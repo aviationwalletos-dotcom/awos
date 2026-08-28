@@ -6,7 +6,6 @@ import {
   CloudOff,
   FileCheck2,
   FileDown,
-  Landmark,
   ListChecks,
   PlaneLanding,
   PlaneTakeoff,
@@ -207,19 +206,6 @@ export function EntryList({
             <Printer className="h-4 w-4" aria-hidden="true" />
             인쇄/PDF
           </Button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-control border border-dashed border-sky/45 px-4 py-2 text-sm font-medium text-sky/90 transition-colors hover:bg-sky/10"
-            onClick={() =>
-              window.alert(
-                'TS(한국교통안전공단) 자격 자동 불러오기를 준비 중입니다.\n연동이 열리면 앱에서 가장 먼저 안내드릴게요.',
-              )
-            }
-          >
-            <Landmark className="h-4 w-4" aria-hidden="true" />
-            TS 연동
-            <span className="rounded bg-sky/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide">준비중</span>
-          </button>
           <Button
  data-mbaas-oid="hmmvzx5" type="button"
             variant="outline"

@@ -171,9 +171,67 @@ export const PRICING_TIERS: PricingTier[] = [
 ]
 
 export const HERO_STAT = {
-  value: '100억 9,300만원+',
-  label: '최근 5년간 국적항공사 항공안전법 위반 과징금 누적 규모',
+  value: '항공안전법 시행규칙 별지 서식',
+  label: '비행경력증명서 항목 구조를 그대로 저장·집계합니다',
 }
+
+/** 기능 명세 — 홍보 문구 대신 지원 항목을 그대로 나열한다(LogTen/ForeFlight식 사양 표기). */
+export interface FeatureSpec {
+  key: string
+  title: string
+  items: string[]
+}
+
+export const FEATURE_SPECS: FeatureSpec[] = [
+  {
+    key: 'record',
+    title: '기록 · 이관',
+    items: [
+      '최소 항목(날짜·구간·기종·블록타임) 입력으로 비행 기록',
+      '기존 엑셀 로그북 일괄 가져오기 — 컬럼 자동 매핑',
+      '비행경력증명서 기반 누적시간 이관',
+      '로컬 우선 저장 후 서버 자동 동기화',
+    ],
+  },
+  {
+    key: 'aggregate',
+    title: '집계 · 서식',
+    items: [
+      '항공기 범주별 집계 — 단발육상 · 다발육상 · 회전익 · 기타',
+      '비행 자격별 집계 — PIC · SIC · Dual Received · 비행교관',
+      '비행 조건별 집계 — 주간 · 야간 · 크로스컨트리 · 실제계기 · 모의계기',
+      '이착륙 횟수 및 계기접근 횟수 관리',
+    ],
+  },
+  {
+    key: 'currency',
+    title: '자격 · 커런시',
+    items: [
+      '자격증명 및 항공신체검사 유효기간 추적',
+      '만료 D-day 표시 및 갱신 알림',
+      '비행 가능 여부(GO / NO-GO) 판정',
+      '한국교통안전공단(TS) 자격 연동 — 준비 중',
+    ],
+  },
+  {
+    key: 'verify',
+    title: '검증 · 보관',
+    items: [
+      '교관 전자서명 요청 및 수신',
+      '소속 교육기관 대시보드 연동',
+      '전체 기록 CSV 내보내기 — 서비스 종속 없음',
+      '비행기록부 인쇄 및 PDF 저장',
+    ],
+  },
+]
+
+/** 종이·엑셀 관리에서 반복되는 문제 상황(주장이 아닌 상황 서술). */
+export const PAIN_POINTS = [
+  '기기별로 파일이 나뉘어 누적 시간이 일치하지 않습니다',
+  '크로스컨트리 · 야간 · 계기 시간을 수동으로 합산해야 합니다',
+  '자격 유효기간을 로그북과 별도로 추적해야 합니다',
+  '증명서 발급 시 기록을 처음부터 다시 정리해야 합니다',
+]
 
 export const TRUST_ITEMS = [
   { title: '데이터 암호화', desc: '전송·저장 구간 모두 암호화하여 자격 정보를 보호합니다.' },

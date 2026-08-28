@@ -27,6 +27,7 @@ import { AutoSyncEntryDecisions } from '../components/logbook/AutoSyncEntryDecis
 import { LogbookTotalsSummary } from '../components/logbook/LogbookTotalsSummary'
 import { LegacyImportSection } from '../components/logbook/LegacyImportSection'
 import { CertificateForm } from '../components/certificates/CertificateForm'
+import { TsIntegrationCard } from '../components/certificates/TsIntegrationCard'
 import { CertificateList } from '../components/certificates/CertificateList'
 import { CertificateDetailDialog } from '../components/certificates/CertificateDetailDialog'
 import { CurrencyDashboard } from '../components/currency/CurrencyDashboard'
@@ -537,6 +538,10 @@ export function LogbookPage() {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <TsIntegrationCard />
                   </div>
 
                   <h2 data-mbaas-oid="d1lqcdw" className="mt-8 font-display text-2xl font-extrabold text-ink">

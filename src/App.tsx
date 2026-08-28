@@ -9,9 +9,8 @@ import { RequireUserType } from './components/RequireUserType'
 import { Hero } from './components/sections/Hero'
 import { Problem } from './components/sections/Problem'
 import { Solution } from './components/sections/Solution'
-import { Roles } from './components/sections/Roles'
+import { Features } from './components/sections/Features'
 import { Dashboard } from './components/sections/Dashboard'
-import { Pricing } from './components/sections/Pricing'
 import { Contact } from './components/sections/Contact'
 import { LogbookPage } from './pages/LogbookPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -43,9 +42,8 @@ function LandingPage() {
         <Hero />
         <Problem />
         <Solution />
-        <Roles />
+        <Features />
         <Dashboard />
-        <Pricing />
         <Contact />
       </main>
       <Footer />

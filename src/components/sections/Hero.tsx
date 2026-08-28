@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { Button } from '../Button'
 import { HERO_STAT } from '../../data/content'
@@ -41,6 +42,8 @@ function RadarMotif() {
 }
 
 export function Hero() {
+  const navigate = useNavigate()
+
   return (
     <section
       data-mbaas-oid="si2d94s" id="hero"
@@ -52,48 +55,46 @@ export function Hero() {
       <div data-mbaas-oid="n5mur3s" className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div data-mbaas-oid="89u7vw5">
           <span data-mbaas-oid="ovvgxer" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
-            항공 레그테크(RegTech) 인프라
+            디지털 파일럿 로그북
           </span>
 
           <h1
             data-mbaas-oid="kiqsaol" className="mt-6 font-display font-extrabold text-white"
-            style={{ fontSize: 'clamp(2.5rem, 1.8rem + 3.5vw, 4rem)', letterSpacing: '-0.03em', lineHeight: 0.98 }}
+            style={{ fontSize: 'clamp(2.25rem, 1.6rem + 3.2vw, 3.5rem)', letterSpacing: '-0.03em', lineHeight: 1.04 }}
           >
-            The Operating System
+            조종사를 위한
             <br data-mbaas-oid="c4in81l" />
-            <span className="text-sky">for Aviation.</span>
+            <span className="text-sky">디지털 로그북.</span>
           </h1>
 
           <p
             data-mbaas-oid="5ghgk0m" className="mt-6 max-w-xl text-slate-300"
-            style={{ fontSize: 'clamp(1rem, 0.94rem + 0.3vw, 1.125rem)', lineHeight: 1.6 }}
+            style={{ fontSize: 'clamp(1rem, 0.94rem + 0.3vw, 1.125rem)', lineHeight: 1.7 }}
           >
-            AWOS는 알림을 보내는 시스템이 아닙니다. <strong className="font-semibold text-white">부적격 배정을 비행 전에 차단하는 시스템</strong>입니다.
-            조종사·정비사·관제사의 면허와 법정교육을 종이와 엑셀 대신 실시간으로 검증합니다.
+            비행기록을 <strong className="font-semibold text-white">국내 비행경력증명서 서식</strong>으로 기록하고, 누적 시간을 항목별로 집계합니다.
+            자격 유효기간 추적, 교관 전자서명, CSV · PDF 내보내기를 지원합니다.
           </p>
 
-          <div data-mbaas-oid="weuxcgg" className="mt-8 flex flex-col gap-3 rounded-card border border-white/10 bg-white/5 px-5 py-4 sm:flex-row sm:items-center sm:gap-6">
-            <p data-mbaas-oid="bcbyfm9" className="font-mono-data tabular-nums text-2xl font-bold text-sky">{HERO_STAT.value}</p>
-            <p data-mbaas-oid="djwb5z4" className="text-sm text-slate-300">{HERO_STAT.label}</p>
+          <div data-mbaas-oid="weuxcgg" className="mt-8 flex flex-col gap-2 rounded-card border border-white/10 bg-white/5 px-5 py-4">
+            <p data-mbaas-oid="bcbyfm9" className="font-mono-data text-sm font-semibold text-sky">{HERO_STAT.value}</p>
+            <p data-mbaas-oid="djwb5z4" className="text-sm text-slate-400">{HERO_STAT.label}</p>
           </div>
 
           <div data-mbaas-oid="tk5xlsd" className="mt-10 flex flex-wrap gap-4">
-            <Button
-              data-mbaas-oid="2722r3q" size="lg"
-              onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              도입 문의하기
+            <Button data-mbaas-oid="2722r3q" size="lg" onClick={() => navigate('/signup')}>
+              시작하기
             </Button>
             <Button
               data-mbaas-oid="frdm1ui" size="lg"
               variant="outline"
               tone="neutral"
               className="border-white/30 text-white hover:bg-white/10"
-              onClick={() => document.querySelector('#roles')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              역할별 기능 보기
+              기능 명세
             </Button>
           </div>
+          <p className="mt-4 text-xs text-slate-400">개인 사용자 무료 · 계정 없이 기능 명세 확인 가능</p>
         </div>
 
         <div data-mbaas-oid="i1n2uh0" className="relative mx-auto aspect-square w-full max-w-md lg:ml-auto lg:mr-0">
