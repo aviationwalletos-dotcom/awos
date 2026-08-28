@@ -37,20 +37,8 @@ export function Nav() {
             </Link>
           </li>
           <li data-mbaas-oid="orgnav1">
-            <Link
-              data-mbaas-oid="orgnav2" to="/dashboard"
-              className="text-sm font-medium text-slate-300 transition-colors hover:text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
-            >
-              DASHBOARD
-            </Link>
           </li>
           <li data-mbaas-oid="mf6257y">
-            <Link
-              data-mbaas-oid="tnyuypn" to="/fleet"
-              className="text-sm font-medium text-slate-300 transition-colors hover:text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
-            >
-              Flight Radar
-            </Link>
           </li>
         </ul>
 
@@ -85,16 +73,6 @@ export function Nav() {
               로그인
             </Link>
           )}
-          <Button
-            data-mbaas-oid="29dn3y3"
-            size="sm"
-            variant="outline"
-            tone="neutral"
-            className="border-white/25 text-slate-200 hover:bg-white/10 hover:text-white"
-            onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            기관 도입 문의
-          </Button>
         </div>
 
         <button
@@ -161,22 +139,8 @@ export function Nav() {
             </Link>
           </li>
           <li data-mbaas-oid="orgnav4">
-            <Link
-              data-mbaas-oid="orgnav5" to="/dashboard"
-              onClick={() => setOpen(false)}
-              className="block rounded-control px-2 py-3 text-sm font-medium text-slate-200 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-            >
-              기관 사용자 · DASHBOARD
-            </Link>
           </li>
           <li data-mbaas-oid="0f28wex">
-            <Link
-              data-mbaas-oid="oge80u7" to="/fleet"
-              onClick={() => setOpen(false)}
-              className="block rounded-control px-2 py-3 text-sm font-medium text-slate-200 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-            >
-              기관 사용자 · Flight Radar
-            </Link>
           </li>
           <li data-mbaas-oid="im9tx7b" className="pt-2">
             <a

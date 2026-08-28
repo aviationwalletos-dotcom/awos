@@ -9,8 +9,7 @@ import { RequireUserType } from './components/RequireUserType'
 import { Hero } from './components/sections/Hero'
 import { Problem } from './components/sections/Problem'
 import { Features } from './components/sections/Features'
-import { Dashboard } from './components/sections/Dashboard'
-import { Contact } from './components/sections/Contact'
+import { FinalCta } from './components/sections/FinalCta'
 import { LogbookPage } from './pages/LogbookPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { FleetPage } from './pages/FleetPage'
@@ -41,8 +40,7 @@ function LandingPage() {
         <Hero />
         <Problem />
         <Features />
-        <Dashboard />
-        <Contact />
+        <FinalCta />
       </main>
       <Footer />
     </>

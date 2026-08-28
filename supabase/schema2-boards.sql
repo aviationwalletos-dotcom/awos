@@ -17,7 +17,7 @@ alter table public.profiles add column if not exists phone text;
 -- ---------------------------------------------------------------------------
 -- 게시글 (aiapp 동적 게시판 호환)
 -- ---------------------------------------------------------------------------
-create table public.board_posts (
+create table if not exists public.board_posts (
   id uuid primary key default gen_random_uuid(),
   board_id text not null,                        -- config.ts의 게시판 상수 8종을 그대로 사용
   author_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
@@ -30,26 +30,31 @@ create table public.board_posts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index idx_board_posts_board_created on public.board_posts (board_id, created_at desc);
-create index idx_board_posts_author on public.board_posts (author_id);
+create index if not exists idx_board_posts_board_created on public.board_posts (board_id, created_at desc);
+create index if not exists idx_board_posts_author on public.board_posts (author_id);
+drop trigger if exists trg_board_posts_updated on public.board_posts;
 create trigger trg_board_posts_updated before update on public.board_posts
   for each row execute function public.set_updated_at();
 
 alter table public.board_posts enable row level security;
 
+drop policy if exists "bp_select_authenticated" on public.board_posts;
 create policy "bp_select_authenticated" on public.board_posts
   for select to authenticated using (true);
+drop policy if exists "bp_insert_own" on public.board_posts;
 create policy "bp_insert_own" on public.board_posts
   for insert to authenticated with check (auth.uid() = author_id);
+drop policy if exists "bp_update_own" on public.board_posts;
 create policy "bp_update_own" on public.board_posts
   for update to authenticated using (auth.uid() = author_id);
+drop policy if exists "bp_delete_own" on public.board_posts;
 create policy "bp_delete_own" on public.board_posts
   for delete to authenticated using (auth.uid() = author_id);
 
 -- ---------------------------------------------------------------------------
 -- 댓글 (서명 완료/승인·반려 표시 [SIGNED]/[APPROVED]/[REJECTED] 워크플로우용)
 -- ---------------------------------------------------------------------------
-create table public.board_comments (
+create table if not exists public.board_comments (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.board_posts (id) on delete cascade,
   author_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
@@ -59,19 +64,24 @@ create table public.board_comments (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index idx_board_comments_post on public.board_comments (post_id, created_at);
+create index if not exists idx_board_comments_post on public.board_comments (post_id, created_at);
+drop trigger if exists trg_board_comments_updated on public.board_comments;
 create trigger trg_board_comments_updated before update on public.board_comments
   for each row execute function public.set_updated_at();
 
 alter table public.board_comments enable row level security;
 
+drop policy if exists "bc_select_authenticated" on public.board_comments;
 create policy "bc_select_authenticated" on public.board_comments
   for select to authenticated using (true);
 -- 댓글은 타인 게시글에도 달 수 있어야 한다(교관 서명, 기관 승인) — 단 author는 본인만
+drop policy if exists "bc_insert_own_author" on public.board_comments;
 create policy "bc_insert_own_author" on public.board_comments
   for insert to authenticated with check (auth.uid() = author_id);
+drop policy if exists "bc_update_own" on public.board_comments;
 create policy "bc_update_own" on public.board_comments
   for update to authenticated using (auth.uid() = author_id);
+drop policy if exists "bc_delete_own" on public.board_comments;
 create policy "bc_delete_own" on public.board_comments
   for delete to authenticated using (auth.uid() = author_id);
 
@@ -82,8 +92,10 @@ insert into storage.buckets (id, name, public)
 values ('board-files', 'board-files', true)
 on conflict (id) do nothing;
 
+drop policy if exists "board_files_public_read" on storage.objects;
 create policy "board_files_public_read" on storage.objects
   for select using (bucket_id = 'board-files');
+drop policy if exists "board_files_auth_insert" on storage.objects;
 create policy "board_files_auth_insert" on storage.objects
   for insert to authenticated with check (bucket_id = 'board-files');
 

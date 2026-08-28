@@ -42,6 +42,8 @@ interface FlightReadinessPanelProps {
   compact?: boolean
 }
 
+const SHOW_ORG_SHARE = false // 조종사 전용 모드: 기관 공유 UI 비활성(B2B 재개 시 true)
+
 export function FlightReadinessPanel({
   entries,
   certificates = [],
@@ -142,7 +144,9 @@ export function FlightReadinessPanel({
         </p>
       )}
 
-      {account && (
+      {/* 조종사 전용 모드: 기관 상태공유 UI는 숨긴다(B2B 재개 시 이 플래그만 켜면 복원).
+          훅·핸들러는 보존되어 있어 기능 자체는 살아있다. */}
+      {SHOW_ORG_SHARE && account && (
         <Button
           data-mbaas-oid="frpsh03" type="button" size="sm" tone="brand" variant="outline"
           className="mt-2 border-sky/40 text-sky hover:bg-sky/10"
@@ -155,13 +159,13 @@ export function FlightReadinessPanel({
         </Button>
       )}
 
-      {shareError && (
+      {SHOW_ORG_SHARE && shareError && (
         <p data-mbaas-oid="frpsh04" role="alert" className="mt-2 text-xs font-medium text-rose-300">
           {shareError}
         </p>
       )}
 
-      {lastSharedAt && !shareError && (
+      {SHOW_ORG_SHARE && lastSharedAt && !shareError && (
         <p data-mbaas-oid="frpsh05" role="status" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-go">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {formatStatusShareDateTime(lastSharedAt)} 기준으로 공유됨

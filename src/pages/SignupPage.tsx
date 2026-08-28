@@ -1,40 +1,12 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Bot, Building2, CheckCircle2, ClipboardList, Plane, Radar, Radio, User, UserPlus } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, UserPlus } from 'lucide-react'
 
 import { Button } from '../components/Button'
 import { InstitutionSelect } from '../components/InstitutionSelect'
 import { useSignup } from '../hooks/baas/useSignup'
 import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
-import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import type { IndividualRole, UserType } from '../lib/baas/types'
-
-const USER_TYPES: { value: UserType; label: string; description: string; icon: typeof User }[] = [
-  {
-    value: 'individual',
-    label: '개인 사용자',
-    description: '조종사·정비사 등, 내 자격을 관리해요',
-    icon: User,
-  },
-  {
-    value: 'organization',
-    label: '기관 사용자',
-    description: '비행훈련원·항공사 등, 소속 인력을 관리해요',
-    icon: Building2,
-  },
-]
-
-const INDIVIDUAL_ROLE_ICONS: Record<IndividualRole, typeof User> = {
-  pilot: Plane,
-  atc: Radar,
-  mechanic: ClipboardList,
-  dispatcher: Radio,
-  drone_pilot: Bot,
-}
-
-const INDIVIDUAL_ROLES: { value: IndividualRole; label: string; icon: typeof User }[] = (
-  Object.keys(INDIVIDUAL_ROLE_LABEL) as IndividualRole[]
-).map((value) => ({ value, label: INDIVIDUAL_ROLE_LABEL[value], icon: INDIVIDUAL_ROLE_ICONS[value] }))
 
 interface FieldErrors {
   name?: string
@@ -50,8 +22,8 @@ export function SignupPage() {
   const navigate = useNavigate()
   const { signup, isLoading, error: submitError } = useSignup()
 
-  const [userType, setUserType] = useState<UserType>('individual')
-  const [individualRole, setIndividualRole] = useState<IndividualRole | null>(null)
+  const userType: UserType = 'individual' // 조종사 전용 단순화 — 기관 가입은 별도 채널로 이관
+  const individualRole: IndividualRole = 'pilot' // 조종사 고정(타 직군 가입은 다음 단계에 오픈)
   const [organizationAffiliation, setOrganizationAffiliation] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -78,10 +50,6 @@ export function SignupPage() {
     if (password !== passwordConfirm) errors.passwordConfirm = '비밀번호가 일치하지 않습니다.'
 
     if (!agreed) errors.agreement = '이용약관 및 개인정보 처리방침에 동의해주세요.'
-
-    if (userType === 'individual' && !individualRole) {
-      errors.individualRole = '역할을 선택해주세요.'
-    }
 
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
@@ -116,7 +84,7 @@ export function SignupPage() {
             회원가입이 완료되었습니다
           </h1>
           <p data-mbaas-oid="z2v2hbp" className="mt-2 text-sm text-slate-400">
-            이제 로그인하여 {userType === 'individual' ? '디지털 로그북' : '기관 관제 대시보드'}을 이용해보세요.
+            이제 로그인하여 디지털 로그북을 이용해보세요.
           </p>
           <Button data-mbaas-oid="jny4ckb" size="lg" className="mt-6 w-full" onClick={() => navigate('/login')}>
             로그인하러 가기
@@ -161,82 +129,11 @@ export function SignupPage() {
               가입하세요
             </h1>
             <p data-mbaas-oid="sgnpg14" className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
-              개인 사용자는 디지털 로그북으로, 기관 사용자는 관제 대시보드로 이동합니다.
+              가입 후 바로 비행기록을 시작할 수 있습니다.
             </p>
           </div>
 
-          <div data-mbaas-oid="sgnpg15" role="tablist" aria-label="사용자 유형 선택" className="mt-10 grid grid-cols-2 gap-3">
-            {USER_TYPES.map((type) => {
-              const Icon = type.icon
-              const active = userType === type.value
-              return (
-                <button
-                  data-mbaas-oid="sgnpg16" key={type.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  data-state={active ? 'active' : 'idle'}
-                  onClick={() => {
-                    setUserType(type.value)
-                    if (type.value === 'organization') {
-                      setIndividualRole(null)
-                      setFieldErrors((prev) => ({ ...prev, individualRole: undefined }))
-                    }
-                  }}
-                  className={`flex flex-col items-start gap-2 rounded-card border p-cardpad text-left transition-all duration-200
-                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                    ${active ? 'border-sky bg-sky/10 shadow-[0_0_24px_rgba(34,211,238,0.2)]' : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
-                >
-                  <Icon className={`h-5 w-5 ${active ? 'text-sky' : 'text-slate-400'}`} aria-hidden="true" />
-                  <span data-mbaas-oid="sgnpg17" className={`text-sm font-semibold ${active ? 'text-white' : 'text-slate-200'}`}>
-                    {type.label}
-                  </span>
-                  <span data-mbaas-oid="sgnpg18" className="text-xs leading-snug text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
-                    {type.description}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {userType === 'individual' && (
-            <div data-mbaas-oid="sgnpg42" className="mt-6">
-              <p data-mbaas-oid="sgnpg43" className="text-xs font-semibold text-slate-300">
-                내 역할을 선택해주세요
-              </p>
-              <div
-                data-mbaas-oid="sgnpg44" role="radiogroup" aria-label="개인 사용자 역할 선택"
-                className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
-              >
-                {INDIVIDUAL_ROLES.map((role) => {
-                  const RoleIcon = role.icon
-                  const active = individualRole === role.value
-                  return (
-                    <button
-                      data-mbaas-oid="sgnpg45" key={role.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      data-state={active ? 'active' : 'idle'}
-                      onClick={() => {
-                        setIndividualRole(role.value)
-                        setFieldErrors((prev) => ({ ...prev, individualRole: undefined }))
-                      }}
-                      className={`flex min-h-[44px] items-center gap-2 rounded-control border px-3 py-2.5 text-left text-sm font-semibold transition-all duration-200
-                        focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                        ${active ? 'border-sky bg-sky/10 text-white' : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/[0.08]'}`}
-                    >
-                      <RoleIcon className={`h-4 w-4 shrink-0 ${active ? 'text-sky' : 'text-slate-400'}`} aria-hidden="true" />
-                      {role.label}
-                    </button>
-                  )
-                })}
-              </div>
-              {fieldErrors.individualRole && (
-                <p data-mbaas-oid="sgnpg46" className="mt-2 text-xs text-rose-400">{fieldErrors.individualRole}</p>
-              )}
-            </div>
-          )}
+          
 
           <form data-mbaas-oid="sgnpg19" onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">
             {submitError && (
@@ -301,7 +198,7 @@ export function SignupPage() {
               idPrefix="signup-affiliation"
               value={organizationAffiliation}
               onChange={setOrganizationAffiliation}
-              helperText="교관 승인 신청 시 이 값이 기관 관리자의 소속 기관 필터에 사용됩니다."
+              helperText="선택 사항입니다. 교관 서명 요청 시 소속 확인에 사용됩니다. (예: 한국항공대학교 울진비행훈련원)"
             />
 
             <div data-mbaas-oid="sgnpg29" className="flex flex-col gap-1.5">
