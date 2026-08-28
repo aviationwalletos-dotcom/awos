@@ -50,7 +50,7 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
               }}
               className={`inline-flex min-h-[44px] items-center rounded-control border px-4 py-2 text-sm font-semibold transition-colors
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                ${isActive ? 'border-sky bg-sky/10 text-[#0369a1]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+                ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
             >
               {FILTER_KIND_LABEL[k]}
             </button>
@@ -66,7 +66,7 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
             onClick={() => onValueChange(null)}
             className={`inline-flex min-h-[36px] items-center rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-              ${value === null ? 'border-ink bg-ink text-white' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+              ${value === null ? 'border-ink bg-ink text-white' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
           >
             전체
           </button>
@@ -80,7 +80,7 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
                 onClick={() => onValueChange(v)}
                 className={`inline-flex min-h-[36px] items-center rounded-control border px-3 py-1.5 text-xs font-semibold font-mono-data transition-colors
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                  ${isActive ? 'border-sky bg-sky/10 text-[#0369a1]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+                  ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
               >
                 {v}
               </button>

@@ -1,0 +1,16 @@
+{
+  "name": "Aviation Wallet OS",
+  "short_name": "AWOS",
+  "description": "항공 종사자를 위한 디지털 로그북과 자격 리스크 방어 인프라",
+  "lang": "ko",
+  "start_url": "/logbook",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#05070D",
+  "theme_color": "#05070D",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

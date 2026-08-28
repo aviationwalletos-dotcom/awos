@@ -6,7 +6,7 @@ import { StatusBadge } from './StatusBadge'
 
 const STATUS_DOT: Record<Aircraft['status'], string> = {
   운항중: 'bg-go text-go',
-  정비중: 'bg-amber-500 text-amber-400',
+  정비중: 'bg-amber-400/100 text-amber-400',
   대기: 'bg-slate-400 text-slate-300',
 }
 
@@ -85,7 +85,7 @@ export function RadarView({ aircraft, selectedTail, onSelect }: RadarViewProps) 
           <span data-mbaas-oid="npbo290" className="h-1.5 w-1.5 rounded-full bg-go" /> 운항중
         </span>
         <span data-mbaas-oid="tqwukuh" className="inline-flex items-center gap-1.5 rounded-control border border-white/10 bg-navy/70 px-2 py-1 text-[10px] text-slate-300">
-          <span data-mbaas-oid="dbt10er" className="h-1.5 w-1.5 rounded-full bg-amber-500" /> 정비중
+          <span data-mbaas-oid="dbt10er" className="h-1.5 w-1.5 rounded-full bg-amber-400/100" /> 정비중
         </span>
         <span data-mbaas-oid="xhby2ei" className="inline-flex items-center gap-1.5 rounded-control border border-white/10 bg-navy/70 px-2 py-1 text-[10px] text-slate-300">
           <span data-mbaas-oid="nphrxwy" className="h-1.5 w-1.5 rounded-full bg-slate-400" /> 대기

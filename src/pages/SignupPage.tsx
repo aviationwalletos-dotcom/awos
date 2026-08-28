@@ -145,7 +145,7 @@ export function SignupPage() {
       </header>
 
       <main data-mbaas-oid="sgnpg07" className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
-        <div data-mbaas-oid="sgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(56,189,248,0.14),transparent_55%)]" />
+        <div data-mbaas-oid="sgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
         <div data-mbaas-oid="sgnpg09" className="relative mx-auto max-w-md px-6">
           <div data-mbaas-oid="sgnpg10" className="text-center">
             <span data-mbaas-oid="sgnpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
@@ -185,7 +185,7 @@ export function SignupPage() {
                   }}
                   className={`flex flex-col items-start gap-2 rounded-card border p-cardpad text-left transition-all duration-200
                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                    ${active ? 'border-sky bg-sky/10 shadow-[0_0_24px_rgba(56,189,248,0.2)]' : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
+                    ${active ? 'border-sky bg-sky/10 shadow-[0_0_24px_rgba(0,212,255,0.2)]' : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
                 >
                   <Icon className={`h-5 w-5 ${active ? 'text-sky' : 'text-slate-400'}`} aria-hidden="true" />
                   <span data-mbaas-oid="sgnpg17" className={`text-sm font-semibold ${active ? 'text-white' : 'text-slate-200'}`}>
@@ -240,7 +240,7 @@ export function SignupPage() {
 
           <form data-mbaas-oid="sgnpg19" onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">
             {submitError && (
-              <p data-mbaas-oid="jwfa8ld" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-300">
+              <p data-mbaas-oid="jwfa8ld" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
                 {submitError}
               </p>
             )}
@@ -256,7 +256,7 @@ export function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="홍길동"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.name && <p data-mbaas-oid="sg9qurs" className="text-xs text-rose-400">{fieldErrors.name}</p>}
@@ -273,7 +273,7 @@ export function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.email && <p data-mbaas-oid="iijf9jc" className="text-xs text-rose-400">{fieldErrors.email}</p>}
@@ -291,7 +291,7 @@ export function SignupPage() {
                 onChange={(e) => setPhone(formatPhone(e.target.value))}
                 placeholder="010-1234-5678"
                 maxLength={13}
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.phone && <p data-mbaas-oid="9p15xto" className="text-xs text-rose-400">{fieldErrors.phone}</p>}
@@ -315,7 +315,7 @@ export function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="8자 이상 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.password && <p data-mbaas-oid="4map06y" className="text-xs text-rose-400">{fieldErrors.password}</p>}
@@ -332,7 +332,7 @@ export function SignupPage() {
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
                 placeholder="비밀번호를 다시 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.passwordConfirm && (
@@ -357,7 +357,7 @@ export function SignupPage() {
               {userType === 'individual' ? '개인 사용자로 가입하기' : '기관 사용자로 가입하기'}
             </Button>
 
-            <p data-mbaas-oid="sgnpg40" className="text-center text-xs text-slate-500">
+            <p data-mbaas-oid="sgnpg40" className="text-center text-xs text-slate-400">
               이미 계정이 있으신가요?{' '}
               <Link
                 data-mbaas-oid="sgnpg41" to="/login"

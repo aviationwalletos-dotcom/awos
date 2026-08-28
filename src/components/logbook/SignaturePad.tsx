@@ -98,7 +98,7 @@ export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) 
         onPointerUp={finishStroke}
         onPointerLeave={finishStroke}
         onPointerCancel={finishStroke}
-        className={`h-40 w-full touch-none rounded-control border border-slate-300 bg-white ${
+        className={`h-40 w-full touch-none rounded-control border border-white/15 bg-white ${
           disabled ? 'opacity-50' : ''
         }`}
       />

@@ -11,14 +11,14 @@ export function Pricing() {
     <section data-mbaas-oid="8bca7kb" id="pricing" className="bg-surface py-[clamp(80px,10vw,160px)]">
       <div data-mbaas-oid="qzf5hcy" className="mx-auto max-w-7xl px-6">
         <Reveal>
-          <p data-mbaas-oid="q3irjzt" className="text-sm font-semibold uppercase tracking-wide text-[#0369a1]">가격/도입 안내</p>
+          <p data-mbaas-oid="q3irjzt" className="text-sm font-semibold uppercase tracking-wide text-[#00D4FF]">가격/도입 안내</p>
           <h2
             data-mbaas-oid="6n9u4mg" className="mt-3 max-w-2xl font-display font-extrabold text-ink"
             style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.02em' }}
           >
             과징금 대비 압도적으로 낮은 비용
           </h2>
-          <p data-mbaas-oid="x9xcsc5" className="mt-4 max-w-2xl text-slate-600">
+          <p data-mbaas-oid="x9xcsc5" className="mt-4 max-w-2xl text-slate-400">
             기관 규모와 감사 대응 수준에 맞춰 세 가지 티어를 선택할 수 있습니다.
           </p>
         </Reveal>
@@ -30,7 +30,7 @@ export function Pricing() {
                 data-mbaas-oid="fzyxc18" className={`flex h-full flex-col rounded-card border p-cardpad ${
                   tier.highlight
                     ? 'border-sky bg-navy text-white shadow-xl'
-                    : 'border-slate-200 bg-white text-ink'
+                    : 'border-white/10 bg-panel text-ink'
                 }`}
               >
                 {tier.highlight && (
@@ -39,7 +39,7 @@ export function Pricing() {
                   </span>
                 )}
                 <h3 data-mbaas-oid="4h2y40p" className="text-xl font-bold">{tier.name}</h3>
-                <p data-mbaas-oid="r938zgr" className={`mt-1 text-sm ${tier.highlight ? 'text-slate-300' : 'text-slate-500'}`}>
+                <p data-mbaas-oid="r938zgr" className={`mt-1 text-sm ${tier.highlight ? 'text-slate-300' : 'text-slate-400'}`}>
                   {tier.target}
                 </p>
 
@@ -57,7 +57,7 @@ export function Pricing() {
                         className={`mt-0.5 h-4 w-4 shrink-0 ${tier.highlight ? 'text-sky' : 'text-go'}`}
                         aria-hidden="true"
                       />
-                      <span data-mbaas-oid="yojs9u4" className={tier.highlight ? 'text-slate-200' : 'text-slate-600'}>{f}</span>
+                      <span data-mbaas-oid="yojs9u4" className={tier.highlight ? 'text-slate-200' : 'text-slate-400'}>{f}</span>
                     </li>
                   ))}
                 </ul>

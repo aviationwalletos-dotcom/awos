@@ -147,7 +147,7 @@ export function AccountPage() {
       <div data-mbaas-oid="qfrkwnk" className="min-h-screen bg-navy-dark font-body text-white">
         <PageHeader />
         <main data-mbaas-oid="95a8tz4" className="mx-auto max-w-md px-6 py-24 text-center">
-          <UserCircle2 className="mx-auto h-10 w-10 text-slate-500" aria-hidden="true" />
+          <UserCircle2 className="mx-auto h-10 w-10 text-slate-400" aria-hidden="true" />
           <h1 data-mbaas-oid="9bqprhy" className="mt-4 font-display text-xl font-extrabold">
             로그인이 필요합니다
           </h1>
@@ -170,7 +170,7 @@ export function AccountPage() {
       <PageHeader />
 
       <main data-mbaas-oid="pmhr8v8" className="relative overflow-hidden py-[clamp(64px,8vw,120px)]">
-        <div data-mbaas-oid="s1w9ydd" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(56,189,248,0.14),transparent_55%)]" />
+        <div data-mbaas-oid="s1w9ydd" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
         <div data-mbaas-oid="ci6ukcu" className="relative mx-auto max-w-2xl px-6">
           <span data-mbaas-oid="pn272mq" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
             <UserCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -196,7 +196,7 @@ export function AccountPage() {
                       {' · '}
                       <span
                         data-mbaas-oid="8sw4ghp"
-                        className={effectiveIndividualRole ? 'font-semibold text-sky' : 'text-slate-500'}
+                        className={effectiveIndividualRole ? 'font-semibold text-sky' : 'text-slate-400'}
                       >
                         {individualRoleLabel}
                       </span>
@@ -272,7 +272,7 @@ export function AccountPage() {
               </p>
             )}
 
-            <p data-mbaas-oid="8tbbs0n" className="mt-3 text-xs text-slate-500">
+            <p data-mbaas-oid="8tbbs0n" className="mt-3 text-xs text-slate-400">
               현재 소속: <span data-mbaas-oid="5wf84ek" className={effectiveAffiliation ? 'font-semibold text-slate-300' : ''}>{effectiveAffiliation || '미설정'}</span>
             </p>
           </div>
@@ -335,7 +335,7 @@ export function AccountPage() {
           {userType === 'individual' && <InstructorApprovalSection account={account} affiliation={effectiveAffiliation} />}
 
           {userType === 'individual' && !isApprovalStatusLoading && (
-            <p data-mbaas-oid="ibxhint" className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+            <p data-mbaas-oid="ibxhint" className="mt-3 flex items-center gap-2 text-xs text-slate-400">
               <Info className="h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
               {isApprovedInstructor ? (
                 <>
@@ -362,7 +362,7 @@ export function AccountPage() {
 
             <form data-mbaas-oid="2p1n958" onSubmit={handleChangePassword} noValidate className="mt-5 flex flex-col gap-4">
               {(formError || changeError) && (
-                <p data-mbaas-oid="4dayk68" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-300">
+                <p data-mbaas-oid="4dayk68" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
                   {formError || changeError}
                 </p>
               )}
@@ -382,7 +382,7 @@ export function AccountPage() {
                   autoComplete="current-password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                 />
               </div>
@@ -398,7 +398,7 @@ export function AccountPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="8자 이상 입력하세요"
-                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                 />
               </div>
@@ -413,7 +413,7 @@ export function AccountPage() {
                   autoComplete="new-password"
                   value={newPasswordConfirm}
                   onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                 />
               </div>

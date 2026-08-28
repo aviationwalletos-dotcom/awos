@@ -83,7 +83,7 @@ export function Contact() {
           <Reveal className="mt-10">
             <form data-mbaas-oid="drgxdc5" noValidate onSubmit={handleSubmit} className="space-y-5">
               {status === 'error' && (
-                <div data-mbaas-oid="nz49wbw" role="alert" className="rounded-control border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                <div data-mbaas-oid="nz49wbw" role="alert" className="rounded-control border border-rose-500/40 bg-rose-500/100/10 px-4 py-3 text-sm text-rose-200">
                   입력하신 내용을 다시 확인해 주세요. 문제가 반복되면 잠시 후 다시 시도해 주세요.
                 </div>
               )}
@@ -96,7 +96,7 @@ export function Contact() {
                   data-mbaas-oid="1xhqkdz" id="orgName"
                   name="orgName"
                   type="text"
-                  className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                   placeholder="예: 한국항공훈련원"
                   aria-invalid={Boolean(errors.orgName)}
                   aria-describedby={errors.orgName ? 'orgName-error' : undefined}
@@ -116,7 +116,7 @@ export function Contact() {
                   data-mbaas-oid="csj6g96" id="contactName"
                   name="contactName"
                   type="text"
-                  className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                   placeholder="예: 홍길동"
                   aria-invalid={Boolean(errors.contactName)}
                   aria-describedby={errors.contactName ? 'contactName-error' : undefined}
@@ -137,7 +137,7 @@ export function Contact() {
                     data-mbaas-oid="pf3ldsl" id="email"
                     name="email"
                     type="email"
-                    className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                    className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                     placeholder="name@company.com"
                     aria-invalid={Boolean(errors.email)}
                     aria-describedby={errors.email ? 'email-error' : undefined}
@@ -157,7 +157,7 @@ export function Contact() {
                     data-mbaas-oid="wccciz8" id="phone"
                     name="phone"
                     type="tel"
-                    className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                    className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                     placeholder="010-0000-0000"
                   />
                 </div>
@@ -189,7 +189,7 @@ export function Contact() {
                   data-mbaas-oid="u4jlk9h" id="content"
                   name="content"
                   rows={4}
-                  className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  className="w-full rounded-control border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                   placeholder="현재 자격 관리 방식과 궁금하신 점을 남겨 주세요."
                 />
               </div>

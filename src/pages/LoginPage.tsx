@@ -54,7 +54,7 @@ export function LoginPage() {
       </header>
 
       <main data-mbaas-oid="lgnpg07" className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
-        <div data-mbaas-oid="lgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(56,189,248,0.14),transparent_55%)]" />
+        <div data-mbaas-oid="lgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
         <div data-mbaas-oid="lgnpg09" className="relative mx-auto max-w-md px-6">
           <div data-mbaas-oid="lgnpg10" className="text-center">
             <span data-mbaas-oid="lgnpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
@@ -76,7 +76,7 @@ export function LoginPage() {
 
           <form data-mbaas-oid="lgnpg19" onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">
             {(formError || error) && (
-              <p data-mbaas-oid="hh3qsba" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-300">
+              <p data-mbaas-oid="hh3qsba" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
                 {formError || error}
               </p>
             )}
@@ -93,7 +93,7 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
             </div>
@@ -110,7 +110,7 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="비밀번호를 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
             </div>
@@ -119,7 +119,7 @@ export function LoginPage() {
               로그인
             </Button>
 
-            <p data-mbaas-oid="lgnpg27" className="text-center text-xs text-slate-500">
+            <p data-mbaas-oid="lgnpg27" className="text-center text-xs text-slate-400">
               계정이 없으신가요?{' '}
               <Link
                 data-mbaas-oid="lgnpg28" to="/signup"

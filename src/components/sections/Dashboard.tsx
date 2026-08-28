@@ -9,7 +9,7 @@ import { DASHBOARD_ROWS } from '../../data/content'
 export function Dashboard() {
   return (
     <section data-mbaas-oid="axmxojw" id="dashboard" className="relative overflow-hidden bg-navy-dark py-[clamp(80px,10vw,160px)] text-white">
-      <div data-mbaas-oid="tyyegr3" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(56,189,248,0.12),transparent_50%)]" />
+      <div data-mbaas-oid="tyyegr3" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,212,255,0.12),transparent_50%)]" />
 
       <div data-mbaas-oid="hayvrfb" className="relative mx-auto max-w-7xl px-6">
         <Reveal>
@@ -53,11 +53,11 @@ export function Dashboard() {
                       <td data-mbaas-oid="14g8eer" className="py-3 pr-4">
                         <span
                           data-mbaas-oid="9usnmnc" className={`inline-flex items-center gap-1.5 rounded-control px-2.5 py-1 text-xs font-bold ${
-                            row.status === 'GO' ? 'bg-go/15 text-go' : 'bg-rose-500/15 text-rose-400'
+                            row.status === 'GO' ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-400'
                           }`}
                         >
                           <span
-                            data-mbaas-oid="oyccv1y" className={`h-1.5 w-1.5 rounded-full ${row.status === 'GO' ? 'bg-go' : 'bg-rose-500'}`}
+                            data-mbaas-oid="oyccv1y" className={`h-1.5 w-1.5 rounded-full ${row.status === 'GO' ? 'bg-go' : 'bg-rose-500/100'}`}
                           />
                           {row.status === 'GO' ? 'GO' : '결격 위험'}
                         </span>
@@ -75,7 +75,7 @@ export function Dashboard() {
               </Button>
               <Link
                 data-mbaas-oid="wdr17co" to="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-control bg-sky px-4 py-2 text-sm font-semibold text-navy shadow-[0_0_24px_rgba(56,189,248,0.35)]
+                className="inline-flex items-center gap-1.5 rounded-control bg-sky px-4 py-2 text-sm font-semibold text-navy shadow-[0_0_24px_rgba(0,212,255,0.35)]
                   transition-all duration-200 hover:bg-sky/90 active:scale-[0.98]
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               >

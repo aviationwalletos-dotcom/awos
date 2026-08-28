@@ -20,21 +20,21 @@ interface StatusBadgeProps {
 const DOT_TONE_CLASS: Record<StatusBadgeTone, string> = {
   success: 'bg-go',
   pending: 'bg-amber-400',
-  danger: 'bg-rose-500',
+  danger: 'bg-rose-500/100',
   neutral: 'bg-slate-400',
 }
 
 const FILL_CLASSES: Record<StatusBadgeSurface, Record<StatusBadgeTone, string>> = {
   light: {
     success: 'bg-go/10 text-go',
-    pending: 'bg-amber-100 text-amber-700',
-    danger: 'bg-rose-100 text-rose-700',
-    neutral: 'bg-slate-100 text-slate-500',
+    pending: 'bg-amber-400/15 text-amber-300',
+    danger: 'bg-rose-500/100/15 text-rose-300',
+    neutral: 'bg-white/[0.07] text-slate-400',
   },
   dark: {
     success: 'bg-go/10 text-go',
     pending: 'bg-amber-400/10 text-amber-300',
-    danger: 'bg-rose-500/10 text-rose-300',
+    danger: 'bg-rose-500/100/10 text-rose-300',
     neutral: 'bg-white/10 text-slate-400',
   },
 }
@@ -42,14 +42,14 @@ const FILL_CLASSES: Record<StatusBadgeSurface, Record<StatusBadgeTone, string>> 
 const BORDER_CLASSES: Record<StatusBadgeSurface, Record<StatusBadgeTone, string>> = {
   light: {
     success: 'border border-go/30 bg-go/10 text-go',
-    pending: 'border border-amber-400/40 bg-amber-100 text-amber-700',
-    danger: 'border border-rose-400/40 bg-rose-100 text-rose-700',
-    neutral: 'border border-slate-200 text-slate-500',
+    pending: 'border border-amber-400/40 bg-amber-400/15 text-amber-300',
+    danger: 'border border-rose-400/40 bg-rose-500/100/15 text-rose-300',
+    neutral: 'border border-white/10 text-slate-400',
   },
   dark: {
     success: 'border border-go/30 bg-go/10 text-go',
     pending: 'border border-amber-400/30 bg-amber-400/10 text-amber-300',
-    danger: 'border border-rose-500/30 bg-rose-500/10 text-rose-300',
+    danger: 'border border-rose-500/30 bg-rose-500/100/10 text-rose-300',
     neutral: 'border border-white/15 text-slate-400',
   },
 }

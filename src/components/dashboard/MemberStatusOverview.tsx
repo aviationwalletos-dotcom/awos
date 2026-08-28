@@ -85,7 +85,7 @@ function MemberRow({ member }: { member: MemberStatus }) {
           </p>
           <span
             data-mbaas-oid="agptp9a" className={`mt-2 inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold
-              ${member.affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-500'}`}
+              ${member.affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-400'}`}
           >
             <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
             <span data-mbaas-oid="vzxkhro">{member.affiliation || '소속 미기재'}</span>
@@ -143,7 +143,7 @@ export function MemberStatusOverview() {
   const noGoCount = members.filter((m) => m.overallGo === false).length
 
   return (
-    <div data-mbaas-oid="5h7gy7x" className="rounded-card border border-slate-200 bg-navy p-6">
+    <div data-mbaas-oid="5h7gy7x" className="rounded-card border border-white/10 bg-navy p-6">
       <div data-mbaas-oid="2zgtwue" className="flex flex-wrap items-center justify-between gap-3">
         <div data-mbaas-oid="7jizgpa">
           <h3 data-mbaas-oid="i28yj8n" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
@@ -197,7 +197,7 @@ export function MemberStatusOverview() {
       {isLoading ? (
         <p data-mbaas-oid="j5tbl25" className="mt-6 text-sm text-slate-400">회원 상태를 불러오는 중입니다...</p>
       ) : error ? (
-        <div data-mbaas-oid="yyjm939" role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
+        <div data-mbaas-oid="yyjm939" role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
           <p data-mbaas-oid="h66so38" className="text-xs font-medium text-rose-300">{error}</p>
           <Button data-mbaas-oid="aymbdar" type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void refetch()}>
             다시 시도

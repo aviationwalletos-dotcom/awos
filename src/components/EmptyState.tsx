@@ -14,14 +14,14 @@ interface EmptyStateProps {
 
 const SURFACE_CLASSES: Record<EmptyStateSurface, { box: string; icon: string; title: string; description: string }> = {
   light: {
-    box: 'border-dashed border-slate-300 bg-surface',
+    box: 'border-dashed border-white/15 bg-surface',
     icon: 'text-slate-400',
     title: 'text-ink',
-    description: 'text-slate-500',
+    description: 'text-slate-400',
   },
   dark: {
     box: 'border-dashed border-white/15 bg-white/[0.04]',
-    icon: 'text-slate-500',
+    icon: 'text-slate-400',
     title: 'text-white',
     description: 'text-slate-400',
   },

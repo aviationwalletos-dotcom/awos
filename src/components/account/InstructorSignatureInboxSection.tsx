@@ -73,7 +73,7 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
       <div data-mbaas-dynamic="true" data-mbaas-oid="cfkc49j" className="flex items-start justify-between gap-3">
         <div data-mbaas-oid="i6h2gb2">
           <p data-mbaas-dynamic="true" data-mbaas-oid="osdk24p" className="text-sm font-semibold text-white">{post.title}</p>
-          <p data-mbaas-dynamic="true" data-mbaas-oid="44nrqpv" className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-500">
+          <p data-mbaas-dynamic="true" data-mbaas-oid="44nrqpv" className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-400">
             요청일: {formatDateTime(post.created_at)} · 요청자: {post.author_name}
           </p>
         </div>
@@ -92,7 +92,7 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
 
       <div data-mbaas-oid="6316nwp" className="mt-3">
         {isCheckingComments ? (
-          <p data-mbaas-oid="gyn76p3" className="text-xs text-slate-500">서명 상태를 확인하는 중입니다...</p>
+          <p data-mbaas-oid="gyn76p3" className="text-xs text-slate-400">서명 상태를 확인하는 중입니다...</p>
         ) : commentsError ? (
           <div data-mbaas-oid="hfsni3z" className="flex items-center gap-2">
             <p data-mbaas-oid="asmw4pc" className="text-xs font-medium text-rose-300">{commentsError}</p>
@@ -107,7 +107,7 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
               <img
                 data-mbaas-oid="98n32cb" src={signedImageUrl}
                 alt={`${signedComment.author_name} 교관 서명 이미지`}
-                className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain"
+                className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
               />
             )}
             <p data-mbaas-oid="98n32cv" className="font-mono-data text-xs tabular-nums text-slate-400">
@@ -234,7 +234,7 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
       {isLoading ? (
         <p data-mbaas-oid="yqwskw9" className="mt-5 text-sm text-slate-400">서명 요청 목록을 불러오는 중입니다...</p>
       ) : error ? (
-        <div data-mbaas-oid="k4ifgdz" role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
+        <div data-mbaas-oid="k4ifgdz" role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
           <p data-mbaas-oid="im2d4zk" className="text-xs font-medium text-rose-300">{error}</p>
           <Button data-mbaas-oid="o4iaj7d" type="button" variant="outline" tone="neutral" size="sm" className="mt-3" onClick={() => void refetch()}>
             다시 시도

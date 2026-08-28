@@ -18,7 +18,7 @@ interface WorkLogFormProps {
 }
 
 const inputClass =
-  'w-full rounded-control border border-slate-200 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
+  'w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
 
 const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
 
@@ -149,12 +149,12 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
       </div>
 
       {copy.showVerified && (
-        <label data-mbaas-oid="wlgfrmi" className="flex min-h-[44px] items-start gap-2 text-sm text-slate-600">
+        <label data-mbaas-oid="wlgfrmi" className="flex min-h-[44px] items-start gap-2 text-sm text-slate-400">
           <input
  data-mbaas-oid="wlgfrmj" type="checkbox"
             checked={verified}
             onChange={(e) => setVerified(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            className="mt-0.5 h-4 w-4 rounded border-white/15 text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
           />
           <span data-mbaas-oid="wlgfrmk">{copy.verifiedLabel}</span>
         </label>

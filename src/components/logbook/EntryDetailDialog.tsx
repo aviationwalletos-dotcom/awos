@@ -235,7 +235,7 @@ export function EntryDetailDialog({
       aria-labelledby="logbook-detail-title"
       onClose={handleNativeClose}
       onCancel={handleNativeClose}
-      className="w-full max-w-lg rounded-card border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-ink/50"
+      className="w-full max-w-lg rounded-card border border-white/10 bg-panel p-0 shadow-2xl backdrop:bg-ink/50"
     >
       {entry && (
         <div data-mbaas-oid="lgbdlg2" className="p-cardpad">
@@ -247,7 +247,7 @@ export function EntryDetailDialog({
               data-mbaas-oid="lgbdlg5" type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="닫기"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-slate-400 hover:bg-slate-100 hover:text-ink
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-slate-400 hover:bg-white/[0.08] hover:text-ink
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -257,7 +257,7 @@ export function EntryDetailDialog({
           {mode === 'edit' ? (
             <div data-mbaas-oid="lgbdlg6" className="mt-5">
               {entry.instructorSignature && (
-                <p data-mbaas-oid="r3okjt6" className="mb-4 rounded-control border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-700">
+                <p data-mbaas-oid="r3okjt6" className="mb-4 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-xs font-medium text-amber-300">
                   이 기록은 교관 서명이 완료된 상태입니다. 내용을 수정하고 저장하면 기존 서명이 취소됩니다.
                 </p>
               )}
@@ -275,13 +275,13 @@ export function EntryDetailDialog({
           ) : (
             <div data-mbaas-oid="lgbdlg8" className="mt-5 space-y-4">
               {(entry.origin === 'legacy_excel' || entry.origin === 'flight_experience_certificate') && entry.legacySourceNote && (
-                <div data-mbaas-oid="5qdk0ac" className="rounded-control border border-slate-200 bg-surface p-4">
-                  <p data-mbaas-oid="7daab0v" className="text-xs text-slate-500">출처: {entry.legacySourceNote}</p>
+                <div data-mbaas-oid="5qdk0ac" className="rounded-control border border-white/10 bg-surface p-4">
+                  <p data-mbaas-oid="7daab0v" className="text-xs text-slate-400">출처: {entry.legacySourceNote}</p>
                 </div>
               )}
 
               {entry.origin === 'flight_experience_certificate' && (
-                <div data-mbaas-oid="qlzi0bi" className="rounded-control border border-slate-200 bg-surface p-4">
+                <div data-mbaas-oid="qlzi0bi" className="rounded-control border border-white/10 bg-surface p-4">
                   <div data-mbaas-oid="stp53e3" className="flex flex-wrap items-center justify-between gap-2">
                     <h4 data-mbaas-oid="pfgkgua" className="flex items-center gap-1.5 text-sm font-bold text-ink">
                       <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
@@ -309,7 +309,7 @@ export function EntryDetailDialog({
                     <img
                       data-mbaas-oid="gg64mzu" src={entry.certificateImageDataUrl}
                       alt="첨부된 비행경력증명서 사진"
-                      className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-slate-200 object-contain"
+                      className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
                     />
                   )}
 
@@ -319,12 +319,12 @@ export function EntryDetailDialog({
                     </p>
                   ) : entry.certificateApprovalStatus === 'rejected' ? (
                     <div data-mbaas-oid="ncj7z02" className="mt-3 space-y-2">
-                      <p data-mbaas-oid="73s406n" className="text-xs font-medium text-rose-700">
+                      <p data-mbaas-oid="73s406n" className="text-xs font-medium text-rose-300">
                         기관에서 이 인증 요청을 반려했습니다. 공식 총 비행시간 합계에서 제외되고 "반려된
                         비행경력증명서"로 별도 표시됩니다.
                       </p>
                       {certificateDecision.comment && (
-                        <p data-mbaas-oid="557m71t" className="rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                        <p data-mbaas-oid="557m71t" className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
                           반려 처리: {certificateDecision.comment.author_name} ·{' '}
                           {formatSignedAt(parseDecidedAtFromComment(certificateDecision.comment))}
                         </p>
@@ -332,9 +332,9 @@ export function EntryDetailDialog({
                     </div>
                   ) : certificateRequestPostId ? (
                     <div data-mbaas-oid="o4ksb06" className="mt-3 space-y-3">
-                      <div data-mbaas-oid="0vfvlcs" role="status" className="flex items-start gap-2 rounded-control border border-amber-300 bg-amber-50 px-4 py-3">
+                      <div data-mbaas-oid="0vfvlcs" role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
-                        <p data-mbaas-oid="u3tx8dx" className="text-sm font-medium text-amber-700">
+                        <p data-mbaas-oid="u3tx8dx" className="text-sm font-medium text-amber-300">
                           기관에 인증 요청을 제출했습니다. 담당자가 승인/반려하면 이 화면에 자동으로 반영됩니다.
                         </p>
                       </div>
@@ -355,7 +355,7 @@ export function EntryDetailDialog({
                     </div>
                   ) : (
                     <div data-mbaas-oid="8rnm1fo" className="mt-3 space-y-2">
-                      <p data-mbaas-oid="njhfi7d" className="text-xs text-slate-500">
+                      <p data-mbaas-oid="njhfi7d" className="text-xs text-slate-400">
                         이 기록은 기관에 인증 요청이 제출되지 않았습니다(제출 당시 네트워크 오류 등). 아직 인증
                         대기중이라 공식 총 비행시간 합계에서 제외되고 "미인증 비행경력증명서(참고용)"에만
                         표시됩니다. 아래에서 본인이 직접 확인 완료로 표시할 수 있습니다(실제 기관 승인이 아닙니다).
@@ -370,8 +370,8 @@ export function EntryDetailDialog({
               )}
 
               {signatureInvalidatedNotice && (
-                <div data-mbaas-oid="sro094q" role="status" className="rounded-control border border-amber-300 bg-amber-50 px-4 py-3">
-                  <p data-mbaas-oid="cea59rs" className="text-xs font-medium text-amber-700">
+                <div data-mbaas-oid="sro094q" role="status" className="rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
+                  <p data-mbaas-oid="cea59rs" className="text-xs font-medium text-amber-300">
                     기록 수정으로 기존 교관 서명이 취소되었습니다. 필요하다면 아래에서 다시 서명을 요청해 주세요.
                   </p>
                 </div>
@@ -449,11 +449,11 @@ export function EntryDetailDialog({
               {entry.notes && (
                 <div data-mbaas-oid="3a7gyyh">
                   <dt data-mbaas-oid="9zq5pdy" className="text-xs font-medium uppercase tracking-wide text-slate-400">메모</dt>
-                  <dd data-mbaas-oid="y6lsgmt" className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{entry.notes}</dd>
+                  <dd data-mbaas-oid="y6lsgmt" className="mt-1 whitespace-pre-wrap text-sm text-slate-400">{entry.notes}</dd>
                 </div>
               )}
 
-              <div data-mbaas-oid="c9z828i" className="rounded-control border border-slate-200 bg-surface p-4">
+              <div data-mbaas-oid="c9z828i" className="rounded-control border border-white/10 bg-surface p-4">
                 <h4 data-mbaas-oid="lpmhmvm" className="flex items-center gap-1.5 text-sm font-bold text-ink">
                   <ShieldCheck className="h-4 w-4 text-sky" aria-hidden="true" />
                   조종사 본인 서명(자기 인증)
@@ -464,21 +464,21 @@ export function EntryDetailDialog({
                       <img
                         data-mbaas-oid="yhkzgbo" src={entry.pilotCertification.signatureDataUrl}
                         alt="조종사 본인 서명 이미지"
-                        className="h-20 w-full max-w-xs rounded-control border border-slate-200 bg-white object-contain"
+                        className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
                       />
                     )}
-                    <p data-mbaas-oid="j3utrf5" className="font-mono-data text-xs tabular-nums text-slate-500">
+                    <p data-mbaas-oid="j3utrf5" className="font-mono-data text-xs tabular-nums text-slate-400">
                       확정 일시: {formatCertifiedAt(entry.pilotCertification.certifiedAt)}
                     </p>
                   </div>
                 ) : (
-                  <p data-mbaas-oid="zqu0984" className="mt-2 text-xs text-slate-500">
+                  <p data-mbaas-oid="zqu0984" className="mt-2 text-xs text-slate-400">
                     아직 본인 서명으로 확정되지 않았습니다. "수정하기"에서 서명 후 "기록 확정(서명)" 버튼을 눌러 확정할 수 있습니다.
                   </p>
                 )}
               </div>
 
-              <div data-mbaas-oid="i4yxlcq" className="rounded-control border border-slate-200 bg-surface p-4">
+              <div data-mbaas-oid="i4yxlcq" className="rounded-control border border-white/10 bg-surface p-4">
                 <h4 data-mbaas-oid="hwsa94l" className="flex items-center gap-1.5 text-sm font-bold text-ink">
                   <ShieldCheck className="h-4 w-4 text-go" aria-hidden="true" />
                   교관 서명
@@ -486,8 +486,8 @@ export function EntryDetailDialog({
 
                 {entry.instructorSignature ? (
                   confirmingCancelSignature ? (
-                    <div data-mbaas-oid="wab7pca" role="alert" className="mt-3 rounded-control border border-rose-300 bg-rose-50 p-4">
-                      <p data-mbaas-oid="rp0bmd4" className="text-sm font-medium text-rose-700">교관 서명을 취소하시겠습니까?</p>
+                    <div data-mbaas-oid="wab7pca" role="alert" className="mt-3 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+                      <p data-mbaas-oid="rp0bmd4" className="text-sm font-medium text-rose-300">교관 서명을 취소하시겠습니까?</p>
                       <div data-mbaas-oid="xi03z5c" className="mt-3 flex gap-2">
                         <Button data-mbaas-oid="13h4ra3" type="button" tone="danger" size="sm" onClick={handleCancelSignature}>
                           서명 취소 확인
@@ -509,16 +509,16 @@ export function EntryDetailDialog({
                         <img
                           data-mbaas-oid="9pv77r0" src={entry.instructorSignature.signatureDataUrl}
                           alt={`${entry.instructorSignature.instructorName} 교관 서명 이미지`}
-                          className="h-20 w-full max-w-xs rounded-control border border-slate-200 bg-white object-contain"
+                          className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
                         />
                       )}
                       <p data-mbaas-oid="v29d9fa" className="text-sm text-ink">
                         <span data-mbaas-oid="6yyruta" className="font-semibold">{entry.instructorSignature.instructorName}</span> 교관
                       </p>
-                      <p data-mbaas-oid="t7begqs" className="font-mono-data text-xs tabular-nums text-slate-500">
+                      <p data-mbaas-oid="t7begqs" className="font-mono-data text-xs tabular-nums text-slate-400">
                         서명 계정: {entry.instructorSignature.instructorUserId || '확인 불가(이전 방식으로 서명됨)'}
                       </p>
-                      <p data-mbaas-oid="58psn2i" className="font-mono-data text-xs tabular-nums text-slate-500">
+                      <p data-mbaas-oid="58psn2i" className="font-mono-data text-xs tabular-nums text-slate-400">
                         서명 일시: {formatSignedAt(entry.instructorSignature.signedAt)}
                       </p>
                       <Button
@@ -534,9 +534,9 @@ export function EntryDetailDialog({
                   )
                 ) : entry.signatureRequestPostId ? (
                   <div data-mbaas-oid="nz5vq3e" className="mt-3 space-y-3">
-                    <div data-mbaas-oid="pjqy8du" role="status" className="flex items-start gap-2 rounded-control border border-amber-300 bg-amber-50 px-4 py-3">
+                    <div data-mbaas-oid="pjqy8du" role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                       <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
-                      <p data-mbaas-oid="4xo4o0x" className="text-sm font-medium text-amber-700">
+                      <p data-mbaas-oid="4xo4o0x" className="text-sm font-medium text-amber-300">
                         교관에게 서명 요청을 보냈습니다. 승인된 교관이 서명 요청함에서 확인 후 서명을 완료하면 이 화면에 자동으로 표시됩니다.
                       </p>
                     </div>
@@ -560,22 +560,22 @@ export function EntryDetailDialog({
                   </div>
                 ) : (
                   <div data-mbaas-oid="qbero0z" className="mt-3 space-y-3">
-                    <p data-mbaas-oid="phbdg1m" className="text-xs text-slate-500">
+                    <p data-mbaas-oid="phbdg1m" className="text-xs text-slate-400">
                       교관에게 서명을 요청하면, 승인된 교관이 서명 요청함에서 확인 후 서명을 완료할 수 있습니다. 교관 로그인을 기다릴 필요가 없습니다.
                     </p>
 
                     {isLoadingInstructors ? (
-                      <p data-mbaas-oid="nq52vb2" className="text-xs text-slate-500">승인된 교관 목록을 불러오는 중입니다...</p>
+                      <p data-mbaas-oid="nq52vb2" className="text-xs text-slate-400">승인된 교관 목록을 불러오는 중입니다...</p>
                     ) : instructorsError ? (
                       <p data-mbaas-oid="whlfhgk" role="alert" className="text-xs font-medium text-rose-600">{instructorsError}</p>
                     ) : approvedInstructors.length === 0 ? (
-                      <p data-mbaas-oid="b04ttjx" className="rounded-control border border-slate-200 bg-surface px-3 py-2 text-xs text-slate-500">
+                      <p data-mbaas-oid="b04ttjx" className="rounded-control border border-white/10 bg-surface px-3 py-2 text-xs text-slate-400">
                         현재 승인된 교관이 없어 서명 요청을 보낼 수 없습니다. 교관이 승인되면 다시 시도해주세요.
                       </p>
                     ) : (
                       <div data-mbaas-oid="wdbtg5s" className="space-y-2">
                         <div data-mbaas-oid="kbnc8ua" className="flex items-center justify-between gap-2">
-                          <label data-mbaas-oid="pxmhi6g" htmlFor="target-instructor" className="text-xs font-semibold text-slate-600">
+                          <label data-mbaas-oid="pxmhi6g" htmlFor="target-instructor" className="text-xs font-semibold text-slate-400">
                             서명 요청 대상 교관
                           </label>
                           {hasMyAffiliation && (
@@ -593,9 +593,9 @@ export function EntryDetailDialog({
                           value={selectedInstructorUserId}
                           onChange={(e) => setSelectedInstructorUserId(e.target.value)}
                           disabled={visibleInstructors.length === 0}
-                          className="w-full rounded-control border border-slate-200 bg-white px-3 py-2 text-sm text-ink
+                          className="w-full rounded-control border border-white/10 bg-panel px-3 py-2 text-sm text-ink
                             focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                            disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                            disabled:cursor-not-allowed disabled:bg-white/[0.07] disabled:text-slate-400"
                         >
                           {visibleInstructors.length === 0 && (
                             <option data-mbaas-oid="wca7tg3" value="" disabled>
@@ -609,7 +609,7 @@ export function EntryDetailDialog({
                           ))}
                         </select>
                         {visibleInstructors.length === 0 && (
-                          <p data-mbaas-oid="rwn5en2" className="text-xs text-slate-500">
+                          <p data-mbaas-oid="rwn5en2" className="text-xs text-slate-400">
                             선택한 소속에 해당하는 승인된 교관이 없습니다. "전체 보기"를 눌러 다른 소속 교관도 확인해보세요.
                           </p>
                         )}
@@ -638,8 +638,8 @@ export function EntryDetailDialog({
               </div>
 
               {confirmingDelete ? (
-                <div data-mbaas-oid="5f14dk1" role="alert" className="rounded-control border border-rose-300 bg-rose-50 p-4">
-                  <p data-mbaas-oid="1285gdt" className="text-sm font-medium text-rose-700">이 비행 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+                <div data-mbaas-oid="5f14dk1" role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+                  <p data-mbaas-oid="1285gdt" className="text-sm font-medium text-rose-300">이 비행 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
                   <div data-mbaas-oid="yq809rj" className="mt-3 flex gap-2">
                     <Button
                       data-mbaas-oid="2liwin7" type="button" tone="danger" size="sm"
@@ -658,7 +658,7 @@ export function EntryDetailDialog({
               ) : (
                 <div data-mbaas-oid="wvzhrk1" className="pt-2">
                   {entry.instructorSignature && (
-                    <p data-mbaas-oid="o85qokh" className="mb-2 text-xs text-slate-500">
+                    <p data-mbaas-oid="o85qokh" className="mb-2 text-xs text-slate-400">
                       서명된 기록을 수정하면 서명이 취소됩니다.
                     </p>
                   )}

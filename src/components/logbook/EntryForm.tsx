@@ -29,7 +29,7 @@ interface EntryFormProps {
 // 아래 스타일 상수/헬퍼는 FlightExperienceCertificateForm.tsx(비행경력증명서로 가져오기)에서도
 // 동일한 필드 스타일을 재사용하기 위해 export합니다.
 export const inputClass =
-  'w-full rounded-control border border-slate-200 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
+  'w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
 
 export const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
 
@@ -228,7 +228,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="kc5iv2c" className="border-slate-100" />
+      <hr data-mbaas-oid="kc5iv2c" className="border-white/[0.08]" />
 
       {/* 2. 출발/도착지 */}
       <fieldset data-mbaas-oid="ud2btp7">
@@ -293,7 +293,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="ky79b2k" className="border-slate-100" />
+      <hr data-mbaas-oid="ky79b2k" className="border-white/[0.08]" />
 
       {/* 3. 항공기 범주/등급별 시간 */}
       <fieldset data-mbaas-oid="6j33a7s">
@@ -373,7 +373,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="7hct34q" className="border-slate-100" />
+      <hr data-mbaas-oid="7hct34q" className="border-white/[0.08]" />
 
       {/* 4. 비행 자격 시간 종류 */}
       <fieldset data-mbaas-oid="lh27m71">
@@ -438,7 +438,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="aa5e0u7" className="border-slate-100" />
+      <hr data-mbaas-oid="aa5e0u7" className="border-white/[0.08]" />
 
       {/* 5. 지상훈련장비 */}
       <fieldset data-mbaas-oid="ktbegxv">
@@ -459,7 +459,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="19wzhue" className="border-slate-100" />
+      <hr data-mbaas-oid="19wzhue" className="border-white/[0.08]" />
 
       {/* 6. 비행 조건별 시간 */}
       <fieldset data-mbaas-oid="qq8v6t4">
@@ -538,7 +538,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="1d2ng39" className="border-slate-100" />
+      <hr data-mbaas-oid="1d2ng39" className="border-white/[0.08]" />
 
       {/* 7. 접근/이착륙 횟수 */}
       <fieldset data-mbaas-oid="2teo0y3">
@@ -592,7 +592,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="480rj37" className="border-slate-100" />
+      <hr data-mbaas-oid="480rj37" className="border-white/[0.08]" />
 
       {/* 8. 총 비행시간 및 비고 */}
       <fieldset data-mbaas-oid="ge236y0">
@@ -636,7 +636,7 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="obc1elg" className="border-slate-100" />
+      <hr data-mbaas-oid="obc1elg" className="border-white/[0.08]" />
 
       {/* 9. 조종사 서명(자기 인증) */}
       <fieldset data-mbaas-oid="rcl7tn3">
@@ -665,7 +665,7 @@ export function EntryForm({
 
       <div
         data-mbaas-oid="rdre8ib"
-        className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-8 flex flex-wrap gap-3 border-t border-slate-200 bg-white/95 px-cardpad py-4 backdrop-blur-sm"
+        className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-8 flex flex-wrap gap-3 border-t border-white/10 bg-navy/95 px-cardpad py-4 backdrop-blur-sm"
       >
         <Button data-mbaas-oid="ucr1gf5" type="submit" name="formAction" value="save" size="md">
           {mode === 'create' ? '비행 기록 추가하기' : '수정 내용 저장하기'}

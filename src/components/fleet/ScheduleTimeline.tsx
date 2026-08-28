@@ -4,8 +4,8 @@ import { AIRCRAFT, SCHEDULE_DAY_LABELS, type ScheduleKind, getScheduleFor } from
 
 const KIND_STYLES: Record<ScheduleKind, string> = {
   운항: 'bg-sky/25 border-sky/50 text-sky',
-  정비: 'bg-amber-500/25 border-amber-500/50 text-amber-300',
-  대기: 'bg-slate-400/20 border-slate-400/40 text-slate-300',
+  정비: 'bg-amber-400/100/25 border-amber-500/50 text-amber-300',
+  대기: 'bg-slate-400/20 border-white/20/40 text-slate-300',
 }
 
 const TOTAL_HOURS = SCHEDULE_DAY_LABELS.length * 24
@@ -37,7 +37,7 @@ export function ScheduleTimeline({ focusTail = null }: ScheduleTimelineProps) {
             <li data-mbaas-oid="rp70rzb" key={a.tailNumber} className="flex items-center gap-0">
               <div data-mbaas-oid="xnd1k3d" className="w-28 shrink-0 pr-2">
                 <p data-mbaas-oid="ymk5zx8" className="font-mono-data text-xs font-bold tabular-nums text-white">{a.tailNumber}</p>
-                <p data-mbaas-oid="csg113n" className="text-[10px] text-slate-500">{a.model}</p>
+                <p data-mbaas-oid="csg113n" className="text-[10px] text-slate-400">{a.model}</p>
               </div>
               <div data-mbaas-oid="c6r41lc" className="relative h-10 flex-1 rounded-control border border-white/10 bg-navy/40">
                 {SCHEDULE_DAY_LABELS.map((_, i) =>
@@ -75,7 +75,7 @@ export function ScheduleTimeline({ focusTail = null }: ScheduleTimelineProps) {
           <span data-mbaas-oid="u4ic367" className="h-2 w-2 rounded-[3px] bg-sky/60" /> 운항
         </span>
         <span data-mbaas-oid="pj083je" className="inline-flex items-center gap-1.5">
-          <span data-mbaas-oid="yoldktw" className="h-2 w-2 rounded-[3px] bg-amber-500/60" /> 정비
+          <span data-mbaas-oid="yoldktw" className="h-2 w-2 rounded-[3px] bg-amber-400/100/60" /> 정비
         </span>
         <span data-mbaas-oid="mowg45g" className="inline-flex items-center gap-1.5">
           <span data-mbaas-oid="miqpmgb" className="h-2 w-2 rounded-[3px] bg-slate-400/60" /> 대기

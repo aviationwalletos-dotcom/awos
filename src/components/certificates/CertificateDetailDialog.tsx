@@ -20,7 +20,7 @@ const STATUS_TEXT: Record<CertificateStatus, string> = {
   valid: 'text-go',
   warning: 'text-amber-600',
   urgent: 'text-rose-600',
-  expired: 'text-slate-500',
+  expired: 'text-slate-400',
   no_expiry: 'text-sky-600',
 }
 
@@ -60,7 +60,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
       aria-labelledby="certificate-detail-title"
       onClose={handleNativeClose}
       onCancel={handleNativeClose}
-      className="w-full max-w-lg rounded-card border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-ink/50"
+      className="w-full max-w-lg rounded-card border border-white/10 bg-panel p-0 shadow-2xl backdrop:bg-ink/50"
     >
       {certificate && status && (
         <div data-mbaas-oid="t4tcd72" className="p-cardpad">
@@ -72,7 +72,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
               data-mbaas-oid="sxm19et" type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="닫기"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-slate-400 hover:bg-slate-100 hover:text-ink
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-slate-400 hover:bg-white/[0.08] hover:text-ink
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -127,13 +127,13 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
               {certificate.notes && (
                 <div data-mbaas-oid="xaa4esm">
                   <dt data-mbaas-oid="u5h16ho" className="text-xs font-medium uppercase tracking-wide text-slate-400">메모</dt>
-                  <dd data-mbaas-oid="cwrxhki" className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{certificate.notes}</dd>
+                  <dd data-mbaas-oid="cwrxhki" className="mt-1 whitespace-pre-wrap text-sm text-slate-400">{certificate.notes}</dd>
                 </div>
               )}
 
               {confirmingDelete ? (
-                <div data-mbaas-oid="eowofus" role="alert" className="rounded-control border border-rose-300 bg-rose-50 p-4">
-                  <p data-mbaas-oid="5816g1n" className="text-sm font-medium text-rose-700">이 자격증을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+                <div data-mbaas-oid="eowofus" role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+                  <p data-mbaas-oid="5816g1n" className="text-sm font-medium text-rose-300">이 자격증을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
                   <div data-mbaas-oid="013qhcq" className="mt-3 flex gap-2">
                     <Button
                       data-mbaas-oid="icjjlcy" type="button" tone="danger" size="sm"

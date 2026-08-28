@@ -29,7 +29,7 @@ export function Roles() {
     <section data-mbaas-oid="4xikbic" id="roles" className="bg-surface py-[clamp(80px,10vw,160px)]">
       <div data-mbaas-oid="i3xwj5r" className="mx-auto max-w-7xl px-6">
         <Reveal>
-          <p data-mbaas-oid="y7aqpud" className="text-sm font-semibold uppercase tracking-wide text-[#0369a1]">
+          <p data-mbaas-oid="y7aqpud" className="text-sm font-semibold uppercase tracking-wide text-[#00D4FF]">
             역할별 기능 쇼케이스
           </p>
           <h2
@@ -55,7 +55,7 @@ export function Roles() {
                   onClick={() => setActive(r.key)}
                   className={`inline-flex min-h-[44px] items-center gap-2 rounded-control border px-4 py-2.5 text-sm font-semibold transition-colors
                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                    ${isActive ? `${r.bgClass} ${r.colorClass} ${r.borderClass}` : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+                    ${isActive ? `${r.bgClass} ${r.colorClass} ${r.borderClass}` : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
                 >
                   <RIcon className="h-4 w-4" aria-hidden="true" />
                   {r.name}
@@ -68,7 +68,7 @@ export function Roles() {
         <Reveal className="mt-6">
           <div
             data-mbaas-oid="v4eu73u" role="tabpanel"
-            className={`rounded-card border-2 bg-white p-cardpad transition-colors duration-300 ${ACTIVE_BORDER[active]}`}
+            className={`rounded-card border-2 bg-panel p-cardpad transition-colors duration-300 ${ACTIVE_BORDER[active]}`}
           >
             <div data-mbaas-oid="wxi6zl0" className="flex flex-col gap-6 sm:flex-row sm:items-start">
               <span data-mbaas-oid="uqjze19" className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-card ${role.bgClass} ${role.colorClass}`}>
@@ -76,17 +76,17 @@ export function Roles() {
               </span>
               <div data-mbaas-oid="w6nthmm" className="flex-1">
                 <h3 data-mbaas-oid="d5spkbe" className={`text-xl font-bold ${role.colorClass}`}>{role.name}</h3>
-                <p data-mbaas-oid="d0ng4b7" className="mt-2 text-sm text-slate-600">{role.summary}</p>
+                <p data-mbaas-oid="d0ng4b7" className="mt-2 text-sm text-slate-400">{role.summary}</p>
 
-                <ul data-mbaas-oid="os43tfx" className="mt-6 divide-y divide-slate-100">
+                <ul data-mbaas-oid="os43tfx" className="mt-6 divide-y divide-white/10">
                   {role.credentials.map((c) => (
                     <li data-mbaas-oid="4rzakh7" key={c.label} className="flex flex-wrap items-center justify-between gap-3 py-3">
                       <span data-mbaas-oid="vby5m27" className="text-sm font-medium text-ink">{c.label}</span>
                       <div data-mbaas-oid="w1cb5oh" className="flex items-center gap-3">
-                        <span data-mbaas-oid="mnd1ebo" className="font-mono-data tabular-nums text-sm text-slate-500">{c.expiry}</span>
+                        <span data-mbaas-oid="mnd1ebo" className="font-mono-data tabular-nums text-sm text-slate-400">{c.expiry}</span>
                         <span
                           data-mbaas-oid="epe5mfc" className={`rounded-control px-2.5 py-1 text-xs font-bold ${
-                            c.status === 'GO' ? 'bg-go/10 text-go' : 'bg-amber-100 text-amber-700'
+                            c.status === 'GO' ? 'bg-go/10 text-go' : 'bg-amber-400/15 text-amber-300'
                           }`}
                         >
                           {c.status}

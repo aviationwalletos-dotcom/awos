@@ -6,10 +6,10 @@ import type { Certificate, CertificateStatus } from '../../types/certificate'
 
 const STATUS_BADGE: Record<CertificateStatus, string> = {
   valid: 'bg-go/10 text-go',
-  warning: 'bg-amber-100 text-amber-700',
-  urgent: 'bg-rose-100 text-rose-700',
-  expired: 'bg-slate-200 text-slate-600',
-  no_expiry: 'bg-sky-100 text-sky-700',
+  warning: 'bg-amber-400/15 text-amber-300',
+  urgent: 'bg-rose-500/100/15 text-rose-300',
+  expired: 'bg-white/10 text-slate-400',
+  no_expiry: 'bg-sky/15 text-sky-700',
 }
 
 const STATUS_ICON: Record<CertificateStatus, React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
@@ -31,7 +31,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
   const hoverBorderClass = accentHoverBorderClass ?? 'hover:border-sky'
   if (certificates.length === 0) {
     return (
-      <div data-mbaas-oid="9j885qt" className="rounded-card border border-dashed border-slate-300 bg-white p-cardpad text-center text-sm text-slate-500">
+      <div data-mbaas-oid="9j885qt" className="rounded-card border border-dashed border-white/15 bg-panel p-cardpad text-center text-sm text-slate-400">
         등록된 자격증이 없습니다. 위 등록 폼으로 첫 자격증을 추가해 보세요.
       </div>
     )
@@ -48,7 +48,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
             <button
               data-mbaas-oid="f519jek" type="button"
               onClick={() => onSelect(cert)}
-              className={`w-full rounded-card border border-slate-200 bg-white p-5 text-left transition-all duration-200
+              className={`w-full rounded-card border border-white/10 bg-panel p-5 text-left transition-all duration-200
                 ${hoverBorderClass} hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky`}
             >
               <div data-mbaas-oid="wm0wt71" className="flex items-start justify-between gap-2">
@@ -62,10 +62,10 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
                 </span>
               </div>
 
-              <p data-mbaas-oid="swve2gh" className="mt-3 text-sm text-slate-600">{cert.issuer}</p>
+              <p data-mbaas-oid="swve2gh" className="mt-3 text-sm text-slate-400">{cert.issuer}</p>
 
               <div data-mbaas-oid="o4n89gc" className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span data-mbaas-oid="kbrjwb9" className="font-mono-data tabular-nums text-slate-500">
+                <span data-mbaas-oid="kbrjwb9" className="font-mono-data tabular-nums text-slate-400">
                   {cert.expiryDate ? `만료일 ${cert.expiryDate}` : `발급일 ${cert.issuedDate}`}
                 </span>
                 <span data-mbaas-oid="wu1emyu" className="font-mono-data tabular-nums text-xs font-semibold text-ink">

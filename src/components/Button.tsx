@@ -19,21 +19,21 @@ const sizeClasses: Record<Size, string> = {
 }
 
 const toneSolid: Record<Tone, string> = {
-  brand: 'bg-sky text-navy hover:bg-sky/90 shadow-[0_0_24px_rgba(56,189,248,0.35)]',
-  neutral: 'bg-ink text-white hover:bg-ink/90',
+  brand: 'bg-sky text-navy hover:bg-sky/90 shadow-[0_0_24px_rgba(0,212,255,0.35)]',
+  neutral: 'bg-ink text-navy-dark hover:bg-white',
   danger: 'bg-rose-600 text-white hover:bg-rose-700',
 }
 
 const toneOutline: Record<Tone, string> = {
   brand: 'border-2 border-sky text-sky hover:bg-sky/10',
-  neutral: 'border-2 border-slate-300 text-ink hover:bg-slate-50',
-  danger: 'border-2 border-rose-500 text-rose-600 hover:bg-rose-50',
+  neutral: 'border-2 border-white/15 text-ink hover:bg-white/[0.06]',
+  danger: 'border-2 border-rose-500/70 text-rose-300 hover:bg-rose-500/10',
 }
 
 const toneGhost: Record<Tone, string> = {
   brand: 'text-sky hover:bg-sky/10',
-  neutral: 'text-ink hover:bg-slate-100',
-  danger: 'text-rose-600 hover:bg-rose-50',
+  neutral: 'text-ink hover:bg-white/[0.08]',
+  danger: 'text-rose-300 hover:bg-rose-500/10',
 }
 
 export function Button({

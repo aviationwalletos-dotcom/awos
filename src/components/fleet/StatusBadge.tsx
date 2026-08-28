@@ -4,13 +4,13 @@ import type { FleetStatus } from '../../data/fleet'
 
 const STATUS_STYLES: Record<FleetStatus, string> = {
   운항중: 'bg-go/15 text-go',
-  정비중: 'bg-amber-500/15 text-amber-400',
+  정비중: 'bg-amber-400/100/15 text-amber-400',
   대기: 'bg-slate-400/15 text-slate-300',
 }
 
 const DOT_STYLES: Record<FleetStatus, string> = {
   운항중: 'bg-go',
-  정비중: 'bg-amber-500',
+  정비중: 'bg-amber-400/100',
   대기: 'bg-slate-400',
 }
 

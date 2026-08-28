@@ -584,9 +584,9 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
 
   return (
     <div data-mbaas-oid="4oqkjcj">
-      <div data-mbaas-oid="a5nw1ea" className="mb-5 flex items-start gap-3 rounded-control border border-slate-200 bg-surface p-4">
+      <div data-mbaas-oid="a5nw1ea" className="mb-5 flex items-start gap-3 rounded-control border border-white/10 bg-surface p-4">
         <FileSpreadsheet className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-        <p data-mbaas-oid="n463qev" className="text-xs text-slate-500">
+        <p data-mbaas-oid="n463qev" className="text-xs text-slate-400">
           개인 엑셀 로그북 파일(.xlsx/.xls/.csv)을 업로드하면 첫 번째 시트를 자동으로 읽어 컬럼을 최대한 자동 매핑합니다.
           매핑 결과를 검토/수정한 뒤 미리보기를 확인하고 가져오기를 눌러 확정하세요.
         </p>
@@ -601,16 +601,16 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
         accept=".xlsx,.xls,.csv"
         onChange={handleFileChange}
         className="block w-full text-sm text-ink file:mr-3 file:rounded-control file:border-0 file:bg-sky/10 file:px-3 file:py-1.5
-          file:text-sm file:font-semibold file:text-[#0369a1]
+          file:text-sm file:font-semibold file:text-[#00D4FF]
           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
       />
 
-      {isParsing && <p data-mbaas-oid="19zapkv" className="mt-3 text-sm text-slate-500">파일을 읽는 중입니다...</p>}
+      {isParsing && <p data-mbaas-oid="19zapkv" className="mt-3 text-sm text-slate-400">파일을 읽는 중입니다...</p>}
 
       {parseError && (
-        <div data-mbaas-oid="8ctb06p" role="alert" className="mt-4 flex items-start gap-2 rounded-control border border-rose-300 bg-rose-50 px-4 py-3">
+        <div data-mbaas-oid="8ctb06p" role="alert" className="mt-4 flex items-start gap-2 rounded-control border border-rose-400/40 bg-rose-500/10 px-4 py-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
-          <p data-mbaas-oid="5h040v4" className="text-sm font-medium text-rose-700">{parseError}</p>
+          <p data-mbaas-oid="5h040v4" className="text-sm font-medium text-rose-300">{parseError}</p>
         </div>
       )}
 
@@ -625,22 +625,22 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
 
       {headerRow.length > 0 && (
         <>
-          <div data-mbaas-oid="5ss6nup" className="mt-6 overflow-x-auto rounded-control border border-slate-200">
+          <div data-mbaas-oid="5ss6nup" className="mt-6 overflow-x-auto rounded-control border border-white/10">
             <table data-mbaas-oid="bxlvhk6" className="w-full min-w-[520px] text-left text-sm">
               <caption data-mbaas-oid="catdehl" className="sr-only">엑셀 컬럼과 비행 기록 필드 매핑</caption>
               <thead data-mbaas-oid="w9masda" className="bg-surface">
                 <tr data-mbaas-oid="8gqfkoz">
-                  <th data-mbaas-oid="lqb53rx" scope="col" className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th data-mbaas-oid="lqb53rx" scope="col" className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                     엑셀 컬럼
                   </th>
-                  <th data-mbaas-oid="n5uni0g" scope="col" className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th data-mbaas-oid="n5uni0g" scope="col" className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                     매핑할 필드
                   </th>
                 </tr>
               </thead>
               <tbody data-mbaas-oid="erm5kn7">
                 {headerRow.map((h, i) => (
-                  <tr data-mbaas-oid="mynhswv" key={i} className="border-t border-slate-100">
+                  <tr data-mbaas-oid="mynhswv" key={i} className="border-t border-white/[0.08]">
                     <td data-mbaas-oid="tncgpjx" className="px-4 py-2 font-mono-data text-sm text-ink">{h || `(${i + 1}열)`}</td>
                     <td data-mbaas-oid="w1d600f" className="px-4 py-2">
                       <select
@@ -648,9 +648,9 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
                         value={mapping[i] ?? 'ignore'}
                         disabled={hasImported}
                         onChange={(e) => setMapping((prev) => ({ ...prev, [i]: e.target.value as MappableField }))}
-                        className="w-full max-w-[220px] rounded-control border border-slate-200 bg-white px-3 py-1.5 text-sm text-ink
+                        className="w-full max-w-[220px] rounded-control border border-white/10 bg-panel px-3 py-1.5 text-sm text-ink
                           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                          disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                          disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-slate-400"
                       >
                         {FIELD_OPTIONS.map((opt) => (
                           <option data-mbaas-oid="vno6vey" key={opt.value} value={opt.value}>
@@ -700,33 +700,33 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
             </div>
 
             {statusFilter === 'invalid' && invalidCount > 0 && (
-              <p data-mbaas-oid="rsf1lt5" className="mt-3 text-xs text-slate-500">
+              <p data-mbaas-oid="rsf1lt5" className="mt-3 text-xs text-slate-400">
                 아래 형식 오류 행은 이 화면에서 자동으로 가져올 수 없습니다. 각 행의 오류 사유를 확인한 뒤,
                 "새 비행 기록 추가" 폼에서 직접 입력해 주세요.
               </p>
             )}
 
-            <div data-mbaas-oid="b7jv3jv" className="mt-2 max-h-96 overflow-auto rounded-control border border-slate-200">
+            <div data-mbaas-oid="b7jv3jv" className="mt-2 max-h-96 overflow-auto rounded-control border border-white/10">
               <table data-mbaas-oid="txsxe80" className="w-full min-w-[1080px] text-left text-xs">
                 <thead data-mbaas-oid="h1fzds3" className="sticky top-0 bg-surface">
                   <tr data-mbaas-oid="87urdqf">
-                    <th data-mbaas-oid="ovlrvch" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">상태</th>
-                    <th data-mbaas-oid="oumx0l8" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">날짜</th>
-                    <th data-mbaas-oid="qvecp09" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">출발</th>
-                    <th data-mbaas-oid="li2nxlh" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">도착</th>
-                    <th data-mbaas-oid="m6h06kt" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">기종</th>
-                    <th data-mbaas-oid="ha5tn65" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">등록번호</th>
-                    <th data-mbaas-oid="wz4zp8s" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">블록타임</th>
-                    <th data-mbaas-oid="bqeat7h" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">주간/야간 착륙</th>
-                    <th data-mbaas-oid="8ygp6l3" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">PIC</th>
-                    <th data-mbaas-oid="d15qs1n" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">SIC</th>
-                    <th data-mbaas-oid="y5noxcq" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">DUAL</th>
-                    <th data-mbaas-oid="tnussrx" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-500">비행교관</th>
+                    <th data-mbaas-oid="ovlrvch" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">상태</th>
+                    <th data-mbaas-oid="oumx0l8" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">날짜</th>
+                    <th data-mbaas-oid="qvecp09" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">출발</th>
+                    <th data-mbaas-oid="li2nxlh" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">도착</th>
+                    <th data-mbaas-oid="m6h06kt" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">기종</th>
+                    <th data-mbaas-oid="ha5tn65" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">등록번호</th>
+                    <th data-mbaas-oid="wz4zp8s" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">블록타임</th>
+                    <th data-mbaas-oid="bqeat7h" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">주간/야간 착륙</th>
+                    <th data-mbaas-oid="8ygp6l3" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">PIC</th>
+                    <th data-mbaas-oid="d15qs1n" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">SIC</th>
+                    <th data-mbaas-oid="y5noxcq" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">DUAL</th>
+                    <th data-mbaas-oid="tnussrx" scope="col" className="px-3 py-2 font-semibold uppercase tracking-wide text-slate-400">비행교관</th>
                   </tr>
                 </thead>
                 <tbody data-mbaas-oid="ke0ljyo">
                   {filteredRows.slice(0, visibleMaxRows).map((r) => (
-                    <tr data-mbaas-oid="tre2wvs" key={r.rowIndex} className={`border-t border-slate-100 ${r.valid ? '' : 'bg-rose-50/60'}`}>
+                    <tr data-mbaas-oid="tre2wvs" key={r.rowIndex} className={`border-t border-white/[0.08] ${r.valid ? '' : 'bg-rose-500/10/60'}`}>
                       <td data-mbaas-oid="7rz3jt1" className="px-3 py-2">
                         {r.valid ? (
                           <span data-mbaas-oid="2pl0rnu" className="rounded-control bg-go/10 px-2 py-0.5 font-semibold text-go">
@@ -734,7 +734,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
                           </span>
                         ) : (
                           <div data-mbaas-oid="gzi4kfs">
-                            <span data-mbaas-oid="ws0v61h" className="rounded-control bg-rose-100 px-2 py-0.5 font-semibold text-rose-600">
+                            <span data-mbaas-oid="ws0v61h" className="rounded-control bg-rose-500/100/15 px-2 py-0.5 font-semibold text-rose-600">
                               오류 - 수정 필요
                             </span>
                             <p data-mbaas-oid="luk02ha" className="mt-1 text-[11px] leading-snug text-rose-500">

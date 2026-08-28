@@ -104,13 +104,13 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
             >
               <td data-mbaas-oid="jdk1pqy" className="py-3 pl-6 pr-4">
                 <p data-mbaas-oid="vct9vx0" className="font-medium text-white">{p.name}</p>
-                <p data-mbaas-oid="kr9n3b5" className="font-mono-data text-xs text-slate-500">{p.userId || '이메일 미확인'}</p>
+                <p data-mbaas-oid="kr9n3b5" className="font-mono-data text-xs text-slate-400">{p.userId || '이메일 미확인'}</p>
               </td>
               <td data-mbaas-oid="r59k35h" className="hidden py-3 pr-4 text-slate-300 sm:table-cell">{p.roleLabel}</td>
               <td data-mbaas-oid="cebayhq" className="hidden py-3 pr-4 sm:table-cell">
                 <span
                   data-mbaas-oid="vbgck8g" className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold
-                    ${p.affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-500'}`}
+                    ${p.affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-400'}`}
                 >
                   <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
                   {p.affiliation || '소속 미기재'}
@@ -133,7 +133,7 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
                 {p.overallGo === true ? (
                   <StatusBadge tone="success" surface="dark" dot label="GO" className="bg-go/15" />
                 ) : p.overallGo === false ? (
-                  <StatusBadge tone="danger" surface="dark" dot label="NO-GO" className="bg-rose-500/15 text-rose-400" />
+                  <StatusBadge tone="danger" surface="dark" dot label="NO-GO" className="bg-rose-500/100/15 text-rose-400" />
                 ) : (
                   <StatusBadge tone="neutral" surface="dark" label="상태 확인 불가" />
                 )}
@@ -160,7 +160,7 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
                         onClick={() => onDismiss(p.id)}
                         title="탈퇴했거나 더 이상 유효하지 않은 회원을 이 목록에서만 숨깁니다(실제 데이터는 삭제되지 않음)."
                         className="inline-flex items-center gap-1 rounded-control border border-white/15 px-2 py-1 text-xs font-semibold text-slate-400
-                          hover:border-rose-400/40 hover:bg-rose-500/10 hover:text-rose-300
+                          hover:border-rose-400/40 hover:bg-rose-500/100/10 hover:text-rose-300
                           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                       >
                         <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />

@@ -17,7 +17,7 @@ const ROLE_ICONS: Record<RoleKey, React.ComponentType<{ className?: string; 'ari
 const STATUS_BADGE: Record<CertificateStatus, string> = {
   valid: 'bg-go/15 text-go',
   warning: 'bg-amber-400/15 text-amber-300',
-  urgent: 'bg-rose-500/15 text-rose-300',
+  urgent: 'bg-rose-500/100/15 text-rose-300',
   expired: 'bg-slate-400/15 text-slate-300',
   no_expiry: 'bg-sky/15 text-sky',
 }
@@ -73,7 +73,7 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
             </p>
 
             {sorted.length === 0 ? (
-              <p data-mbaas-oid="oqup49l" className="mt-2 text-xs text-slate-500">
+              <p data-mbaas-oid="oqup49l" className="mt-2 text-xs text-slate-400">
                 등록된 자격증이 없습니다. 자격증 관리 탭에서 첫 자격증을 등록해 보세요.
               </p>
             ) : (
@@ -95,7 +95,7 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
                     )
                   })}
                 </ul>
-                <p data-mbaas-oid="iusoj54" className="mt-2 text-[11px] text-slate-500">
+                <p data-mbaas-oid="iusoj54" className="mt-2 text-[11px] text-slate-400">
                   자격증 관리 탭에서 전체보기{hiddenCount > 0 ? ` (${hiddenCount}건 더 있음)` : ''}
                 </p>
               </>
@@ -131,7 +131,7 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
             <div
  data-mbaas-oid="w0i5sii" className="mt-6 flex flex-col items-center gap-2 rounded-control border border-dashed border-white/15 bg-white/[0.02] py-8 text-center"
             >
-              <ShieldCheck className="h-6 w-6 text-slate-500" aria-hidden="true" />
+              <ShieldCheck className="h-6 w-6 text-slate-400" aria-hidden="true" />
               <p data-mbaas-oid="oqup49l" className="max-w-xs text-sm text-slate-400">
                 등록된 자격증이 없습니다. 자격증 관리 탭에서 첫 자격증을 등록해 보세요.
               </p>
@@ -161,7 +161,7 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
                 })}
               </ul>
               {hiddenCount > 0 && (
-                <p data-mbaas-oid="iusoj54" className="mt-4 text-xs text-slate-500">
+                <p data-mbaas-oid="iusoj54" className="mt-4 text-xs text-slate-400">
                   이 외 {hiddenCount}건이 더 있습니다. 자격증 관리 탭에서 전체보기.
                 </p>
               )}

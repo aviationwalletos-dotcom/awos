@@ -88,7 +88,7 @@ function ApplicationRow({ item, onStatusResolved }: ApplicationRowProps) {
           <span
             data-mbaas-oid="iapan39"
             className={`mt-2 inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold
-              ${affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-500'}`}
+              ${affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-400'}`}
           >
             <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
             {affiliation || '소속 미기재'}
@@ -142,7 +142,7 @@ function ApplicationRow({ item, onStatusResolved }: ApplicationRowProps) {
           {decision.status !== 'rejected' && (
             <Button
               data-mbaas-oid="iapan25" type="button" size="sm" variant="outline" tone="danger"
-              className="border-rose-400/50 text-rose-300 hover:bg-rose-500/10"
+              className="border-rose-400/50 text-rose-300 hover:bg-rose-500/100/10"
               loading={isSubmitting}
               disabled={isSubmitting}
               onClick={() => void handleDecision('rejected')}
@@ -196,7 +196,7 @@ export function InstructorApprovalPanel() {
   }, [scopedItems, filter, statusMap])
 
   return (
-    <div data-mbaas-oid="iapan01" className="rounded-card border border-slate-200 bg-navy p-6">
+    <div data-mbaas-oid="iapan01" className="rounded-card border border-white/10 bg-navy p-6">
       <div data-mbaas-oid="iapan02" className="flex flex-wrap items-center justify-between gap-3">
         <div data-mbaas-oid="iapan03">
           <h3 data-mbaas-oid="iapan04" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
@@ -255,7 +255,7 @@ export function InstructorApprovalPanel() {
       {isLoading ? (
         <p data-mbaas-oid="iapan09" className="mt-6 text-sm text-slate-400">신청 목록을 불러오는 중입니다...</p>
       ) : error ? (
-        <div data-mbaas-oid="iapan10" role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
+        <div data-mbaas-oid="iapan10" role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
           <p data-mbaas-oid="iapan11" className="text-xs font-medium text-rose-300">{error}</p>
           <Button data-mbaas-oid="iapan12" type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void refetch()}>
             다시 시도

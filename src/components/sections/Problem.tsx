@@ -33,7 +33,7 @@ export function Problem() {
           >
             종이·엑셀 관리가 남기는 세 겹의 사각지대
           </h2>
-          <p data-mbaas-oid="bb9p4gr" className="mt-4 max-w-2xl text-slate-600">
+          <p data-mbaas-oid="bb9p4gr" className="mt-4 max-w-2xl text-slate-400">
             최근 5년간 국적항공사가 항공안전법 위반으로 부과받은 과징금은{' '}
             <span data-mbaas-oid="fus5s3t" className="font-mono-data tabular-nums font-semibold text-rose-600">100억 9,300만 원</span>을
             넘습니다. 아날로그 관리 방식은 이 리스크를 실시간으로 잡아내지 못합니다.
@@ -44,12 +44,12 @@ export function Problem() {
           {CARDS.map((card, i) => (
             <Reveal key={card.title} className="h-full">
               <div
-                data-mbaas-oid="o4j82p6" className="flex h-full flex-col rounded-card border border-slate-200 bg-white p-cardpad shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-md"
+                data-mbaas-oid="o4j82p6" className="flex h-full flex-col rounded-card border border-white/10 bg-panel p-cardpad shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-md"
                 style={{ transitionDelay: `${i * 60}ms` }}
               >
                 <card.icon className="h-9 w-9 text-rose-500" aria-hidden="true" />
                 <h3 data-mbaas-oid="li35wy2" className="mt-5 text-lg font-bold text-ink">{card.title}</h3>
-                <p data-mbaas-oid="2rife4e" className="mt-3 text-sm leading-relaxed text-slate-600">{card.desc}</p>
+                <p data-mbaas-oid="2rife4e" className="mt-3 text-sm leading-relaxed text-slate-400">{card.desc}</p>
               </div>
             </Reveal>
           ))}

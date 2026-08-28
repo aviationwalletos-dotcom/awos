@@ -99,11 +99,11 @@ export function Nav() {
         >
           <span data-mbaas-oid="r80y0w8" className="relative block h-4 w-6">
             <span
-              data-mbaas-oid="33ukuap" className={`absolute left-0 top-0 h-0.5 w-6 bg-white transition-transform ${open ? 'translate-y-[7px] rotate-45' : ''}`}
+              data-mbaas-oid="33ukuap" className={`absolute left-0 top-0 h-0.5 w-6 bg-panel transition-transform ${open ? 'translate-y-[7px] rotate-45' : ''}`}
             />
-            <span data-mbaas-oid="g9gv4ne" className={`absolute left-0 top-[7px] h-0.5 w-6 bg-white transition-opacity ${open ? 'opacity-0' : ''}`} />
+            <span data-mbaas-oid="g9gv4ne" className={`absolute left-0 top-[7px] h-0.5 w-6 bg-panel transition-opacity ${open ? 'opacity-0' : ''}`} />
             <span
-              data-mbaas-oid="5f596tx" className={`absolute left-0 top-[14px] h-0.5 w-6 bg-white transition-transform ${open ? '-translate-y-[7px] -rotate-45' : ''}`}
+              data-mbaas-oid="5f596tx" className={`absolute left-0 top-[14px] h-0.5 w-6 bg-panel transition-transform ${open ? '-translate-y-[7px] -rotate-45' : ''}`}
             />
           </span>
         </button>

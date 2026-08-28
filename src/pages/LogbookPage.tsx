@@ -19,6 +19,7 @@ import { Button } from '../components/Button'
 import { AwosSectionTabs } from '../components/AwosSectionTabs'
 import { Reveal } from '../components/Reveal'
 import { EntryForm } from '../components/logbook/EntryForm'
+import { QuickEntryForm } from '../components/logbook/QuickEntryForm'
 import { EntryFilterBar, matchesFilter } from '../components/logbook/EntryFilterBar'
 import { EntryList } from '../components/logbook/EntryList'
 import { EntryDetailDialog } from '../components/logbook/EntryDetailDialog'
@@ -43,6 +44,8 @@ import {
   computeDroneCompliance,
   computeMechanicCompliance,
 } from '../lib/roleCompliance'
+import { downloadLogbookCsv } from '../lib/logbookCsv'
+import { printLogbook } from '../lib/logbookPrint'
 import { useLogbookEntries } from '../hooks/useLogbookEntries'
 import { useCertificates } from '../hooks/useCertificates'
 import { useWorkLogEntries } from '../hooks/useWorkLogEntries'
@@ -315,6 +318,13 @@ export function LogbookPage() {
     [entries, filterKind, filterValue],
   )
 
+  // 서버에 아직 저장되지 않은(미동기화) 기록 수. syncPostId가 없으면 서버 게시글 생성이
+  // 실패했거나 아직 시도 전이라는 뜻이다 — 로컬에는 안전하게 있으므로 경고 배지로만 알린다.
+  const pendingSyncCount = useMemo(() => entries.filter((e) => !e.syncPostId).length, [entries])
+
+  // 새 비행 기록 입력 모드: 비행 직후 최소 입력(quick)이 기본, 공식 양식 전체는 detail.
+  const [entryFormMode, setEntryFormMode] = useState<'quick' | 'detail'>('quick')
+
   // 드론 조종자는 "항공기" 대신 "기체" 개념을 사용하므로 입력 폼/상세 라벨만 자연스럽게 조정합니다.
   const aircraftLabelProps = isDrone
     ? {
@@ -326,7 +336,7 @@ export function LogbookPage() {
     : {}
 
   return (
-    <div data-mbaas-oid="7kkgjdu" className="min-h-screen bg-white font-body">
+    <div data-mbaas-oid="7kkgjdu" className="min-h-screen bg-surface font-body text-ink">
       <header data-mbaas-oid="7fiidhl" className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur">
         <div data-mbaas-oid="7j766ty" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
@@ -347,7 +357,7 @@ export function LogbookPage() {
 
       <main data-mbaas-oid="bh5vvhf">
         <section data-mbaas-oid="zm0n7fe" className="relative overflow-hidden bg-navy-dark py-[clamp(24px,3vw,40px)] text-white">
-          <div data-mbaas-oid="flk85t0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(56,189,248,0.14),transparent_55%)]" />
+          <div data-mbaas-oid="flk85t0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(0,212,255,0.14),transparent_55%)]" />
           <div data-mbaas-dynamic="true" data-mbaas-oid="lgbpg10" className="relative mx-auto max-w-4xl px-6">
             <span data-mbaas-oid="lgbpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
               <NotebookPen className="h-3.5 w-3.5" aria-hidden="true" />
@@ -374,13 +384,13 @@ export function LogbookPage() {
               </div>
             )}
 
-            <p data-mbaas-oid="lgbpg15" className="mt-4 text-xs text-slate-500">
+            <p data-mbaas-oid="lgbpg15" className="mt-4 text-xs text-slate-400">
               현재는 이 브라우저에만 저장되며, 실제 서버 저장은 별도 백엔드 기능 활성화가 필요합니다.
             </p>
           </div>
         </section>
 
-        <section data-mbaas-oid="tabnav1" className="sticky top-[121px] z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <section data-mbaas-oid="tabnav1" className="sticky top-[121px] z-30 border-b border-white/10 bg-navy/95 backdrop-blur">
           <div data-mbaas-oid="tabnav2" className="mx-auto max-w-4xl px-6">
             <div data-mbaas-oid="tabnav3" role="tablist" aria-label="AWOS 기능 선택" className="flex flex-wrap gap-2 py-4">
               {TABS.map(({ key, label, icon: Icon }) => {
@@ -395,7 +405,7 @@ export function LogbookPage() {
                     onClick={() => setActiveTab(key)}
                     className={`inline-flex min-h-[44px] items-center gap-2 rounded-control border px-4 py-2 text-sm font-semibold transition-colors
                       focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                      ${isActive ? 'border-sky bg-sky/10 text-[#0369a1]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+                      ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
                   >
                     <Icon className="h-4 w-4" aria-hidden={true} />
                     {label}
@@ -409,7 +419,7 @@ export function LogbookPage() {
         {activeTab === 'myRecords' && (
           <>
             {isDrone && (
-              <section data-mbaas-oid="cpldrn1" className="bg-white py-[clamp(64px,8vw,120px)]">
+              <section data-mbaas-oid="cpldrn1" className="bg-panel py-[clamp(64px,8vw,120px)]">
                 <div data-mbaas-oid="cpldrn2" className="mx-auto max-w-4xl px-6">
                   <Reveal>
                     <ComplianceSection
@@ -438,7 +448,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="lgbpg20" className="bg-white py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="lgbpg20" className="bg-panel py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="lgbpg21" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <div data-mbaas-oid="kyatjlq" className="flex flex-wrap items-center justify-between gap-3">
@@ -461,7 +471,7 @@ export function LogbookPage() {
                           : '서버와 다시 동기화'}
                       </Button>
                       {resyncMessage && (
-                        <p data-mbaas-oid="cycrkz7" className="text-xs text-slate-500">
+                        <p data-mbaas-oid="cycrkz7" className="text-xs text-slate-400">
                           {resyncMessage}
                         </p>
                       )}
@@ -480,6 +490,7 @@ export function LogbookPage() {
                     <EntryList
                       entries={filteredEntries}
                       totalAccountEntryCount={entries.length}
+                      pendingSyncCount={pendingSyncCount}
                       onSelect={setSelectedEntry}
                       onDeleteMany={(ids) => {
                         cleanupSignatureRequestPosts(ids)
@@ -489,6 +500,8 @@ export function LogbookPage() {
                         cleanupSignatureRequestPosts(entries.map((e) => e.id))
                         clearAll()
                       }}
+                      onExportCsv={() => downloadLogbookCsv(entries)}
+                      onPrint={() => printLogbook(entries)}
                     />
                   </div>
                 </Reveal>
@@ -512,13 +525,13 @@ export function LogbookPage() {
                       <p data-mbaas-oid="dufiijg" className={`text-xs font-semibold uppercase tracking-wide ${roleContent ? roleContent.colorClass : 'text-sky'}`}>
                         {roleContent ? `${roleContent.name} 자격 템플릿` : '자격증 관리'}
                       </p>
-                      <p data-mbaas-oid="vo5u9f7" className="mt-1 text-sm text-slate-600">
+                      <p data-mbaas-oid="vo5u9f7" className="mt-1 text-sm text-slate-400">
                         {roleContent
                           ? roleContent.summary
                           : '면허, 항공신체검사, 법정교육 등 자격 항목을 자유롭게 등록하고 관리하세요. 역할을 설정하면 역할별 추천 자격 템플릿과 강조 색상이 표시됩니다.'}
                       </p>
                       {!isPilotLike && (
-                        <p data-mbaas-oid="jgvfszy" className="mt-2 text-xs text-slate-500">
+                        <p data-mbaas-oid="jgvfszy" className="mt-2 text-xs text-slate-400">
                           만료일이 등록된 자격증은 D-30/D-7 기준으로 카드에 경고 배지가 표시됩니다. 이 직군의 구체적인 법정 갱신 주기는 아직
                           제공되지 않아, 등록한 자격증의 만료 알림으로 갱신 시점을 관리해 주세요.
                         </p>
@@ -529,17 +542,17 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="d1lqcdw" className="mt-8 font-display text-2xl font-extrabold text-ink">
                     자격증 등록
                   </h2>
-                  <p data-mbaas-oid="wo3mwbm" className="mt-2 text-sm text-slate-500">
+                  <p data-mbaas-oid="wo3mwbm" className="mt-2 text-sm text-slate-400">
                     면허, 항공신체검사, 법정교육 등 자격 항목을 등록하면 만료 임박 시 카드에 경고 배지가 표시됩니다.
                   </p>
-                  <div data-mbaas-oid="0ol2vj9" className="mt-6 rounded-card border border-slate-200 bg-white p-cardpad shadow-sm">
+                  <div data-mbaas-oid="0ol2vj9" className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
                     <CertificateForm mode="create" onSubmit={(input) => addCertificate(input)} roleTemplate={roleContent} />
                   </div>
                 </Reveal>
               </div>
             </section>
 
-            <section data-mbaas-oid="7r4ryck" className="bg-white py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="7r4ryck" className="bg-panel py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="5nfdg3d" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="x782ba2" className="font-display text-2xl font-extrabold text-ink">
@@ -565,7 +578,7 @@ export function LogbookPage() {
                 <h2 data-mbaas-oid="cursec3" className="font-display text-2xl font-extrabold text-ink">
                   커런시 현황
                 </h2>
-                <p data-mbaas-oid="cursec4" className="mt-2 text-sm text-slate-500">
+                <p data-mbaas-oid="cursec4" className="mt-2 text-sm text-slate-400">
                   비행기록 관리 탭에 입력한 이착륙·계기접근·비행교관 시간을 바탕으로 최근 비행경험·계기비행 경험·조종교육
                   비행경험 유지 상태를 계산합니다.
                 </p>
@@ -590,20 +603,44 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="lgbpg18" className="font-display text-2xl font-extrabold text-ink">
                     새 비행 기록 추가
                   </h2>
-                  <div data-mbaas-oid="lgbpg19" className="mt-6 rounded-card border border-slate-200 bg-white p-cardpad shadow-sm">
-                    <EntryForm mode="create" onSubmit={(input) => addEntry(input)} {...aircraftLabelProps} />
+                  <div className="mt-4 inline-flex rounded-control border border-white/15 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setEntryFormMode('quick')}
+                      className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
+                        entryFormMode === 'quick' ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      ⚡ 퀵 기록 (30초)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEntryFormMode('detail')}
+                      className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
+                        entryFormMode === 'detail' ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      상세 입력 (공식 양식)
+                    </button>
+                  </div>
+                  <div data-mbaas-oid="lgbpg19" className="mt-4 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
+                    {entryFormMode === 'quick' ? (
+                      <QuickEntryForm onSubmit={(input) => addEntry(input)} />
+                    ) : (
+                      <EntryForm mode="create" onSubmit={(input) => addEntry(input)} {...aircraftLabelProps} />
+                    )}
                   </div>
                 </Reveal>
               </div>
             </section>
 
-            <section data-mbaas-oid="lgbpg26" className="bg-white py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="lgbpg26" className="bg-panel py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="lgbpg27" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="lgbpg28" className="font-display text-2xl font-extrabold text-ink">
                     종이 로그북 기록 가져오기
                   </h2>
-                  <p data-mbaas-oid="lgbpg29" className="mt-2 text-sm text-slate-500">
+                  <p data-mbaas-oid="lgbpg29" className="mt-2 text-sm text-slate-400">
                     기존에 종이 로그북(탈론 로그 등)이나 개인 엑셀 파일로 관리하던 과거 비행 기록을 이 앱으로 옮겨올 수 있습니다.
                   </p>
                   <div data-mbaas-oid="lgbpg2a" className="mt-6">
@@ -620,7 +657,7 @@ export function LogbookPage() {
 
         {activeTab === 'workLog' && workLogCopy && (
           <>
-            <section data-mbaas-oid="cplwrk1" className="bg-white py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="cplwrk1" className="bg-panel py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="cplwrk2" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <ComplianceSection
@@ -638,17 +675,17 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="dj8ehec" className="font-display text-2xl font-extrabold text-ink">
                     {workLogCopy.formTitle}
                   </h2>
-                  <p data-mbaas-oid="g3u3q5t" className="mt-2 text-sm text-slate-500">
+                  <p data-mbaas-oid="g3u3q5t" className="mt-2 text-sm text-slate-400">
                     {workLogCopy.formDesc}
                   </p>
-                  <div data-mbaas-oid="pw1u587" className="mt-6 rounded-card border border-slate-200 bg-white p-cardpad shadow-sm">
+                  <div data-mbaas-oid="pw1u587" className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
                     <WorkLogForm mode="create" copy={workLogCopy} onSubmit={(input) => addWorkLogEntry(input)} />
                   </div>
                 </Reveal>
               </div>
             </section>
 
-            <section data-mbaas-oid="5wmlu2d" className="bg-white py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="5wmlu2d" className="bg-panel py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="djxyqfk" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="7muuj7p" className="font-display text-2xl font-extrabold text-ink">

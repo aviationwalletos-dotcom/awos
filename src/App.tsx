@@ -27,7 +27,7 @@ function NotFoundPage() {
   return (
     <div data-mbaas-oid="cf5qfe1" className="mx-auto max-w-2xl px-6 py-24 text-center">
       <h1 data-mbaas-oid="3pkshcf" className="mb-4 text-6xl font-bold text-slate-300">404</h1>
-      <p data-mbaas-oid="l7fhm0t" className="mb-6 text-slate-600">페이지를 찾을 수 없습니다.</p>
+      <p data-mbaas-oid="l7fhm0t" className="mb-6 text-slate-400">페이지를 찾을 수 없습니다.</p>
       <Link data-mbaas-oid="bu7fq3f" to="/" className="text-sky-600 hover:underline">
         홈으로 돌아가기
       </Link>
@@ -58,7 +58,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <div data-mbaas-oid="nc8cen2" className="min-h-screen bg-white font-body">
+          <div data-mbaas-oid="nc8cen2" className="min-h-screen bg-surface font-body text-ink">
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />

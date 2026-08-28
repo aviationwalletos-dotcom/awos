@@ -169,7 +169,7 @@ export function FlightReadinessPanel({
       )}
 
       {account && (
-        <p data-mbaas-oid="frpsh06" className="mt-2 text-[11px] text-slate-500">
+        <p data-mbaas-oid="frpsh06" className="mt-2 text-[11px] text-slate-400">
           이 버튼을 눌러야 최신 상태가 기관에 반영됩니다(자동 실시간 동기화가 아닙니다).
         </p>
       )}
@@ -197,7 +197,7 @@ export function FlightReadinessPanel({
           <div data-mbaas-oid="lkh664p" className="mt-3 flex items-center gap-3">
             <span
               data-mbaas-oid="ej793li" className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 ${
-                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/10 text-rose-400'
+                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/100/10 text-rose-400'
               }`}
             >
               {summary.overallGo ? (
@@ -242,7 +242,7 @@ export function FlightReadinessPanel({
 
       {!hasData ? (
         <div data-mbaas-oid="j3lpr1t" className="mt-6 flex flex-col items-center gap-3 rounded-control border border-dashed border-white/15 bg-white/[0.02] py-10 text-center">
-          <Gauge className="h-8 w-8 text-slate-500" aria-hidden="true" />
+          <Gauge className="h-8 w-8 text-slate-400" aria-hidden="true" />
           <p data-mbaas-oid="zpyk7vt" className="max-w-xs text-sm text-slate-400">
             아직 등록된 자격증이나 비행 기록이 없어 비행 적합성을 계산할 수 없습니다. 자격증 관리·비행기록 관리 탭에서
             정보를 등록하면 이 자리에 실시간 GO/NO-GO 판정이 표시됩니다.
@@ -255,7 +255,7 @@ export function FlightReadinessPanel({
             <span
 
               data-mbaas-oid="ej793li" className={`flex h-24 w-24 items-center justify-center rounded-full border-4 ${
-                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/10 text-rose-400'
+                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/100/10 text-rose-400'
               }`}
             >
               {summary.overallGo ? (
@@ -290,7 +290,7 @@ export function FlightReadinessPanel({
 
       {shareControl}
 
-      <p data-mbaas-oid="frpnote" className="mt-6 text-xs text-slate-500">
+      <p data-mbaas-oid="frpnote" className="mt-6 text-xs text-slate-400">
         이 판정은 등록된 자격증·비행 기록을 바탕으로 한 참고용 자동 계산이며, 실제 법적 판단은 소속 기관/관련 규정을
         통해 확인해야 합니다. 자세한 산출 근거는 아래 "커런시 관리" 탭에서 확인할 수 있습니다.
       </p>
@@ -311,7 +311,7 @@ function ReadinessStateChip({ state }: { state: ReadinessState }) {
       {state.label}
       <span
  data-mbaas-oid="625aw10" className={`ml-0.5 rounded-control px-1 text-[10px] font-bold ${
-          state.met ? 'bg-go/15 text-go' : 'bg-rose-500/15 text-rose-300'
+          state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
         }`}
       >
         {state.met ? '가능' : '제한'}
@@ -339,7 +339,7 @@ function ReadinessStateCard({ state }: { state: ReadinessState }) {
         <span
 
           data-mbaas-oid="1i61xid" className={`inline-flex shrink-0 items-center rounded-control px-2 py-0.5 text-[11px] font-bold ${
-            state.met ? 'bg-go/15 text-go' : 'bg-rose-500/15 text-rose-300'
+            state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
           }`}
         >
           {state.met ? '가능' : '제한'}

@@ -37,7 +37,7 @@ export function Footer() {
               Flight Radar
             </Link>
           </nav>
-          <p data-mbaas-oid="2b5qdl8" className="mt-2 text-slate-600">© 2026 Aviation Wallet OS. All rights reserved.</p>
+          <p data-mbaas-oid="2b5qdl8" className="mt-2 text-slate-400">© 2026 Aviation Wallet OS. All rights reserved.</p>
         </div>
       </div>
     </footer>

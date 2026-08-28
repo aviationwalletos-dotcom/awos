@@ -55,7 +55,7 @@ export function DutyTimeLimitCard({ entries, compact = false }: DutyTimeLimitCar
 
             data-mbaas-oid="6089ypr" role="status"
             className={`inline-flex items-center rounded-control px-2.5 py-1 text-xs font-bold ${
-              isGo ? 'bg-go/15 text-go' : 'bg-rose-500/15 text-rose-300'
+              isGo ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
             }`}
           >
             {isGo ? 'GO' : 'NO-GO'}
@@ -77,7 +77,7 @@ export function DutyTimeLimitCard({ entries, compact = false }: DutyTimeLimitCar
 
 function DutyTimeDisclaimer({ compact = false }: { compact?: boolean }) {
   return (
-    <p data-mbaas-oid="dtlnote" className={`${compact ? 'mt-3' : 'mt-6'} flex items-start gap-1.5 text-[11px] text-slate-500`}>
+    <p data-mbaas-oid="dtlnote" className={`${compact ? 'mt-3' : 'mt-6'} flex items-start gap-1.5 text-[11px] text-slate-400`}>
       <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
       이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관/관련 규정을 통해
       확인해야 합니다.

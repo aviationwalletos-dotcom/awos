@@ -28,7 +28,7 @@ export function FleetPage() {
   const selectedAircraft = selectedTail ? AIRCRAFT.find((a) => a.tailNumber === selectedTail) ?? null : null
 
   return (
-    <div data-mbaas-oid="9oy3mf3" className="min-h-screen bg-white font-body">
+    <div data-mbaas-oid="9oy3mf3" className="min-h-screen bg-surface font-body text-ink">
       <header data-mbaas-oid="ajujrpf" className="sticky top-0 z-40 border-b border-white/10 bg-navy/90 backdrop-blur">
         <div data-mbaas-oid="dmlsk2d" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
@@ -49,7 +49,7 @@ export function FleetPage() {
 
       <main data-mbaas-oid="jqvshbn">
         <section data-mbaas-oid="p3vty3r" className="relative overflow-hidden bg-navy-dark py-[clamp(64px,8vw,120px)] text-white">
-          <div data-mbaas-oid="t15f2hr" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(56,189,248,0.14),transparent_50%)]" />
+          <div data-mbaas-oid="t15f2hr" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_50%)]" />
           <div data-mbaas-oid="kl2pa5k" className="relative mx-auto max-w-7xl px-6">
             <Reveal>
               <span data-mbaas-oid="cwul10b" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
@@ -140,15 +140,15 @@ export function FleetPage() {
           </div>
         </section>
 
-        <section data-mbaas-oid="z9glvmt" className="bg-white py-[clamp(64px,8vw,120px)]">
+        <section data-mbaas-oid="z9glvmt" className="bg-panel py-[clamp(64px,8vw,120px)]">
           <div data-mbaas-oid="tyshlgv" className="mx-auto max-w-7xl px-6">
             <Reveal>
               <h2 data-mbaas-oid="pw1c118" className="font-display text-2xl font-extrabold text-ink">정비기록 · 스케줄링</h2>
-              <p data-mbaas-oid="7vsau90" className="mt-2 text-sm text-slate-500">기종/상태별 정비 이력을 조회하거나, 전체 항공기의 운항·정비 스케줄을 확인하세요.</p>
+              <p data-mbaas-oid="7vsau90" className="mt-2 text-sm text-slate-400">기종/상태별 정비 이력을 조회하거나, 전체 항공기의 운항·정비 스케줄을 확인하세요.</p>
             </Reveal>
 
             <Reveal className="mt-8">
-              <div data-mbaas-oid="hlfii9l" role="tablist" aria-label="정비기록/스케줄링 탭" className="flex gap-2 border-b border-slate-200">
+              <div data-mbaas-oid="hlfii9l" role="tablist" aria-label="정비기록/스케줄링 탭" className="flex gap-2 border-b border-white/10">
                 <button
                   data-mbaas-oid="j1ms31m"
                   type="button"
@@ -179,7 +179,7 @@ export function FleetPage() {
             </Reveal>
 
             <Reveal className="mt-8">
-              <div data-mbaas-oid="uimo94y" className="rounded-card border border-slate-200 bg-navy p-6">
+              <div data-mbaas-oid="uimo94y" className="rounded-card border border-white/10 bg-navy p-6">
                 {sectionTab === 'maintenance' ? <MaintenanceLog /> : <ScheduleTimeline />}
               </div>
             </Reveal>

@@ -10,16 +10,20 @@
 
 /* CSS 변수로 커스텀 색상 정의 (미리보기에서도 작동) */
 :root {
-  /* 기본 색상 팔레트 - 프로젝트에 맞게 tailwind.config.js에서 덮어쓸 수 있음 */
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-secondary: #64748b;
-  --color-accent: #f59e0b;
-  --color-background: #ffffff;
-  --color-foreground: #1e293b;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-border: #e2e8f0;
+  /* 옵션 A "시네마틱 OS" 다크 팔레트 — tailwind.config.js 토큰과 동기화 */
+  --color-primary: #00d4ff;
+  --color-primary-hover: #33ddff;
+  --color-secondary: #98a2b6;
+  --color-accent: #2563eb;
+  --color-background: #05070d;
+  --color-foreground: #f2f5fa;
+  --color-muted: #0b1220;
+  --color-muted-foreground: #98a2b6;
+  --color-border: rgba(255, 255, 255, 0.09);
+}
+
+::selection {
+  background: rgba(0, 212, 255, 0.28);
 }
 
 /* 기본 리셋 및 베이스 스타일 */

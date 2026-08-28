@@ -97,14 +97,14 @@ export function InstitutionSelect({
             value={customValue}
             onChange={(e) => handleCustomChange(e.target.value)}
             placeholder="예: OO비행교육원"
-            className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-500
+            className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
           />
         </div>
       )}
 
       {helperText && (
-        <p data-mbaas-oid="insts09" className="text-xs text-slate-500">
+        <p data-mbaas-oid="insts09" className="text-xs text-slate-400">
           {helperText}
         </p>
       )}

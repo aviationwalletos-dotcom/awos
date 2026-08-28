@@ -30,7 +30,7 @@ interface CertificateFormProps {
 }
 
 const inputClass =
-  'w-full rounded-control border border-slate-200 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
+  'w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
 
 const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
 
@@ -140,14 +140,14 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
           <p data-mbaas-oid="zi57mny" className={`text-xs font-semibold ${roleTemplate.colorClass}`}>
             {roleTemplate.name} 추천 자격 빠른 추가
           </p>
-          <p data-mbaas-oid="6c6tnlb" className="mt-1 text-xs text-slate-500">클릭하면 아래 명칭 입력란에 채워집니다. 직접 입력도 가능합니다.</p>
+          <p data-mbaas-oid="6c6tnlb" className="mt-1 text-xs text-slate-400">클릭하면 아래 명칭 입력란에 채워집니다. 직접 입력도 가능합니다.</p>
           <div data-mbaas-oid="1gp3qm6" className="mt-2.5 flex flex-wrap gap-2">
             {roleTemplate.credentials.map((c) => (
               <button
                 data-mbaas-oid="tbmqc2l" key={c.label}
                 type="button"
                 onClick={() => setNameValue(c.label)}
-                className={`inline-flex min-h-[36px] items-center rounded-control border bg-white px-3 py-1.5 text-xs font-medium transition-colors active:scale-[0.98]
+                className={`inline-flex min-h-[36px] items-center rounded-control border bg-panel px-3 py-1.5 text-xs font-medium transition-colors active:scale-[0.98]
                   ${roleTemplate.borderClass} ${roleTemplate.colorClass} ${roleTemplate.hoverBgClass}
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky`}
               >
@@ -221,7 +221,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
         {category === '조종교육증명' && (
           <div data-mbaas-oid="6g4qv1x">
             <span data-mbaas-oid="9hluw75" className={labelClass}>세부 종류</span>
-            <p data-mbaas-oid="1t8d1tp" className="rounded-control border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
+            <p data-mbaas-oid="1t8d1tp" className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               {FLIGHT_INSTRUCTOR_CERTIFICATE_LABEL} (세부 선택 없음)
             </p>
           </div>
@@ -285,7 +285,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
           </>
         ) : (
           <>
-            <p data-mbaas-oid="q0shiuh" className="rounded-control border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
+            <p data-mbaas-oid="q0shiuh" className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               {nameValue}
             </p>
             <p data-mbaas-oid="ar45ett" className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류 선택에 따라 자동으로 결정되며, 정확한 인식을 위해 직접 수정할 수 없습니다.</p>
@@ -368,7 +368,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
         ) : (
           <div data-mbaas-oid="opahh8c">
             <span data-mbaas-oid="af0b0s7" className={labelClass}>만료일</span>
-            <p data-mbaas-oid="q4jbu0j" className="rounded-control border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500">
+            <p data-mbaas-oid="q4jbu0j" className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               이 자격은 만료 개념이 없습니다.
             </p>
           </div>

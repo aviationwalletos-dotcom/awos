@@ -24,7 +24,7 @@ export function ComplianceSection({ title, description, items }: ComplianceSecti
             {title}
           </h3>
           {description && (
-            <p data-mbaas-oid="cplsec5" className="mt-1 text-sm text-slate-500">
+            <p data-mbaas-oid="cplsec5" className="mt-1 text-sm text-slate-400">
               {description}
             </p>
           )}
@@ -33,7 +33,7 @@ export function ComplianceSection({ title, description, items }: ComplianceSecti
 
       <div
         data-mbaas-oid="cplsec6"
-        className="mt-4 flex items-start gap-2 rounded-control border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800"
+        className="mt-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 p-4 text-xs text-amber-300"
       >
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         이 화면은 참고자료를 근거로 한 자동 계산이며, 실제 법적 기준은 관련 법령 원문과 소속 기관 규정을 통해 반드시

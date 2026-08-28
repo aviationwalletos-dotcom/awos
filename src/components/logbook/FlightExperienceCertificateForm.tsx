@@ -215,9 +215,9 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
   return (
     <form data-mbaas-oid="h8ha9h1" noValidate onSubmit={handleSubmit} className="space-y-8">
-      <div data-mbaas-oid="s0yt7by" className="flex items-start gap-3 rounded-control border border-slate-200 bg-surface p-4">
+      <div data-mbaas-oid="s0yt7by" className="flex items-start gap-3 rounded-control border border-white/10 bg-surface p-4">
         <FileCheck2 className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-        <p data-mbaas-oid="05w8a88" className="text-xs text-slate-500">
+        <p data-mbaas-oid="05w8a88" className="text-xs text-slate-400">
           이 폼은 "비행 1건"이 아니라, 비행경력증명서에 적힌 <strong data-mbaas-oid="z6rdqzu">누적 비행경력 총합</strong>을 항목별로 옮겨 적는
           용도입니다. 출발/도착지나 기종처럼 개별 비행에만 해당하는 값은 입력하지 않습니다. 저장하면 소속 기관에 실제
           인증 요청을 제출하는 "인증 대기중" 상태의 비행기록 1건으로 등록되며, 기관 담당자가 승인/반려하면 자동으로
@@ -262,7 +262,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="oimtxga" className="border-slate-100" />
+      <hr data-mbaas-oid="oimtxga" className="border-white/[0.08]" />
 
       {/* 2. 항공기 범주/등급별 누적 시간 */}
       <fieldset data-mbaas-oid="zrm1tat">
@@ -303,7 +303,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="sx0xwrl" className="border-slate-100" />
+      <hr data-mbaas-oid="sx0xwrl" className="border-white/[0.08]" />
 
       {/* 3. 비행 자격 시간 종류 */}
       <fieldset data-mbaas-oid="rhumxem">
@@ -336,7 +336,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="5qg5wir" className="border-slate-100" />
+      <hr data-mbaas-oid="5qg5wir" className="border-white/[0.08]" />
 
       {/* 4. 지상훈련장비 */}
       <fieldset data-mbaas-oid="8f3rf3d">
@@ -349,7 +349,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="uzbmacn" className="border-slate-100" />
+      <hr data-mbaas-oid="uzbmacn" className="border-white/[0.08]" />
 
       {/* 5. 비행 조건별 누적 시간 */}
       <fieldset data-mbaas-oid="x7aw6ng">
@@ -388,7 +388,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="gyn222u" className="border-slate-100" />
+      <hr data-mbaas-oid="gyn222u" className="border-white/[0.08]" />
 
       {/* 6. 접근/이착륙 누적 횟수 */}
       <fieldset data-mbaas-oid="9k4aesw">
@@ -415,7 +415,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="d5jylrh" className="border-slate-100" />
+      <hr data-mbaas-oid="d5jylrh" className="border-white/[0.08]" />
 
       {/* 7. 총 블록타임 */}
       <fieldset data-mbaas-oid="rdlvij6">
@@ -443,7 +443,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="yy3gr7b" className="border-slate-100" />
+      <hr data-mbaas-oid="yy3gr7b" className="border-white/[0.08]" />
 
       {/* 8. 증명서 사진 */}
       <fieldset data-mbaas-oid="zv4o5j5">
@@ -454,8 +454,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </p>
         <label
           data-mbaas-oid="gsh0pzp" htmlFor="cert-image"
-          className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-ink
-            hover:bg-slate-50 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky"
+          className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm font-medium text-ink
+            hover:bg-white/[0.06] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky"
         >
           <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
           사진 선택
@@ -471,14 +471,14 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           <img
             data-mbaas-oid="aopmpa8" src={imageDataUrl}
             alt="첨부한 비행경력증명서 사진 미리보기"
-            className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-slate-200 object-contain"
+            className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
           />
         )}
       </fieldset>
 
       <div data-mbaas-oid="klj11ft" className="flex items-start gap-3 rounded-control border border-sky/30 bg-sky/10 px-4 py-3">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky" aria-hidden="true" />
-        <p data-mbaas-oid="e78kbgj" className="text-xs font-medium text-[#0369a1]">
+        <p data-mbaas-oid="e78kbgj" className="text-xs font-medium text-[#00D4FF]">
           저장하면 "인증 대기중" 상태로 표시되며, 동시에 소속 기관이 실제로 검토·승인/반려할 수 있도록 "비행경력증명서"
           게시판에 인증 요청도 함께 제출됩니다. 상세 화면에서 승인/반려 결과가 자동으로 반영됩니다. 요청 제출 자체에
           실패한 경우에만 본인이 직접 "학교/교관에게 확인받았습니다" 버튼으로 확인 처리할 수 있습니다.
@@ -488,7 +488,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       {submitted && syncNotice && (
         <p
           data-mbaas-oid="vq88owf" role="status"
-          className={`text-sm font-medium ${syncNotice.tone === 'success' ? 'text-go' : 'text-amber-700'}`}
+          className={`text-sm font-medium ${syncNotice.tone === 'success' ? 'text-go' : 'text-amber-300'}`}
         >
           {syncNotice.message}
         </p>
@@ -496,7 +496,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
       <div
         data-mbaas-oid="z3x9bkb"
-        className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-2 flex flex-wrap gap-3 border-t border-slate-200 bg-white/95 px-cardpad py-4 backdrop-blur-sm"
+        className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-2 flex flex-wrap gap-3 border-t border-white/10 bg-navy/95 px-cardpad py-4 backdrop-blur-sm"
       >
         <Button data-mbaas-oid="u204fe2" type="submit" size="md" loading={isSubmitting} disabled={isSubmitting}>
           비행경력증명서 기록 저장하기
