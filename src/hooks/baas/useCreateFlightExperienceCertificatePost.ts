@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, FLIGHT_EXPERIENCE_CERTIFICATE_BOARD_ID, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostCreateRequest, BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseCreateFlightExperienceCertificatePostReturn {
@@ -24,7 +25,7 @@ export function useCreateFlightExperienceCertificatePost(): UseCreateFlightExper
     try {
       // 기관 계정이 승인 관리 화면에서 목록/상세를 조회할 수 있어야 하므로 항상 공개(is_hidden: false)로
       // 생성한다(BUG-006: 숨김 게시글은 작성자 본인만 조회할 수 있어 기관 계정에는 보이지 않는다).
-      const response = await fetch(
+      const response = await baasFetch(
         `${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${FLIGHT_EXPERIENCE_CERTIFICATE_BOARD_ID}/posts`,
         {
           method: 'POST',

@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { type ApiEnvelope, BAAS_BASE_URL, getAuthHeaders, parseJsonResponse } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import {
   parseAffiliationFromContent,
   parseInstructorApplicationTitle,
@@ -33,7 +34,7 @@ interface UseApprovedInstructorsReturn {
 
 async function fetchCommentsForPost(postId: string): Promise<CommentListResponse | null> {
   try {
-    const response = await fetch(`${BAAS_BASE_URL}/public/boards/posts/${postId}/comments`, {
+    const response = await baasFetch(`${BAAS_BASE_URL}/public/boards/posts/${postId}/comments`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       credentials: 'include',

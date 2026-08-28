@@ -7,6 +7,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 interface PresignResponseData {
   original: {
@@ -34,7 +35,7 @@ const SIGNATURE_FILE_NAME = 'signature.png'
 const SIGNATURE_CONTENT_TYPE = 'image/png'
 
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
-  const response = await fetch(dataUrl)
+  const response = await baasFetch(dataUrl)
   return response.blob()
 }
 
@@ -49,7 +50,7 @@ export function useUploadSignatureImage(): UseUploadSignatureImageReturn {
     try {
       const blob = await dataUrlToBlob(dataUrl)
 
-      const presignResponse = await fetch(`${BAAS_BASE_URL}/upload/presign?project_id=${getBaasProjectId()}`, {
+      const presignResponse = await baasFetch(`${BAAS_BASE_URL}/upload/presign?project_id=${getBaasProjectId()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',
@@ -69,7 +70,7 @@ export function useUploadSignatureImage(): UseUploadSignatureImageReturn {
 
       const { presign_url: presignUrl, cdn_url: cdnUrl } = presignResult.data.original
 
-      const putResponse = await fetch(presignUrl, {
+      const putResponse = await baasFetch(presignUrl, {
         method: 'PUT',
         body: blob,
         headers: { 'Content-Type': SIGNATURE_CONTENT_TYPE },

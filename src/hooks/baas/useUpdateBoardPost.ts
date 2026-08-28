@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostDetail, BoardPostUpdateRequest } from '../../lib/baas/boardTypes'
 
 interface UseUpdateBoardPostReturn {
@@ -24,7 +25,7 @@ export function useUpdateBoardPost(): UseUpdateBoardPostReturn {
     try {
       // PUT /boards/posts/{post_id}는 작성자 본인만 호출할 수 있으므로, 본인 게시글을
       // 갱신하는 용도로만 사용해야 한다(다른 사람 게시글에 사용하면 FORBIDDEN 응답).
-      const response = await fetch(`${BAAS_BASE_URL}/boards/posts/${postId}`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/posts/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

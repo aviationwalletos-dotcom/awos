@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders, setStoredAccessToken } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { UseLogoutOptions, UseLogoutReturn } from '../../lib/baas/types'
 
 export function useLogout(options: UseLogoutOptions = {}): UseLogoutReturn {
@@ -23,7 +24,7 @@ export function useLogout(options: UseLogoutOptions = {}): UseLogoutReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/account/logout`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/account/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

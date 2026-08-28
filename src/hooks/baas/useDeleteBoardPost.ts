@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 interface UseDeleteBoardPostReturn {
   deletePost: (postId: string) => Promise<void>
@@ -21,7 +22,7 @@ export function useDeleteBoardPost(): UseDeleteBoardPostReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/boards/posts/${postId}`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/posts/${postId}`, {
         method: 'DELETE',
         headers: { ...getAuthHeaders() },
         credentials: 'include',

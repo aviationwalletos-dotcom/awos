@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, PROFILE_SETTINGS_BOARD_ID, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostCreateRequest, BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseCreateProfileSettingsPostReturn {
@@ -24,7 +25,7 @@ export function useCreateProfileSettingsPost(): UseCreateProfileSettingsPostRetu
     try {
       // 본인 명의로 작성되며, 항상 공개(기본값)로 생성한다(is_hidden: true로 만들 필요가 없다 —
       // 숨김 게시글은 작성자 본인만 조회 가능해 초기 동기화(다른 기기)에서 사용할 수 없게 된다).
-      const response = await fetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${PROFILE_SETTINGS_BOARD_ID}/posts`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${PROFILE_SETTINGS_BOARD_ID}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

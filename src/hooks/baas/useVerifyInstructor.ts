@@ -10,6 +10,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { VerifiedInstructor } from '../../lib/baas/types'
 
 interface UseVerifyInstructorReturn {
@@ -28,7 +29,7 @@ export function useVerifyInstructor(): UseVerifyInstructorReturn {
     setError(null)
 
     try {
-      const loginResponse = await fetch(`${BAAS_BASE_URL}/account/login`, {
+      const loginResponse = await baasFetch(`${BAAS_BASE_URL}/account/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -47,7 +48,7 @@ export function useVerifyInstructor(): UseVerifyInstructorReturn {
       // 검증 전용 토큰. 이 요청 안에서만 사용하고 저장하지 않는다.
       const verificationToken: string = loginResult.data.access_token
 
-      const infoResponse = await fetch(`${BAAS_BASE_URL}/account/info`, {
+      const infoResponse = await baasFetch(`${BAAS_BASE_URL}/account/info`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

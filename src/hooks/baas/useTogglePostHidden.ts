@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseTogglePostHiddenReturn {
@@ -23,7 +24,7 @@ export function useTogglePostHidden(): UseTogglePostHiddenReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/boards/posts/${postId}/hidden`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/posts/${postId}/hidden`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

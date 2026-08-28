@@ -9,6 +9,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 interface PresignResponseData {
   original: {
@@ -52,7 +53,7 @@ export function useUploadBoardFile(): UseUploadBoardFileReturn {
     setError(null)
 
     try {
-      const presignResponse = await fetch(`${BAAS_BASE_URL}/upload/presign?project_id=${getBaasProjectId()}`, {
+      const presignResponse = await baasFetch(`${BAAS_BASE_URL}/upload/presign?project_id=${getBaasProjectId()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',
@@ -73,7 +74,7 @@ export function useUploadBoardFile(): UseUploadBoardFileReturn {
       const { presign_url: presignUrl, cdn_url: cdnUrl } = presignResult.data.original
       const fileId = presignResult.data.file_id
 
-      const putResponse = await fetch(presignUrl, {
+      const putResponse = await baasFetch(presignUrl, {
         method: 'PUT',
         body: file,
         headers: { 'Content-Type': options.contentType || 'application/octet-stream' },

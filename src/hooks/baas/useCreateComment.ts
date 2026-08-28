@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { CommentItem } from '../../lib/baas/boardTypes'
 
 interface UseCreateCommentReturn {
@@ -26,7 +27,7 @@ export function useCreateComment(postId: string | undefined | null): UseCreateCo
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/boards/posts/${postId}/comments`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

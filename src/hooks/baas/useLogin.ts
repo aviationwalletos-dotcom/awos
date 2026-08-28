@@ -11,6 +11,7 @@ import {
   setStoredAccessToken,
 } from '../../lib/baas/config'
 import type { TokenResponse, UseLoginReturn } from '../../lib/baas/types'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 export function useLogin(): UseLoginReturn {
   const [isLoading, setIsLoading] = useState(false)
@@ -22,7 +23,7 @@ export function useLogin(): UseLoginReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/account/login`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/account/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

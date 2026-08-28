@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { type ApiEnvelope, BAAS_BASE_URL, getAuthHeaders, parseJsonResponse } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { CommentListResponse } from '../../lib/baas/boardTypes'
 
 interface UseCommentsOptions {
@@ -33,7 +34,7 @@ export function useComments(postId: string | undefined | null, options: UseComme
 
     try {
       const params = sort ? `?sort=${sort}` : ''
-      const response = await fetch(`${BAAS_BASE_URL}/public/boards/posts/${postId}/comments${params}`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/public/boards/posts/${postId}/comments${params}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

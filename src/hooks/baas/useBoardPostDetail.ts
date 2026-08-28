@@ -7,6 +7,7 @@
 import { useCallback, useState } from 'react'
 
 import { type ApiEnvelope, BAAS_BASE_URL, getAuthHeaders, parseJsonResponse } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseBoardPostDetailReturn {
@@ -25,7 +26,7 @@ export function useBoardPostDetail(): UseBoardPostDetailReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/public/boards/posts/${postId}`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/public/boards/posts/${postId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

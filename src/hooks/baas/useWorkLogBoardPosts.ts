@@ -15,6 +15,7 @@ import {
   parseJsonResponse,
 } from '../../lib/baas/config'
 import type { BoardPostListItem, BoardPostListResponse } from '../../lib/baas/boardTypes'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 interface UseWorkLogBoardPostsOptions {
   /** true면 마운트 시 자동으로 목록을 조회한다. (기본값: true) */
@@ -44,7 +45,7 @@ const MAX_PAGES = 50
 
 async function fetchWorkLogPostsPage(offset: number, limit: number): Promise<BoardPostListResponse> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) })
-  const response = await fetch(
+  const response = await baasFetch(
     `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${WORK_LOG_BOARD_ID}/posts?${params.toString()}`,
     {
       method: 'GET',

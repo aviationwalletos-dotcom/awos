@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, getAuthHeaders } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { UseChangePasswordReturn } from '../../lib/baas/types'
 
 export function useChangePassword(): UseChangePasswordReturn {
@@ -17,7 +18,7 @@ export function useChangePassword(): UseChangePasswordReturn {
     setIsSuccess(false)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/account/profile/change-password`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/account/profile/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

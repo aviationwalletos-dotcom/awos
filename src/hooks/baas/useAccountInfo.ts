@@ -11,6 +11,7 @@ import {
   setStoredAccessToken,
 } from '../../lib/baas/config'
 import type { AccountResponse, UseAccountInfoOptions, UseAccountInfoReturn } from '../../lib/baas/types'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 export function useAccountInfo(options: UseAccountInfoOptions = {}): UseAccountInfoReturn {
   const { enabled = true, onError } = options
@@ -28,7 +29,7 @@ export function useAccountInfo(options: UseAccountInfoOptions = {}): UseAccountI
     setError(null)
 
     try {
-      const response = await fetch(`${BAAS_BASE_URL}/account/info`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/account/info`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

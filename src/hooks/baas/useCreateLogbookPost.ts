@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, LOGBOOK_BOARD_ID, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import { handleBaasResponse, withRetry } from '../../lib/baas/retry'
 
 import type { BoardPostCreateRequest, BoardPostDetail } from '../../lib/baas/boardTypes'
@@ -28,7 +29,7 @@ export function useCreateLogbookPost(): UseCreateLogbookPostReturn {
       // 숨김 게시글은 작성자 본인만 조회 가능해 초기 동기화(다른 기기)에서 사용할 수 없게 된다).
       // withRetry: 429/5xx/네트워크 예외는 지수 백오프로 자동 재시도, 4xx는 즉시 실패로 전파한다.
       return await withRetry(async () => {
-        const response = await fetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${LOGBOOK_BOARD_ID}/posts`, {
+        const response = await baasFetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${LOGBOOK_BOARD_ID}/posts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           credentials: 'include',

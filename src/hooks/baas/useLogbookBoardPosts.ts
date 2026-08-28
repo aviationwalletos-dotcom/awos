@@ -17,6 +17,7 @@ import {
 import { RetryableHttpError, isRetryableStatus, withRetry } from '../../lib/baas/retry'
 
 import type { BoardPostListItem, BoardPostListResponse } from '../../lib/baas/boardTypes'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 interface UseLogbookBoardPostsOptions {
   /** true면 마운트 시 자동으로 목록을 조회한다. (기본값: true) */
@@ -49,7 +50,7 @@ async function fetchLogbookPostsPage(offset: number, limit: number): Promise<Boa
   // withRetry: 목록 조회가 429/5xx로 일시 실패하면 자동 재시도한다. 재시도 판단을 위해 HTTP 상태가
   // 재시도 대상이면 RetryableHttpError를 던진다(그 외 실패/비정상 result는 일반 Error로 전파).
   return withRetry(async () => {
-    const response = await fetch(
+    const response = await baasFetch(
       `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${LOGBOOK_BOARD_ID}/posts?${params.toString()}`,
       {
         method: 'GET',

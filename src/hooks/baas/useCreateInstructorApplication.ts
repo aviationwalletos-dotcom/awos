@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, INSTRUCTOR_APPROVAL_BOARD_ID, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostCreateRequest, BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseCreateInstructorApplicationReturn {
@@ -23,7 +24,7 @@ export function useCreateInstructorApplication(): UseCreateInstructorApplication
 
     try {
       // 현재 로그인한 사용자 본인 명의로 작성되므로 쿠키/세션 인증을 사용한다.
-      const response = await fetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${INSTRUCTOR_APPROVAL_BOARD_ID}/posts`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${INSTRUCTOR_APPROVAL_BOARD_ID}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',

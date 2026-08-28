@@ -12,6 +12,7 @@ import {
   parseJsonResponse,
 } from '../../lib/baas/config'
 import type { BoardPostListResponse } from '../../lib/baas/boardTypes'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 
 interface UseSignatureRequestsOptions {
   /** true면 마운트 시 자동으로 목록을 조회한다. (기본값: true) */
@@ -42,7 +43,7 @@ export function useSignatureRequests(options: UseSignatureRequestsOptions = {}):
 
     try {
       const params = new URLSearchParams({ limit: String(limitRef.current) })
-      const response = await fetch(
+      const response = await baasFetch(
         `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${SIGNATURE_REQUEST_BOARD_ID}/posts?${params.toString()}`,
         {
           method: 'GET',

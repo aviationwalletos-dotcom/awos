@@ -4,6 +4,7 @@
 import { useCallback, useState } from 'react'
 
 import { BAAS_BASE_URL, SIGNATURE_REQUEST_BOARD_ID, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
+import { baasFetch } from '../../lib/baas/supabaseTransport'
 import type { BoardPostCreateRequest, BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseCreateSignatureRequestReturn {
@@ -24,7 +25,7 @@ export function useCreateSignatureRequest(): UseCreateSignatureRequestReturn {
     try {
       // 서명 요청은 학생 본인 명의로 작성되므로 쿠키/세션 인증을 사용한다. 요청 게시글은 숨김
       // 처리할 필요가 없다(교관이 목록에서 바로 볼 수 있어야 한다).
-      const response = await fetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${SIGNATURE_REQUEST_BOARD_ID}/posts`, {
+      const response = await baasFetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${SIGNATURE_REQUEST_BOARD_ID}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',
