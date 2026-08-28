@@ -85,8 +85,15 @@ export function Nav() {
               로그인
             </Link>
           )}
-          <Button data-mbaas-oid="29dn3y3" size="sm" onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}>
-            도입 문의하기
+          <Button
+            data-mbaas-oid="29dn3y3"
+            size="sm"
+            variant="outline"
+            tone="neutral"
+            className="border-white/25 text-slate-200 hover:bg-white/10 hover:text-white"
+            onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            기관 도입 문의
           </Button>
         </div>
 

@@ -112,7 +112,7 @@ export function DashboardPage() {
 
       <main data-mbaas-oid="um7limy">
         <section data-mbaas-oid="74h26xy" className="relative overflow-hidden bg-navy-dark py-[clamp(24px,3vw,40px)] text-white">
-          <div data-mbaas-oid="9diwe1c" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_50%)]" />
+          <div data-mbaas-oid="9diwe1c" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(34,211,238,0.14),transparent_50%)]" />
           <div data-mbaas-oid="p3vkttb" className="relative mx-auto max-w-7xl px-6">
             <Reveal>
               <span data-mbaas-oid="ny8obyn" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
@@ -138,7 +138,7 @@ export function DashboardPage() {
                     onClick={() => setActiveTab(key)}
                     className={`inline-flex min-h-[44px] items-center gap-2 rounded-control border px-4 py-2 text-sm font-semibold transition-colors
                       focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                      ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
+                      ${isActive ? 'border-sky bg-sky/10 text-[#22D3EE]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
                   >
                     <Icon className="h-4 w-4" aria-hidden={true} />
                     {label}

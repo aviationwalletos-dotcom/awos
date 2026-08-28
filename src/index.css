@@ -11,19 +11,19 @@
 /* CSS 변수로 커스텀 색상 정의 (미리보기에서도 작동) */
 :root {
   /* 옵션 A "시네마틱 OS" 다크 팔레트 — tailwind.config.js 토큰과 동기화 */
-  --color-primary: #00d4ff;
-  --color-primary-hover: #33ddff;
+  --color-primary: #22d3ee;
+  --color-primary-hover: #4ae0f5;
   --color-secondary: #98a2b6;
   --color-accent: #2563eb;
-  --color-background: #020409;
+  --color-background: #0f172a;
   --color-foreground: #f2f5fa;
-  --color-muted: #070a12;
+  --color-muted: #152033;
   --color-muted-foreground: #98a2b6;
   --color-border: rgba(255, 255, 255, 0.09);
 }
 
 ::selection {
-  background: rgba(0, 212, 255, 0.28);
+  background: rgba(34, 211, 238, 0.28);
 }
 
 /* 기본 리셋 및 베이스 스타일 */

@@ -11,7 +11,7 @@ export function Pricing() {
     <section data-mbaas-oid="8bca7kb" id="pricing" className="bg-surface py-[clamp(80px,10vw,160px)]">
       <div data-mbaas-oid="qzf5hcy" className="mx-auto max-w-7xl px-6">
         <Reveal>
-          <p data-mbaas-oid="q3irjzt" className="text-sm font-semibold uppercase tracking-wide text-[#00D4FF]">가격/도입 안내</p>
+          <p data-mbaas-oid="q3irjzt" className="text-sm font-semibold uppercase tracking-wide text-[#22D3EE]">가격/도입 안내</p>
           <h2
             data-mbaas-oid="6n9u4mg" className="mt-3 max-w-2xl font-display font-extrabold text-ink"
             style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.02em' }}

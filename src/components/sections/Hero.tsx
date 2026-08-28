@@ -1,43 +1,68 @@
+import { Check, ShieldCheck } from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '../Button'
 import { HERO_STAT } from '../../data/content'
 
-function RadarMotif() {
+// 히어로 우측 시각 요소.
+//
+// 이전에는 추상적인 레이더 그래픽이었으나, 이 제품의 본질은 관제·항적 추적이 아니라
+// "비행기록의 정리·집계"다. 사용자가 실제로 보게 될 로그북 화면을 그대로 보여주는 편이
+// 무엇을 해주는 도구인지 즉시 전달된다(Show, don't tell).
+function LogbookPreview() {
   return (
-    <svg
-      data-mbaas-oid="etc8kjf" viewBox="0 0 480 480"
-      className="h-full w-full"
+    <div
+      className="w-full rounded-card border border-white/10 bg-panel/90 p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur"
       role="img"
-      aria-label="관제 레이더 그리드와 항로선을 형상화한 추상 그래픽"
+      aria-label="AWOS 디지털 로그북 화면 예시 — 누적 비행시간과 항목별 집계, 최근 비행 기록 목록"
     >
-      <defs data-mbaas-oid="jd3pung">
-        <radialGradient data-mbaas-oid="buhqfhu" id="radarGlow" cx="50%" cy="50%" r="50%">
-          <stop data-mbaas-oid="zia0exe" offset="0%" stopColor="#00D4FF" stopOpacity="0.35" />
-          <stop data-mbaas-oid="27xd5pe" offset="100%" stopColor="#00D4FF" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <circle data-mbaas-oid="rs5359k" cx="240" cy="240" r="220" fill="url(#radarGlow)" />
-      {[60, 110, 160, 210].map((r) => (
-        <circle data-mbaas-oid="5ayitcm" key={r} cx="240" cy="240" r={r} fill="none" stroke="#00D4FF" strokeOpacity="0.25" strokeWidth="1" />
+      <div className="flex items-center justify-between">
+        <span className="font-display text-sm font-bold text-ink">
+          Aviation Wallet <span className="text-sky">OS</span>
+        </span>
+        <span className="rounded-full border border-go/40 bg-go/10 px-2.5 py-1 font-mono-data text-[10px] font-semibold text-go">
+          ● GO
+        </span>
+      </div>
+
+      <div className="mt-4 rounded-control border border-white/10 bg-gradient-to-br from-deep/80 to-transparent p-4">
+        <p className="font-mono-data text-[10px] tracking-[0.22em] text-sky">TOTAL FLIGHT TIME</p>
+        <p className="mt-1.5 font-mono-data text-4xl font-bold tracking-tight text-ink">
+          1091.8 <span className="text-sm font-normal text-slate-400">hrs</span>
+        </p>
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] text-slate-400">
+          <span>PIC <b className="font-mono-data font-medium text-ink">823.5</b></span>
+          <span>야간 <b className="font-mono-data font-medium text-ink">121.3</b></span>
+          <span>계기 <b className="font-mono-data font-medium text-ink">88.0</b></span>
+        </div>
+      </div>
+
+      {[
+        { date: '2026-08-21', route: 'RKTL → RKTH', ac: 'C172', hrs: '2.3', tag: 'X-C' },
+        { date: '2026-08-19', route: 'RKTL → RKTL', ac: 'C172', hrs: '1.1', tag: 'LCL' },
+      ].map((row) => (
+        <div
+          key={row.date}
+          className="mt-2.5 flex items-center justify-between rounded-control border border-white/[0.07] bg-white/[0.03] px-4 py-3"
+        >
+          <div>
+            <p className="font-mono-data text-[10px] text-slate-400">{row.date}</p>
+            <p className="mt-0.5 font-mono-data text-xs font-semibold text-ink">
+              {row.route} · {row.ac}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-mono-data text-sm font-bold text-ink">{row.hrs}h</p>
+            <span className="mt-0.5 inline-block rounded bg-sky/15 px-1.5 py-0.5 font-mono-data text-[9px] font-semibold text-sky">
+              {row.tag}
+            </span>
+          </div>
+        </div>
       ))}
-      <line data-mbaas-oid="ycc58dk" x1="20" y1="240" x2="460" y2="240" stroke="#00D4FF" strokeOpacity="0.2" strokeWidth="1" />
-      <line data-mbaas-oid="ke6o2gx" x1="240" y1="20" x2="240" y2="460" stroke="#00D4FF" strokeOpacity="0.2" strokeWidth="1" />
-      <path
-        data-mbaas-oid="phzjakx" d="M 60 380 L 210 220 L 300 260 L 420 90"
-        fill="none"
-        stroke="#00D4FF"
-        strokeOpacity="0.6"
-        strokeWidth="2"
-        strokeDasharray="6 6"
-      />
-      <circle data-mbaas-oid="p4y3s7f" cx="210" cy="220" r="5" fill="#00D4FF" />
-      <circle data-mbaas-oid="jrgwx52" cx="300" cy="260" r="5" fill="#10B981" />
-      <circle data-mbaas-oid="g4vjol9" cx="420" cy="90" r="6" fill="#00D4FF">
-        <animate data-mbaas-oid="ahb25jw" attributeName="opacity" values="1;0.4;1" dur="2.4s" repeatCount="indefinite" />
-      </circle>
-    </svg>
+
+      <p className="mt-3 text-center font-mono-data text-[9px] tracking-wider text-slate-500">예시 데이터</p>
+    </div>
   )
 }
 
@@ -50,7 +75,16 @@ export function Hero() {
       className="relative overflow-hidden bg-navy text-white"
       style={{ paddingTop: 'clamp(96px, 12vw, 160px)', paddingBottom: 'clamp(80px, 10vw, 160px)' }}
     >
-      <div data-mbaas-oid="wyjpu2x" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,212,255,0.12),transparent_55%)]" />
+      <div
+        data-mbaas-oid="wyjpu2x"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(65% 55% at 15% 5%, rgba(34,211,238,0.13), transparent 62%),' +
+            'radial-gradient(55% 50% at 90% 25%, rgba(59,130,246,0.14), transparent 65%),' +
+            'radial-gradient(100% 60% at 50% 108%, rgba(10,16,32,0.6), transparent 72%)',
+        }}
+      />
 
       <div data-mbaas-oid="n5mur3s" className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div data-mbaas-oid="89u7vw5">
@@ -59,12 +93,13 @@ export function Hero() {
           </span>
 
           <h1
-            data-mbaas-oid="kiqsaol" className="mt-6 font-display font-extrabold text-white"
-            style={{ fontSize: 'clamp(2.25rem, 1.6rem + 3.2vw, 3.5rem)', letterSpacing: '-0.03em', lineHeight: 1.04 }}
+            data-mbaas-oid="kiqsaol" className="mt-6 font-display text-white"
+            style={{ fontSize: 'clamp(2.25rem, 1.6rem + 3.2vw, 3.5rem)', letterSpacing: '-0.04em', lineHeight: 1.02 }}
           >
-            조종사를 위한
-            <br data-mbaas-oid="c4in81l" />
-            <span className="text-sky">디지털 로그북.</span>
+            <span className="block font-medium text-slate-300" style={{ fontSize: '0.62em', letterSpacing: '-0.02em' }}>
+              조종사를 위한
+            </span>
+            <span className="block font-black">디지털 로그북</span>
           </h1>
 
           <p
@@ -75,9 +110,15 @@ export function Hero() {
             자격 유효기간 추적, 교관 전자서명, CSV · PDF 내보내기를 지원합니다.
           </p>
 
-          <div data-mbaas-oid="weuxcgg" className="mt-8 flex flex-col gap-2 rounded-card border border-white/10 bg-white/5 px-5 py-4">
-            <p data-mbaas-oid="bcbyfm9" className="font-mono-data text-sm font-semibold text-sky">{HERO_STAT.value}</p>
-            <p data-mbaas-oid="djwb5z4" className="text-sm text-slate-400">{HERO_STAT.label}</p>
+          <div
+            data-mbaas-oid="weuxcgg"
+            className="mt-8 inline-flex items-start gap-3 rounded-card border border-sky/20 bg-sky/[0.06] px-5 py-4 backdrop-blur-sm"
+          >
+            <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-sky" aria-hidden="true" />
+            <div>
+              <p data-mbaas-oid="bcbyfm9" className="text-sm font-semibold text-ink">{HERO_STAT.value}</p>
+              <p data-mbaas-oid="djwb5z4" className="mt-1 text-sm text-slate-400">{HERO_STAT.label}</p>
+            </div>
           </div>
 
           <div data-mbaas-oid="tk5xlsd" className="mt-10 flex flex-wrap gap-4">
@@ -91,14 +132,23 @@ export function Hero() {
               className="border-white/30 text-white hover:bg-white/10"
               onClick={() => document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              기능 명세
+              기능 둘러보기
             </Button>
           </div>
-          <p className="mt-4 text-xs text-slate-400">개인 사용자 무료 · 계정 없이 기능 명세 확인 가능</p>
+          <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-300">
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-go" aria-hidden="true" />
+              개인 사용자 무료
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-go" aria-hidden="true" />
+              가입 없이 둘러보기
+            </span>
+          </p>
         </div>
 
         <div data-mbaas-oid="i1n2uh0" className="relative mx-auto aspect-square w-full max-w-md lg:ml-auto lg:mr-0">
-          <RadarMotif />
+          <LogbookPreview />
         </div>
       </div>
     </section>

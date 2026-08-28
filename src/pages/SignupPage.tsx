@@ -145,7 +145,7 @@ export function SignupPage() {
       </header>
 
       <main data-mbaas-oid="sgnpg07" className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
-        <div data-mbaas-oid="sgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
+        <div data-mbaas-oid="sgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,0.14),transparent_55%)]" />
         <div data-mbaas-oid="sgnpg09" className="relative mx-auto max-w-md px-6">
           <div data-mbaas-oid="sgnpg10" className="text-center">
             <span data-mbaas-oid="sgnpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
@@ -185,7 +185,7 @@ export function SignupPage() {
                   }}
                   className={`flex flex-col items-start gap-2 rounded-card border p-cardpad text-left transition-all duration-200
                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                    ${active ? 'border-sky bg-sky/10 shadow-[0_0_24px_rgba(0,212,255,0.2)]' : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
+                    ${active ? 'border-sky bg-sky/10 shadow-[0_0_24px_rgba(34,211,238,0.2)]' : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
                 >
                   <Icon className={`h-5 w-5 ${active ? 'text-sky' : 'text-slate-400'}`} aria-hidden="true" />
                   <span data-mbaas-oid="sgnpg17" className={`text-sm font-semibold ${active ? 'text-white' : 'text-slate-200'}`}>

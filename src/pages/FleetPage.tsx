@@ -49,7 +49,7 @@ export function FleetPage() {
 
       <main data-mbaas-oid="jqvshbn">
         <section data-mbaas-oid="p3vty3r" className="relative overflow-hidden bg-navy-dark py-[clamp(64px,8vw,120px)] text-white">
-          <div data-mbaas-oid="t15f2hr" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_50%)]" />
+          <div data-mbaas-oid="t15f2hr" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(34,211,238,0.14),transparent_50%)]" />
           <div data-mbaas-oid="kl2pa5k" className="relative mx-auto max-w-7xl px-6">
             <Reveal>
               <span data-mbaas-oid="cwul10b" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">

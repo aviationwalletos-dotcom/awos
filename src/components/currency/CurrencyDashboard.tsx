@@ -24,7 +24,7 @@ type BadgeTone = 'met' | 'unmet' | 'exempt'
 
 function StatusBadge({ tone, label }: { tone: BadgeTone; label: string }) {
   const toneClass =
-    tone === 'met' ? 'bg-go/10 text-go' : tone === 'exempt' ? 'bg-sky/10 text-[#00D4FF]' : 'bg-rose-500/100/15 text-rose-300'
+    tone === 'met' ? 'bg-go/10 text-go' : tone === 'exempt' ? 'bg-sky/10 text-[#22D3EE]' : 'bg-rose-500/100/15 text-rose-300'
   const Icon = tone === 'met' ? CircleCheck : tone === 'exempt' ? CircleDashed : CircleAlert
   return (
     <span
@@ -383,7 +383,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
               <p data-mbaas-oid="6gjpqfs" className="mt-1 text-sm text-slate-400">최근 1년 누적 비행교관 탑승 시간</p>
 
               {instructor.isNewInstructorGrace && (
-                <p data-mbaas-oid="012nkp6" className="mt-3 rounded-control bg-sky/10 px-3 py-2 text-xs font-medium text-[#00D4FF]">
+                <p data-mbaas-oid="012nkp6" className="mt-3 rounded-control bg-sky/10 px-3 py-2 text-xs font-medium text-[#22D3EE]">
                   조종교육증명 최초 취득일({formatDate(instructorFirstCertDate as string)}) 기준 1년 이내로, 신임 교관
                   유예기간이 적용되어 이 요건이 적용되지 않습니다.
                 </p>

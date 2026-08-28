@@ -6,26 +6,26 @@ export default {
     extend: {
       colors: {
         navy: {
-          DEFAULT: '#04060B', // 딥 배경 (더 깊은 블랙으로 하향)
-          light: '#0C1730',
-          dark: '#000205',    // 페이지 최심부 배경
+          DEFAULT: '#0F172A', // 딥 네이비 — 퓨어 블랙 대비 눈 피로/할레이션 완화
+          light: '#1E293B',
+          dark: '#0A1020',    // 최심부(네비/푸터 등)
         },
-        panel: '#070A12',      // 카드/패널 표면 (배경과 미세 대비만 유지)
-        deep: '#081228',       // 히어로 그라디언트용 딥 블루(채도 하향)
+        panel: '#152033',      // 카드/패널 — 배경보다 한 단계 밝게 해 경계를 인지시킨다
+        deep: '#1B2C4D',       // 히어로 그라디언트용 딥 블루
         sky: {
-          DEFAULT: '#00D4FF', // 시그니처 시안 (구 #38BDF8)
+          DEFAULT: '#22D3EE', // 시그니처 시안 — 형광도를 낮춰 어두운 배경 번짐(할레이션) 완화
         },
         go: {
           DEFAULT: '#10B981',
         },
         surface: {
-          DEFAULT: '#05070D', // 페이지 배경 (구 라이트 #F8FAFC → 시네마틱 블랙)
+          DEFAULT: '#0F172A', // 페이지 배경 — 다크 네이비
         },
         ink: {
           DEFAULT: '#F2F5FA', // 기본 텍스트 (다크 전환으로 라이트 반전)
         },
         role: {
-          pilot: '#00D4FF',
+          pilot: '#22D3EE',
           mechanic: '#F59E0B',
           controller: '#10B981',
           ops: '#A855F7',

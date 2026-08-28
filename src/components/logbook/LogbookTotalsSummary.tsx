@@ -109,7 +109,7 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
 
       <div data-mbaas-oid="dr71nf2" className="mt-4">
         <div data-mbaas-oid="nllid6s" className="rounded-control border border-sky/30 bg-sky/10 p-4">
-          <p data-mbaas-oid="bsd7lof" className="text-xs font-semibold uppercase tracking-wide text-[#00D4FF]">총 블록타임</p>
+          <p data-mbaas-oid="bsd7lof" className="text-xs font-semibold uppercase tracking-wide text-[#22D3EE]">총 블록타임</p>
           <p data-mbaas-oid="vhbboxv" className="mt-1 font-mono-data text-3xl font-extrabold tabular-nums text-ink">{fmt(totals.blockTime)}<span data-mbaas-oid="x6nq362" className="ml-1 text-base font-semibold text-slate-400">시간</span></p>
         </div>
       </div>

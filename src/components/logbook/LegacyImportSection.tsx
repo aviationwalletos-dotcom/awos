@@ -50,7 +50,7 @@ export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) 
               onClick={() => setActiveTab(key)}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-control border px-4 py-2 text-sm font-semibold transition-colors
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
+                ${isActive ? 'border-sky bg-sky/10 text-[#22D3EE]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
             >
               <Icon className="h-4 w-4" aria-hidden={true} />
               {label}
