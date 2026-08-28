@@ -1,0 +1,7 @@
+/*
+ * Tailwind CSS 지시문 (배포 빌드용)
+ * 이 파일은 수정하지 마세요.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
