@@ -12,6 +12,17 @@ const STATUS_BADGE: Record<CertificateStatus, string> = {
   no_expiry: 'bg-sky/15 text-sky-700',
 }
 
+// 실물 자격증 카드처럼 카테고리별 색 밴드(월렛 스타일). 채도를 낮춘 그라디언트로
+// '장식'이 아니라 '분류 식별' 기능을 하게 한다.
+const CATEGORY_WALLET_STYLE: Record<string, { gradient: string }> = {
+  '조종사 자격증명': { gradient: 'from-sky-600/60 via-sky-700/35 to-panel' },
+  '한정': { gradient: 'from-indigo-600/55 via-indigo-700/30 to-panel' },
+  '조종교육증명': { gradient: 'from-violet-600/55 via-violet-700/30 to-panel' },
+  '항공신체검사': { gradient: 'from-emerald-600/55 via-emerald-700/30 to-panel' },
+  '법정교육': { gradient: 'from-amber-500/50 via-amber-700/25 to-panel' },
+  '기타 자격': { gradient: 'from-slate-500/45 via-slate-700/25 to-panel' },
+}
+
 const STATUS_ICON: Record<CertificateStatus, React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
   valid: ShieldCheck,
   warning: TriangleAlert,
@@ -43,28 +54,33 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
         const status = getCertificateStatus(cert.expiryDate)
         const remaining = cert.expiryDate ? daysUntil(cert.expiryDate) : null
         const Icon = STATUS_ICON[status]
+        const wallet = CATEGORY_WALLET_STYLE[cert.category] ?? CATEGORY_WALLET_STYLE['기타 자격']
         return (
           <li data-mbaas-oid="y1jh8j4" key={cert.id}>
             <button
               data-mbaas-oid="f519jek" type="button"
               onClick={() => onSelect(cert)}
-              className={`w-full rounded-card border border-white/10 bg-panel p-5 text-left transition-all duration-200
+              className={`w-full overflow-hidden rounded-card border border-white/10 bg-panel text-left transition-all duration-200
                 ${hoverBorderClass} hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky`}
             >
-              <div data-mbaas-oid="wm0wt71" className="flex items-start justify-between gap-2">
-                <div data-mbaas-oid="2se4v2n">
-                  <span data-mbaas-oid="tcv615v" className="text-xs font-medium uppercase tracking-wide text-slate-400">{cert.category}</span>
-                  <h3 data-mbaas-oid="5w1lvoh" className="mt-0.5 font-display text-base font-bold text-ink">{cert.name}</h3>
+              {/* 월렛 카드 헤더 — 실물 자격증처럼 카테고리별 색 밴드로 종류를 즉시 구분한다 */}
+              <div className={`bg-gradient-to-br ${wallet.gradient} px-5 pb-4 pt-4`}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-mono-data text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                    {cert.category}
+                  </span>
+                  <span data-mbaas-oid="1jmrsue" className={`inline-flex shrink-0 items-center gap-1 rounded-control px-2.5 py-1 text-xs font-bold ${STATUS_BADGE[status]}`}>
+                    <Icon className="h-3.5 w-3.5" aria-hidden />
+                    {CERTIFICATE_STATUS_LABEL[status]}
+                  </span>
                 </div>
-                <span data-mbaas-oid="1jmrsue" className={`inline-flex shrink-0 items-center gap-1 rounded-control px-2.5 py-1 text-xs font-bold ${STATUS_BADGE[status]}`}>
-                  <Icon className="h-3.5 w-3.5" aria-hidden />
-                  {CERTIFICATE_STATUS_LABEL[status]}
-                </span>
+                <h3 data-mbaas-oid="5w1lvoh" className="mt-2 font-display text-lg font-extrabold tracking-tight text-white">
+                  {cert.name}
+                </h3>
+                <p data-mbaas-oid="swve2gh" className="mt-1 text-xs text-white/60">{cert.issuer}</p>
               </div>
 
-              <p data-mbaas-oid="swve2gh" className="mt-3 text-sm text-slate-400">{cert.issuer}</p>
-
-              <div data-mbaas-oid="o4n89gc" className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+              <div data-mbaas-oid="o4n89gc" className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm">
                 <span data-mbaas-oid="kbrjwb9" className="font-mono-data tabular-nums text-slate-400">
                   {cert.expiryDate ? `만료일 ${cert.expiryDate}` : `발급일 ${cert.issuedDate}`}
                 </span>

@@ -106,8 +106,8 @@ export function Hero() {
             data-mbaas-oid="5ghgk0m" className="mt-6 max-w-xl text-slate-300"
             style={{ fontSize: 'clamp(1rem, 0.94rem + 0.3vw, 1.125rem)', lineHeight: 1.7 }}
           >
-            비행기록을 <strong className="font-semibold text-white">국내 비행경력증명서 서식</strong>으로 기록하고, 누적 시간을 항목별로 집계합니다.
-            자격 유효기간 추적, 교관 전자서명, CSV · PDF 내보내기를 지원합니다.
+            비행기록을 입력하면, 필요한 시간과 자격이 자동으로 정리됩니다.
+            <strong className="font-semibold text-white"> 국내 비행경력증명서 서식</strong> 기준 · 교관 전자서명 · CSV · PDF 내보내기 지원.
           </p>
 
           <div

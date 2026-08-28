@@ -5,6 +5,8 @@
 // 내보낸 파일을 자격 신청 서류 작성이나 다른 로그북 도구로 옮길 때 바로 쓸 수 있습니다.
 // 참고: 이 앱의 "엑셀 가져오기"가 읽을 수 있는 형태이기도 해서, 백업→복원 왕복이 됩니다.
 
+import { sumHours } from './hours'
+
 import type { LogbookEntry } from '../types/logbook'
 
 const HEADERS = [
@@ -80,11 +82,8 @@ function entryToRow(e: LogbookEntry): string {
   return values.map(cell).join(',')
 }
 
-/** 소수점 오차 없이 0.1 단위로 합산한다(부동소수점 누적 오차 방지). */
-function sum(values: Array<number | undefined>): number {
-  const total = values.reduce<number>((acc, v) => acc + (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) : 0), 0)
-  return total / 10
-}
+/** 공용 합산 유틸에 위임(모든 시간 합산은 lib/hours 한 곳에서만 구현·검증된다). */
+const sum = sumHours
 
 function totalsRow(entries: LogbookEntry[]): string {
   const values = [

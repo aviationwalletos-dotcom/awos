@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 
 import { Button } from '../Button'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
+import { roundToTenth } from '../../lib/hours'
 
 import type { FlightCategory, LogbookEntryInput } from '../../types/logbook'
 
@@ -63,7 +64,7 @@ export function QuickEntryForm({ onSubmit }: QuickEntryFormProps) {
       arrival: arr,
       aircraftType: type,
       aircraftIdentification: aircraftIdentification.trim() || undefined,
-      blockTime: Math.round(blockTime * 10) / 10, // 로그북 관례인 0.1시간 단위로 반올림
+      blockTime: roundToTenth(blockTime), // 로그북 관례인 0.1시간 단위로 반올림
       flightCategory,
       origin: 'manual',
     })

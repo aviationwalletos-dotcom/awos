@@ -19,6 +19,7 @@ import {
 import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
+import { sumHours } from '../../lib/hours'
 import type { LogbookEntry } from '../../types/logbook'
 
 const PAGE_SIZE = 10
@@ -149,7 +150,7 @@ export function EntryList({
     setSelectMode(false)
   }
 
-  const totalHours = entries.reduce((sum, e) => sum + e.blockTime, 0)
+  const totalHours = sumHours(entries.map((e) => e.blockTime))
   const allPageSelected = pagedEntries.length > 0 && pagedEntries.every((e) => selectedIds.has(e.id))
 
   return (

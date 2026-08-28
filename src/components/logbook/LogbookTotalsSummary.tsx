@@ -2,6 +2,8 @@ import React from 'react'
 import { Gauge, PlaneTakeoff } from 'lucide-react'
 
 import { EmptyState } from '../EmptyState'
+import { sumHours } from '../../lib/hours'
+
 import type { LogbookEntry } from '../../types/logbook'
 
 interface LogbookTotalsSummaryProps {
@@ -41,53 +43,31 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
   // (승인 완료되면 공식 합계에 포함됩니다).
   const officialEntries = entries.filter((e) => !isUnconfirmedCertificate(e))
   const pendingCertificateEntries = entries.filter(isPendingCertificate)
-  const pendingCertificateBlockTime = pendingCertificateEntries.reduce((sum, e) => sum + (e.blockTime || 0), 0)
+  const pendingCertificateBlockTime = sumHours(pendingCertificateEntries.map((e) => e.blockTime))
   const rejectedCertificateEntries = entries.filter(isRejectedCertificate)
-  const rejectedCertificateBlockTime = rejectedCertificateEntries.reduce((sum, e) => sum + (e.blockTime || 0), 0)
+  const rejectedCertificateBlockTime = sumHours(rejectedCertificateEntries.map((e) => e.blockTime))
 
-  const totals = officialEntries.reduce(
-    (acc, e) => {
-      acc.blockTime += e.blockTime || 0
-      acc.singleEngineLand += e.categoryHours?.singleEngineLand ?? 0
-      acc.multiEngineLand += e.categoryHours?.multiEngineLand ?? 0
-      acc.rotorcraftHelicopter += e.categoryHours?.rotorcraftHelicopter ?? 0
-      acc.otherCategoryHours += e.categoryHours?.otherHours ?? 0
-      acc.dualReceived += e.pilotingTime?.dualReceived ?? 0
-      acc.pic += e.pilotingTime?.pic ?? 0
-      acc.sic += e.pilotingTime?.sic ?? 0
-      acc.flightInstructor += e.pilotingTime?.flightInstructor ?? 0
-      acc.groundTrainerTime += e.groundTrainerTime ?? 0
-      acc.day += e.conditions?.day ?? 0
-      acc.night += e.conditions?.night ?? 0
-      acc.crossCountry += e.conditions?.crossCountry ?? 0
-      acc.actualInstrument += e.conditions?.actualInstrument ?? 0
-      acc.simulatedInstrument += e.conditions?.simulatedInstrument ?? 0
-      acc.instrumentApproaches += e.instrumentApproaches ?? 0
-      acc.dayLandings += e.dayLandings ?? 0
-      acc.nightLandings += e.nightLandings ?? 0
-      return acc
-    },
-    {
-      blockTime: 0,
-      singleEngineLand: 0,
-      multiEngineLand: 0,
-      rotorcraftHelicopter: 0,
-      otherCategoryHours: 0,
-      dualReceived: 0,
-      pic: 0,
-      sic: 0,
-      flightInstructor: 0,
-      groundTrainerTime: 0,
-      day: 0,
-      night: 0,
-      crossCountry: 0,
-      actualInstrument: 0,
-      simulatedInstrument: 0,
-      instrumentApproaches: 0,
-      dayLandings: 0,
-      nightLandings: 0,
-    },
-  )
+  // 공식 합계 — 모든 시간 필드는 0.1h 정수 틱 합산(sumHours)으로 계산해 부동소수점 누적 오차를 차단한다.
+  const totals = {
+    blockTime: sumHours(officialEntries.map((e) => e.blockTime)),
+    singleEngineLand: sumHours(officialEntries.map((e) => e.categoryHours?.singleEngineLand)),
+    multiEngineLand: sumHours(officialEntries.map((e) => e.categoryHours?.multiEngineLand)),
+    rotorcraftHelicopter: sumHours(officialEntries.map((e) => e.categoryHours?.rotorcraftHelicopter)),
+    otherCategoryHours: sumHours(officialEntries.map((e) => e.categoryHours?.otherHours)),
+    dualReceived: sumHours(officialEntries.map((e) => e.pilotingTime?.dualReceived)),
+    pic: sumHours(officialEntries.map((e) => e.pilotingTime?.pic)),
+    sic: sumHours(officialEntries.map((e) => e.pilotingTime?.sic)),
+    flightInstructor: sumHours(officialEntries.map((e) => e.pilotingTime?.flightInstructor)),
+    groundTrainerTime: sumHours(officialEntries.map((e) => e.groundTrainerTime)),
+    day: sumHours(officialEntries.map((e) => e.conditions?.day)),
+    night: sumHours(officialEntries.map((e) => e.conditions?.night)),
+    crossCountry: sumHours(officialEntries.map((e) => e.conditions?.crossCountry)),
+    actualInstrument: sumHours(officialEntries.map((e) => e.conditions?.actualInstrument)),
+    simulatedInstrument: sumHours(officialEntries.map((e) => e.conditions?.simulatedInstrument)),
+    instrumentApproaches: officialEntries.reduce((a, e) => a + (e.instrumentApproaches ?? 0), 0),
+    dayLandings: officialEntries.reduce((a, e) => a + (e.dayLandings ?? 0), 0),
+    nightLandings: officialEntries.reduce((a, e) => a + (e.nightLandings ?? 0), 0),
+  }
 
   const isEmpty = entries.length === 0
 

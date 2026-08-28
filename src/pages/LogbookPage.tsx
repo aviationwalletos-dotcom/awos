@@ -25,6 +25,7 @@ import { EntryList } from '../components/logbook/EntryList'
 import { EntryDetailDialog } from '../components/logbook/EntryDetailDialog'
 import { AutoSyncEntryDecisions } from '../components/logbook/AutoSyncEntryDecisions'
 import { LogbookTotalsSummary } from '../components/logbook/LogbookTotalsSummary'
+import { LogbookOnboarding } from '../components/logbook/LogbookOnboarding'
 import { LegacyImportSection } from '../components/logbook/LegacyImportSection'
 import { CertificateForm } from '../components/certificates/CertificateForm'
 import { TsIntegrationCard } from '../components/certificates/TsIntegrationCard'
@@ -68,19 +69,19 @@ type TabDef = { key: TabKey; label: string; icon: React.ComponentType<{ classNam
 
 // 조종사(및 역할 미설정 계정 폴백)용 기본 탭 구성. 절대 변경하지 않습니다.
 const PILOT_TABS: TabDef[] = [
-  { key: 'myRecords', label: '내 비행기록', icon: ListChecks },
-  { key: 'logbook', label: '비행기록 관리', icon: PlaneTakeoff },
-  { key: 'certificates', label: '자격증 관리', icon: ShieldCheck },
-  { key: 'currency', label: '커런시 관리', icon: Gauge },
+  { key: 'myRecords', label: '비행기록', icon: ListChecks },
+  { key: 'logbook', label: '기록 입력·가져오기', icon: PlaneTakeoff },
+  { key: 'certificates', label: '자격증', icon: ShieldCheck },
+  { key: 'currency', label: '커런시', icon: Gauge },
 ]
 
 const SIGNATURE_INBOX_TAB: TabDef = { key: 'signatureInbox', label: '서명 요청함', icon: Inbox }
 
 // 드론 조종자용 탭 구성: 비행기록 구조는 재사용하되 커런시/실시간 적합성 등 조종사 전용 개념은 제외합니다.
 const DRONE_TABS: TabDef[] = [
-  { key: 'myRecords', label: '내 비행기록', icon: ListChecks },
-  { key: 'logbook', label: '비행기록 관리', icon: PlaneTakeoff },
-  { key: 'certificates', label: '자격증 관리', icon: ShieldCheck },
+  { key: 'myRecords', label: '비행기록', icon: ListChecks },
+  { key: 'logbook', label: '기록 입력·가져오기', icon: PlaneTakeoff },
+  { key: 'certificates', label: '자격증', icon: ShieldCheck },
 ]
 
 const WORK_LOG_TAB_ICON: Record<WorkLogRole, TabDef['icon']> = {
@@ -134,7 +135,7 @@ export function LogbookPage() {
     if (workLogRole && workLogCopy) {
       return [
         { key: 'workLog', label: workLogCopy.tabLabel, icon: WORK_LOG_TAB_ICON[workLogRole] },
-        { key: 'certificates', label: '자격증 관리', icon: ShieldCheck },
+        { key: 'certificates', label: '자격증', icon: ShieldCheck },
       ]
     }
     if (isDrone) {
@@ -419,6 +420,30 @@ export function LogbookPage() {
 
         {activeTab === 'myRecords' && (
           <>
+            {entries.length === 0 && (
+              <section className="bg-surface pt-[clamp(48px,6vw,80px)]">
+                <div className="mx-auto max-w-4xl px-6">
+                  <Reveal>
+                    <LogbookOnboarding
+                      onStartExcel={() => {
+                        setActiveTab('logbook')
+                        window.setTimeout(() => document.getElementById('legacy-import')?.scrollIntoView({ behavior: 'smooth' }), 80)
+                      }}
+                      onStartCertificate={() => {
+                        setActiveTab('logbook')
+                        window.setTimeout(() => document.getElementById('legacy-import')?.scrollIntoView({ behavior: 'smooth' }), 80)
+                      }}
+                      onStartNew={() => {
+                        setActiveTab('logbook')
+                        setEntryFormMode('quick')
+                        window.setTimeout(() => document.getElementById('new-entry')?.scrollIntoView({ behavior: 'smooth' }), 80)
+                      }}
+                    />
+                  </Reveal>
+                </div>
+              </section>
+            )}
+
             {isDrone && (
               <section data-mbaas-oid="cpldrn1" className="bg-panel py-[clamp(64px,8vw,120px)]">
                 <div data-mbaas-oid="cpldrn2" className="mx-auto max-w-4xl px-6">
@@ -584,7 +609,7 @@ export function LogbookPage() {
                   커런시 현황
                 </h2>
                 <p data-mbaas-oid="cursec4" className="mt-2 text-sm text-slate-400">
-                  비행기록 관리 탭에 입력한 이착륙·계기접근·비행교관 시간을 바탕으로 최근 비행경험·계기비행 경험·조종교육
+                  '기록 입력·가져오기' 탭에 입력한 이착륙·계기접근·비행교관 시간을 바탕으로 최근 비행경험·계기비행 경험·조종교육
                   비행경험 유지 상태를 계산합니다.
                 </p>
                 <div data-mbaas-oid="cursec5" className="mt-6">
@@ -602,7 +627,7 @@ export function LogbookPage() {
 
         {activeTab === 'logbook' && (
           <>
-            <section data-mbaas-oid="lgbpg16" className="bg-surface py-[clamp(64px,8vw,120px)]">
+            <section id="new-entry" data-mbaas-oid="lgbpg16" className="bg-surface py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="lgbpg17" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="lgbpg18" className="font-display text-2xl font-extrabold text-ink">
@@ -649,9 +674,9 @@ export function LogbookPage() {
                     기존에 종이 로그북(탈론 로그 등)이나 개인 엑셀 파일로 관리하던 과거 비행 기록을 이 앱으로 옮겨올 수 있습니다.
                   </p>
                   <div data-mbaas-oid="lgbpg2a" className="mt-6">
-                    <LegacyImportSection
-                      onAddEntries={handleImportLegacyEntries}
-                    />
+                    <div id="legacy-import">
+                    <LegacyImportSection onAddEntries={handleImportLegacyEntries} />
+                    </div>
                   </div>
                 </Reveal>
               </div>

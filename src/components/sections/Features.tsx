@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 import React from 'react'
 
-import { FEATURE_SPECS, PAIN_POINTS } from '../../data/content'
+import { FEATURE_SPECS } from '../../data/content'
 import { Reveal } from '../Reveal'
 
 // 기능 명세 섹션.
@@ -46,19 +46,6 @@ export function Features() {
           ))}
         </div>
 
-        <Reveal>
-          <div className="mt-12 rounded-card border border-white/10 bg-white/[0.03] p-cardpad">
-            <h3 className="font-display text-base font-bold text-ink">종이 · 엑셀 관리에서 반복되는 문제</h3>
-            <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
-              {PAIN_POINTS.map((point) => (
-                <li key={point} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
-                  <span aria-hidden="true" className="mt-2 h-1 w-1 flex-none rounded-full bg-slate-500" />
-                  <span>{point}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Reveal>
 
         <Reveal>
           <p className="mt-8 text-xs leading-relaxed text-slate-500">

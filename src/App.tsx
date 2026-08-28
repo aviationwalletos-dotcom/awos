@@ -8,7 +8,6 @@ import { Footer } from './components/Footer'
 import { RequireUserType } from './components/RequireUserType'
 import { Hero } from './components/sections/Hero'
 import { Problem } from './components/sections/Problem'
-import { Solution } from './components/sections/Solution'
 import { Features } from './components/sections/Features'
 import { Dashboard } from './components/sections/Dashboard'
 import { Contact } from './components/sections/Contact'
@@ -41,7 +40,6 @@ function LandingPage() {
       <main data-mbaas-oid="jtf29w6">
         <Hero />
         <Problem />
-        <Solution />
         <Features />
         <Dashboard />
         <Contact />

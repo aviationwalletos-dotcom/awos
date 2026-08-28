@@ -5,17 +5,15 @@
 // 취업 지원·자격 신청 시 첨부용 정리본이 목적이며, 공식 비행경력증명서 제출본은
 // 소속 기관의 확인·서명 절차를 거쳐야 함을 문서 하단에 명시한다.
 
+import { sumHours } from './hours'
+
 import type { LogbookEntry } from '../types/logbook'
 
 function esc(v: string): string {
   return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-/** 0.1시간 단위 합산(부동소수점 누적 오차 방지) */
-function sumTenths(values: Array<number | undefined>): number {
-  const t = values.reduce<number>((acc, v) => acc + (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) : 0), 0)
-  return t / 10
-}
+const sumTenths = sumHours
 
 function fmt(v: number | undefined): string {
   return typeof v === 'number' && Number.isFinite(v) && v !== 0 ? v.toFixed(1) : ''
