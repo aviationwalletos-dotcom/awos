@@ -6,9 +6,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://vflyqnbdquaanpkvuinz.supabase.co'
-// TODO(다음 단계): 대표님이 전달할 anon public 키로 교체
-const SUPABASE_ANON_KEY = 'sb_publishable_GwIFABkaVgmSrYPtrrVgww_bVQYP4oE'
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {

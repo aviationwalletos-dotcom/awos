@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test:asset-base": "node scripts/check-asset-base.mjs",
     "smoke:reveal": "node scripts/smoke-reveal.mjs",
-    "validate": "npm run lint && npm run typecheck",
+    "validate": "npm run lint && npm run typecheck && npm run test",
     "test": "vitest run"
   },
   "dependencies": {

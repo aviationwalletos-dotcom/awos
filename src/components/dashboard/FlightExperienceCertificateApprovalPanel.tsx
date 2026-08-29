@@ -11,6 +11,7 @@ import { useComments } from '../../hooks/baas/useComments'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
 import { useFlightExperienceCertificateBoardPosts } from '../../hooks/baas/useFlightExperienceCertificateBoardPosts'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
+import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   buildApprovalCommentContent,
   buildRejectionCommentContent,
@@ -56,7 +57,11 @@ function RequestRow({ item, onStatusResolved }: RequestRowProps) {
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
 
-  const decision = useMemo(() => resolveApprovalDecision(commentsData?.items ?? []), [commentsData])
+  const { orgIds } = useAuthorizedOrgIds()
+  const decision = useMemo(
+    () => resolveApprovalDecision(commentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
+    [commentsData, orgIds],
+  )
   const affiliation = useMemo(() => parseAffiliationFromTitle(item.title), [item.title])
 
   useEffect(() => {

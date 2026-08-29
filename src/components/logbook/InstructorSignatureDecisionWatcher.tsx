@@ -5,6 +5,7 @@
 import { useEffect } from 'react'
 
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
+import { useApprovedInstructorIdSet } from '../../lib/baas/authorization'
 import {
   findSignedComment,
   parseSignatureImageUrlFromComment,
@@ -22,11 +23,13 @@ interface InstructorSignatureDecisionWatcherProps {
 export function InstructorSignatureDecisionWatcher({ entry, onUpdate }: InstructorSignatureDecisionWatcherProps) {
   const pendingRequestPostId = entry.signatureRequestPostId
   const { data: commentsData } = useComments(pendingRequestPostId, { enabled: Boolean(pendingRequestPostId) })
+  // [SEC-001] 승인 교관 목록이 로드되기 전에는 판정하지 않는다(fail-closed).
+  const { instructorIds } = useApprovedInstructorIdSet()
 
   useEffect(() => {
-    if (entry.instructorSignature || !commentsData) return
+    if (entry.instructorSignature || !commentsData || !instructorIds) return
 
-    const signedComment = findSignedComment(commentsData.items)
+    const signedComment = findSignedComment(commentsData.items, instructorIds)
     if (!signedComment) return
 
     onUpdate(entry.id, {
@@ -38,7 +41,7 @@ export function InstructorSignatureDecisionWatcher({ entry, onUpdate }: Instruct
         signedAt: parseSignedAtFromComment(signedComment),
       },
     })
-  }, [entry, commentsData, onUpdate])
+  }, [entry, commentsData, instructorIds, onUpdate])
 
   return null
 }

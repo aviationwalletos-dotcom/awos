@@ -11,6 +11,7 @@
 // `InstructorApprovalPanel.tsx`의 `ApplicationRow` 패턴과 동일).
 import { useEffect, useMemo } from 'react'
 
+import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import { resolveApprovalDecision } from '../../lib/baas/instructorApproval'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 import { useComments } from '../../hooks/baas/useComments'
@@ -28,7 +29,12 @@ export function CertificateDecisionWatcher({ entry, onUpdate }: CertificateDecis
     enabled: Boolean(certificateRequestPostId),
   })
 
-  const decision = useMemo(() => resolveApprovalDecision(commentsData?.items ?? []), [commentsData])
+  // [SEC-001] 기관 계정 목록이 로드되기 전에는 항상 'pending'(판정 보류).
+  const { orgIds } = useAuthorizedOrgIds()
+  const decision = useMemo(
+    () => resolveApprovalDecision(commentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
+    [commentsData, orgIds],
+  )
 
   useEffect(() => {
     if (!commentsData) return

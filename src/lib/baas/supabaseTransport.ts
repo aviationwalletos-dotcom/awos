@@ -19,12 +19,11 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../supabase/env'
 import { BAAS_BASE_URL, getStoredAccessToken, setStoredAccessToken } from './config'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://vflyqnbdquaanpkvuinz.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_GwIFABkaVgmSrYPtrrVgww_bVQYP4oE'
 
 // ---------------------------------------------------------------------------
 // 클라이언트 팩토리
@@ -223,6 +222,32 @@ const pendingUploads = new Map<number, { path: string; contentType: string; file
 
 function publicUrlFor(path: string): string {
   return `${SUPABASE_URL}/storage/v1/object/public/board-files/${path}`
+}
+
+/**
+ * [SEC-003] 비공개 버킷 전환 대응: board-files 스토리지 URL(또는 data: URL)을 받아
+ * 표시 가능한 URL로 바꾼다. data: URL은 그대로, 스토리지 URL은 로그인 토큰으로 1시간짜리
+ * 서명 URL을 발급해 돌려준다. 발급 실패(비로그인·토큰 만료 등) 시 null.
+ * 주의: 댓글에는 기존 형식의 public 경로 문자열이 그대로 저장되며(하위 호환),
+ * 이 함수가 표시 시점에 경로만 추출해 서명한다.
+ */
+export async function createSignedBoardFileUrl(rawUrl: string, expiresInSeconds = 60 * 60): Promise<string | null> {
+  if (!rawUrl) return null
+  if (rawUrl.startsWith('data:')) return rawUrl
+  const marker = '/board-files/'
+  const idx = rawUrl.indexOf(marker)
+  if (idx === -1) return null
+  const path = decodeURIComponent(rawUrl.slice(idx + marker.length))
+  const packed = getStoredAccessToken()
+  if (!packed) return null
+  const { access } = unpackToken(packed)
+  try {
+    const { data, error } = await dataClientFor(access).storage.from('board-files').createSignedUrl(path, expiresInSeconds)
+    if (error) return null
+    return data?.signedUrl ?? null
+  } catch {
+    return null
+  }
 }
 
 // ---------------------------------------------------------------------------

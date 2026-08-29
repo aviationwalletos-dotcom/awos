@@ -50,9 +50,21 @@ function latestByCreatedAt(items: CommentItem[]): CommentItem | null {
   return items.reduce((latest, item) => (new Date(item.created_at) > new Date(latest.created_at) ? item : latest))
 }
 
-/** 댓글 목록에서 가장 최근의 [SIGNED] 댓글을 찾는다. 없으면 null. */
-export function findSignedComment(comments: CommentItem[]): CommentItem | null {
-  return latestByCreatedAt(comments.filter(isSignedComment))
+/**
+ * 댓글 목록에서 가장 최근의 "유효한" [SIGNED] 댓글을 찾는다. 없으면 null.
+ *
+ * [SEC-001] 로그인 회원 누구나(요청자 본인 포함) 댓글을 달 수 있으므로 접두어만으로 판정하면
+ * 셀프 서명 위조가 가능하다. 따라서 approvedInstructorIds("기관에게 승인 완료된 교관" 계정
+ * 집합)에 포함된 작성자의 [SIGNED] 댓글만 서명으로 인정한다. 집합이 비어 있으면(로딩·미설정
+ * 포함) 어떤 댓글도 인정하지 않는다(fail-closed).
+ */
+export function findSignedComment(
+  comments: CommentItem[],
+  approvedInstructorIds: ReadonlySet<string>,
+): CommentItem | null {
+  return latestByCreatedAt(
+    comments.filter((comment) => isSignedComment(comment) && approvedInstructorIds.has(comment.author_id)),
+  )
 }
 
 /**

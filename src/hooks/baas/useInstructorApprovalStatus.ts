@@ -9,6 +9,7 @@
 
 import { useCallback, useMemo } from 'react'
 
+import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import { findInstructorApplicationByUserId, isApprovedByComments } from '../../lib/baas/instructorApproval'
 import { useComments } from './useComments'
 import { useInstructorApplications } from './useInstructorApplications'
@@ -44,7 +45,11 @@ export function useInstructorApprovalStatus(account: AccountResponse | null): Us
     refetch: refetchComments,
   } = useComments(myApplication?.id, { enabled: Boolean(myApplication) })
 
-  const isApproved = useMemo(() => isApprovedByComments(commentsData?.items ?? []), [commentsData])
+  const { orgIds } = useAuthorizedOrgIds()
+  const isApproved = useMemo(
+    () => isApprovedByComments(commentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
+    [commentsData, orgIds],
+  )
 
   const refetch = useCallback(async () => {
     await refetchApplications()

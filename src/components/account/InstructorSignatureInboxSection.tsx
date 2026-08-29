@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Clock3, Inbox, RefreshCw, ShieldCheck } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { EMPTY_ID_SET, useApprovedInstructorIdSet } from '../../lib/baas/authorization'
 import {
   buildSignedCommentContent,
   findSignedComment,
@@ -12,6 +13,7 @@ import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
 import { SignaturePad } from '../logbook/SignaturePad'
 import { useComments } from '../../hooks/baas/useComments'
+import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
 import { useSignatureRequests } from '../../hooks/baas/useSignatureRequests'
 import { useUploadSignatureImage } from '../../hooks/baas/useUploadSignatureImage'
@@ -40,11 +42,18 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
 
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
 
-  const signedComment = useMemo(() => findSignedComment(commentsData?.items ?? []), [commentsData])
-  const signedImageUrl = useMemo(
+  // [SEC-001] 승인 교관 계정이 남긴 [SIGNED] 댓글만 유효 서명으로 인정한다.
+  const { instructorIds } = useApprovedInstructorIdSet()
+  const signedComment = useMemo(
+    () => findSignedComment(commentsData?.items ?? [], instructorIds ?? EMPTY_ID_SET),
+    [commentsData, instructorIds],
+  )
+  const signedImageRawUrl = useMemo(
     () => (signedComment ? parseSignatureImageUrlFromComment(signedComment) : undefined),
     [signedComment],
   )
+  // [SEC-003] 비공개 버킷 전환 후에도 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
+  const signedImageUrl = useSignedFileUrl(signedImageRawUrl)
 
   useEffect(() => {
     if (!isCheckingComments) onStatusResolved(post.id, Boolean(signedComment))

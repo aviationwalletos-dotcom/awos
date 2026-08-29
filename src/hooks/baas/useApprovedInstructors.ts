@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { type ApiEnvelope, BAAS_BASE_URL, getAuthHeaders, parseJsonResponse } from '../../lib/baas/config'
 import { baasFetch } from '../../lib/baas/supabaseTransport'
+import { fetchAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   parseAffiliationFromContent,
   parseInstructorApplicationTitle,
@@ -70,13 +71,15 @@ export function useApprovedInstructors(): UseApprovedInstructorsReturn {
     setResolveError(null)
 
     try {
+      // [SEC-001] 기관 계정의 [APPROVED] 댓글만 유효 승인으로 인정한다.
+      const orgIds = await fetchAuthorizedOrgIds()
       const results = await Promise.all(
         items.map(async (item) => {
           const parsed = parseInstructorApplicationTitle(item.title)
           if (!parsed) return null
 
           const comments = await fetchCommentsForPost(item.id)
-          const decision = resolveApprovalDecision(comments?.items ?? [])
+          const decision = resolveApprovalDecision(comments?.items ?? [], orgIds)
           if (decision.status !== 'approved') return null
 
           const affiliation = parseAffiliationFromContent(item.content) ?? '미상'

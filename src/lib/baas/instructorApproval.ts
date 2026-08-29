@@ -135,19 +135,29 @@ export interface ApprovalDecisionResult {
 }
 
 /**
- * 신청 게시글의 댓글 목록에서 가장 최근의 승인/반려 댓글을 찾아 최종 판정을 내린다.
+ * 신청 게시글의 댓글 목록에서 가장 최근의 "유효한" 승인/반려 댓글을 찾아 최종 판정을 내린다.
  * 승인 이후 반려 댓글이 더 최근에 달리면(또는 그 반대) 더 최근 댓글을 최종 상태로 취급한다.
+ *
+ * [SEC-001] 로그인 회원 누구나 댓글을 달 수 있으므로 내용 접두어만으로 판정하면 위조가 가능하다.
+ * 따라서 authorizedOrgIds(authorized_orgs 테이블에 등록된 기관 계정)에 포함된 작성자의
+ * 댓글만 판정에 사용한다. 집합이 비어 있으면(로딩·미설정 포함) 항상 'pending'을 반환한다.
  */
-export function resolveApprovalDecision(comments: CommentItem[]): ApprovalDecisionResult {
-  const decisionComments = comments.filter((comment) => isApprovalComment(comment) || isRejectionComment(comment))
+export function resolveApprovalDecision(
+  comments: CommentItem[],
+  authorizedOrgIds: ReadonlySet<string>,
+): ApprovalDecisionResult {
+  const decisionComments = comments.filter(
+    (comment) =>
+      (isApprovalComment(comment) || isRejectionComment(comment)) && authorizedOrgIds.has(comment.author_id),
+  )
   const latest = latestByCreatedAt(decisionComments)
   if (!latest) return { status: 'pending', comment: null }
   return { status: isApprovalComment(latest) ? 'approved' : 'rejected', comment: latest }
 }
 
-/** 댓글 목록만으로 승인 여부를 판정하는 축약 헬퍼. */
-export function isApprovedByComments(comments: CommentItem[]): boolean {
-  return resolveApprovalDecision(comments).status === 'approved'
+/** 댓글 목록만으로 승인 여부를 판정하는 축약 헬퍼. [SEC-001] 기관 계정 댓글만 인정. */
+export function isApprovedByComments(comments: CommentItem[], authorizedOrgIds: ReadonlySet<string>): boolean {
+  return resolveApprovalDecision(comments, authorizedOrgIds).status === 'approved'
 }
 
 /**

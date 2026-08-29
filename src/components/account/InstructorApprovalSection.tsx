@@ -5,6 +5,7 @@ import { Button } from '../Button'
 import { useComments } from '../../hooks/baas/useComments'
 import { useCreateInstructorApplication } from '../../hooks/baas/useCreateInstructorApplication'
 import { useInstructorApplications } from '../../hooks/baas/useInstructorApplications'
+import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   buildAffiliationLine,
   buildInstructorApplicationTitle,
@@ -56,7 +57,11 @@ export function InstructorApprovalSection({ account, affiliation }: InstructorAp
     refetch: refetchComments,
   } = useComments(myApplication?.id, { enabled: Boolean(myApplication) })
 
-  const decision = useMemo(() => resolveApprovalDecision(commentsData?.items ?? []), [commentsData])
+  const { orgIds } = useAuthorizedOrgIds()
+  const decision = useMemo(
+    () => resolveApprovalDecision(commentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
+    [commentsData, orgIds],
+  )
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()

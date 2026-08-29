@@ -10,6 +10,7 @@ import { useComments } from '../../hooks/baas/useComments'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
 import { useInstructorApplications } from '../../hooks/baas/useInstructorApplications'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
+import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   buildApprovalCommentContent,
   buildRejectionCommentContent,
@@ -55,7 +56,11 @@ function ApplicationRow({ item, onStatusResolved }: ApplicationRowProps) {
   const { data: commentsData, isLoading: isCheckingDecision, error: commentsError, refetch: refetchComments } = useComments(item.id)
   const { createComment, isLoading: isSubmitting, error: submitError, reset: resetSubmit } = useCreateComment(item.id)
 
-  const decision = useMemo(() => resolveApprovalDecision(commentsData?.items ?? []), [commentsData])
+  const { orgIds } = useAuthorizedOrgIds()
+  const decision = useMemo(
+    () => resolveApprovalDecision(commentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
+    [commentsData, orgIds],
+  )
   const affiliation = useMemo(
     () => parseAffiliationFromTitle(item.title) ?? parseAffiliationFromContent(item.content),
     [item.title, item.content],

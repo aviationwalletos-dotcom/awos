@@ -1,6 +1,7 @@
 import { Camera, CheckCircle2, Clock3, Pencil, RefreshCw, Send, ShieldCheck, Trash2, X } from 'lucide-react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
+import { EMPTY_ID_SET, useApprovedInstructorIdSet, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   parseDecidedAtFromComment,
   resolveApprovalDecision,
@@ -13,6 +14,7 @@ import {
   parseSignedAtFromComment,
 } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
+import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { Button } from '../Button'
 import { StatusBadge } from '../StatusBadge'
 import { EntryForm } from './EntryForm'
@@ -128,9 +130,15 @@ export function EntryDetailDialog({
     refetch: refetchCertificateComments,
   } = useComments(certificateRequestPostId, { enabled: shouldTrackCertificateDecision })
 
+  // [SEC-001] 판정에 쓰는 권한 집합(기관/승인 교관). 로드 전에는 판정을 보류한다.
+  const { orgIds } = useAuthorizedOrgIds()
+  const { instructorIds } = useApprovedInstructorIdSet()
+  // [SEC-003] 비공개 버킷 전환 후에도 교관 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
+  const resolvedInstructorSignatureUrl = useSignedFileUrl(entry?.instructorSignature?.signatureDataUrl)
+
   const certificateDecision = useMemo(
-    () => resolveApprovalDecision(certificateCommentsData?.items ?? []),
-    [certificateCommentsData],
+    () => resolveApprovalDecision(certificateCommentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
+    [certificateCommentsData, orgIds],
   )
 
   useEffect(() => {
@@ -157,9 +165,9 @@ export function EntryDetailDialog({
   // 서명 요청 대기중인 게시글에 교관이 [SIGNED] 댓글을 남겼는지 확인해, 발견되면 자동으로
   // 이 기록의 서명 완료 상태로 전환한다(댓글 작성자 = 인증된 교관 계정이므로 그 자체가 전자서명).
   useEffect(() => {
-    if (!entry || entry.instructorSignature || !pendingRequestPostId || !commentsData) return
+    if (!entry || entry.instructorSignature || !pendingRequestPostId || !commentsData || !instructorIds) return
 
-    const signedComment = findSignedComment(commentsData.items)
+    const signedComment = findSignedComment(commentsData.items, instructorIds)
     if (!signedComment) return
 
     onUpdate(entry.id, {
@@ -171,7 +179,7 @@ export function EntryDetailDialog({
         signedAt: parseSignedAtFromComment(signedComment),
       },
     })
-  }, [entry, pendingRequestPostId, commentsData, onUpdate])
+  }, [entry, pendingRequestPostId, commentsData, instructorIds, onUpdate])
 
   // 비행경력증명서 인증 요청 게시글에 기관 담당자가 [APPROVED]/[REJECTED] 댓글을 남겼는지 확인해,
   // 발견되면 자동으로 이 기록의 인증 상태를 갱신한다(승인 → confirmed, 반려 → rejected).
@@ -505,9 +513,9 @@ export function EntryDetailDialog({
                     </div>
                   ) : (
                     <div data-mbaas-oid="48yreht" className="mt-3 space-y-2">
-                      {entry.instructorSignature.signatureDataUrl && (
+                      {resolvedInstructorSignatureUrl && (
                         <img
-                          data-mbaas-oid="9pv77r0" src={entry.instructorSignature.signatureDataUrl}
+                          data-mbaas-oid="9pv77r0" src={resolvedInstructorSignatureUrl ?? undefined}
                           alt={`${entry.instructorSignature.instructorName} 교관 서명 이미지`}
                           className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
                         />
