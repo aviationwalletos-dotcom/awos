@@ -85,7 +85,7 @@ export function Hero() {
         className="bg-blueprint pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(65% 55% at 15% 5%, rgba(34,211,238,0.13), transparent 62%),' +
+            'radial-gradient(65% 55% at 15% 5%, rgba(0,212,255,0.13), transparent 62%),' +
             'radial-gradient(55% 50% at 90% 25%, rgba(59,130,246,0.14), transparent 65%),' +
             'radial-gradient(100% 60% at 50% 108%, rgba(10,16,32,0.6), transparent 72%)',
         }}

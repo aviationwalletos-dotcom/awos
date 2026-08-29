@@ -54,7 +54,7 @@ export function LoginPage() {
       </header>
 
       <main data-mbaas-oid="lgnpg07" className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
-        <div data-mbaas-oid="lgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(34,211,238,0.14),transparent_55%)]" />
+        <div data-mbaas-oid="lgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
         <div data-mbaas-oid="lgnpg09" className="relative mx-auto max-w-md px-6">
           <div data-mbaas-oid="lgnpg10" className="text-center">
             <span data-mbaas-oid="lgnpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">

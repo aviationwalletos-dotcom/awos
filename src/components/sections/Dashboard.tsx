@@ -9,7 +9,7 @@ import { DASHBOARD_ROWS } from '../../data/content'
 export function Dashboard() {
   return (
     <section data-mbaas-oid="axmxojw" id="dashboard" className="relative overflow-hidden bg-navy-dark py-[clamp(80px,10vw,160px)] text-white">
-      <div data-mbaas-oid="tyyegr3" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(34,211,238,0.12),transparent_50%)]" />
+      <div data-mbaas-oid="tyyegr3" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,212,255,0.12),transparent_50%)]" />
 
       <div data-mbaas-oid="hayvrfb" className="relative mx-auto max-w-7xl px-6">
         <Reveal>
@@ -75,7 +75,7 @@ export function Dashboard() {
               </Button>
               <Link
                 data-mbaas-oid="wdr17co" to="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-control bg-sky px-4 py-2 text-sm font-semibold text-navy shadow-[0_0_24px_rgba(34,211,238,0.35)]
+                className="inline-flex items-center gap-1.5 rounded-control bg-sky px-4 py-2 text-sm font-semibold text-navy shadow-[0_0_24px_rgba(0,212,255,0.35)]
                   transition-all duration-200 hover:bg-sky/90 active:scale-[0.98]
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               >

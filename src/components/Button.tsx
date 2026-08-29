@@ -19,13 +19,13 @@ const sizeClasses: Record<Size, string> = {
 }
 
 const toneSolid: Record<Tone, string> = {
-  brand: 'bg-sky text-navy hover:bg-sky/90 shadow-[0_0_24px_rgba(34,211,238,0.35)]',
+  brand: 'bg-brand text-white hover:bg-brand-hover hover:-translate-y-px shadow-[0_8px_24px_-8px_rgba(37,99,235,0.55)]',
   neutral: 'bg-ink text-navy-dark hover:bg-white',
   danger: 'bg-rose-600 text-white hover:bg-rose-700',
 }
 
 const toneOutline: Record<Tone, string> = {
-  brand: 'border-2 border-sky text-sky hover:bg-sky/10',
+  brand: 'border border-white/25 text-slate-200 hover:border-sky/50 hover:text-white',
   neutral: 'border-2 border-white/15 text-ink hover:bg-white/[0.06]',
   danger: 'border-2 border-rose-500/70 text-rose-300 hover:bg-rose-500/10',
 }

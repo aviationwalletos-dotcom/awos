@@ -170,7 +170,7 @@ export function AccountPage() {
       <PageHeader />
 
       <main data-mbaas-oid="pmhr8v8" className="relative overflow-hidden py-[clamp(64px,8vw,120px)]">
-        <div data-mbaas-oid="s1w9ydd" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(34,211,238,0.14),transparent_55%)]" />
+        <div data-mbaas-oid="s1w9ydd" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
         <div data-mbaas-oid="ci6ukcu" className="relative mx-auto max-w-2xl px-6">
           <span data-mbaas-oid="pn272mq" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
             <UserCircle2 className="h-3.5 w-3.5" aria-hidden="true" />

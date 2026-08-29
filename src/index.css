@@ -10,20 +10,21 @@
 
 /* CSS 변수로 커스텀 색상 정의 (미리보기에서도 작동) */
 :root {
+  --ease-concept: cubic-bezier(0.16, 1, 0.3, 1);
   /* 옵션 A "시네마틱 OS" 다크 팔레트 — tailwind.config.js 토큰과 동기화 */
-  --color-primary: #22d3ee;
-  --color-primary-hover: #4ae0f5;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
   --color-secondary: #98a2b6;
   --color-accent: #2563eb;
-  --color-background: #070b14;
+  --color-background: #05070d;
   --color-foreground: #f2f5fa;
-  --color-muted: #0d1526;
+  --color-muted: #0b1220;
   --color-muted-foreground: #98a2b6;
   --color-border: rgba(255, 255, 255, 0.09);
 }
 
 ::selection {
-  background: rgba(34, 211, 238, 0.28);
+  background: rgba(0, 212, 255, 0.28);
 }
 
 /* 기본 리셋 및 베이스 스타일 */
@@ -186,7 +187,7 @@ p {
 /* 미세 격자 + 방사 글로우 배경(히어로/기능 섹션) */
 .bg-blueprint {
   background-image:
-    radial-gradient(60% 50% at 16% 6%, rgba(34, 211, 238, 0.1), transparent 62%),
+    radial-gradient(60% 50% at 16% 6%, rgba(0, 212, 255, 0.1), transparent 62%),
     radial-gradient(50% 45% at 88% 20%, rgba(37, 99, 235, 0.12), transparent 64%),
     linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);

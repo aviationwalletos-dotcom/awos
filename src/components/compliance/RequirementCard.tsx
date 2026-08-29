@@ -6,7 +6,7 @@ import type { RequirementItem } from '../../lib/roleCompliance'
 const STATUS_BADGE_CLASS: Record<RequirementItem['status'], string> = {
   met: 'bg-go/10 text-go',
   unmet: 'bg-rose-500/100/15 text-rose-300',
-  info: 'bg-sky/10 text-[#22D3EE]',
+  info: 'bg-sky/10 text-[#00D4FF]',
 }
 
 const STATUS_DEFAULT_LABEL: Record<RequirementItem['status'], string> = {

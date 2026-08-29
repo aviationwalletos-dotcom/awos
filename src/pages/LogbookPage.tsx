@@ -356,7 +356,7 @@ export function LogbookPage() {
 
       <main data-mbaas-oid="bh5vvhf">
         <section data-mbaas-oid="zm0n7fe" className="relative overflow-hidden bg-navy-dark py-[clamp(24px,3vw,40px)] text-white">
-          <div data-mbaas-oid="flk85t0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.14),transparent_55%)]" />
+          <div data-mbaas-oid="flk85t0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(0,212,255,0.14),transparent_55%)]" />
           <div data-mbaas-dynamic="true" data-mbaas-oid="lgbpg10" className="relative mx-auto max-w-4xl px-6">
             <span data-mbaas-oid="lgbpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
               <NotebookPen className="h-3.5 w-3.5" aria-hidden="true" />
@@ -404,7 +404,7 @@ export function LogbookPage() {
                     onClick={() => setActiveTab(key)}
                     className={`inline-flex min-h-[44px] items-center gap-2 rounded-control border px-4 py-2 text-sm font-semibold transition-colors
                       focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                      ${isActive ? 'border-sky bg-sky/10 text-[#22D3EE]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
+                      ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
                   >
                     <Icon className="h-4 w-4" aria-hidden={true} />
                     {label}

@@ -29,7 +29,7 @@ export function Roles() {
     <section data-mbaas-oid="4xikbic" id="roles" className="bg-surface py-[clamp(80px,10vw,160px)]">
       <div data-mbaas-oid="i3xwj5r" className="mx-auto max-w-7xl px-6">
         <Reveal>
-          <p data-mbaas-oid="y7aqpud" className="text-sm font-semibold uppercase tracking-wide text-[#22D3EE]">
+          <p data-mbaas-oid="y7aqpud" className="text-sm font-semibold uppercase tracking-wide text-[#00D4FF]">
             역할별 기능 쇼케이스
           </p>
           <h2

@@ -607,7 +607,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
         accept=".xlsx,.xls,.csv"
         onChange={handleFileChange}
         className="block w-full text-sm text-ink file:mr-3 file:rounded-control file:border-0 file:bg-sky/10 file:px-3 file:py-1.5
-          file:text-sm file:font-semibold file:text-[#22D3EE]
+          file:text-sm file:font-semibold file:text-[#00D4FF]
           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
       />
 

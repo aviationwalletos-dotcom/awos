@@ -496,7 +496,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
       <div data-mbaas-oid="klj11ft" className="flex items-start gap-3 rounded-control border border-sky/30 bg-sky/10 px-4 py-3">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky" aria-hidden="true" />
-        <p data-mbaas-oid="e78kbgj" className="text-xs font-medium text-[#22D3EE]">
+        <p data-mbaas-oid="e78kbgj" className="text-xs font-medium text-[#00D4FF]">
           저장하면 "인증 대기중" 상태로 표시되며, 동시에 소속 기관이 실제로 검토·승인/반려할 수 있도록 "비행경력증명서"
           게시판에 인증 요청도 함께 제출됩니다. 상세 화면에서 승인/반려 결과가 자동으로 반영됩니다. 요청 제출 자체에
           실패한 경우에만 본인이 직접 "학교/교관에게 확인받았습니다" 버튼으로 확인 처리할 수 있습니다.

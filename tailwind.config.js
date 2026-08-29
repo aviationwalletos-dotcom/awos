@@ -6,26 +6,30 @@ export default {
     extend: {
       colors: {
         navy: {
-          DEFAULT: '#0A1122', // 딥 네이비(컨셉 하향) — 퓨어 블랙과 리뷰 절충
+          DEFAULT: '#05070D', // 컨셉 원값 — 딥 블랙
           light: '#1E293B',
-          dark: '#05070D',    // 최심부(컨셉 원색)
+          dark: '#030509',    // 최심부(푸터 등, 배경보다 반 단계 아래)
         },
-        panel: '#0D1526',      // 패널 — 헤어라인 미학에 맞춘 은은한 층
+        panel: '#0B1220',      // 패널 — 컨셉 원값
         deep: '#13294B',       // 히어로 그라디언트용 딥 블루(컨셉 값)
         sky: {
-          DEFAULT: '#22D3EE', // 시그니처 시안 — 형광도를 낮춰 어두운 배경 번짐(할레이션) 완화
+          DEFAULT: '#00D4FF', // 시그니처 시안 — 컨셉 원값(포인트 전용, 대면적 사용 금지)
+        },
+        brand: {
+          DEFAULT: '#2563EB', // 컨셉 프라이머리(행동 버튼) — 시안은 강조, 블루는 행동
+          hover: '#1D4ED8',
         },
         go: {
           DEFAULT: '#10B981',
         },
         surface: {
-          DEFAULT: '#070B14', // 페이지 배경 — 컨셉 딥 블랙과 리뷰 네이비의 절충
+          DEFAULT: '#05070D', // 페이지 배경 — 컨셉 원값
         },
         ink: {
           DEFAULT: '#F2F5FA', // 기본 텍스트 (다크 전환으로 라이트 반전)
         },
         role: {
-          pilot: '#22D3EE',
+          pilot: '#00D4FF',
           mechanic: '#F59E0B',
           controller: '#10B981',
           ops: '#A855F7',
@@ -39,7 +43,7 @@ export default {
       },
       borderRadius: {
         card: '20px',
-        control: '10px',
+        control: '6px', // 컨셉 원값(버튼·입력 6px)
       },
       spacing: {
         section: '96px',
