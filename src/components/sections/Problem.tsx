@@ -15,7 +15,7 @@ export function Problem() {
     <section id="problem" className="bg-navy-dark py-[clamp(64px,8vw,120px)]">
       <div className="mx-auto max-w-7xl px-6">
         <Reveal>
-          <p className="font-mono-data text-xs tracking-[0.24em] text-sky">THE PROBLEM</p>
+          <p className="eyebrow-tech">The Problem</p>
           <h2
             className="mt-4 max-w-3xl font-display font-extrabold text-ink"
             style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.02em', lineHeight: 1.25 }}
@@ -26,11 +26,12 @@ export function Problem() {
           </h2>
         </Reveal>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        <div className="mt-10 space-y-2.5">
+          {/* 관제 플라이트 스트립 미학: 사각 행 + 좌측 틱 + 헤어라인 */}
           {PAIN_POINTS.map((point) => (
             <Reveal key={point}>
-              <div className="flex h-full items-start gap-3 rounded-card border border-white/10 bg-panel p-5">
-                <AlertCircle className="mt-0.5 h-5 w-5 flex-none text-slate-500" aria-hidden="true" />
+              <div className="flex items-start gap-3.5 border border-white/10 border-l-2 border-l-slate-500/70 bg-panel/70 px-4 py-3.5 transition-colors hover:border-white/20">
+                <AlertCircle className="mt-0.5 h-4.5 w-4.5 flex-none text-slate-500" aria-hidden="true" />
                 <p className="text-[15px] leading-relaxed text-slate-300">{point}</p>
               </div>
             </Reveal>

@@ -15,9 +15,9 @@
   --color-primary-hover: #4ae0f5;
   --color-secondary: #98a2b6;
   --color-accent: #2563eb;
-  --color-background: #0f172a;
+  --color-background: #070b14;
   --color-foreground: #f2f5fa;
-  --color-muted: #152033;
+  --color-muted: #0d1526;
   --color-muted-foreground: #98a2b6;
   --color-border: rgba(255, 255, 255, 0.09);
 }
@@ -170,4 +170,25 @@ p {
   .blip-pulse {
     animation: none;
   }
+}
+
+
+/* ── 기술 문서(블루프린트) 미학 유틸 — 랜딩 전용 컨셉 ─────────────────────────── */
+.eyebrow-tech {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #98a2b6;
+}
+.hairline { border-color: rgba(255, 255, 255, 0.08); }
+.hairline-strong { border-color: rgba(255, 255, 255, 0.16); }
+/* 미세 격자 + 방사 글로우 배경(히어로/기능 섹션) */
+.bg-blueprint {
+  background-image:
+    radial-gradient(60% 50% at 16% 6%, rgba(34, 211, 238, 0.1), transparent 62%),
+    radial-gradient(50% 45% at 88% 20%, rgba(37, 99, 235, 0.12), transparent 64%),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
 }

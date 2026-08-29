@@ -16,7 +16,6 @@ import {
 
 import { Footer } from '../components/Footer'
 import { Button } from '../components/Button'
-import { AwosSectionTabs } from '../components/AwosSectionTabs'
 import { Reveal } from '../components/Reveal'
 import { EntryForm } from '../components/logbook/EntryForm'
 import { QuickEntryForm } from '../components/logbook/QuickEntryForm'
@@ -354,8 +353,6 @@ export function LogbookPage() {
           </p>
         </div>
       </header>
-
-      <AwosSectionTabs />
 
       <main data-mbaas-oid="bh5vvhf">
         <section data-mbaas-oid="zm0n7fe" className="relative overflow-hidden bg-navy-dark py-[clamp(24px,3vw,40px)] text-white">

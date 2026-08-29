@@ -15,6 +15,7 @@ export function FinalCta() {
     <section className="bg-navy-dark py-[clamp(64px,8vw,120px)]">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <Reveal>
+          <p className="eyebrow-tech mb-4">Start Logging</p>
           <h2
             className="font-display font-extrabold text-ink"
             style={{ fontSize: 'clamp(1.6rem, 1.3rem + 1.5vw, 2.25rem)', letterSpacing: '-0.02em' }}

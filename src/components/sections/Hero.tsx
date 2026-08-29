@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { Button } from '../Button'
 import { HERO_STAT } from '../../data/content'
+import { TechFrame } from '../TechFrame'
 
 // 히어로 우측 시각 요소.
 //
@@ -12,8 +13,11 @@ import { HERO_STAT } from '../../data/content'
 // 무엇을 해주는 도구인지 즉시 전달된다(Show, don't tell).
 function LogbookPreview() {
   return (
+    <TechFrame
+      className="w-full bg-panel/90 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur"
+    >
     <div
-      className="w-full rounded-card border border-white/10 bg-panel/90 p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur"
+      className="p-5"
       role="img"
       aria-label="AWOS 디지털 로그북 화면 예시 — 누적 비행시간과 항목별 집계, 최근 비행 기록 목록"
     >
@@ -63,6 +67,7 @@ function LogbookPreview() {
 
       <p className="mt-3 text-center font-mono-data text-[9px] tracking-wider text-slate-500">예시 데이터</p>
     </div>
+    </TechFrame>
   )
 }
 
@@ -77,7 +82,7 @@ export function Hero() {
     >
       <div
         data-mbaas-oid="wyjpu2x"
-        className="pointer-events-none absolute inset-0"
+        className="bg-blueprint pointer-events-none absolute inset-0"
         style={{
           background:
             'radial-gradient(65% 55% at 15% 5%, rgba(34,211,238,0.13), transparent 62%),' +
@@ -88,9 +93,9 @@ export function Hero() {
 
       <div data-mbaas-oid="n5mur3s" className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div data-mbaas-oid="89u7vw5">
-          <span data-mbaas-oid="ovvgxer" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
-            디지털 파일럿 로그북
-          </span>
+          <p data-mbaas-oid="ovvgxer" className="eyebrow-tech">
+            Digital Pilot Logbook — KR Format
+          </p>
 
           <h1
             data-mbaas-oid="kiqsaol" className="mt-6 font-display text-white"
@@ -110,16 +115,15 @@ export function Hero() {
             <strong className="font-semibold text-white"> 국내 비행경력증명서 서식</strong> 기준 · 교관 전자서명 · CSV · PDF 내보내기 지원.
           </p>
 
-          <div
-            data-mbaas-oid="weuxcgg"
-            className="mt-8 inline-flex items-start gap-3 rounded-card border border-sky/20 bg-sky/[0.06] px-5 py-4 backdrop-blur-sm"
-          >
-            <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-sky" aria-hidden="true" />
-            <div>
-              <p data-mbaas-oid="bcbyfm9" className="text-sm font-semibold text-ink">{HERO_STAT.value}</p>
-              <p data-mbaas-oid="djwb5z4" className="mt-1 text-sm text-slate-400">{HERO_STAT.label}</p>
+          <TechFrame className="mt-8 inline-block bg-white/[0.03] backdrop-blur-sm">
+            <div data-mbaas-oid="weuxcgg" className="flex items-start gap-3 px-5 py-4">
+              <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-sky" aria-hidden="true" />
+              <div>
+                <p data-mbaas-oid="bcbyfm9" className="text-sm font-semibold text-ink">{HERO_STAT.value}</p>
+                <p data-mbaas-oid="djwb5z4" className="mt-1 text-sm text-slate-400">{HERO_STAT.label}</p>
+              </div>
             </div>
-          </div>
+          </TechFrame>
 
           <div data-mbaas-oid="tk5xlsd" className="mt-10 flex flex-wrap gap-4">
             <Button data-mbaas-oid="2722r3q" size="lg" onClick={() => navigate('/signup')}>

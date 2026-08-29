@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, FileCheck2, Gauge, Info, ShieldCheck, Users } from 'lucide-react'
 
 import { Footer } from '../components/Footer'
-import { AwosSectionTabs } from '../components/AwosSectionTabs'
 import { Reveal } from '../components/Reveal'
 import { Button } from '../components/Button'
 import { PersonnelFilterBar, type StatusFilter } from '../components/dashboard/PersonnelFilterBar'
@@ -107,8 +106,6 @@ export function DashboardPage() {
           </p>
         </div>
       </header>
-
-      <AwosSectionTabs />
 
       <main data-mbaas-oid="um7limy">
         <section data-mbaas-oid="74h26xy" className="relative overflow-hidden bg-navy-dark py-[clamp(24px,3vw,40px)] text-white">
