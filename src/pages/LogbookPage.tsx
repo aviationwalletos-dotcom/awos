@@ -538,6 +538,23 @@ export function LogbookPage() {
 
         {activeTab === 'certificates' && (
           <>
+            <section data-mbaas-oid="7r4ryck" className="bg-panel py-[clamp(64px,8vw,120px)]">
+              <div data-mbaas-oid="5nfdg3d" className="mx-auto max-w-4xl px-6">
+                <Reveal>
+                  <h2 data-mbaas-oid="x782ba2" className="font-display text-2xl font-extrabold text-ink">
+                    내 자격증 목록
+                  </h2>
+                  <div data-mbaas-oid="85jt1q8" className="mt-6">
+                    <CertificateList
+                      certificates={certificates}
+                      onSelect={setSelectedCertificate}
+                      accentHoverBorderClass={roleContent?.hoverBorderClass}
+                    />
+                  </div>
+                </Reveal>
+              </div>
+            </section>
+
             <section data-mbaas-oid="xaqul3f" className="bg-surface py-[clamp(64px,8vw,120px)]">
               <div data-mbaas-oid="wuso7uw" className="mx-auto max-w-4xl px-6">
                 <Reveal>
@@ -582,22 +599,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="7r4ryck" className="bg-panel py-[clamp(64px,8vw,120px)]">
-              <div data-mbaas-oid="5nfdg3d" className="mx-auto max-w-4xl px-6">
-                <Reveal>
-                  <h2 data-mbaas-oid="x782ba2" className="font-display text-2xl font-extrabold text-ink">
-                    내 자격증 목록
-                  </h2>
-                  <div data-mbaas-oid="85jt1q8" className="mt-6">
-                    <CertificateList
-                      certificates={certificates}
-                      onSelect={setSelectedCertificate}
-                      accentHoverBorderClass={roleContent?.hoverBorderClass}
-                    />
-                  </div>
-                </Reveal>
-              </div>
-            </section>
+            
           </>
         )}
 

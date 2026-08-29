@@ -61,12 +61,18 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setImageError('이미지 파일만 첨부할 수 있습니다.')
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    if (!file.type.startsWith('image/') && !isPdf) {
+      setImageError('이미지 또는 PDF 파일만 첨부할 수 있습니다.')
       return
     }
     setImageError(null)
     setImageFile(file)
+    if (isPdf) {
+      // PDF는 <img> 미리보기가 불가능하므로 데이터URL을 만들지 않는다(파일명 배지로 표시).
+      setImageDataUrl(null)
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => {
       setImageDataUrl(typeof reader.result === 'string' ? reader.result : null)
@@ -77,7 +83,10 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const form = new FormData(e.currentTarget)
+    // await 이후에는 리액트 이벤트의 currentTarget이 null이 될 수 있으므로 미리 잡아둔다.
+    // (제출 후 무한 로딩 버그의 원인 — reset()에서 예외가 나며 로딩 해제 코드에 도달하지 못했음)
+    const formEl = e.currentTarget
+    const form = new FormData(formEl)
     const nextErrors: FieldErrors = {}
 
     const date = String(form.get('date') || '').trim()
@@ -129,6 +138,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
     setIsSubmitting(true)
     setSyncNotice(null)
+    try {
 
     // 1. 사진이 있으면 먼저 presigned 업로드로 file_id를 확보한다(게시글 첨부용).
     let fileId: number | undefined
@@ -196,21 +206,24 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       certificateRequestPostId,
     })
 
-    e.currentTarget.reset()
+    formEl.reset()
     setImageDataUrl(null)
     setImageFile(null)
     setImageError(null)
-    setIsSubmitting(false)
     setSubmitted(true)
     setSyncNotice(
       certificateRequestPostId
-        ? { tone: 'success', message: '기관에 인증 요청을 제출했습니다. "내 비행 기록" 상세 화면에서 승인/반려 여부를 확인할 수 있습니다.' }
+        ? { tone: 'success', message: '관리자에게 인증 요청을 제출했습니다. "내 비행 기록" 상세 화면에서 승인/반려 여부를 확인할 수 있습니다.' }
         : {
             tone: 'warning',
             message:
-              '기록은 이 브라우저에 저장되었지만, 기관 인증 요청 제출에는 실패했습니다(네트워크 오류 등). 상세 화면에서 "학교/교관에게 확인받았습니다" 버튼으로 자기 확인할 수 있습니다.',
+              '기록은 이 브라우저에 저장되었지만, 관리자 인증 요청 제출에는 실패했습니다(네트워크 오류 등). 상세 화면에서 "학교/교관에게 확인받았습니다" 버튼으로 자기 확인할 수 있습니다.',
           },
     )
+    } finally {
+      // 어떤 경로로 끝나든 제출 버튼의 로딩 상태는 반드시 해제된다(무한 로딩 구조적 차단).
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -219,8 +232,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         <FileCheck2 className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
         <p data-mbaas-oid="05w8a88" className="text-xs text-slate-400">
           이 폼은 "비행 1건"이 아니라, 비행경력증명서에 적힌 <strong data-mbaas-oid="z6rdqzu">누적 비행경력 총합</strong>을 항목별로 옮겨 적는
-          용도입니다. 출발/도착지나 기종처럼 개별 비행에만 해당하는 값은 입력하지 않습니다. 저장하면 소속 기관에 실제
-          인증 요청을 제출하는 "인증 대기중" 상태의 비행기록 1건으로 등록되며, 기관 담당자가 승인/반려하면 자동으로
+          용도입니다. 출발/도착지나 기종처럼 개별 비행에만 해당하는 값은 입력하지 않습니다. 저장하면 관리자에게 실제
+          인증 요청을 제출하는 "인증 대기중" 상태의 비행기록 1건으로 등록되며, 관리자가 원본과 대조해 승인/반려하면 자동으로
           반영됩니다.
         </p>
       </div>
@@ -460,11 +473,16 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
           사진 선택
         </label>
-        <input data-mbaas-oid="rj7wdha" id="cert-image" type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
+        <input data-mbaas-oid="rj7wdha" id="cert-image" type="file" accept="image/*,application/pdf,.pdf" onChange={handleImageChange} className="sr-only" />
         {imageError && (
           <p data-mbaas-oid="efbref5" role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-600">
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
             {imageError}
+          </p>
+        )}
+        {imageFile && !imageDataUrl && (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-control border border-white/15 bg-white/[0.05] px-3 py-2 text-sm text-slate-300">
+            📄 {imageFile.name} <span className="text-xs text-slate-500">(PDF 첨부됨)</span>
           </p>
         )}
         {imageDataUrl && (

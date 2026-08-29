@@ -38,7 +38,7 @@ function isRejectedCertificate(entry: LogbookEntry): boolean {
 
 export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
   // 교관 전자서명으로 기록의 신뢰성을 검증하므로, 별도의 확인 상태 구분 없이 모든 비행 기록을 합산합니다.
-  // 단, 비행경력증명서로 가져온 기록 중 아직 인증 대기중이거나 기관에서 반려된 것은 공식 합계에서
+  // 단, 비행경력증명서로 가져온 기록 중 아직 인증 대기중이거나 관리자가 반려한 것은 공식 합계에서
   // 제외하고, 각각 "미인증 비행경력증명서(참고용)"/"반려된 비행경력증명서" 소계로 구분해 표시합니다
   // (승인 완료되면 공식 합계에 포함됩니다).
   const officialEntries = entries.filter((e) => !isUnconfirmedCertificate(e))
@@ -148,7 +148,7 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
             </span>
           </p>
           <p data-mbaas-oid="cdqymea" className="mt-1 text-xs text-amber-300">
-            기관에서 승인하거나 학교/교관에게 확인받으면 공식 총 비행시간 합계에 자동으로 포함됩니다.
+            관리자가 원본 증명서와 대조해 승인하면 공식 총 비행시간 합계에 자동으로 포함됩니다.
           </p>
         </div>
       )}
@@ -163,7 +163,7 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
             </span>
           </p>
           <p data-mbaas-oid="cdqymeb" className="mt-1 text-xs text-rose-300">
-            기관에서 반려한 기록입니다. 상세 화면에서 반려 사유를 확인해 주세요.
+            관리자가 반려한 기록입니다. 상세 화면에서 반려 사유를 확인해 주세요.
           </p>
         </div>
       )}

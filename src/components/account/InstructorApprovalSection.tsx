@@ -99,7 +99,7 @@ export function InstructorApprovalSection({ account, affiliation }: InstructorAp
         교관 승인 신청
       </h2>
       <p data-mbaas-oid="iasec03" className="mt-1 text-xs text-slate-400">
-        비행 기록에 교관 전자서명을 하려면 먼저 승인이 필요합니다. 신청 후 기관 관리자의 검토를 기다려 주세요.
+        비행 기록에 교관 전자서명을 하려면 먼저 승인이 필요합니다. 신청 후 관리자의 검토를 기다려 주세요.
       </p>
 
       {isLoading ? (
@@ -133,14 +133,14 @@ export function InstructorApprovalSection({ account, affiliation }: InstructorAp
             <div data-mbaas-oid="iasec29" role="status" className="flex items-center gap-2 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
               <AlertTriangle className="h-4 w-4 shrink-0 text-rose-300" aria-hidden="true" />
               <p data-mbaas-oid="iasec30" className="text-sm font-medium text-rose-300">
-                신청이 반려되었습니다. 문의사항이 있다면 소속 기관 관리자에게 확인해주세요.
+                신청이 반려되었습니다. 문의사항이 있다면 관리자에게 확인해주세요.
               </p>
             </div>
           ) : (
             <div data-mbaas-oid="iasec11" role="status" className="flex items-center gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-4 py-3">
               <Clock3 className="h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
               <p data-mbaas-oid="iasec12" className="text-sm font-medium text-amber-300">
-                승인 대기중입니다. 기관 관리자의 검토가 완료되면 서명이 가능해집니다.
+                승인 대기중입니다. 관리자의 검토가 완료되면 서명이 가능해집니다.
               </p>
             </div>
           )}

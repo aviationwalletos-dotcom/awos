@@ -224,7 +224,7 @@ export function FlightReadinessPanel({
                 ))}
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-                AWOS에 등록된 자격·비행기록 기준의 참고 판정입니다. 실제 비행 가부는 소속 기관 규정과 자격 원본으로 확인하세요.
+                AWOS에 등록된 자격·비행기록 기준의 참고 판정입니다(규칙 세트 v0.9 — 항공안전법·운항기술기준 원문 대조 검증 예정). 실제 비행 가부는 소속 규정과 자격 원본으로 확인하세요.
               </p>
             </div>
           </div>

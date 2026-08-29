@@ -27,6 +27,61 @@ function todayIsoDate(): string {
   return `${y}-${m}-${d}`
 }
 
+// ── 자주 쓰는 값 칩(공항·기종) ─────────────────────────────────────────────────
+// 훈련 비행은 같은 공항·같은 기종의 반복이다. 저장에 성공할 때마다 값을 학습해
+// 입력칸 아래 칩으로 띄우고, 탭 한 번으로 채워지게 한다(수동 등록 불필요).
+const FAVORITES_KEY = 'awos_quick_favorites_v1'
+
+interface QuickFavorites {
+  airports: string[]
+  aircraft: string[]
+}
+
+function loadFavorites(): QuickFavorites {
+  try {
+    const raw = window.localStorage.getItem(FAVORITES_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<QuickFavorites>
+      return { airports: parsed.airports ?? [], aircraft: parsed.aircraft ?? [] }
+    }
+  } catch {
+    // 저장소 접근 실패(프라이빗 모드 등)는 무시 — 칩만 안 뜰 뿐 기능엔 지장 없다.
+  }
+  return { airports: [], aircraft: [] }
+}
+
+function remember(list: string[], value: string, max = 6): string[] {
+  const v = value.trim()
+  if (!v) return list
+  return [v, ...list.filter((x) => x.toLowerCase() !== v.toLowerCase())].slice(0, max)
+}
+
+function saveFavorites(f: QuickFavorites): void {
+  try {
+    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(f))
+  } catch {
+    // 무시
+  }
+}
+
+function FavoriteChips({ values, onPick }: { values: string[]; onPick: (v: string) => void }) {
+  if (values.length === 0) return null
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {values.map((v) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onPick(v)}
+          className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 font-mono-data text-xs text-slate-300 transition-colors hover:border-sky/50 hover:text-sky"
+        >
+          {v}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 const inputClass =
   'w-full rounded-control border border-white/15 bg-white/[0.05] px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-sky focus:outline-none'
 
@@ -40,6 +95,7 @@ export function QuickEntryForm({ onSubmit }: QuickEntryFormProps) {
   const [flightCategory, setFlightCategory] = useState<FlightCategory>('주간')
   const [error, setError] = useState<string | null>(null)
   const [savedFlash, setSavedFlash] = useState(false)
+  const [favorites, setFavorites] = useState<QuickFavorites>(loadFavorites)
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -70,6 +126,13 @@ export function QuickEntryForm({ onSubmit }: QuickEntryFormProps) {
     })
 
     setError(null)
+    // 자주 쓰는 값 학습(공항은 출발·도착 통합 목록, 기종은 별도)
+    const nextFavorites: QuickFavorites = {
+      airports: remember(remember(favorites.airports, dep), arr),
+      aircraft: remember(favorites.aircraft, type),
+    }
+    setFavorites(nextFavorites)
+    saveFavorites(nextFavorites)
     // 다음 구간 준비: 도착지 → 출발지 이월, 나머지 구간 값 초기화(날짜·기종·기체번호는 유지)
     setDeparture(arr)
     setArrival('')
@@ -98,14 +161,17 @@ export function QuickEntryForm({ onSubmit }: QuickEntryFormProps) {
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-slate-400">출발지 *</span>
           <input className={inputClass} value={departure} onChange={(e) => setDeparture(e.target.value)} placeholder="예: RKTL" required />
+          <FavoriteChips values={favorites.airports} onPick={setDeparture} />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-slate-400">도착지 *</span>
           <input className={inputClass} value={arrival} onChange={(e) => setArrival(e.target.value)} placeholder="예: RKTH" required />
+          <FavoriteChips values={favorites.airports} onPick={setArrival} />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-slate-400">기종 *</span>
           <input className={inputClass} value={aircraftType} onChange={(e) => setAircraftType(e.target.value)} placeholder="예: C172" required />
+          <FavoriteChips values={favorites.aircraft} onPick={setAircraftType} />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-slate-400">등록번호 (선택)</span>

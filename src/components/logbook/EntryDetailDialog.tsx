@@ -320,7 +320,7 @@ export function EntryDetailDialog({
                   ) : entry.certificateApprovalStatus === 'rejected' ? (
                     <div data-mbaas-oid="ncj7z02" className="mt-3 space-y-2">
                       <p data-mbaas-oid="73s406n" className="text-xs font-medium text-rose-300">
-                        기관에서 이 인증 요청을 반려했습니다. 공식 총 비행시간 합계에서 제외되고 "반려된
+                        관리자가 이 인증 요청을 반려했습니다. 공식 총 비행시간 합계에서 제외되고 "반려된
                         비행경력증명서"로 별도 표시됩니다.
                       </p>
                       {certificateDecision.comment && (
@@ -335,7 +335,7 @@ export function EntryDetailDialog({
                       <div data-mbaas-oid="0vfvlcs" role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
                         <p data-mbaas-oid="u3tx8dx" className="text-sm font-medium text-amber-300">
-                          기관에 인증 요청을 제출했습니다. 담당자가 승인/반려하면 이 화면에 자동으로 반영됩니다.
+                          관리자에게 인증 요청을 제출했습니다. 관리자가 승인/반려하면 이 화면에 자동으로 반영됩니다.
                         </p>
                       </div>
                       {certificateCommentsError && (
@@ -356,7 +356,7 @@ export function EntryDetailDialog({
                   ) : (
                     <div data-mbaas-oid="8rnm1fo" className="mt-3 space-y-2">
                       <p data-mbaas-oid="njhfi7d" className="text-xs text-slate-400">
-                        이 기록은 기관에 인증 요청이 제출되지 않았습니다(제출 당시 네트워크 오류 등). 아직 인증
+                        이 기록은 관리자에게 인증 요청이 제출되지 않았습니다(제출 당시 네트워크 오류 등). 아직 인증
                         대기중이라 공식 총 비행시간 합계에서 제외되고 "미인증 비행경력증명서(참고용)"에만
                         표시됩니다. 아래에서 본인이 직접 확인 완료로 표시할 수 있습니다(실제 기관 승인이 아닙니다).
                       </p>

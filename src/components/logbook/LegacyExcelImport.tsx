@@ -439,7 +439,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
     const flightInstructorIdx = columnIndexFor('flightInstructorTime')
     const instrumentApproachesIdx = columnIndexFor('instrumentApproaches')
 
-    return dataRows.map((row, rowIndex) => {
+    return dataRows.flatMap((row, rowIndex) => {
       const rawDate = dateIdx !== null ? row[dateIdx] : ''
       const departure = (departureIdx !== null ? row[departureIdx] : '').trim()
       const arrival = (arrivalIdx !== null ? row[arrivalIdx] : '').trim()
@@ -453,6 +453,12 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       const blockTime = parseNumberValue(rawBlockTime)
       const dayLandings = parseNumberValue(rawDayLandings) ?? 0
       const nightLandings = parseNumberValue(rawNightLandings) ?? 0
+
+      // 울진 등 실제 로그북 엑셀의 하단에는 '합계'·'서명'·빈 줄 같은 요약 행이 붙는다.
+      // 날짜도 기종도 구간도 없는 행은 비행기록이 아니라 서식의 일부이므로 오류로 세지 않고
+      // 조용히 제외한다 — "항상 뜨던 오류 2건"의 원인 제거.
+      const isFooterOrBlankRow = !date && !aircraftType && !departure && !arrival
+      if (isFooterOrBlankRow) return []
 
       const singleEngineLand = singleEngineIdx !== null ? parseNumberValue(row[singleEngineIdx]) : undefined
       const multiEngineLand = multiEngineIdx !== null ? parseNumberValue(row[multiEngineIdx]) : undefined
@@ -533,7 +539,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
           }
         : undefined
 
-      return {
+      return [{
         rowIndex,
         valid,
         reason: valid ? undefined : `형식 오류(${missing.join(', ')})`,
@@ -552,7 +558,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
           dualReceivedTime: dualReceived !== undefined ? String(dualReceived) : '-',
           flightInstructorTime: flightInstructor !== undefined ? String(flightInstructor) : '-',
         },
-      }
+      }]
     })
   }, [dataRows, mapping, fileName])
 
@@ -670,6 +676,11 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
               미리보기 ({previewRows.length}행 중 유효 {validRows.length}건
               {invalidCount > 0 && `, 형식 오류 ${invalidCount}건`})
             </h4>
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              날짜·기종이 없는 하단 합계/서명 행은 자동으로 제외됩니다. ·
+              엑셀에 계기접근 횟수 컬럼이 없는 경우(울진 서식 등) 0으로 저장되니, 계기 비행 기록은
+              가져온 뒤 목록에서 해당 기록을 눌러 횟수를 보완해 주세요.
+            </p>
 
             <div data-mbaas-oid="rsf1lt1" role="group" aria-label="상태별 필터" className="mt-3 flex flex-wrap gap-2">
               <Button

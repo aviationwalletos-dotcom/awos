@@ -12,7 +12,6 @@ import { Features } from './components/sections/Features'
 import { FinalCta } from './components/sections/FinalCta'
 import { LogbookPage } from './pages/LogbookPage'
 import { DashboardPage } from './pages/DashboardPage'
-import { FleetPage } from './pages/FleetPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { AccountPage } from './pages/AccountPage'
@@ -74,7 +73,6 @@ function App() {
                   </RequireUserType>
                 }
               />
-              <Route path="/fleet" element={<FleetPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </div>
