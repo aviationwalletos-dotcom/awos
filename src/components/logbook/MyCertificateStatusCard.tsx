@@ -50,11 +50,9 @@ interface MyCertificateStatusCardProps {
   compact?: boolean
   /** 카드에 표기할 보유자 이름(계정 이름) */
   holderName?: string
-  /** 카드에 표기할 회원 식별번호 */
-  memberId?: string
 }
 
-export function MyCertificateStatusCard({ certificates, roleContent, compact = false, holderName, memberId }: MyCertificateStatusCardProps) {
+export function MyCertificateStatusCard({ certificates, roleContent, compact = false, holderName }: MyCertificateStatusCardProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
 
@@ -89,7 +87,7 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
             {roleContent ? `${roleContent.name} 자격 요약` : '등록된 자격 요약'}
           </p>
         </div>
-        <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">카드를 누르면 다음 자격 →</p>
+        <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">← 카드 좌·우를 눌러 넘겨보세요 →</p>
       </div>
 
       <div
@@ -109,9 +107,13 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
             <button
               data-mbaas-oid="mcscard" key={def.category}
               type="button"
-              onClick={() => goTo(active + 1)}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const isLeftHalf = e.clientX - rect.left < rect.width / 2
+                goTo(active + (isLeftHalf ? -1 : 1))
+              }}
               className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'min-h-[210px] p-4' : 'min-h-[240px] p-6'}`}
-              aria-label={`${def.category} 카드, 누르면 다음 자격으로 넘어갑니다`}
+              aria-label={`${def.category} 카드 — 왼쪽을 누르면 이전, 오른쪽을 누르면 다음 자격`}
             >
               <div data-mbaas-oid="mcsc0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" />
               <div data-mbaas-oid="mcsc1" className="relative flex items-center justify-between gap-2">
@@ -124,9 +126,8 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
               <h3 data-mbaas-oid="mcsc5" className={`relative mt-1 font-display font-extrabold tracking-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>
                 {def.category}
               </h3>
-              <p data-mbaas-oid="mcsc6" className="relative mt-4 font-mono-data text-[10px] tracking-wider text-white/50">NAME / IDENTIFIER</p>
-              <p data-mbaas-oid="mcsc7" className="relative truncate text-base font-bold text-white">{holderName ?? '이름 미설정'}</p>
-              {memberId && <p data-mbaas-oid="mcsc8" className="relative font-mono-data text-xs font-semibold text-sky-200/90">{memberId}</p>}
+              <p data-mbaas-oid="mcsc6" className="relative mt-4 font-mono-data text-[10px] font-bold tracking-[0.18em] text-white/75">NAME / IDENTIFIER</p>
+              <p data-mbaas-oid="mcsc7" className={`relative truncate font-display font-extrabold text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{holderName ?? '이름 미설정'}</p>
               <div data-mbaas-oid="mcsc9" className="relative mt-4 flex flex-wrap items-center gap-1.5">
                 {heldCodes.map((code) => (
                   <span data-mbaas-oid="mcscA" key={code} className="rounded-md border border-white/35 bg-white/15 px-2 py-1 font-mono-data text-[11px] font-bold text-white">

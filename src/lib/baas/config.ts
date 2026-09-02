@@ -74,6 +74,10 @@ export const FLIGHT_EXPERIENCE_CERTIFICATE_BOARD_ID = 'df0315ce-3c41-4a96-8a34-7
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
 export const CERTIFICATE_APPROVAL_BOARD_ID = '3e8f6a91-2c47-4d5b-9a13-6f0b8d24c7e5'
 
+// "문의" 게시판 — 사이트 문의하기(/inquiry)에서 작성, 관리자 페이지 문의함에서 확인·답변.
+// schema9 정책으로 본인 + 관리자만 조회 가능(문의 내용의 개인정보 보호).
+export const INQUIRY_BOARD_ID = '8c4d2f6a-1b3e-4a7c-9d05-2e6f8a1b4c7d'
+
 function readViteEnvProjectId(): string | undefined {
   try {
     const env = (import.meta as unknown as { env?: Record<string, string | undefined> })?.env

@@ -14,6 +14,7 @@ import { computeFlightReadiness, isMedicalStatusValid } from '../../lib/flightRe
 import { sumHours } from '../../lib/hours'
 import { parseLogbookEntryFromContent } from '../../lib/logbookSync'
 
+import { daysUntil } from '../../types/certificate'
 import type { Certificate } from '../../types/certificate'
 import type { LogbookEntry } from '../../types/logbook'
 
@@ -47,6 +48,9 @@ type EmptyReason = 'token' | 'policy' | 'not_admin' | null
 export function MemberDirectoryPanel() {
   const [rows, setRows] = useState<MemberRow[]>([])
   const [stats, setStats] = useState<Record<string, MemberStats>>({})
+  const [memberCerts, setMemberCerts] = useState<Record<string, Certificate[]>>({})
+  const [emails, setEmails] = useState<Record<string, string>>({})
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [statsNote, setStatsNote] = useState<string | null>(null)
   const [emptyReason, setEmptyReason] = useState<EmptyReason>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -162,6 +166,15 @@ export function MemberDirectoryPanel() {
           }
         }
         setStats(nextStats)
+        setMemberCerts(Object.fromEntries([...certsByUser.entries()]))
+        try {
+          const { data: emailRows } = await client.rpc('admin_member_emails')
+          if (Array.isArray(emailRows)) {
+            setEmails(Object.fromEntries(emailRows.map((r: { id: string; email: string }) => [r.id, r.email])))
+          }
+        } catch {
+          // schema8 미실행 시 이메일 없이 진행
+        }
         if (!tablesMissing) setStatsNote(null)
       } catch (aggErr) {
         setStats({})
@@ -256,8 +269,15 @@ export function MemberDirectoryPanel() {
             {members.map((m) => {
               const st = stats[m.id]
               return (
-                <tr data-mbaas-oid="mdirtr" key={m.id} className="hover:bg-white/[0.03]">
-                  <td data-mbaas-oid="mdirc1" className="px-4 py-3 font-medium text-ink">{m.name}</td>
+                <React.Fragment key={m.id}>
+                <tr
+                  data-mbaas-oid="mdirtr" onClick={() => setExpandedId((prev) => (prev === m.id ? null : m.id))}
+                  className="cursor-pointer hover:bg-white/[0.03]"
+                >
+                  <td data-mbaas-oid="mdirc1" className="px-4 py-3 font-medium text-ink">
+                    <span data-mbaas-oid="mdirc1a" className="mr-1.5 inline-block text-[10px] text-slate-500">{expandedId === m.id ? '▼' : '▶'}</span>
+                    {m.name}
+                  </td>
                   <td data-mbaas-oid="mdirc2" className="px-4 py-3 text-slate-300">
                     {m.individual_role ? ROLE_LABEL[m.individual_role] ?? m.individual_role : '-'}
                   </td>
@@ -283,6 +303,50 @@ export function MemberDirectoryPanel() {
                     )}
                   </td>
                 </tr>
+                {expandedId === m.id && (
+                  <tr data-mbaas-oid="mdirdet" className="bg-white/[0.02]">
+                    <td data-mbaas-oid="mdirdet1" colSpan={6} className="px-4 py-4">
+                      <div data-mbaas-oid="mdirdet2" className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+                        <p data-mbaas-oid="mdirdet3" className="text-slate-300">
+                          <span data-mbaas-oid="mdirdet3a" className="text-xs uppercase tracking-wide text-slate-500">계정 이메일 </span><br data-mbaas-oid="mdirdetbr1" />
+                          <span data-mbaas-oid="mdirdet3b" className="font-medium text-ink">{emails[m.id] ?? '(schema8 SQL 실행 시 표시)'}</span>
+                        </p>
+                        <p data-mbaas-oid="mdirdet4" className="text-slate-300">
+                          <span data-mbaas-oid="mdirdet4a" className="text-xs uppercase tracking-wide text-slate-500">가입일 </span><br data-mbaas-oid="mdirdetbr2" />
+                          <span data-mbaas-oid="mdirdet4b" className="font-mono-data text-ink">{new Date(m.created_at).toLocaleDateString('ko-KR')}</span>
+                        </p>
+                      </div>
+                      <div data-mbaas-oid="mdirdet5" className="mt-4">
+                        <p data-mbaas-oid="mdirdet6" className="text-xs uppercase tracking-wide text-slate-500">보유 자격증 ({(memberCerts[m.id] ?? []).length}건)</p>
+                        {(memberCerts[m.id] ?? []).length === 0 ? (
+                          <p data-mbaas-oid="mdirdet7" className="mt-1.5 text-sm text-slate-400">등록된 자격증이 없습니다.</p>
+                        ) : (
+                          <ul data-mbaas-oid="mdirdet8" className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                            {(memberCerts[m.id] ?? []).map((cert) => {
+                              const remain = cert.expiryDate ? daysUntil(cert.expiryDate) : null
+                              return (
+                                <li data-mbaas-oid="mdirdet9" key={cert.id} className="flex items-center justify-between gap-2 rounded-control border border-white/10 bg-navy px-3 py-2 text-sm">
+                                  <span data-mbaas-oid="mdirdetA" className="min-w-0 truncate text-ink">
+                                    <span data-mbaas-oid="mdirdetB" className="mr-1.5 text-[10px] font-semibold text-slate-500">{cert.category}</span>
+                                    {cert.name}
+                                  </span>
+                                  <span
+                                    data-mbaas-oid="mdirdetC" className={`shrink-0 font-mono-data text-xs font-bold ${
+                                      remain === null ? 'text-slate-400' : remain < 0 ? 'text-rose-300' : remain <= 30 ? 'text-amber-300' : 'text-go'
+                                    }`}
+                                  >
+                                    {remain === null ? '만료 없음' : remain < 0 ? `만료됨` : `D-${remain}`}
+                                  </span>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               )
             })}
           </tbody>

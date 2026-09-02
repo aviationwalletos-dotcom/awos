@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileCheck2, ShieldCheck, Users } from 'lucide-react'
+import { ArrowLeft, Inbox, FileCheck2, ShieldCheck, Users } from 'lucide-react'
 
 import { Footer } from '../components/Footer'
 import { Reveal } from '../components/Reveal'
 import { Button } from '../components/Button'
 import { CertificateApprovalRequestsPanel } from '../components/dashboard/CertificateApprovalRequestsPanel'
 import { FlightExperienceCertificateApprovalPanel } from '../components/dashboard/FlightExperienceCertificateApprovalPanel'
+import { InquiryAdminPanel } from '../components/dashboard/InquiryAdminPanel'
 import { InstructorApprovalPanel } from '../components/dashboard/InstructorApprovalPanel'
 import { MemberDirectoryPanel } from '../components/dashboard/MemberDirectoryPanel'
 
-type DashboardTabKey = 'goNoGo' | 'personnel' | 'instructorApproval' | 'certificateApproval' | 'certApprovals'
+type DashboardTabKey = 'goNoGo' | 'personnel' | 'instructorApproval' | 'certificateApproval' | 'certApprovals' | 'inquiries'
 
 type DashboardTabDef = {
   key: DashboardTabKey
@@ -22,6 +23,7 @@ const DASHBOARD_TABS: DashboardTabDef[] = [
   { key: 'personnel', label: '구성원 현황', icon: Users },
   { key: 'instructorApproval', label: '교관 승인 관리', icon: ShieldCheck },
   { key: 'certificateApproval', label: '비행경력증명서 승인', icon: FileCheck2 },  { key: 'certApprovals', label: '자격증·신체검사 요청함', icon: ShieldCheck },
+  { key: 'inquiries', label: '문의함', icon: Inbox },
 ]
 
 export function DashboardPage() {
@@ -165,6 +167,22 @@ export function DashboardPage() {
               </Reveal>
               <div data-mbaas-oid="crtappnl" className="mt-8">
                 <CertificateApprovalRequestsPanel categoryFilter={certApprovalCategory} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'inquiries' && (
+          <section data-mbaas-oid="inqsec0" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <div data-mbaas-oid="inqsec1" className="mx-auto max-w-4xl px-6">
+              <Reveal>
+                <h2 data-mbaas-oid="inqsec2" className="font-display text-2xl font-extrabold text-ink">문의함</h2>
+                <p data-mbaas-oid="inqsec3" className="mt-2 text-sm text-slate-400">
+                  회원이 남긴 문의를 확인하고 답변을 등록하세요. 답변은 해당 회원의 문의하기 페이지에 표시됩니다.
+                </p>
+              </Reveal>
+              <div data-mbaas-oid="inqsec4" className="mt-8">
+                <InquiryAdminPanel />
               </div>
             </div>
           </section>

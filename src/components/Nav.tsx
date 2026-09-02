@@ -37,6 +37,12 @@ export function Nav() {
             </Link>
           </li>
           <li data-mbaas-oid="orgnav1">
+            <Link
+              data-mbaas-oid="inqnav1" to="/inquiry"
+              className="text-sm font-medium text-slate-300 transition-colors hover:text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
+            >
+              문의
+            </Link>
           </li>
           <li data-mbaas-oid="mf6257y">
           </li>
@@ -139,6 +145,13 @@ export function Nav() {
             </Link>
           </li>
           <li data-mbaas-oid="orgnav4">
+            <Link
+              data-mbaas-oid="inqnav2" to="/inquiry"
+              onClick={() => setOpen(false)}
+              className="block rounded-control px-2 py-3 text-sm font-medium text-slate-200 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              문의하기
+            </Link>
           </li>
           <li data-mbaas-oid="0f28wex">
           </li>

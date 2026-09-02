@@ -409,13 +409,13 @@ export function LogbookPage() {
               <div data-mbaas-oid="rdnscmp" className="mt-4 flex flex-col gap-4">
                 <FlightReadinessPanel entries={entries} certificates={certificates} account={account} compact />
                 <div data-mbaas-oid="6w3w4t6" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} memberId={account?.id ? `AWOS-${String(account.id).slice(0, 8).toUpperCase()}` : undefined} />
+                  <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} />
                   <DutyTimeLimitCard entries={entries} compact />
                 </div>
               </div>
             ) : (
               <div data-mbaas-oid="rdnscmp" className="mt-4">
-                <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} memberId={account?.id ? `AWOS-${String(account.id).slice(0, 8).toUpperCase()}` : undefined} />
+                <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} />
               </div>
             )}
 

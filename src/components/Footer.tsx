@@ -29,6 +29,8 @@ export function Footer() {
         </div>
       </div>
       <p data-mbaas-oid="ftlgl" className="mt-4 text-center text-xs text-slate-500">
+        <a data-mbaas-oid="ftlgl0" href="/inquiry" className="hover:text-slate-300">문의하기</a>
+        <span data-mbaas-oid="ftlgl0s" className="mx-2">·</span>
         <a data-mbaas-oid="ftlgl1" href="/terms.html" className="hover:text-slate-300">이용약관</a>
         <span data-mbaas-oid="ftlgl2" className="mx-2">·</span>
         <a data-mbaas-oid="ftlgl3" href="/privacy.html" className="hover:text-slate-300">개인정보처리방침</a>

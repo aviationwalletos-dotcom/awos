@@ -50,7 +50,7 @@ export function ForgotPasswordPage() {
             <div data-mbaas-oid="fppg09" className="mt-10 rounded-card border border-go/30 bg-go/10 p-6 text-center">
               <p data-mbaas-oid="fppg10" className="text-sm font-semibold text-go">재설정 메일을 보냈어요!</p>
               <p data-mbaas-oid="fppg11" className="mt-2 text-xs leading-relaxed text-slate-300">
-                <span data-mbaas-oid="fppg12" className="font-mono-data text-ink">{email}</span> 의 받은편지함(또는 스팸함)을 확인하고,
+                <span data-mbaas-oid="fppg12" className="break-all font-semibold text-sky">{email}</span> 주소의 받은편지함(또는 스팸함)을 확인하고,
                 메일 속 링크를 눌러 새 비밀번호를 설정하세요. 메일이 안 오면 몇 분 뒤 다시 시도해 주세요.
               </p>
               <Link data-mbaas-oid="fppg13" to="/login" className="mt-4 inline-block text-sm font-semibold text-sky hover:underline">
