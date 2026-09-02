@@ -1,12 +1,21 @@
-// 구성원 현황 — 상태 공유 절차 없이 profiles 테이블을 직접 조회해 전 회원을 보여준다.
-// 조회 권한: supabase/schema5-admin-directory.sql 의 정책(authorized_orgs 등록 계정만) 필요.
+// 구성원 현황 v2 — profiles 직접 조회 + 각 회원의 비행기록·자격증 게시글을 읽어
+// 총 비행시간 / 최근 비행 / 커런시(간이 GO)를 함께 표시한다.
+// 목록이 비어 있으면 원인(권한 미적용 vs 세션 토큰)을 화면에서 직접 진단한다.
 
 import { RefreshCw, Users } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
+import { CERTIFICATE_BOARD_ID, LOGBOOK_BOARD_ID } from '../../lib/baas/config'
 import { getAuthedDataClient } from '../../lib/baas/supabaseTransport'
+import { parseCertificateFromContent } from '../../lib/certificateSync'
+import { computeFlightReadiness, isMedicalStatusValid } from '../../lib/flightReadiness'
+import { sumHours } from '../../lib/hours'
+import { parseLogbookEntryFromContent } from '../../lib/logbookSync'
+
+import type { Certificate } from '../../types/certificate'
+import type { LogbookEntry } from '../../types/logbook'
 
 interface MemberRow {
   id: string
@@ -17,6 +26,14 @@ interface MemberRow {
   created_at: string
 }
 
+interface MemberStats {
+  totalHours: number
+  lastFlight: string | null
+  medicalValid: boolean
+  recencyMet: boolean
+  hasRecords: boolean
+}
+
 const ROLE_LABEL: Record<string, string> = {
   pilot: '조종사',
   atc: '관제사',
@@ -25,26 +42,95 @@ const ROLE_LABEL: Record<string, string> = {
   drone_pilot: '드론 조종자',
 }
 
+type EmptyReason = 'token' | 'policy' | null
+
 export function MemberDirectoryPanel() {
-  const [rows, setRows] = useState<MemberRow[] | null>(null)
+  const [rows, setRows] = useState<MemberRow[]>([])
+  const [stats, setStats] = useState<Record<string, MemberStats>>({})
+  const [statsNote, setStatsNote] = useState<string | null>(null)
+  const [emptyReason, setEmptyReason] = useState<EmptyReason>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchMembers = useCallback(async () => {
     setIsLoading(true)
     setError(null)
+    setEmptyReason(null)
     try {
       const client = getAuthedDataClient()
-      if (!client) throw new Error('로그인이 필요합니다.')
+      if (!client) throw new Error('로그인 정보가 없습니다. 로그아웃 후 다시 로그인해 주세요.')
+
       const { data, error: qError } = await client
         .from('profiles')
         .select('id,name,user_type,individual_role,institution,created_at')
         .order('created_at', { ascending: false })
       if (qError) throw new Error(qError.message)
-      setRows((data ?? []) as MemberRow[])
+      const all = (data ?? []) as MemberRow[]
+      setRows(all)
+
+      const individuals = all.filter((r) => r.user_type === 'individual')
+      if (individuals.length === 0) {
+        // 자기 자신(profiles_select_own)조차 안 보이면 토큰이 인증으로 실리지 않은 것,
+        // 자기 계정만 보이면 schema5 관리자 정책이 아직 적용되지 않은 것.
+        setEmptyReason(all.length === 0 ? 'token' : 'policy')
+        setStats({})
+        return
+      }
+
+      // 회원별 기록·자격증 집계 (게시판 원본을 직접 읽음 — 실패해도 목록은 유지)
+      try {
+        const [logbookRes, certRes] = await Promise.all([
+          client.from('board_posts').select('author_id,content').eq('board_id', LOGBOOK_BOARD_ID).eq('is_hidden', false).limit(1000),
+          client.from('board_posts').select('author_id,content').eq('board_id', CERTIFICATE_BOARD_ID).eq('is_hidden', false).limit(1000),
+        ])
+        if (logbookRes.error) throw new Error(logbookRes.error.message)
+        if (certRes.error) throw new Error(certRes.error.message)
+
+        const entriesByUser = new Map<string, Map<string, LogbookEntry>>()
+        for (const post of logbookRes.data ?? []) {
+          const entry = parseLogbookEntryFromContent((post as { content: string | null }).content)
+          const author = (post as { author_id: string | null }).author_id
+          if (!entry || !author) continue
+          if (!entriesByUser.has(author)) entriesByUser.set(author, new Map())
+          entriesByUser.get(author)!.set(entry.id, entry)
+        }
+        const certsByUser = new Map<string, Certificate[]>()
+        for (const post of certRes.data ?? []) {
+          const cert = parseCertificateFromContent((post as { content: string | null }).content)
+          const author = (post as { author_id: string | null }).author_id
+          if (!cert || !author) continue
+          if (!certsByUser.has(author)) certsByUser.set(author, [])
+          certsByUser.get(author)!.push(cert)
+        }
+
+        const nextStats: Record<string, MemberStats> = {}
+        for (const member of individuals) {
+          const entries = [...(entriesByUser.get(member.id)?.values() ?? [])]
+          const certificates = certsByUser.get(member.id) ?? []
+          const totalHours = sumHours(entries.map((e) => e.blockTime))
+          const lastFlight = entries.reduce<string | null>(
+            (latest, e) => (!latest || e.date > latest ? e.date : latest),
+            null,
+          )
+          const readiness = computeFlightReadiness(entries, certificates)
+          const medicalValid =
+            isMedicalStatusValid(readiness.medical.class1Status) || isMedicalStatusValid(readiness.medical.class2Status)
+          nextStats[member.id] = {
+            totalHours,
+            lastFlight,
+            medicalValid,
+            recencyMet: readiness.recency.baseMet,
+            hasRecords: entries.length > 0 || certificates.length > 0,
+          }
+        }
+        setStats(nextStats)
+        setStatsNote(null)
+      } catch (aggErr) {
+        setStats({})
+        setStatsNote(aggErr instanceof Error ? aggErr.message : '기록 집계에 실패해 기본 정보만 표시합니다.')
+      }
     } catch (err) {
-      const message = err instanceof Error ? err.message : '구성원 목록을 불러오지 못했습니다.'
-      setError(message)
+      setError(err instanceof Error ? err.message : '구성원 목록을 불러오지 못했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -55,16 +141,13 @@ export function MemberDirectoryPanel() {
   }, [fetchMembers])
 
   if (isLoading) {
-    return <p data-mbaas-oid="mdirld" className="text-sm text-slate-400">구성원 목록을 불러오는 중…</p>
+    return <p data-mbaas-oid="mdirld" className="text-sm text-slate-400">구성원 현황을 불러오는 중…</p>
   }
 
   if (error) {
     return (
       <div data-mbaas-oid="mdirer" className="rounded-card border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-300">
         <p data-mbaas-oid="mdirer1">{error}</p>
-        <p data-mbaas-oid="mdirer2" className="mt-2 text-xs text-slate-400">
-          목록이 비어 보이면 Supabase에서 <code data-mbaas-oid="mdirer3">supabase/schema5-admin-directory.sql</code>을 실행했는지 확인하세요.
-        </p>
         <div data-mbaas-oid="mdirer4" className="mt-3">
           <Button data-mbaas-oid="mdirer5" type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
             다시 시도
@@ -74,15 +157,34 @@ export function MemberDirectoryPanel() {
     )
   }
 
-  const members = (rows ?? []).filter((r) => r.user_type === 'individual')
+  const members = rows.filter((r) => r.user_type === 'individual')
 
   if (members.length === 0) {
     return (
-      <EmptyState
-        data-mbaas-oid="mdirem" icon={Users}
-        title="표시할 구성원이 없습니다"
-        description="아직 가입한 회원이 없거나, 관리자 조회 권한(schema5 SQL)이 설정되지 않았습니다."
-      />
+      <div data-mbaas-oid="mdirdx" className="space-y-4">
+        <EmptyState
+          data-mbaas-oid="mdirem" icon={Users}
+          title="표시할 구성원이 없습니다"
+          description={
+            emptyReason === 'policy'
+              ? '진단 결과: 현재 관리자 본인 계정만 조회됩니다 — 관리자 조회 권한(schema5 SQL)이 아직 적용되지 않았습니다.'
+              : '진단 결과: 본인 계정조차 조회되지 않습니다 — 로그인 세션 문제일 수 있으니 로그아웃 후 다시 로그인해 주세요.'
+          }
+        />
+        {emptyReason === 'policy' && (
+          <div data-mbaas-oid="mdirsq" className="rounded-card border border-amber-400/30 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-200">
+            Supabase → SQL Editor에서 아래를 실행한 뒤 이 화면의 새로고침을 누르세요:
+            <pre data-mbaas-oid="mdirsq2" className="mt-2 overflow-x-auto rounded bg-black/30 p-3 font-mono-data text-[11px] text-amber-100">{`create policy "profiles_select_authorized_admin" on public.profiles
+  for select to authenticated
+  using (exists (select 1 from public.authorized_orgs a
+                 where a.user_id = auth.uid()));`}</pre>
+          </div>
+        )}
+        <Button data-mbaas-oid="mdirrf0" type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
+          <RefreshCw data-mbaas-oid="mdirrfi0" className="mr-1.5 h-3.5 w-3.5" aria-hidden={true} />
+          새로고침
+        </Button>
+      </div>
     )
   }
 
@@ -91,6 +193,7 @@ export function MemberDirectoryPanel() {
       <div data-mbaas-oid="mdirhead" className="flex items-center justify-between">
         <p data-mbaas-oid="mdircnt" className="text-sm text-slate-400">
           총 <span data-mbaas-oid="mdircnt2" className="font-mono-data font-semibold text-ink">{members.length}</span>명
+          {statsNote && <span data-mbaas-oid="mdirnote" className="ml-2 text-xs text-amber-300">({statsNote})</span>}
         </p>
         <Button data-mbaas-oid="mdirrf" type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
           <RefreshCw data-mbaas-oid="mdirrfi" className="mr-1.5 h-3.5 w-3.5" aria-hidden={true} />
@@ -98,31 +201,56 @@ export function MemberDirectoryPanel() {
         </Button>
       </div>
       <div data-mbaas-oid="mdirtbl" className="mt-4 overflow-x-auto rounded-card border border-white/10">
-        <table data-mbaas-oid="mdirt" className="w-full min-w-[560px] text-left text-sm">
+        <table data-mbaas-oid="mdirt" className="w-full min-w-[760px] text-left text-sm">
           <thead data-mbaas-oid="mdirth" className="bg-white/[0.04] text-xs uppercase tracking-wide text-slate-400">
             <tr data-mbaas-oid="mdirtr0">
               <th data-mbaas-oid="mdirh1" className="px-4 py-3">이름</th>
               <th data-mbaas-oid="mdirh2" className="px-4 py-3">역할</th>
               <th data-mbaas-oid="mdirh3" className="px-4 py-3">소속</th>
-              <th data-mbaas-oid="mdirh4" className="px-4 py-3">가입일</th>
+              <th data-mbaas-oid="mdirh5" className="px-4 py-3 text-right">총 비행시간</th>
+              <th data-mbaas-oid="mdirh6" className="px-4 py-3">최근 비행</th>
+              <th data-mbaas-oid="mdirh7" className="px-4 py-3">커런시</th>
             </tr>
           </thead>
           <tbody data-mbaas-oid="mdirtb" className="divide-y divide-white/5">
-            {members.map((m) => (
-              <tr data-mbaas-oid="mdirtr" key={m.id} className="hover:bg-white/[0.03]">
-                <td data-mbaas-oid="mdirc1" className="px-4 py-3 font-medium text-ink">{m.name}</td>
-                <td data-mbaas-oid="mdirc2" className="px-4 py-3 text-slate-300">
-                  {m.individual_role ? ROLE_LABEL[m.individual_role] ?? m.individual_role : '-'}
-                </td>
-                <td data-mbaas-oid="mdirc3" className="px-4 py-3 text-slate-300">{m.institution ?? '-'}</td>
-                <td data-mbaas-oid="mdirc4" className="px-4 py-3 font-mono-data text-xs text-slate-400">
-                  {new Date(m.created_at).toLocaleDateString('ko-KR')}
-                </td>
-              </tr>
-            ))}
+            {members.map((m) => {
+              const st = stats[m.id]
+              return (
+                <tr data-mbaas-oid="mdirtr" key={m.id} className="hover:bg-white/[0.03]">
+                  <td data-mbaas-oid="mdirc1" className="px-4 py-3 font-medium text-ink">{m.name}</td>
+                  <td data-mbaas-oid="mdirc2" className="px-4 py-3 text-slate-300">
+                    {m.individual_role ? ROLE_LABEL[m.individual_role] ?? m.individual_role : '-'}
+                  </td>
+                  <td data-mbaas-oid="mdirc3" className="px-4 py-3 text-slate-300">{m.institution ?? '-'}</td>
+                  <td data-mbaas-oid="mdirc5" className="px-4 py-3 text-right font-mono-data tabular-nums text-ink">
+                    {st ? `${st.totalHours.toFixed(1)}h` : '-'}
+                  </td>
+                  <td data-mbaas-oid="mdirc6" className="px-4 py-3 font-mono-data text-xs text-slate-300">
+                    {st?.lastFlight ?? '-'}
+                  </td>
+                  <td data-mbaas-oid="mdirc7" className="px-4 py-3">
+                    {!st || !st.hasRecords ? (
+                      <span data-mbaas-oid="mdircb0" className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-slate-400">기록 없음</span>
+                    ) : st.medicalValid && st.recencyMet ? (
+                      <span data-mbaas-oid="mdircb1" className="rounded bg-go/15 px-2 py-0.5 text-[11px] font-semibold text-go">GO</span>
+                    ) : (
+                      <span
+                        data-mbaas-oid="mdircb2" className="rounded bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300"
+                        title={[!st.medicalValid ? '항공신체검사 미유효' : null, !st.recencyMet ? '최근비행 기준 미달' : null].filter(Boolean).join(' · ')}
+                      >
+                        확인 필요
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
+      <p data-mbaas-oid="mdirfoot" className="mt-3 text-xs text-slate-500">
+        커런시는 항공신체검사 유효 + 최근비행 기준(간이 판정)입니다. 세부 사유는 배지에 마우스를 올리면 표시돼요.
+      </p>
     </div>
   )
 }
