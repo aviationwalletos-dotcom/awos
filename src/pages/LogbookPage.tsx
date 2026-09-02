@@ -17,7 +17,7 @@ import {
 import { Footer } from '../components/Footer'
 import { Button } from '../components/Button'
 import { Reveal } from '../components/Reveal'
-import { EntryForm } from '../components/logbook/EntryForm'
+import { EntryForm, buildEntrySuggestions } from '../components/logbook/EntryForm'
 import { QuickEntryForm } from '../components/logbook/QuickEntryForm'
 import { EntryFilterBar, matchesFilter } from '../components/logbook/EntryFilterBar'
 import { EntryList } from '../components/logbook/EntryList'
@@ -160,6 +160,7 @@ export function LogbookPage() {
     resyncFromServer: resyncLogbookEntries,
     retryPendingSync: retryLogbookPendingSync,
   } = useLogbookEntries(account)
+  const entrySuggestions = useMemo(() => buildEntrySuggestions(entries), [entries])
   const [filterKind, setFilterKind] = useState<LogbookFilterKind>('all')
   const [filterValue, setFilterValue] = useState<string | null>(null)
   const [selectedEntry, setSelectedEntry] = useState<LogbookEntry | null>(null)
@@ -656,7 +657,7 @@ export function LogbookPage() {
                     {entryFormMode === 'quick' ? (
                       <QuickEntryForm onSubmit={(input) => addEntry(input)} />
                     ) : (
-                      <EntryForm mode="create" onSubmit={(input) => addEntry(input)} {...aircraftLabelProps} />
+                      <EntryForm mode="create" onSubmit={(input) => addEntry(input)} suggestions={entrySuggestions} {...aircraftLabelProps} />
                     )}
                   </div>
                 </Reveal>

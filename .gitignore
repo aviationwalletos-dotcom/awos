@@ -1,0 +1,16 @@
+# 의존성·빌드 산출물
+node_modules/
+dist/
+
+# 환경변수(비밀값) — 절대 커밋 금지
+.env
+.env.*
+*.local
+
+# OS·에디터 잡파일
+.DS_Store
+Thumbs.db
+
+# 로그·테스트 산출물
+npm-debug.log*
+coverage/
