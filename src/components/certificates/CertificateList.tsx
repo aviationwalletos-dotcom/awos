@@ -65,14 +65,14 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
   }
 
   return (
-    <ul data-mbaas-oid="as8g46c" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <ul data-mbaas-oid="as8g46c" className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-3">
       {sortedCertificates.map((cert) => {
         const status = getCertificateStatus(cert.expiryDate)
         const remaining = cert.expiryDate ? daysUntil(cert.expiryDate) : null
         const Icon = STATUS_ICON[status]
         const wallet = CATEGORY_WALLET_STYLE[cert.category] ?? CATEGORY_WALLET_STYLE['기타 자격']
         return (
-          <li data-mbaas-oid="y1jh8j4" key={cert.id}>
+          <li data-mbaas-oid="y1jh8j4" key={cert.id} className="w-[260px] shrink-0 snap-start sm:w-[280px]">
             <button
               data-mbaas-oid="f519jek" type="button"
               onClick={() => onSelect(cert)}

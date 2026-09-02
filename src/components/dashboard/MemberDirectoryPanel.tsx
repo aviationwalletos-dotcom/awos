@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { CERTIFICATE_BOARD_ID, LOGBOOK_BOARD_ID } from '../../lib/baas/config'
-import { getAuthedDataClient } from '../../lib/baas/supabaseTransport'
+import { getAuthedDataClient, getAuthedUserId } from '../../lib/baas/supabaseTransport'
 import { parseCertificateFromContent } from '../../lib/certificateSync'
 import { computeFlightReadiness, isMedicalStatusValid } from '../../lib/flightReadiness'
 import { sumHours } from '../../lib/hours'
@@ -42,7 +42,7 @@ const ROLE_LABEL: Record<string, string> = {
   drone_pilot: '드론 조종자',
 }
 
-type EmptyReason = 'token' | 'policy' | null
+type EmptyReason = 'token' | 'policy' | 'not_admin' | null
 
 export function MemberDirectoryPanel() {
   const [rows, setRows] = useState<MemberRow[]>([])
@@ -70,9 +70,16 @@ export function MemberDirectoryPanel() {
 
       const individuals = all.filter((r) => r.user_type === 'individual')
       if (individuals.length === 0) {
-        // 자기 자신(profiles_select_own)조차 안 보이면 토큰이 인증으로 실리지 않은 것,
-        // 자기 계정만 보이면 schema5 관리자 정책이 아직 적용되지 않은 것.
-        setEmptyReason(all.length === 0 ? 'token' : 'policy')
+        if (all.length === 0) {
+          // 자기 자신(profiles_select_own)조차 안 보이면 토큰이 인증으로 실리지 않은 것
+          setEmptyReason('token')
+        } else {
+          // 자기 계정만 보임 → 이 계정이 관리자 명단(authorized_orgs)에 있는지 대조해 원인을 가른다
+          const uid = getAuthedUserId()
+          const { data: admins } = await client.from('authorized_orgs').select('user_id')
+          const adminIds = new Set((admins ?? []).map((a) => String((a as { user_id: unknown }).user_id)))
+          setEmptyReason(uid && adminIds.size > 0 && !adminIds.has(uid) ? 'not_admin' : 'policy')
+        }
         setStats({})
         return
       }
@@ -166,9 +173,11 @@ export function MemberDirectoryPanel() {
           data-mbaas-oid="mdirem" icon={Users}
           title="표시할 구성원이 없습니다"
           description={
-            emptyReason === 'policy'
-              ? '진단 결과: 현재 관리자 본인 계정만 조회됩니다 — 관리자 조회 권한(schema5 SQL)이 아직 적용되지 않았습니다.'
-              : '진단 결과: 본인 계정조차 조회되지 않습니다 — 로그인 세션 문제일 수 있으니 로그아웃 후 다시 로그인해 주세요.'
+            emptyReason === 'not_admin'
+              ? '진단 결과: 지금 로그인한 계정이 관리자 명단(authorized_orgs)에 없습니다 — 관리자 계정(AWOS 관리자)으로 로그인했는지 확인하거나, 이 계정을 명단에 추가해 주세요.'
+              : emptyReason === 'policy'
+                ? '진단 결과: 현재 관리자 본인 계정만 조회됩니다 — 관리자 조회 권한(schema5 SQL)이 아직 적용되지 않았습니다.'
+                : '진단 결과: 본인 계정조차 조회되지 않습니다 — 로그인 세션 문제일 수 있으니 로그아웃 후 다시 로그인해 주세요.'
           }
         />
         {emptyReason === 'policy' && (

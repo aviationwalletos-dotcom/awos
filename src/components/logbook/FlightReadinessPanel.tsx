@@ -172,11 +172,6 @@ export function FlightReadinessPanel({
         </p>
       )}
 
-      {account && (
-        <p data-mbaas-oid="frpsh06" className="mt-2 text-[11px] text-slate-400">
-          이 버튼을 눌러야 최신 상태가 관리자 화면에 반영됩니다(자동 실시간 동기화가 아닙니다).
-        </p>
-      )}
     </div>
   )
 
@@ -223,9 +218,6 @@ export function FlightReadinessPanel({
                   <ReadinessStateChip key={state.key} state={state} />
                 ))}
               </div>
-              <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-                AWOS에 등록된 자격·비행기록 기준의 참고 판정입니다(규칙 세트 v0.9 — 항공안전법·운항기술기준 원문 대조 검증 예정). 실제 비행 가부는 소속 규정과 자격 원본으로 확인하세요.
-              </p>
             </div>
           </div>
         )}
@@ -309,12 +301,12 @@ function ReadinessStateChip({ state }: { state: ReadinessState }) {
   const Icon = STATE_ICON[state.key]
   return (
     <span
-      data-mbaas-oid="frpchip" className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-[11px] font-semibold ${
+      data-mbaas-oid="frpchip" className={`inline-flex items-center gap-2 rounded-control border px-4 py-2 text-sm font-bold ${
         state.met ? 'border-go/25 bg-go/10 text-go' : 'border-white/10 bg-white/[0.03] text-slate-400'
       }`}
       title={state.label}
     >
-      <Icon className="h-3 w-3" aria-hidden={true} />
+      <Icon className="h-5 w-5" aria-hidden={true} />
       {state.label}
       <span
  data-mbaas-oid="625aw10" className={`ml-0.5 rounded-control px-1 text-[10px] font-bold ${
@@ -338,14 +330,14 @@ function ReadinessStateCard({ state }: { state: ReadinessState }) {
     >
       <div data-mbaas-oid="o2xnvqa" className="flex items-center justify-between gap-2">
         <div data-mbaas-oid="usoks14" className="flex items-center gap-2">
-          <Icon className={`h-4 w-4 ${state.met ? 'text-go' : 'text-slate-400'}`} aria-hidden={true} />
+          <Icon className={`h-6 w-6 ${state.met ? 'text-go' : 'text-slate-400'}`} aria-hidden={true} />
           <span data-mbaas-oid="axpvvk5" className="text-sm font-bold text-white">
             {state.label}
           </span>
         </div>
         <span
 
-          data-mbaas-oid="1i61xid" className={`inline-flex shrink-0 items-center rounded-control px-2 py-0.5 text-[11px] font-bold ${
+          data-mbaas-oid="1i61xid" className={`inline-flex shrink-0 items-center rounded-control px-2 py-0.5 text-sm font-bold ${
             state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
           }`}
         >
@@ -353,7 +345,7 @@ function ReadinessStateCard({ state }: { state: ReadinessState }) {
         </span>
       </div>
       {!state.met && state.reasons.length > 0 && (
-        <ul data-mbaas-oid="351rdz9" className="mt-2 space-y-1 text-xs text-slate-400">
+        <ul data-mbaas-oid="351rdz9" className="mt-2 space-y-1 text-sm text-slate-400">
           {state.reasons.map((reason, i) => (
             <li data-mbaas-oid="25f1o8j" key={i} className="flex gap-1.5">
               <span data-mbaas-oid="iyc3p4i" aria-hidden="true">

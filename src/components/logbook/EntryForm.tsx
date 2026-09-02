@@ -11,6 +11,7 @@ interface FieldErrors {
   arrival?: string
   aircraftType?: string
   blockTime?: string
+  groundTrainerTime?: string
   certification?: string
 }
 
@@ -45,7 +46,7 @@ export function buildEntrySuggestions(entries: LogbookEntry[]): EntrySuggestions
     return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k]) => k)
   }
   return {
-    airports: top(entries.flatMap((e) => [e.departure, e.arrival])),
+    airports: top(entries.flatMap((e) => [e.departure, e.arrival]).filter((v) => v !== 'SIM')),
     aircraftTypes: top(entries.map((e) => e.aircraftType)),
     registrations: top(entries.map((e) => e.aircraftIdentification)),
   }
@@ -117,7 +118,9 @@ export function EntryForm({
 }: EntryFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [entryRole, setEntryRole] = useState<EntryRole>('')
-  const [entryKind, setEntryKind] = useState<'flight' | 'sim'>('flight')
+  const [entryKind, setEntryKind] = useState<'flight' | 'sim'>(
+    initialValues && (initialValues.departure === 'SIM' || (initialValues.groundTrainerTime ?? 0) > 0) ? 'sim' : 'flight',
+  )
   const formRef = useRef<HTMLFormElement>(null)
   /** 자동으로 채운 필드 이름 — 사용자가 직접 고친 값은 덮어쓰지 않기 위해 추적 */
   const autofilledRef = useRef<Set<string>>(new Set())
@@ -172,6 +175,10 @@ export function EntryForm({
     })
     applyRoleAutofill(role, Number(getField('blockTime')?.value))
   }
+
+  const isSimKind = entryKind === 'sim'
+  const aircraftTypeChips = suggestions?.aircraftTypes?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
+  const registrationChips = suggestions?.registrations?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(
     initialValues?.pilotCertification?.signatureDataUrl ?? null,
   )
@@ -201,6 +208,10 @@ export function EntryForm({
     if (!aircraftType) nextErrors.aircraftType = '기종을 입력해 주세요.'
     if (!isSim && (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0)) {
       nextErrors.blockTime = '블록타임을 0보다 큰 숫자로 입력해 주세요.'
+    }
+    const groundTrainerRaw = String(form.get('groundTrainerTime') || '').trim()
+    if (isSim && (!groundTrainerRaw || Number(groundTrainerRaw) <= 0)) {
+      nextErrors.groundTrainerTime = '시뮬레이터(지상훈련장비) 시간을 0보다 큰 숫자로 입력해 주세요.'
     }
     if (isCertifyAction && !signatureDataUrl) {
       nextErrors.certification = '서명 후 확정해 주세요.'
@@ -308,8 +319,7 @@ export function EntryForm({
         </div>
         {entryKind === 'sim' && (
           <p data-mbaas-oid="simntc" className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
-            시뮬레이터 기록 모드: <span data-mbaas-oid="simntc2" className="font-semibold">장비명 · 지상훈련장비 시간 · 모의계기 시간 · 계기접근 횟수</span>만
-            입력하면 됩니다. 출발/도착지와 블록타임은 자동으로 처리돼요.
+            시뮬레이터 기록 모드: <span data-mbaas-oid="simntc2" className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리됩니다.
           </p>
         )}
       </div>
@@ -346,12 +356,12 @@ export function EntryForm({
               name="aircraftType"
               type="text"
               defaultValue={initialValues?.aircraftType}
-              placeholder={aircraftTypePlaceholder}
+              placeholder={isSimKind ? '예: FTD, FTD-Multi' : aircraftTypePlaceholder}
               className={inputClass}
               aria-invalid={Boolean(errors.aircraftType)}
               aria-describedby={errors.aircraftType ? 'aircraftType-error' : undefined}
             />
-            <Chips items={suggestions?.aircraftTypes} onPick={(v) => setField('aircraftType', v)} />
+            <Chips items={aircraftTypeChips} onPick={(v) => setField('aircraftType', v)} />
             {errors.aircraftType && (
               <p data-mbaas-oid="obspykq" id="aircraftType-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.aircraftType}
@@ -368,10 +378,10 @@ export function EntryForm({
               name="aircraftIdentification"
               type="text"
               defaultValue={initialValues?.aircraftIdentification}
-              placeholder={aircraftIdPlaceholder}
+              placeholder={isSimKind ? '예: FTD-Multi' : aircraftIdPlaceholder}
               className={`${inputClass} font-mono-data`}
             />
-            <Chips items={suggestions?.registrations} onPick={(v) => setField('aircraftIdentification', v)} />
+            <Chips items={registrationChips} onPick={(v) => setField('aircraftIdentification', v)} />
           </div>
         </div>
       </fieldset>
@@ -608,8 +618,10 @@ export function EntryForm({
       <hr data-mbaas-oid="aa5e0u7" className="border-white/[0.08]" />
 
       {/* 5. 지상훈련장비 */}
+      {entryKind === 'sim' && (<>
+
       <fieldset data-mbaas-oid="ktbegxv">
-        <legend data-mbaas-oid="87l6119" className={sectionTitleClass}>5. 지상훈련장비 (선택)</legend>
+        <legend data-mbaas-oid="87l6119" className={sectionTitleClass}>5. 지상훈련장비 — 시뮬레이터 시간 (필수)</legend>
         <div data-mbaas-oid="sd8q38m" className="mt-3 max-w-xs">
           <label data-mbaas-oid="g0ys0t0" htmlFor="groundTrainerTime" className={labelClass}>
             시뮬레이터 시간
@@ -624,11 +636,35 @@ export function EntryForm({
             className={numberInputClass}
           />
         </div>
-      </fieldset>
+      
+          {errors.groundTrainerTime && (
+            <p data-mbaas-oid="simerr1" className="mt-1.5 text-xs text-rose-400">{errors.groundTrainerTime}</p>
+          )}
+          {/* 시뮬레이터 전용 입력 — 실비행 섹션(6·7·8)이 숨겨져 있어 이름 충돌이 없다 */}
+          <div data-mbaas-oid="simx0" className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div data-mbaas-oid="simx1">
+              <label data-mbaas-oid="simx1l" htmlFor="sim-instrument" className={labelClass}>모의계기 시간 (선택)</label>
+              <input data-mbaas-oid="simx1i" id="sim-instrument" name="simulatedInstrument" type="number" step="0.1" min="0" className={numberInputClass} />
+            </div>
+            <div data-mbaas-oid="simx2">
+              <label data-mbaas-oid="simx2l" htmlFor="sim-approaches" className={labelClass}>계기 접근 횟수 (선택)</label>
+              <input data-mbaas-oid="simx2i" id="sim-approaches" name="instrumentApproaches" type="number" step="1" min="0" placeholder="예: 2" className={numberInputClass} />
+            </div>
+          </div>
+          <div data-mbaas-oid="simx3" className="mt-4">
+            <label data-mbaas-oid="simx3l" htmlFor="sim-notes" className={labelClass}>비고 (선택)</label>
+            <textarea data-mbaas-oid="simx3t" id="sim-notes" name="notes" rows={2} defaultValue={initialValues?.notes} className={inputClass} />
+          </div>
+        </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="19wzhue" className="border-white/[0.08]" />
 
       {/* 6. 비행 조건별 시간 */}
+      {entryKind === 'flight' && (<>
+
       <fieldset data-mbaas-oid="qq8v6t4">
         <legend data-mbaas-oid="1n59dl8" className={sectionTitleClass}>6. 비행 조건별 시간 (선택)</legend>
         <div data-mbaas-oid="i8ktosd" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -706,10 +742,15 @@ export function EntryForm({
           </div>
         </div>
       </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="1d2ng39" className="border-white/[0.08]" />
 
       {/* 7. 접근/이착륙 횟수 */}
+      {entryKind === 'flight' && (<>
+
       <fieldset data-mbaas-oid="2teo0y3">
         <legend data-mbaas-oid="2qd2300" className={sectionTitleClass}>7. 접근/이착륙 횟수 (선택)</legend>
         <div data-mbaas-oid="1ro3o3q" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -760,10 +801,15 @@ export function EntryForm({
           </div>
         </div>
       </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="480rj37" className="border-white/[0.08]" />
 
       {/* 8. 총 비행시간 및 비고 */}
+      {entryKind === 'flight' && (<>
+
       <fieldset data-mbaas-oid="ge236y0">
         <legend data-mbaas-oid="73qnd0k" className={sectionTitleClass}>8. 총 비행시간 및 비고</legend>
         <div data-mbaas-oid="ehklpel" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -805,6 +851,9 @@ export function EntryForm({
           />
         </div>
       </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="obc1elg" className="border-white/[0.08]" />
 

@@ -540,7 +540,8 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
         : undefined
 
       // 하단 합계·총계·서명 행은 형식 오류로 세지 않고 조용히 건너뛴다(항상 '오류 2건'이 뜨던 문제 해결).
-      const summaryLike = /합계|총계|소계|서명|total/i.test(rawDate) || (!rawDate.trim() && !aircraftType.trim())
+      // 기종이 없는 행은 비행기록이 아니다(합계·서명·출력시각 등 꼬리 행 포함) — 오류로 세지 않고 건너뛴다.
+      const summaryLike = /합계|총계|소계|서명|total|page/i.test(rawDate) || !aircraftType.trim()
       if (!valid && summaryLike) return []
 
       return [{
