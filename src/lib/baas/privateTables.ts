@@ -29,6 +29,11 @@ export function parsePrivatePostId(postId: string): { table: PrivateTable; appId
   return { table, appId }
 }
 
+// 목록 조회 결과 캐시 — 초기 동기화가 기록 1건마다 상세 조회를 반복해도(기록 200건 = 200회)
+// 네트워크를 다시 타지 않도록, listMyPrivateRecords가 채워두고 fetchMyPrivateRecord가 먼저 읽는다.
+const recordCache = new Map<string, PrivateRecordRow>()
+const cacheKey = (table: PrivateTable, appId: string) => `${table}:${appId}`
+
 function requireClient() {
   const client = getAuthedDataClient()
   const userId = getAuthedUserId()
@@ -48,12 +53,14 @@ export async function upsertPrivateRecord(table: PrivateTable, appId: string, co
     .from(table)
     .upsert({ user_id: userId, app_id: appId, data }, { onConflict: 'user_id,app_id' })
   if (error) throw new Error(error.message)
+  recordCache.set(cacheKey(table, appId), { app_id: appId, data })
 }
 
 export async function deletePrivateRecord(table: PrivateTable, appId: string): Promise<void> {
   const { client, userId } = requireClient()
   const { error } = await client.from(table).delete().eq('user_id', userId).eq('app_id', appId)
   if (error) throw new Error(error.message)
+  recordCache.delete(cacheKey(table, appId))
 }
 
 export interface PrivateRecordRow {
@@ -70,10 +77,14 @@ export async function listMyPrivateRecords(table: PrivateTable): Promise<Private
     .order('updated_at', { ascending: false })
     .limit(2000)
   if (error) throw new Error(error.message)
-  return (data ?? []) as PrivateRecordRow[]
+  const rows = (data ?? []) as PrivateRecordRow[]
+  for (const row of rows) recordCache.set(cacheKey(table, row.app_id), row)
+  return rows
 }
 
 export async function fetchMyPrivateRecord(table: PrivateTable, appId: string): Promise<PrivateRecordRow | null> {
+  const cached = recordCache.get(cacheKey(table, appId))
+  if (cached) return cached
   const { client, userId } = requireClient()
   const { data, error } = await client
     .from(table)

@@ -7,6 +7,7 @@ import { InstitutionSelect } from '../components/InstitutionSelect'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
 import { useAuth } from '../contexts/AuthContext'
+import { getAuthedDataClient } from '../lib/baas/supabaseTransport'
 import { useChangePassword } from '../hooks/baas/useChangePassword'
 import { useIndividualRoleOverride } from '../hooks/useIndividualRoleOverride'
 import { useInstructorApprovalStatus } from '../hooks/baas/useInstructorApprovalStatus'
@@ -48,6 +49,38 @@ function PageHeader() {
 export function AccountPage() {
   const navigate = useNavigate()
   const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut } = useAuth()
+  const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'working'>('idle')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  async function handleDeleteAccount() {
+    setDeleteError(null)
+    setDeleteStep('working')
+    try {
+      const client = getAuthedDataClient()
+      if (!client) throw new Error('로그인 정보를 찾을 수 없습니다. 다시 로그인 후 시도해 주세요.')
+      const { error } = await client.rpc('delete_my_account')
+      if (error) {
+        throw new Error(
+          error.message.includes('delete_my_account')
+            ? '탈퇴 기능이 아직 서버에 설정되지 않았습니다(schema7 SQL 실행 필요).'
+            : error.message,
+        )
+      }
+      // 이 기기에 남은 캐시(비행기록·자격증 등) 제거
+      try {
+        Object.keys(window.localStorage)
+          .filter((key) => key.startsWith('awos'))
+          .forEach((key) => window.localStorage.removeItem(key))
+      } catch {
+        // 캐시 정리 실패는 무시
+      }
+      await logout()
+      window.location.href = '/'
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : '탈퇴 처리에 실패했습니다.')
+      setDeleteStep('confirm')
+    }
+  }
   const { changePassword, isLoading: isChangingPassword, error: changeError, isSuccess, reset: resetChangePassword } = useChangePassword()
   const { override: roleOverride, setOverride: setRoleOverride } = useIndividualRoleOverride(account)
   const { override: affiliationOverride, setOverride: setAffiliationOverride } = useOrganizationAffiliationOverride(account)
@@ -424,6 +457,50 @@ export function AccountPage() {
             </form>
           </div>
         </div>
+
+        <section data-mbaas-oid="delacc0" className="mx-auto mt-12 max-w-3xl px-6 pb-16">
+          <div data-mbaas-oid="delacc1" className="rounded-card border border-rose-500/25 bg-rose-500/5 p-6">
+            <h2 data-mbaas-oid="delacc2" className="font-display text-lg font-extrabold text-rose-300">회원 탈퇴</h2>
+            <p data-mbaas-oid="delacc3" className="mt-2 text-sm leading-relaxed text-slate-400">
+              탈퇴하면 계정과 함께 비행기록·자격증·서명 요청 등 모든 데이터가 <span data-mbaas-oid="delacc4" className="font-semibold text-rose-300">즉시 영구 삭제</span>되며 복구할 수 없습니다.
+              필요한 기록은 탈퇴 전에 백업해 주세요.
+            </p>
+            {deleteStep === 'idle' && (
+              <button
+                data-mbaas-oid="delacc5" type="button"
+                onClick={() => setDeleteStep('confirm')}
+                className="mt-4 rounded-control border border-rose-400/40 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/10"
+              >
+                회원 탈퇴 진행하기
+              </button>
+            )}
+            {(deleteStep === 'confirm' || deleteStep === 'working') && (
+              <div data-mbaas-oid="delacc6" className="mt-4 rounded-control border border-rose-400/30 bg-navy p-4">
+                <p data-mbaas-oid="delacc7" className="text-sm font-semibold text-ink">정말 탈퇴하시겠어요?</p>
+                <p data-mbaas-oid="delacc8" className="mt-1 text-xs text-slate-400">이 작업은 되돌릴 수 없습니다.</p>
+                {deleteError && <p data-mbaas-oid="delacc9" className="mt-2 text-xs text-rose-300">{deleteError}</p>}
+                <div data-mbaas-oid="delaccA" className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    data-mbaas-oid="delaccB" type="button"
+                    onClick={() => void handleDeleteAccount()}
+                    disabled={deleteStep === 'working'}
+                    className="rounded-control bg-rose-500/90 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-500 disabled:opacity-60"
+                  >
+                    {deleteStep === 'working' ? '삭제 중…' : '네, 영구 삭제합니다'}
+                  </button>
+                  <button
+                    data-mbaas-oid="delaccC" type="button"
+                    onClick={() => { setDeleteStep('idle'); setDeleteError(null) }}
+                    disabled={deleteStep === 'working'}
+                    className="rounded-control border border-white/15 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   )

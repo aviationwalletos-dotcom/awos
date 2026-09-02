@@ -61,7 +61,13 @@ export function SignupPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!validate()) return
+    if (!validate()) {
+      // 실패한 항목이 화면 밖에 있으면 첫 번째 빨간 안내로 스크롤해 '무반응'처럼 보이지 않게 한다
+      window.setTimeout(() => {
+        document.querySelector('.text-rose-400')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }, 30)
+      return
+    }
 
     try {
       await signup(email.trim(), password, name.trim(), phone, {
@@ -174,6 +180,11 @@ export function SignupPage() {
               </label>
             </div>
               {fieldErrors.agreement && <p data-mbaas-oid="gkc0qoy" className="text-xs text-rose-400">{fieldErrors.agreement}</p>}
+            {Object.keys(fieldErrors).length > 0 && (
+              <p data-mbaas-oid="sgnerrb" className="text-center text-xs font-semibold text-rose-400">
+                빨간 안내가 표시된 항목을 확인해 주세요.
+              </p>
+            )}
             </div>
 
             <Button data-mbaas-oid="sgnpg39" type="submit" size="lg" className="mt-2 w-full" disabled={isLoading} loading={isLoading}>

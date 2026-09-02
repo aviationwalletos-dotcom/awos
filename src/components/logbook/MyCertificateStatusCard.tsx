@@ -1,173 +1,164 @@
-import React, { useMemo } from 'react'
-import { Bot, ClipboardList, Plane, Radar, Radio, ShieldCheck } from 'lucide-react'
+// "내 자격 현황" — 실물 자격증 느낌의 카드 덱.
+// 카테고리(자격증명·한정·신체검사·교육증명·무선통신사)별 카드 1장씩, 카드를 누르거나
+// 옆으로 넘기면 다음 카드로 이동한다(스크롤바는 숨김, 하단 점으로 위치 표시).
 
-import type { RoleContent, RoleKey } from '../../data/content'
-import { CERTIFICATE_STATUS_LABEL, daysUntil, getCertificateStatus } from '../../types/certificate'
-import type { Certificate, CertificateStatus } from '../../types/certificate'
+import React, { useMemo, useRef, useState } from 'react'
 
-const ROLE_ICONS: Record<RoleKey, React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
-  pilot: Plane,
-  mechanic: ClipboardList,
-  controller: Radar,
-  ops: Radio,
-  drone: Bot,
+import type { RoleContent } from '../../data/content'
+import { daysUntil } from '../../types/certificate'
+import type { Certificate, CertificateCategory } from '../../types/certificate'
+
+interface DeckCardDef {
+  category: CertificateCategory
+  en: string
+  refText: string
+  gradient: string
+  standards: string[]
 }
 
-/** 다크 카드 배경 위에서도 대비가 확보되도록 조정한 상태 배지 스타일 (FlightReadinessPanel의 GO/NO-GO 칩 톤과 통일) */
-const STATUS_BADGE: Record<CertificateStatus, string> = {
-  valid: 'bg-go/15 text-go',
-  warning: 'bg-amber-400/15 text-amber-300',
-  urgent: 'bg-rose-500/100/15 text-rose-300',
-  expired: 'bg-slate-400/15 text-slate-300',
-  no_expiry: 'bg-sky/15 text-sky',
-}
+const DECK: DeckCardDef[] = [
+  { category: '조종사 자격증명', en: 'AERONAUTICAL PERSONNEL', refText: 'ICAO Annex 1 · 항공안전법 제34조', gradient: 'from-[#0B2A6B] via-[#123C8F] to-[#1D4ED8]', standards: ['PPL', 'CPL', 'ATPL'] },
+  { category: '한정', en: 'RATINGS', refText: '항공안전법 제37조', gradient: 'from-[#312E81] via-[#4C1D95] to-[#7C3AED]', standards: ['IR', 'ME'] },
+  { category: '항공신체검사', en: 'MEDICAL CERTIFICATE', refText: '항공안전법 제40조', gradient: 'from-[#064E3B] via-[#047857] to-[#0D9488]', standards: ['1종', '2종', '3종'] },
+  { category: '조종교육증명', en: 'FLIGHT INSTRUCTOR', refText: 'ICAO Annex 1', gradient: 'from-[#7C2D12] via-[#9A3412] to-[#D97706]', standards: ['초급', '선임'] },
+  { category: '무선통신사', en: 'RADIO OPERATOR', refText: '전파법', gradient: 'from-[#155E75] via-[#0E7490] to-[#0891B2]', standards: [] },
+]
 
-const MAX_VISIBLE = 6
-const MAX_VISIBLE_COMPACT = 2
+/** 자격 명칭 → 카드 칩용 짧은 코드 */
+function certCode(cert: Certificate): string {
+  const n = cert.name
+  if (n.includes('운송용')) return 'ATPL'
+  if (n.includes('사업용')) return 'CPL'
+  if (n.includes('자가용')) return 'PPL'
+  if (n.includes('경량')) return 'LSA'
+  if (n.includes('계기')) return 'IR'
+  if (n.includes('다발')) return 'ME'
+  if (n.includes('단발')) return 'SE'
+  const type = /형식한정\(([^)]+)\)/.exec(n)
+  if (type) return type[1]
+  if (n.includes('제1종') || n.includes('1종')) return '1종'
+  if (n.includes('제2종') || n.includes('2종')) return '2종'
+  if (n.includes('제3종') || n.includes('3종')) return '3종'
+  if (n.includes('초급')) return '초급'
+  if (n.includes('선임')) return '선임'
+  return n.replace(/\s/g, '').slice(0, 5)
+}
 
 interface MyCertificateStatusCardProps {
   certificates: Certificate[]
   roleContent?: RoleContent
-  /** true면 히어로 등 좁은 영역에 맞춰 만료 임박 1~2건만 보여주는 축약형으로 렌더링합니다. */
   compact?: boolean
+  /** 카드에 표기할 보유자 이름(계정 이름) */
+  holderName?: string
+  /** 카드에 표기할 회원 식별번호 */
+  memberId?: string
 }
 
-/**
- * 홈(랜딩) "역할별 기능 쇼케이스"(Roles.tsx)와 같은 카드 시각 스타일을 재사용해,
- * 로그인한 사용자의 실제 자격증 데이터를 만료 임박 순으로 보여주는 AWOS 전용 컴포넌트.
- * 만료일이 없는 자격(조종사 자격증명/한정/조종교육증명)은 목록 맨 뒤에 배치한다.
- */
-export function MyCertificateStatusCard({ certificates, roleContent, compact = false }: MyCertificateStatusCardProps) {
-  const Icon = roleContent ? ROLE_ICONS[roleContent.key] : ShieldCheck
-  const colorClass = roleContent?.colorClass ?? 'text-sky'
-  const bgClass = roleContent?.bgClass ?? 'bg-sky/10'
+export function MyCertificateStatusCard({ certificates, roleContent, compact = false, holderName, memberId }: MyCertificateStatusCardProps) {
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
 
-  const sorted = useMemo(() => {
-    return [...certificates].sort((a, b) => {
-      const aRemaining = a.expiryDate ? daysUntil(a.expiryDate) : Number.POSITIVE_INFINITY
-      const bRemaining = b.expiryDate ? daysUntil(b.expiryDate) : Number.POSITIVE_INFINITY
-      return aRemaining - bRemaining
-    })
+  const byCategory = useMemo(() => {
+    const map = new Map<CertificateCategory, Certificate[]>()
+    for (const cert of certificates) {
+      if (!map.has(cert.category)) map.set(cert.category, [])
+      map.get(cert.category)!.push(cert)
+    }
+    return map
   }, [certificates])
 
-  const visible = sorted.slice(0, compact ? MAX_VISIBLE_COMPACT : MAX_VISIBLE)
-  const hiddenCount = sorted.length - visible.length
+  const goTo = (index: number) => {
+    const el = scrollerRef.current
+    if (!el) return
+    const next = ((index % DECK.length) + DECK.length) % DECK.length
+    el.scrollTo({ left: next * el.clientWidth, behavior: 'smooth' })
+  }
 
-  if (compact) {
-    return (
-      <div
-        data-mbaas-oid="ms8d0lv" className="rounded-card border border-white/10 bg-white/[0.04] p-4 backdrop-blur"
-      >
-        <div data-mbaas-oid="s0cp464" className="flex items-start gap-3">
-          <span data-mbaas-oid="mj04ehl" className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-card ${bgClass} ${colorClass}`}>
-            <Icon className="h-5 w-5" aria-hidden={true} />
-          </span>
-          <div data-mbaas-oid="xgu1ivg" className="min-w-0 flex-1">
-            <p data-mbaas-oid="xczv64y" className={`text-xs font-semibold uppercase tracking-wide ${colorClass}`}>
-              내 자격 현황
-            </p>
-            <p data-mbaas-oid="d2gdtsk" className="mt-1 truncate text-sm text-slate-400">
-              {roleContent
-                ? `${roleContent.name} 자격 요약`
-                : '등록된 자격 항목을 만료 임박 순으로 보여드립니다.'}
-            </p>
-
-            {sorted.length === 0 ? (
-              <p data-mbaas-oid="oqup49l" className="mt-2 text-xs text-slate-400">
-                등록된 자격증이 없습니다. 자격증 관리 탭에서 첫 자격증을 등록해 보세요.
-              </p>
-            ) : (
-              <>
-                <ul data-mbaas-oid="vaqhh2w" className="mt-2 space-y-1.5">
-                  {visible.map((cert) => {
-                    const status = getCertificateStatus(cert.expiryDate)
-                    return (
-                      <li data-mbaas-oid="mcscrow" key={cert.id} className="flex items-center justify-between gap-2 text-xs">
-                        <span data-mbaas-oid="si1wiwy" className="truncate font-medium text-white">
-                          {cert.name}
-                        </span>
-                        <span
-                          data-mbaas-oid="jmu9d39" className={`shrink-0 rounded-control px-2 py-0.5 font-bold ${STATUS_BADGE[status]}`}
-                        >
-                          {CERTIFICATE_STATUS_LABEL[status]}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
-                <p data-mbaas-oid="iusoj54" className="mt-2 text-[11px] text-slate-400">
-                  자격증 관리 탭에서 전체보기{hiddenCount > 0 ? ` (${hiddenCount}건 더 있음)` : ''}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    )
+  const handleScroll = () => {
+    const el = scrollerRef.current
+    if (!el || el.clientWidth === 0) return
+    setActive(Math.min(DECK.length - 1, Math.max(0, Math.round(el.scrollLeft / el.clientWidth))))
   }
 
   return (
-    <div
- data-mbaas-oid="ms8d0lv" className="rounded-card border border-white/10 bg-white/[0.04] p-cardpad backdrop-blur"
-    >
-      <div data-mbaas-oid="s0cp464" className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        <span data-mbaas-oid="mj04ehl" className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-card ${bgClass} ${colorClass}`}>
-          <Icon className="h-8 w-8" aria-hidden={true} />
-        </span>
-        <div data-mbaas-oid="xgu1ivg" className="flex-1">
-          <p data-mbaas-oid="xczv64y" className={`text-xs font-semibold uppercase tracking-wide ${colorClass}`}>
-            내 자격 현황
-          </p>
-          <h3 data-mbaas-oid="ji5ffd4" className="mt-1 text-xl font-bold text-white">
+    <div data-mbaas-oid="ms8d0lv" className={`rounded-card border border-white/10 bg-white/[0.04] ${compact ? 'p-4' : 'p-cardpad'} backdrop-blur`}>
+      <div data-mbaas-oid="mcshead" className="flex items-baseline justify-between gap-3">
+        <div data-mbaas-oid="mcshead1" className="min-w-0">
+          <p data-mbaas-oid="xczv64y" className="text-xs font-semibold uppercase tracking-wide text-sky">내 자격 현황</p>
+          <p data-mbaas-oid="d2gdtsk" className="mt-0.5 truncate text-sm text-slate-400">
             {roleContent ? `${roleContent.name} 자격 요약` : '등록된 자격 요약'}
-          </h3>
-          <p data-mbaas-oid="d2gdtsk" className="mt-2 text-sm text-slate-400">
-            {roleContent
-              ? roleContent.summary
-              : '자격증 관리 탭에서 등록한 면허·항공신체검사·법정교육 등 자격 항목을 만료 임박 순으로 보여드립니다.'}
           </p>
-
-          {sorted.length === 0 ? (
-            <div
- data-mbaas-oid="w0i5sii" className="mt-6 flex flex-col items-center gap-2 rounded-control border border-dashed border-white/15 bg-white/[0.02] py-8 text-center"
-            >
-              <ShieldCheck className="h-6 w-6 text-slate-400" aria-hidden="true" />
-              <p data-mbaas-oid="oqup49l" className="max-w-xs text-sm text-slate-400">
-                등록된 자격증이 없습니다. 자격증 관리 탭에서 첫 자격증을 등록해 보세요.
-              </p>
-            </div>
-          ) : (
-            <>
-              <ul data-mbaas-oid="vaqhh2w" className="mt-6 divide-y divide-white/10">
-                {visible.map((cert) => {
-                  const status = getCertificateStatus(cert.expiryDate)
-                  return (
-                    <li data-mbaas-oid="mcscrow" key={cert.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                      <span data-mbaas-oid="si1wiwy" className="text-sm font-medium text-white">
-                        {cert.name}
-                      </span>
-                      <div data-mbaas-oid="02s3who" className="flex items-center gap-3">
-                        <span data-mbaas-oid="stthnne" className="font-mono-data tabular-nums text-sm text-slate-400">
-                          {cert.expiryDate ?? '만료 없음'}
-                        </span>
-                        <span
- data-mbaas-oid="jmu9d39" className={`rounded-control px-2.5 py-1 text-xs font-bold ${STATUS_BADGE[status]}`}
-                        >
-                          {CERTIFICATE_STATUS_LABEL[status]}
-                        </span>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-              {hiddenCount > 0 && (
-                <p data-mbaas-oid="iusoj54" className="mt-4 text-xs text-slate-400">
-                  이 외 {hiddenCount}건이 더 있습니다. 자격증 관리 탭에서 전체보기.
-                </p>
-              )}
-            </>
-          )}
         </div>
+        <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">카드를 누르면 다음 자격 →</p>
+      </div>
+
+      <div
+        data-mbaas-oid="mcsdeck" ref={scrollerRef}
+        onScroll={handleScroll}
+        className="mt-4 flex snap-x snap-mandatory overflow-x-auto rounded-card [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {DECK.map((def) => {
+          const held = byCategory.get(def.category) ?? []
+          const heldCodes = [...new Set(held.map(certCode))]
+          const dimCodes = def.standards.filter((code) => !heldCodes.includes(code)).slice(0, 3)
+          const soonest = held
+            .map((c) => (c.expiryDate ? daysUntil(c.expiryDate) : null))
+            .filter((d): d is number => d !== null)
+            .sort((a, b) => a - b)[0]
+          return (
+            <button
+              data-mbaas-oid="mcscard" key={def.category}
+              type="button"
+              onClick={() => goTo(active + 1)}
+              className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'min-h-[210px] p-4' : 'min-h-[240px] p-6'}`}
+              aria-label={`${def.category} 카드, 누르면 다음 자격으로 넘어갑니다`}
+            >
+              <div data-mbaas-oid="mcsc0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" />
+              <div data-mbaas-oid="mcsc1" className="relative flex items-center justify-between gap-2">
+                <p data-mbaas-oid="mcsc2" className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
+                <span data-mbaas-oid="mcsc3" className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${held.length > 0 ? 'bg-white/20 text-white' : 'bg-black/25 text-white/50'}`}>
+                  {held.length > 0 ? `보유 ${held.length}` : '미등록'}
+                </span>
+              </div>
+              <p data-mbaas-oid="mcsc4" className="relative mt-5 font-mono-data text-[10px] font-semibold tracking-[0.22em] text-white/70">{def.en}</p>
+              <h3 data-mbaas-oid="mcsc5" className={`relative mt-1 font-display font-extrabold tracking-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>
+                {def.category}
+              </h3>
+              <p data-mbaas-oid="mcsc6" className="relative mt-4 font-mono-data text-[10px] tracking-wider text-white/50">NAME / IDENTIFIER</p>
+              <p data-mbaas-oid="mcsc7" className="relative truncate text-base font-bold text-white">{holderName ?? '이름 미설정'}</p>
+              {memberId && <p data-mbaas-oid="mcsc8" className="relative font-mono-data text-xs font-semibold text-sky-200/90">{memberId}</p>}
+              <div data-mbaas-oid="mcsc9" className="relative mt-4 flex flex-wrap items-center gap-1.5">
+                {heldCodes.map((code) => (
+                  <span data-mbaas-oid="mcscA" key={code} className="rounded-md border border-white/35 bg-white/15 px-2 py-1 font-mono-data text-[11px] font-bold text-white">
+                    {code}
+                  </span>
+                ))}
+                {dimCodes.map((code) => (
+                  <span data-mbaas-oid="mcscB" key={code} className="rounded-md border border-white/10 bg-white/[0.06] px-2 py-1 font-mono-data text-[11px] font-semibold text-white/35">
+                    {code}
+                  </span>
+                ))}
+                {soonest !== undefined && (
+                  <span data-mbaas-oid="mcscC" className={`ml-auto font-mono-data text-[11px] font-bold ${soonest < 0 ? 'text-rose-200' : soonest <= 30 ? 'text-amber-200' : 'text-white/70'}`}>
+                    {soonest < 0 ? `만료 ${Math.abs(soonest)}일 경과` : `최단 D-${soonest}`}
+                  </span>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <div data-mbaas-oid="mcsdots" className="mt-3 flex items-center justify-center gap-1.5">
+        {DECK.map((def, index) => (
+          <button
+            data-mbaas-oid="mcsdot" key={def.category}
+            type="button"
+            onClick={() => goTo(index)}
+            aria-label={`${def.category} 카드로 이동`}
+            className={`h-1.5 rounded-full transition-all ${active === index ? 'w-5 bg-sky' : 'w-1.5 bg-white/20 hover:bg-white/40'}`}
+          />
+        ))}
       </div>
     </div>
   )
