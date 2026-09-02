@@ -462,7 +462,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       <fieldset data-mbaas-oid="zv4o5j5">
         <legend data-mbaas-oid="l07pu5w" className={sectionTitleClass}>8. 비행경력증명서 사진</legend>
         <p data-mbaas-oid="mifhaxb" className={sectionHintClass}>
-          이 브라우저에 미리보기로 표시되며, 제출 시 기관 인증 요청 게시글의 첨부파일로 함께 업로드되어
+          이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
           담당자가 확인할 수 있습니다(선택 입력).
         </p>
         <label

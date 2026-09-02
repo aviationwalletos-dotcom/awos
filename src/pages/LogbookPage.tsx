@@ -18,7 +18,6 @@ import { Footer } from '../components/Footer'
 import { Button } from '../components/Button'
 import { Reveal } from '../components/Reveal'
 import { EntryForm, buildEntrySuggestions } from '../components/logbook/EntryForm'
-import { QuickEntryForm } from '../components/logbook/QuickEntryForm'
 import { EntryFilterBar, matchesFilter } from '../components/logbook/EntryFilterBar'
 import { EntryList } from '../components/logbook/EntryList'
 import { EntryDetailDialog } from '../components/logbook/EntryDetailDialog'
@@ -325,7 +324,6 @@ export function LogbookPage() {
   const pendingSyncCount = useMemo(() => entries.filter((e) => !e.syncPostId).length, [entries])
 
   // 새 비행 기록 입력 모드: 비행 직후 최소 입력(quick)이 기본, 공식 양식 전체는 detail.
-  const [entryFormMode, setEntryFormMode] = useState<'quick' | 'detail'>('quick')
 
   // 드론 조종자는 "항공기" 대신 "기체" 개념을 사용하므로 입력 폼/상세 라벨만 자연스럽게 조정합니다.
   const aircraftLabelProps = isDrone
@@ -433,7 +431,6 @@ export function LogbookPage() {
                       }}
                       onStartNew={() => {
                         setActiveTab('logbook')
-                        setEntryFormMode('quick')
                         window.setTimeout(() => document.getElementById('new-entry')?.scrollIntoView({ behavior: 'smooth' }), 80)
                       }}
                     />
@@ -542,6 +539,16 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="x782ba2" className="font-display text-2xl font-extrabold text-ink">
                     내 자격증 목록
                   </h2>
+                  {certificates.some((c) => c.category === '조종교육증명' || c.name.includes('교육증명')) &&
+                    !isApprovedInstructor && (
+                      <div className="mt-4 rounded-card border border-sky/30 bg-sky/5 p-4 text-sm text-slate-300">
+                        조종교육증명을 보유하고 계시네요. <span className="font-semibold text-ink">교관 승인</span>을 받으면
+                        학생들의 서명 요청이 들어오는 <span className="font-semibold text-ink">서명요청함</span>이 열립니다.{' '}
+                        <Link to="/account" className="font-semibold text-sky underline underline-offset-2">
+                          계정정보에서 교관 승인 신청하기 →
+                        </Link>
+                      </div>
+                    )}
                   <div data-mbaas-oid="85jt1q8" className="mt-6">
                     <CertificateList
                       certificates={certificates}
@@ -633,32 +640,8 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="lgbpg18" className="font-display text-2xl font-extrabold text-ink">
                     새 비행 기록 추가
                   </h2>
-                  <div className="mt-4 inline-flex rounded-control border border-white/15 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setEntryFormMode('quick')}
-                      className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
-                        entryFormMode === 'quick' ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      ⚡ 퀵 기록 (30초)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEntryFormMode('detail')}
-                      className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
-                        entryFormMode === 'detail' ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      상세 입력 (공식 양식)
-                    </button>
-                  </div>
                   <div data-mbaas-oid="lgbpg19" className="mt-4 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-                    {entryFormMode === 'quick' ? (
-                      <QuickEntryForm onSubmit={(input) => addEntry(input)} />
-                    ) : (
-                      <EntryForm mode="create" onSubmit={(input) => addEntry(input)} suggestions={entrySuggestions} {...aircraftLabelProps} />
-                    )}
+                    <EntryForm mode="create" onSubmit={(input) => addEntry(input)} suggestions={entrySuggestions} {...aircraftLabelProps} />
                   </div>
                 </Reveal>
               </div>

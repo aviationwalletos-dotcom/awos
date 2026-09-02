@@ -39,6 +39,21 @@ interface CertificateListProps {
 }
 
 export function CertificateList({ certificates, onSelect, accentHoverBorderClass }: CertificateListProps) {
+  const sortedCertificates = [...certificates].sort((a, b) => {
+    // 만료일 있는 유효 자격(임박순) → 만료 개념 없는 자격 → 만료된 자격 순으로 정렬
+    const rank = (c: Certificate) => {
+      const status = getCertificateStatus(c.expiryDate)
+      if (status === 'expired') return 2
+      if (status === 'no_expiry') return 1
+      return 0
+    }
+    const byRank = rank(a) - rank(b)
+    if (byRank !== 0) return byRank
+    const da = a.expiryDate ?? '9999-12-31'
+    const db = b.expiryDate ?? '9999-12-31'
+    if (da !== db) return da < db ? -1 : 1
+    return b.updatedAt - a.updatedAt
+  })
   const hoverBorderClass = accentHoverBorderClass ?? 'hover:border-sky'
   if (certificates.length === 0) {
     return (
@@ -50,7 +65,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
 
   return (
     <ul data-mbaas-oid="as8g46c" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {certificates.map((cert) => {
+      {sortedCertificates.map((cert) => {
         const status = getCertificateStatus(cert.expiryDate)
         const remaining = cert.expiryDate ? daysUntil(cert.expiryDate) : null
         const Icon = STATUS_ICON[status]
