@@ -9,6 +9,7 @@ import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
 import type { IndividualRole, UserType } from '../lib/baas/types'
 
 interface FieldErrors {
+  emailConfirm?: string
   name?: string
   email?: string
   phone?: string
@@ -27,6 +28,7 @@ export function SignupPage() {
   const [organizationAffiliation, setOrganizationAffiliation] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [emailConfirm, setEmailConfirm] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -40,6 +42,7 @@ export function SignupPage() {
     if (!name.trim()) errors.name = '이름을 입력해주세요.'
     if (!email.trim()) errors.email = '이메일을 입력해주세요.'
     else if (!validateEmail(email)) errors.email = '올바른 이메일 형식이 아닙니다.'
+    if (email.trim() && emailConfirm.trim() !== email.trim()) errors.emailConfirm = '이메일이 서로 달라요. 오타가 없는지 확인해 주세요.'
 
     if (!phone.trim()) errors.phone = '전화번호를 입력해주세요.'
     else if (!validatePhone(phone)) errors.phone = '010-1234-5678 형식으로 입력해주세요.'
@@ -174,6 +177,26 @@ export function SignupPage() {
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.email && <p data-mbaas-oid="iijf9jc" className="text-xs text-rose-400">{fieldErrors.email}</p>}
+            </div>
+
+            <div data-mbaas-oid="sgnec01" className="flex flex-col gap-1.5">
+              <label data-mbaas-oid="sgnec02" htmlFor="signup-email2" className="text-xs font-semibold text-slate-300">
+                이메일 확인
+              </label>
+              <input
+                data-mbaas-oid="sgnec03" id="signup-email2"
+                type="email"
+                autoComplete="email"
+                value={emailConfirm}
+                onChange={(e) => setEmailConfirm(e.target.value)}
+                placeholder="같은 이메일을 한 번 더 입력하세요"
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+              />
+              <p data-mbaas-oid="sgnec04" className="text-xs text-slate-500">
+                비밀번호 재설정 메일이 이 주소로 발송되니 오타가 없는지 꼭 확인하세요.
+              </p>
+              {fieldErrors.emailConfirm && <p data-mbaas-oid="sgnec05" className="text-xs text-rose-400">{fieldErrors.emailConfirm}</p>}
             </div>
 
             <div data-mbaas-oid="sgnpg26" className="flex flex-col gap-1.5">

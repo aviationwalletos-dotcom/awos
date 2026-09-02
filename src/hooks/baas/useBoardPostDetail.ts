@@ -3,6 +3,7 @@
 //
 // 목록 조회 API의 content는 "미리보기(HTML 태그 제거)"라 원본 줄바꿈/서식이 보존된다는
 // 보장이 없다. 원본 content가 필요한 경우(예: JSON 직렬화 데이터 파싱) 이 훅을 사용한다.
+import { fetchMyPrivateRecord, parsePrivatePostId } from '../../lib/baas/privateTables'
 
 import { useCallback, useState } from 'react'
 
@@ -22,6 +23,14 @@ export function useBoardPostDetail(): UseBoardPostDetailReturn {
   const [error, setError] = useState<string | null>(null)
 
   const fetchDetail = useCallback(async (postId: string): Promise<BoardPostDetail> => {
+      {
+        const privateRef = parsePrivatePostId(postId)
+        if (privateRef) {
+          const row = await fetchMyPrivateRecord(privateRef.table, privateRef.appId)
+          if (!row) throw new Error('기록을 찾을 수 없습니다.')
+          return { id: postId, title: '', content: JSON.stringify(row.data), attachments: [] } as unknown as BoardPostDetail
+        }
+      }
     setIsLoading(true)
     setError(null)
 

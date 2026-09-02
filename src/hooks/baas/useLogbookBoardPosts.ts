@@ -3,6 +3,7 @@
 //
 // 비행기록 데이터 자체는 상세 조회(useBoardPostDetail)로 가져오므로, 이 훅은 "본인 명의로 된
 // 비행기록 게시글 id 목록"을 찾는 용도(초기 서버 동기화 등)로 주로 사용한다.
+import { buildPrivatePostId, listMyPrivateRecords } from '../../lib/baas/privateTables'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -132,6 +133,16 @@ export function useLogbookBoardPosts(options: UseLogbookBoardPostsOptions = {}):
           console.warn('[비행기록 게시글 전체 목록 조회 중 일부 페이지 실패]', err)
           break
         }
+      }
+
+      // [schema6] 본인 전용 테이블의 기록도 합성 게시글 아이템으로 덧붙인다(비로그인 등 실패는 무시).
+      try {
+        const privateRows = await listMyPrivateRecords('user_logbook_entries')
+        for (const row of privateRows) {
+          collected.push({ id: buildPrivatePostId('user_logbook_entries', row.app_id), title: '' } as unknown as BoardPostListItem)
+        }
+      } catch {
+        // 테이블 조회 실패 시 게시판 결과만으로 진행
       }
 
       return collected

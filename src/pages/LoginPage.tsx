@@ -119,6 +119,15 @@ export function LoginPage() {
               로그인
             </Button>
 
+            <p data-mbaas-oid="lgnfgt1" className="text-center text-xs">
+              <Link
+                data-mbaas-oid="lgnfgt2" to="/forgot-password"
+                className="font-medium text-slate-400 hover:text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
+            </p>
+
             <p data-mbaas-oid="lgnpg27" className="text-center text-xs text-slate-400">
               계정이 없으신가요?{' '}
               <Link

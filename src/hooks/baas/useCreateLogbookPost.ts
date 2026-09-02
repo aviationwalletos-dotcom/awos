@@ -1,12 +1,9 @@
-// "기록관리" 게시판 게시글 작성 Hook (비행기록 1건당 게시글 1건)
-// 참고: baas-integration skill의 references/dynamic-board.md #2. 게시글 작성 API
+// 비행기록 저장 — [schema6 이후] 게시판 대신 본인 전용 테이블(user_logbook_entries)에 저장한다.
+// 반환 형태는 기존 게시글(BoardPostDetail)과 호환되는 합성 객체라 상위 훅 수정이 필요 없다.
 
 import { useCallback, useState } from 'react'
 
-import { BAAS_BASE_URL, LOGBOOK_BOARD_ID, getAuthHeaders, getBaasProjectId } from '../../lib/baas/config'
-import { baasFetch } from '../../lib/baas/supabaseTransport'
-import { handleBaasResponse, withRetry } from '../../lib/baas/retry'
-
+import { buildPrivatePostId, upsertPrivateRecord } from '../../lib/baas/privateTables'
 import type { BoardPostCreateRequest, BoardPostDetail } from '../../lib/baas/boardTypes'
 
 interface UseCreateLogbookPostReturn {
@@ -23,22 +20,18 @@ export function useCreateLogbookPost(): UseCreateLogbookPostReturn {
   const createLogbookPost = useCallback(async (data: BoardPostCreateRequest): Promise<BoardPostDetail> => {
     setIsLoading(true)
     setError(null)
-
     try {
-      // 본인 명의로 작성되며, 항상 공개(기본값)로 생성한다(is_hidden: true로 만들 필요가 없다 —
-      // 숨김 게시글은 작성자 본인만 조회 가능해 초기 동기화(다른 기기)에서 사용할 수 없게 된다).
-      // withRetry: 429/5xx/네트워크 예외는 지수 백오프로 자동 재시도, 4xx는 즉시 실패로 전파한다.
-      return await withRetry(async () => {
-        const response = await baasFetch(`${BAAS_BASE_URL}/boards/${getBaasProjectId()}/${LOGBOOK_BOARD_ID}/posts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-          credentials: 'include',
-          body: JSON.stringify({ is_hidden: false, ...data }),
-        })
-        return handleBaasResponse<BoardPostDetail>(response, '비행기록 서버 동기화(생성)에 실패했습니다.')
-      })
+      const parsed = JSON.parse(data.content) as { id?: string }
+      const appId = parsed?.id
+      if (!appId) throw new Error('비행기록 id가 없어 저장할 수 없습니다.')
+      await upsertPrivateRecord('user_logbook_entries', appId, data.content)
+      return {
+        id: buildPrivatePostId('user_logbook_entries', appId),
+        title: data.title,
+        content: data.content,
+      } as BoardPostDetail
     } catch (err) {
-      const message = err instanceof Error ? err.message : '비행기록 서버 동기화(생성)에 실패했습니다.'
+      const message = err instanceof Error ? err.message : '비행기록 저장에 실패했습니다.'
       setError(message)
       throw err instanceof Error ? err : new Error(message)
     } finally {

@@ -1,5 +1,6 @@
 // 게시글 수정 Hook (작성자 본인만 가능, board_id와 무관한 범용 훅)
 // 참고: baas-integration skill의 references/dynamic-board.md #4. 게시글 수정 API
+import { parsePrivatePostId, upsertPrivateRecord } from '../../lib/baas/privateTables'
 
 import { useCallback, useState } from 'react'
 
@@ -19,6 +20,13 @@ export function useUpdateBoardPost(): UseUpdateBoardPostReturn {
   const [error, setError] = useState<string | null>(null)
 
   const updatePost = useCallback(async (postId: string, data: BoardPostUpdateRequest): Promise<BoardPostDetail> => {
+      {
+        const privateRef = parsePrivatePostId(postId)
+        if (privateRef) {
+          await upsertPrivateRecord(privateRef.table, privateRef.appId, data.content ?? '')
+          return { id: postId, content: data.content ?? '' } as BoardPostDetail
+        }
+      }
     setIsLoading(true)
     setError(null)
 

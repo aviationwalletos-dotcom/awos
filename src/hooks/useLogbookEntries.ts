@@ -131,7 +131,10 @@ export function useLogbookEntries(account: AccountResponse | null | undefined) {
 
       // 이미 삭제 처리(tombstone)한 게시글은 서버에 남아있어도 다시 병합하지 않는다(BUG-014).
       const deletedPostIds = accountId ? loadDeletedPostIds(DELETED_POST_IDS_STORAGE_KEY_PREFIX, accountId) : new Set<string>()
-      const myPosts = findLogbookEntryPostsByUserId(allItems, userId).filter((post) => !deletedPostIds.has(post.id))
+      const privateItems = allItems.filter((item) => item.id.startsWith('tbl:'))
+      const myPosts = [...privateItems, ...findLogbookEntryPostsByUserId(allItems, userId)].filter(
+        (post) => !deletedPostIds.has(post.id),
+      )
       if (myPosts.length === 0) return
 
       // 게시글마다 개별 상세조회 API를 호출해야 하므로, 기록이 수백 건이면 한꺼번에 수백 개의

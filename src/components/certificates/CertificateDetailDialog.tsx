@@ -189,6 +189,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
               {/* 관리자 인증 — 상태 표시 및 (재)요청 */}
               {(() => {
                 const effectiveStatus = certificate.approvalStatus ?? (approvalDone ? 'pending' : undefined)
+                const requestNotSent = certificate.approvalStatus === 'pending' && !certificate.approvalRequestPostId && !approvalDone
                 return (
                   <div data-mbaas-oid="crtaprq" className="rounded-card border border-sky/25 bg-sky/5 p-4">
                     <p data-mbaas-oid="crtaprq1" className="text-sm font-semibold text-ink">관리자 인증</p>
@@ -197,16 +198,21 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                         인증 완료 — 관리자가 확인한 자격입니다.
                       </p>
                     )}
-                    {effectiveStatus === 'pending' && (
+                    {effectiveStatus === 'pending' && !requestNotSent && (
                       <p data-mbaas-oid="crtaprqP" className="mt-2 text-sm text-amber-300">
                         승인 대기 중 — 관리자 확인 후 이 카드에 자동 반영됩니다.
                       </p>
                     )}
-                    {(effectiveStatus === undefined || effectiveStatus === 'rejected') && (
+                    {(effectiveStatus === undefined || effectiveStatus === 'rejected' || requestNotSent) && (
                       <>
                         {effectiveStatus === 'rejected' && (
                           <p data-mbaas-oid="crtaprqR" className="mt-2 text-sm text-rose-300">
                             반려됨 — 사진을 다시 첨부해 재요청할 수 있어요.
+                          </p>
+                        )}
+                        {requestNotSent && (
+                          <p data-mbaas-oid="crtaprqN" className="mt-2 text-sm text-amber-300">
+                            요청이 관리자에게 전송되지 않았어요(등록 당시 네트워크 문제로 보여요). 아래에서 다시 보내주세요.
                           </p>
                         )}
                         <p data-mbaas-oid="crtaprq3" className="mt-1 text-xs leading-relaxed text-slate-400">
@@ -224,7 +230,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                         )}
                         <div data-mbaas-oid="crtaprq6" className="mt-3">
                           <Button data-mbaas-oid="crtaprq7" type="button" size="sm" onClick={() => void handleRequestApproval()} disabled={isRequestingApproval}>
-                            {isRequestingApproval ? '요청 보내는 중…' : effectiveStatus === 'rejected' ? '다시 인증 요청' : '관리자에게 인증 요청'}
+                            {isRequestingApproval ? '요청 보내는 중…' : effectiveStatus === 'rejected' || requestNotSent ? '인증 요청 다시 보내기' : '관리자에게 인증 요청'}
                           </Button>
                         </div>
                       </>

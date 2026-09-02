@@ -12,7 +12,9 @@ import { Features } from './components/sections/Features'
 import { FinalCta } from './components/sections/FinalCta'
 import { LogbookPage } from './pages/LogbookPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LoginPage } from './pages/LoginPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SignupPage } from './pages/SignupPage'
 import { AccountPage } from './pages/AccountPage'
 import { AuthProvider } from './contexts/AuthContext'
@@ -56,6 +58,8 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route
                 path="/logbook"

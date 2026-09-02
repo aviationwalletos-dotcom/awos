@@ -86,28 +86,59 @@ export function MemberDirectoryPanel() {
 
       // 회원별 기록·자격증 집계 (게시판 원본을 직접 읽음 — 실패해도 목록은 유지)
       try {
-        const [logbookRes, certRes] = await Promise.all([
+        const [logbookRes, certRes, tableLogRes, tableCertRes] = await Promise.all([
           client.from('board_posts').select('author_id,content').eq('board_id', LOGBOOK_BOARD_ID).eq('is_hidden', false).limit(1000),
           client.from('board_posts').select('author_id,content').eq('board_id', CERTIFICATE_BOARD_ID).eq('is_hidden', false).limit(1000),
+          client.from('user_logbook_entries').select('user_id,data').limit(5000),
+          client.from('user_certificates').select('user_id,data').limit(5000),
         ])
         if (logbookRes.error) throw new Error(logbookRes.error.message)
         if (certRes.error) throw new Error(certRes.error.message)
+        const tablesMissing = Boolean(tableLogRes.error || tableCertRes.error)
 
         const entriesByUser = new Map<string, Map<string, LogbookEntry>>()
+        const certsByUser = new Map<string, Certificate[]>()
+        const certIdsByUser = new Map<string, Set<string>>()
+
+        // 1순위: 본인 전용 테이블(schema6) — 새 저장 방식의 원본
+        if (!tablesMissing) {
+          for (const row of tableLogRes.data ?? []) {
+            const author = (row as { user_id: string | null }).user_id
+            const entry = (row as { data: unknown }).data as LogbookEntry | null
+            if (!author || !entry || typeof entry !== 'object' || !entry.id || !entry.date) continue
+            if (!entriesByUser.has(author)) entriesByUser.set(author, new Map())
+            entriesByUser.get(author)!.set(entry.id, entry)
+          }
+          for (const row of tableCertRes.data ?? []) {
+            const author = (row as { user_id: string | null }).user_id
+            const cert = (row as { data: unknown }).data as Certificate | null
+            if (!author || !cert || typeof cert !== 'object' || !cert.id) continue
+            if (!certsByUser.has(author)) certsByUser.set(author, [])
+            if (!certIdsByUser.has(author)) certIdsByUser.set(author, new Set())
+            certsByUser.get(author)!.push(cert)
+            certIdsByUser.get(author)!.add(cert.id)
+          }
+        }
+
+        // 2순위: 아직 이전되지 않은 게시판 기록으로 빈 곳을 보충
         for (const post of logbookRes.data ?? []) {
           const entry = parseLogbookEntryFromContent((post as { content: string | null }).content)
           const author = (post as { author_id: string | null }).author_id
           if (!entry || !author) continue
           if (!entriesByUser.has(author)) entriesByUser.set(author, new Map())
+          if (entriesByUser.get(author)!.has(entry.id)) continue
           entriesByUser.get(author)!.set(entry.id, entry)
         }
-        const certsByUser = new Map<string, Certificate[]>()
         for (const post of certRes.data ?? []) {
           const cert = parseCertificateFromContent((post as { content: string | null }).content)
           const author = (post as { author_id: string | null }).author_id
           if (!cert || !author) continue
+          if (certIdsByUser.get(author)?.has(cert.id)) continue
           if (!certsByUser.has(author)) certsByUser.set(author, [])
           certsByUser.get(author)!.push(cert)
+        }
+        if (tablesMissing) {
+          setStatsNote('본인 전용 테이블(schema6)이 아직 없어 게시판 기준으로 집계했어요.')
         }
 
         const nextStats: Record<string, MemberStats> = {}
@@ -131,7 +162,7 @@ export function MemberDirectoryPanel() {
           }
         }
         setStats(nextStats)
-        setStatsNote(null)
+        if (!tablesMissing) setStatsNote(null)
       } catch (aggErr) {
         setStats({})
         setStatsNote(aggErr instanceof Error ? aggErr.message : '기록 집계에 실패해 기본 정보만 표시합니다.')
