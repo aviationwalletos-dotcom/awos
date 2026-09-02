@@ -5,6 +5,7 @@ import { ArrowLeft, LogIn } from 'lucide-react'
 import { Button } from '../components/Button'
 import { useAuth } from '../contexts/AuthContext'
 import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
+import { SocialLoginButtons } from '../components/SocialLoginButtons'
 import { useLogin } from '../hooks/baas/useLogin'
 
 export function LoginPage() {
@@ -86,6 +87,10 @@ export function LoginPage() {
             <p data-mbaas-oid="lgnpg14" className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
               가입 시 등록한 사용자 유형에 따라 개인 사용자는 디지털 로그북으로, 기관 사용자는 관제 대시보드로 이동합니다.
             </p>
+          </div>
+
+          <div data-mbaas-oid="lgnsoc" className="mt-8">
+            <SocialLoginButtons />
           </div>
 
           <form data-mbaas-oid="lgnpg19" onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">

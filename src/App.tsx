@@ -16,6 +16,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { InquiryPage } from './pages/InquiryPage'
 import { LoginPage } from './pages/LoginPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { SignupPage } from './pages/SignupPage'
 import { AccountPage } from './pages/AccountPage'
@@ -64,6 +65,7 @@ function App() {
               <Route path="/inquiry" element={<InquiryPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route
                 path="/logbook"

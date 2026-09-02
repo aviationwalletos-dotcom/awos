@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, UserPlus } from 'lucide-react'
 
 import { Button } from '../components/Button'
 import { InstitutionSelect } from '../components/InstitutionSelect'
+import { SocialLoginButtons } from '../components/SocialLoginButtons'
 import { useSignup } from '../hooks/baas/useSignup'
 import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
 import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
@@ -186,6 +187,10 @@ export function SignupPage() {
           </div>
 
           
+
+          <div data-mbaas-oid="sgnsoc" className="mt-8">
+            <SocialLoginButtons />
+          </div>
 
           <form data-mbaas-oid="sgnpg19" onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">
             {submitError && (
