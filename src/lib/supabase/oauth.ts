@@ -17,6 +17,6 @@ const SCOPES: Partial<Record<OAuthProvider, string>> = {
 export function startOAuthLogin(provider: OAuthProvider): void {
   const redirectTo = `${window.location.origin}/auth/callback`
   const scope = SCOPES[provider]
-  const scopeParam = scope ? `&scopes=${encodeURIComponent(scope)}` : ''
+  const scopeParam = scope ? `&scope=${encodeURIComponent(scope)}` : ''
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}${scopeParam}`
 }
