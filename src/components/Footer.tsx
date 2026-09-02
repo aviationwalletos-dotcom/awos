@@ -28,6 +28,11 @@ export function Footer() {
           <p data-mbaas-oid="2b5qdl8" className="mt-2 text-slate-400">© 2026 Aviation Wallet OS. All rights reserved.</p>
         </div>
       </div>
+      <p data-mbaas-oid="ftlgl" className="mt-4 text-center text-xs text-slate-500">
+        <a data-mbaas-oid="ftlgl1" href="/terms.html" className="hover:text-slate-300">이용약관</a>
+        <span data-mbaas-oid="ftlgl2" className="mx-2">·</span>
+        <a data-mbaas-oid="ftlgl3" href="/privacy.html" className="hover:text-slate-300">개인정보처리방침</a>
+      </p>
     </footer>
   )
 }

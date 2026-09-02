@@ -32,7 +32,8 @@ export function SignupPage() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [agreed, setAgreed] = useState(false)
+  const [agreedTerms, setAgreedTerms] = useState(false)
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isDone, setIsDone] = useState(false)
 
@@ -52,7 +53,7 @@ export function SignupPage() {
 
     if (password !== passwordConfirm) errors.passwordConfirm = '비밀번호가 일치하지 않습니다.'
 
-    if (!agreed) errors.agreement = '이용약관 및 개인정보 처리방침에 동의해주세요.'
+    if (!agreedTerms || !agreedPrivacy) errors.agreement = '필수 약관에 모두 동의해주세요.'
 
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
@@ -64,8 +65,8 @@ export function SignupPage() {
 
     try {
       await signup(email.trim(), password, name.trim(), phone, {
-        terms_agreed: agreed,
-        privacy_agreed: agreed,
+        terms_agreed: agreedTerms,
+        privacy_agreed: agreedPrivacy,
         data: {
           user_type: userType,
           individual_role: userType === 'individual' ? individualRole ?? undefined : undefined,
@@ -146,130 +147,32 @@ export function SignupPage() {
             )}
 
             <div data-mbaas-oid="sgnpg20" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnpg21" htmlFor="signup-name" className="text-xs font-semibold text-slate-300">
-                이름
-              </label>
-              <input
-                data-mbaas-oid="sgnpg22" id="signup-name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="홍길동"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              {fieldErrors.name && <p data-mbaas-oid="sg9qurs" className="text-xs text-rose-400">{fieldErrors.name}</p>}
-            </div>
-
-            <div data-mbaas-oid="sgnpg23" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnpg24" htmlFor="signup-email" className="text-xs font-semibold text-slate-300">
-                이메일
-              </label>
-              <input
-                data-mbaas-oid="sgnpg25" id="signup-email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              {fieldErrors.email && <p data-mbaas-oid="iijf9jc" className="text-xs text-rose-400">{fieldErrors.email}</p>}
-            </div>
-
-            <div data-mbaas-oid="sgnec01" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnec02" htmlFor="signup-email2" className="text-xs font-semibold text-slate-300">
-                이메일 확인
-              </label>
-              <input
-                data-mbaas-oid="sgnec03" id="signup-email2"
-                type="email"
-                autoComplete="email"
-                value={emailConfirm}
-                onChange={(e) => setEmailConfirm(e.target.value)}
-                placeholder="같은 이메일을 한 번 더 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              <p data-mbaas-oid="sgnec04" className="text-xs text-slate-500">
-                비밀번호 재설정 메일이 이 주소로 발송되니 오타가 없는지 꼭 확인하세요.
-              </p>
-              {fieldErrors.emailConfirm && <p data-mbaas-oid="sgnec05" className="text-xs text-rose-400">{fieldErrors.emailConfirm}</p>}
-            </div>
-
-            <div data-mbaas-oid="sgnpg26" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnpg27" htmlFor="signup-phone" className="text-xs font-semibold text-slate-300">
-                전화번호
-              </label>
-              <input
-                data-mbaas-oid="sgnpg28" id="signup-phone"
-                type="tel"
-                autoComplete="tel"
-                value={phone}
-                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                placeholder="010-1234-5678"
-                maxLength={13}
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              {fieldErrors.phone && <p data-mbaas-oid="9p15xto" className="text-xs text-rose-400">{fieldErrors.phone}</p>}
-            </div>
-
-            <InstitutionSelect
-              idPrefix="signup-affiliation"
-              value={organizationAffiliation}
-              onChange={setOrganizationAffiliation}
-              helperText="선택 사항입니다. 교관 서명 요청 시 소속 확인에 사용됩니다. (예: 한국항공대학교 울진비행훈련원)"
-            />
-
-            <div data-mbaas-oid="sgnpg29" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnpg30" htmlFor="signup-password" className="text-xs font-semibold text-slate-300">
-                비밀번호
-              </label>
-              <input
-                data-mbaas-oid="sgnpg31" id="signup-password"
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="8자 이상 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              {fieldErrors.password && <p data-mbaas-oid="4map06y" className="text-xs text-rose-400">{fieldErrors.password}</p>}
-            </div>
-
-            <div data-mbaas-oid="sgnpg32" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnpg33" htmlFor="signup-password-confirm" className="text-xs font-semibold text-slate-300">
-                비밀번호 확인
-              </label>
-              <input
-                data-mbaas-oid="sgnpg34" id="signup-password-confirm"
-                type="password"
-                autoComplete="new-password"
-                value={passwordConfirm}
-                onChange={(e) => setPasswordConfirm(e.target.value)}
-                placeholder="비밀번호를 다시 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              {fieldErrors.passwordConfirm && (
-                <p data-mbaas-oid="9krcaxw" className="text-xs text-rose-400">{fieldErrors.passwordConfirm}</p>
-              )}
-            </div>
-
-            <div data-mbaas-oid="sgnpg35" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnpg36" className="flex items-start gap-2 text-xs text-slate-300">
+              <div data-mbaas-oid="agrbox" className="flex flex-col gap-2.5 rounded-control border border-white/10 bg-white/[0.03] p-4">
+              <label data-mbaas-oid="agr1" className="flex items-start gap-2.5 text-sm text-slate-300">
                 <input
-                  data-mbaas-oid="sgnpg37" type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-white/20 bg-navy text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  data-mbaas-oid="agr1c" type="checkbox"
+                  checked={agreedTerms}
+                  onChange={(e) => setAgreedTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-sky"
                 />
-                <span data-mbaas-oid="sgnpg38">이용약관 및 개인정보 처리방침에 동의합니다.</span>
+                <span data-mbaas-oid="agr1t">
+                  <span data-mbaas-oid="agr1r" className="font-semibold text-sky">(필수)</span> 이용약관에 동의합니다{' '}
+                  <a data-mbaas-oid="agr1l" href="/terms.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
+                </span>
               </label>
+              <label data-mbaas-oid="agr2" className="flex items-start gap-2.5 text-sm text-slate-300">
+                <input
+                  data-mbaas-oid="agr2c" type="checkbox"
+                  checked={agreedPrivacy}
+                  onChange={(e) => setAgreedPrivacy(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-sky"
+                />
+                <span data-mbaas-oid="agr2t">
+                  <span data-mbaas-oid="agr2r" className="font-semibold text-sky">(필수)</span> 개인정보 수집·이용에 동의합니다{' '}
+                  <a data-mbaas-oid="agr2l" href="/privacy.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
+                </span>
+              </label>
+            </div>
               {fieldErrors.agreement && <p data-mbaas-oid="gkc0qoy" className="text-xs text-rose-400">{fieldErrors.agreement}</p>}
             </div>
 
