@@ -111,12 +111,13 @@ export function EntryForm({
   onCancel,
   suggestions,
   aircraftTypeLabel = '항공기 제작사 및 모델',
-  aircraftTypePlaceholder = '예: Cessna C172, Boeing 737',
+  aircraftTypePlaceholder = '예: Cessna 172R, C172, Boeing 737',
   aircraftIdLabel = '항공기 등록번호 / 테일넘버 (선택)',
   aircraftIdPlaceholder = '예: HL1234',
 }: EntryFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [entryRole, setEntryRole] = useState<EntryRole>('')
+  const [entryKind, setEntryKind] = useState<'flight' | 'sim'>('flight')
   const formRef = useRef<HTMLFormElement>(null)
   /** 자동으로 채운 필드 이름 — 사용자가 직접 고친 값은 덮어쓰지 않기 위해 추적 */
   const autofilledRef = useRef<Set<string>>(new Set())
@@ -193,11 +194,12 @@ export function EntryForm({
     const dayLandings = dayLandingsRaw ? Number(dayLandingsRaw) : 0
     const nightLandings = nightLandingsRaw ? Number(nightLandingsRaw) : 0
 
+    const isSim = entryKind === 'sim'
     if (!date) nextErrors.date = '비행 날짜를 입력해 주세요.'
-    if (!departure) nextErrors.departure = '출발지를 입력해 주세요.'
-    if (!arrival) nextErrors.arrival = '도착지를 입력해 주세요.'
+    if (!isSim && !departure) nextErrors.departure = '출발지를 입력해 주세요.'
+    if (!isSim && !arrival) nextErrors.arrival = '도착지를 입력해 주세요.'
     if (!aircraftType) nextErrors.aircraftType = '기종을 입력해 주세요.'
-    if (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0) {
+    if (!isSim && (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0)) {
       nextErrors.blockTime = '블록타임을 0보다 큰 숫자로 입력해 주세요.'
     }
     if (isCertifyAction && !signatureDataUrl) {
@@ -217,12 +219,12 @@ export function EntryForm({
     onSubmit({
       year,
       date,
-      departure,
-      arrival,
+      departure: isSim ? 'SIM' : departure,
+      arrival: isSim ? 'SIM' : arrival,
       viaAirports: String(form.get('viaAirports') || '').trim() || undefined,
       aircraftType,
       aircraftIdentification: String(form.get('aircraftIdentification') || '').trim() || undefined,
-      blockTime,
+      blockTime: isSim ? 0 : blockTime,
       // 대표 비행 종류(flightCategory)는 더 이상 폼에서 입력받지 않고 기본값으로 채웁니다.
       // 목록/필터의 실제 배지는 EntryList.tsx의 deriveBadges()가 기록된 시간 값을 기준으로 다시 계산합니다.
       flightCategory: FLIGHT_CATEGORIES[0] as LogbookEntryInput['flightCategory'],
@@ -288,6 +290,29 @@ export function EntryForm({
           역할을 고르고 비행시간을 넣으면 교육·PIC·교관 시간과 야간 시간이 자동으로 채워져요. 직접 고친 값은 덮어쓰지 않아요.
         </p>
       </div>
+
+      <div data-mbaas-oid="kindwrap" className="space-y-3">
+        <div data-mbaas-oid="kindtgl" className="inline-flex rounded-control border border-white/15 p-1">
+          {(['flight', 'sim'] as const).map((kind) => (
+            <button
+              data-mbaas-oid="kindbtn" key={kind}
+              type="button"
+              onClick={() => setEntryKind(kind)}
+              className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
+                entryKind === kind ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              {kind === 'flight' ? '✈️ 실비행' : '🖥️ 시뮬레이터 (FTD)'}
+            </button>
+          ))}
+        </div>
+        {entryKind === 'sim' && (
+          <p data-mbaas-oid="simntc" className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
+            시뮬레이터 기록 모드: <span data-mbaas-oid="simntc2" className="font-semibold">장비명 · 지상훈련장비 시간 · 모의계기 시간 · 계기접근 횟수</span>만
+            입력하면 됩니다. 출발/도착지와 블록타임은 자동으로 처리돼요.
+          </p>
+        )}
+      </div>
       {/* 1. 기본 비행 정보 */}
       <fieldset data-mbaas-oid="upndrix">
         <legend data-mbaas-oid="2hufkaa" className={sectionTitleClass}>1. 기본 비행 정보</legend>
@@ -300,7 +325,7 @@ export function EntryForm({
               data-mbaas-oid="xsva53y" id="date"
               name="date"
               type="date"
-              defaultValue={initialValues?.date}
+              defaultValue={initialValues?.date ?? (mode === 'create' ? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) : undefined)}
               className={inputClass}
               aria-invalid={Boolean(errors.date)}
               aria-describedby={errors.date ? 'date-error' : undefined}
@@ -354,6 +379,8 @@ export function EntryForm({
       <hr data-mbaas-oid="kc5iv2c" className="border-white/[0.08]" />
 
       {/* 2. 출발/도착지 */}
+      {entryKind === 'flight' && (<>
+
       <fieldset data-mbaas-oid="ud2btp7">
         <legend data-mbaas-oid="bqc9cm6" className={sectionTitleClass}>2. 출발/도착지</legend>
         <div data-mbaas-oid="ks18sv8" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -366,7 +393,7 @@ export function EntryForm({
               name="departure"
               type="text"
               defaultValue={initialValues?.departure}
-              placeholder="예: RKSI"
+              placeholder="예: RKPU"
               className={`${inputClass} font-mono-data`}
               aria-invalid={Boolean(errors.departure)}
               aria-describedby={errors.departure ? 'departure-error' : undefined}
@@ -388,7 +415,7 @@ export function EntryForm({
               name="arrival"
               type="text"
               defaultValue={initialValues?.arrival}
-              placeholder="예: RKPC"
+              placeholder="예: RKNY"
               className={`${inputClass} font-mono-data`}
               aria-invalid={Boolean(errors.arrival)}
               aria-describedby={errors.arrival ? 'arrival-error' : undefined}
@@ -410,17 +437,22 @@ export function EntryForm({
               name="viaAirports"
               type="text"
               defaultValue={initialValues?.viaAirports}
-              placeholder="예: RKPU, RKTN"
+              placeholder="예: RKTN, RKNY"
               className={`${inputClass} font-mono-data`}
             />
             <p data-mbaas-oid="6uzo4cg" className={sectionHintClass}>여러 곳이면 쉼표로 구분해 입력해 주세요.</p>
           </div>
         </div>
       </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="ky79b2k" className="border-white/[0.08]" />
 
       {/* 3. 항공기 범주/등급별 시간 */}
+      {entryKind === 'flight' && (<>
+
       <fieldset data-mbaas-oid="6j33a7s">
         <legend data-mbaas-oid="ekb97da" className={sectionTitleClass}>3. 항공기 범주/등급별 시간 (선택)</legend>
         <div data-mbaas-oid="qzkj8cz" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -499,10 +531,15 @@ export function EntryForm({
           </div>
         </div>
       </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="7hct34q" className="border-white/[0.08]" />
 
       {/* 4. 비행 자격 시간 종류 */}
+      {entryKind === 'flight' && (<>
+
       <fieldset data-mbaas-oid="lh27m71">
         <legend data-mbaas-oid="946bltl" className={sectionTitleClass}>4. 비행 자격 시간 종류 (선택)</legend>
         <div data-mbaas-oid="0ly6doh" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -564,6 +601,9 @@ export function EntryForm({
           </div>
         </div>
       </fieldset>
+      </>)}
+
+      
 
       <hr data-mbaas-oid="aa5e0u7" className="border-white/[0.08]" />
 

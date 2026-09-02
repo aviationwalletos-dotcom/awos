@@ -43,8 +43,8 @@ function LogbookPreview() {
       </div>
 
       {[
-        { date: '2026-08-21', route: 'RKTL → RKTH', ac: 'C172', hrs: '2.3', tag: 'X-C' },
-        { date: '2026-08-19', route: 'RKTL → RKTL', ac: 'C172', hrs: '1.1', tag: 'LCL' },
+        { date: '2026-08-21', route: 'RKPU → RKNY', ac: 'C172', hrs: '2.3', tag: 'X-C' },
+        { date: '2026-08-19', route: 'RKPU → RKPU', ac: 'C172', hrs: '1.1', tag: 'LCL' },
       ].map((row) => (
         <div
           key={row.date}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 import { Button } from '../Button'
 import { CERTIFICATE_CATEGORIES } from '../../types/certificate'
@@ -9,6 +9,7 @@ import {
   MEDICAL_CERTIFICATE_TYPES,
   RATING_TYPES,
   buildRatingName,
+  computeMedicalExpiryDate,
   getExpiryRequirement,
 } from '../../data/certificateOptions'
 import type { RoleContent } from '../../data/content'
@@ -18,12 +19,13 @@ interface FieldErrors {
   issuer?: string
   issuedDate?: string
   expiryDate?: string
+  approvalFile?: string
 }
 
 interface CertificateFormProps {
   mode: 'create' | 'edit'
   initialValues?: Certificate
-  onSubmit: (input: CertificateInput) => void
+  onSubmit: (input: CertificateInput, options?: { approvalFile?: File }) => void
   onCancel?: () => void
   /** 로그인한 사용자의 역할에 해당하는 자격 템플릿(빠른 추가 칩)과 강조 색상 */
   roleTemplate?: RoleContent
@@ -46,6 +48,21 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
   const [ratingKey, setRatingKey] = useState(RATING_TYPES[0].key)
   const [ratingDetail, setRatingDetail] = useState('')
   const [medicalKey, setMedicalKey] = useState(MEDICAL_CERTIFICATE_TYPES[0].key)
+  const [instructorGrade, setInstructorGrade] = useState<'초급' | '선임'>('초급')
+  const [approvalFile, setApprovalFile] = useState<File | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  /** 항공신체검사: 발급일·종별이 바뀌면 만료일을 월말 원칙으로 자동 계산해 채운다(수정 가능). */
+  function autofillMedicalExpiry(nextIssued?: string, nextKey?: string) {
+    if (category !== '항공신체검사') return
+    const formEl = formRef.current
+    if (!formEl) return
+    const issuedEl = formEl.elements.namedItem('issuedDate') as HTMLInputElement | null
+    const expiryEl = formEl.elements.namedItem('expiryDate') as HTMLInputElement | null
+    const issued = nextIssued ?? issuedEl?.value ?? ''
+    const expiry = computeMedicalExpiryDate(issued, nextKey ?? medicalKey)
+    if (expiry && expiryEl) expiryEl.value = expiry
+  }
 
   const expiryRequirement = getExpiryRequirement(category)
   const showExpiryField = expiryRequirement !== 'hidden'
@@ -60,9 +77,12 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
       setRatingDetail('')
       setNameValue(buildRatingName(RATING_TYPES[0], ''))
     } else if (next === '조종교육증명') {
-      setNameValue(FLIGHT_INSTRUCTOR_CERTIFICATE_LABEL)
+      setInstructorGrade('초급')
+      setNameValue('초급 조종교육증명')
     } else if (next === '항공신체검사') {
       setMedicalKey(MEDICAL_CERTIFICATE_TYPES[0].key)
+      setInstructorGrade('초급')
+      setApprovalFile(null)
       setNameValue(MEDICAL_CERTIFICATE_TYPES[0].label)
     }
   }
@@ -106,6 +126,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
     if (!issuer) nextErrors.issuer = '발급기관을 입력해 주세요.'
     if (!issuedDate) nextErrors.issuedDate = '발급일을 입력해 주세요.'
     if (expiryRequirement === 'required' && !expiryDateRaw) nextErrors.expiryDate = '만료일을 입력해 주세요.'
+    if (mode === 'create' && !approvalFile) nextErrors.approvalFile = '자격증 사진(이미지 또는 PDF)을 첨부해 주세요.'
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
@@ -113,14 +134,17 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
     }
 
     setErrors({})
-    onSubmit({
-      name,
-      category,
-      issuer,
-      issuedDate,
-      expiryDate,
-      notes: String(form.get('notes') || '').trim() || undefined,
-    })
+    onSubmit(
+      {
+        name,
+        category,
+        issuer,
+        issuedDate,
+        expiryDate,
+        notes: String(form.get('notes') || '').trim() || undefined,
+      },
+      { approvalFile: approvalFile ?? undefined },
+    )
 
     if (mode === 'create') {
       e.currentTarget.reset()
@@ -134,7 +158,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
   }
 
   return (
-    <form data-mbaas-oid="bqneq6d" noValidate onSubmit={handleSubmit} className="space-y-5">
+    <form data-mbaas-oid="bqneq6d" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
       {roleTemplate && roleTemplate.credentials.length > 0 && (
         <div data-mbaas-oid="vt7bbs2" className={`rounded-control border p-4 ${roleTemplate.borderClass} ${roleTemplate.bgClass}`}>
           <p data-mbaas-oid="zi57mny" className={`text-xs font-semibold ${roleTemplate.colorClass}`}>
@@ -220,11 +244,30 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
 
         {category === '조종교육증명' && (
           <div data-mbaas-oid="6g4qv1x">
-            <span data-mbaas-oid="9hluw75" className={labelClass}>세부 종류</span>
-            <p data-mbaas-oid="1t8d1tp" className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
-              {FLIGHT_INSTRUCTOR_CERTIFICATE_LABEL} (세부 선택 없음)
-            </p>
+            <label data-mbaas-oid="9hluw75" htmlFor="instructor-grade" className={labelClass}>
+              세부 종류
+            </label>
+            <select
+              data-mbaas-oid="instrsel" id="instructor-grade"
+              value={instructorGrade}
+              onChange={(e) => {
+                const grade = e.target.value as '초급' | '선임'
+                setInstructorGrade(grade)
+                setNameValue(`${grade} 조종교육증명`)
+              }}
+              className={inputClass}
+            >
+              <option data-mbaas-oid="instro1" value="초급">초급 조종교육증명</option>
+              <option data-mbaas-oid="instro2" value="선임">선임 조종교육증명</option>
+            </select>
           </div>
+        )}
+
+        {category === '무선통신사' && (
+          <p data-mbaas-oid="commntc" className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200">
+            무선통신사는 <span data-mbaas-oid="commntc2" className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요. 발급 5년이 지나면
+            교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리됩니다.
+          </p>
         )}
 
         {category === '항공신체검사' && (
@@ -235,7 +278,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
             <select
  data-mbaas-oid="siuo4zq" id="medical-type"
               value={medicalKey}
-              onChange={(e) => handleMedicalChange(e.target.value)}
+              onChange={(e) => { handleMedicalChange(e.target.value); autofillMedicalExpiry(undefined, e.target.value) }}
               className={inputClass}
             >
               {MEDICAL_CERTIFICATE_TYPES.map((m) => (
@@ -332,7 +375,9 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
             className={inputClass}
             aria-invalid={Boolean(errors.issuedDate)}
             aria-describedby={errors.issuedDate ? 'issuedDate-error' : undefined}
-          />
+          
+              onChange={(e) => autofillMedicalExpiry(e.target.value)}
+            />
           {errors.issuedDate && (
             <p data-mbaas-oid="nuy6rc8" id="issuedDate-error" className="mt-1.5 text-xs text-rose-600">
               {errors.issuedDate}
@@ -354,6 +399,12 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
               aria-invalid={Boolean(errors.expiryDate)}
               aria-describedby={errors.expiryDate ? 'expiryDate-error' : undefined}
             />
+            {category === '항공신체검사' && (
+              <p data-mbaas-oid="medauto1" className="mt-1.5 text-xs text-slate-400">
+                발급일을 넣으면 <span data-mbaas-oid="medauto2" className="font-semibold text-slate-300">월말 만료 원칙</span>으로 자동 계산돼요(수정 가능).
+                종별 유효기간은 검증 중(v0.9)입니다.
+              </p>
+            )}
             {errors.expiryDate && (
               <p data-mbaas-oid="9ll421d" id="expiryDate-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.expiryDate}
@@ -388,6 +439,24 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
           className={inputClass}
         />
       </div>
+
+        <div data-mbaas-oid="crtfile0">
+          <span data-mbaas-oid="crtfile1" className={labelClass}>자격증 사진 (이미지 또는 PDF)</span>
+          <input
+            data-mbaas-oid="crtfile2" type="file"
+            accept="image/*,application/pdf,.pdf"
+            onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
+            className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
+          />
+          <p data-mbaas-oid="crtfile3" className="mt-1.5 text-xs text-slate-400">
+            {mode === 'create'
+              ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'
+              : '수정 시에는 첨부하지 않아도 됩니다. 재인증은 상세 화면에서 요청하세요.'}
+          </p>
+          {errors.approvalFile && (
+            <p data-mbaas-oid="crtfile4" className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
+          )}
+        </div>
 
       <div data-mbaas-oid="jn9x7gq" className="flex flex-wrap gap-3">
         <Button data-mbaas-oid="zq3xs96" type="submit" size="md">

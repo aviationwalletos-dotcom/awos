@@ -5,6 +5,7 @@ export type CertificateCategory =
   | '조종사 자격증명'
   | '한정'
   | '조종교육증명'
+  | '무선통신사'
   | '항공신체검사'
   | '법정교육'
   | '기타 자격'
@@ -18,6 +19,10 @@ export interface Certificate {
   /** 항공신체검사/법정교육 등 실제 만료가 있는 자격만 값을 가집니다. 조종사 자격증명/한정/조종교육증명은 만료 개념이 없어 비어 있을 수 있습니다. */
   expiryDate?: string // YYYY-MM-DD
   notes?: string
+  /** 관리자 인증 상태 — undefined는 인증 요청 이력이 없는 기존 자격 */
+  approvalStatus?: 'pending' | 'approved' | 'rejected'
+  /** "자격증 인증" 게시판의 요청 게시글 id */
+  approvalRequestPostId?: string
   createdAt: number
   updatedAt: number
   /**
@@ -34,6 +39,7 @@ export const CERTIFICATE_CATEGORIES: CertificateCategory[] = [
   '한정',
   '조종교육증명',
   '항공신체검사',
+  '무선통신사',
   '법정교육',
   '기타 자격',
 ]

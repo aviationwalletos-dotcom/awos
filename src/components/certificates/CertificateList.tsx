@@ -1,6 +1,7 @@
 import React from 'react'
 import { OctagonAlert, Shield, ShieldCheck, ShieldX, TriangleAlert } from 'lucide-react'
 
+import { isCommEducationDue } from '../../data/certificateOptions'
 import { CERTIFICATE_STATUS_LABEL, daysUntil, getCertificateStatus } from '../../types/certificate'
 import type { Certificate, CertificateStatus } from '../../types/certificate'
 
@@ -91,6 +92,18 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
                 </div>
                 <h3 data-mbaas-oid="5w1lvoh" className="mt-2 font-display text-lg font-extrabold tracking-tight text-white">
                   {cert.name}
+                {cert.approvalStatus === 'approved' && (
+                  <span data-mbaas-oid="apvbdg1" className="ml-2 rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
+                )}
+                {cert.approvalStatus === 'pending' && (
+                  <span data-mbaas-oid="apvbdg2" className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
+                )}
+                {cert.category === '무선통신사' && isCommEducationDue(cert.issuedDate) && cert.approvalStatus !== 'approved' && (
+                  <span data-mbaas-oid="commbdg" className="ml-2 rounded bg-orange-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-orange-300">교육 확인 필요</span>
+                )}
+                {cert.approvalStatus === 'rejected' && (
+                  <span data-mbaas-oid="apvbdg3" className="ml-2 rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>
+                )}
                 </h3>
                 <p data-mbaas-oid="swve2gh" className="mt-1 text-xs text-white/60">{cert.issuer}</p>
               </div>

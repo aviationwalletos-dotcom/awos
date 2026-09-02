@@ -25,6 +25,7 @@ import { AutoSyncEntryDecisions } from '../components/logbook/AutoSyncEntryDecis
 import { LogbookTotalsSummary } from '../components/logbook/LogbookTotalsSummary'
 import { LogbookOnboarding } from '../components/logbook/LogbookOnboarding'
 import { LegacyImportSection } from '../components/logbook/LegacyImportSection'
+import { CertificateApprovalStatusWatcher } from '../components/certificates/CertificateApprovalStatusWatcher'
 import { CertificateForm } from '../components/certificates/CertificateForm'
 import { TsIntegrationCard } from '../components/certificates/TsIntegrationCard'
 import { CertificateList } from '../components/certificates/CertificateList'
@@ -46,6 +47,9 @@ import {
 } from '../lib/roleCompliance'
 import { downloadLogbookCsv } from '../lib/logbookCsv'
 import { printLogbook } from '../lib/logbookPrint'
+import { useCreateCertificateApprovalPost } from '../hooks/baas/useCreateCertificateApprovalPost'
+import { useUploadBoardFile } from '../hooks/baas/useUploadBoardFile'
+import { buildCertificateApprovalContent, buildCertificateApprovalTitle } from '../lib/certificateApproval'
 import { useLogbookEntries } from '../hooks/useLogbookEntries'
 import { useCertificates } from '../hooks/useCertificates'
 import { useWorkLogEntries } from '../hooks/useWorkLogEntries'
@@ -59,7 +63,7 @@ import { getRoleContentByIndividualRole } from '../data/content'
 import { WORK_LOG_ROLE_COPY } from '../types/workLog'
 import type { WorkLogEntry, WorkLogRole } from '../types/workLog'
 import type { LogbookEntry, LogbookEntryInput, LogbookFilterKind } from '../types/logbook'
-import type { Certificate } from '../types/certificate'
+import type { CertificateInput, Certificate } from '../types/certificate'
 
 type TabKey = 'myRecords' | 'certificates' | 'currency' | 'logbook' | 'signatureInbox' | 'workLog'
 
@@ -160,6 +164,39 @@ export function LogbookPage() {
     retryPendingSync: retryLogbookPendingSync,
   } = useLogbookEntries(account)
   const entrySuggestions = useMemo(() => buildEntrySuggestions(entries), [entries])
+  const { uploadFile } = useUploadBoardFile()
+  const { createCertificateApprovalPost } = useCreateCertificateApprovalPost()
+
+  /** 자격증 등록 → 사진 업로드 → 관리자 인증 요청 게시글 생성 → 요청 id를 카드에 기록 */
+  async function handleCreateCertificate(input: CertificateInput, approvalFile?: File) {
+    const created = addCertificate({ ...input, approvalStatus: 'pending' })
+    if (!created) return
+    try {
+      let fileIds: number[] | undefined
+      if (approvalFile) {
+        const uploaded = await uploadFile(approvalFile, {
+          filename: approvalFile.name,
+          contentType: approvalFile.type || 'image/jpeg',
+        })
+        fileIds = [uploaded.fileId]
+      }
+      const post = await createCertificateApprovalPost({
+        title: buildCertificateApprovalTitle({
+          category: created.category,
+          certId: created.id,
+          userName: account?.name || account?.user_id || '사용자',
+          userId: account?.user_id || '',
+          affiliation: account?.data?.organization_affiliation || undefined,
+        }),
+        content: buildCertificateApprovalContent(created),
+        ...(fileIds ? { file_ids: fileIds } : {}),
+      })
+      const { id: _id, createdAt: _c, updatedAt: _u, syncPostId: _s, ...rest } = created
+      updateCertificate(created.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: post.id })
+    } catch (err) {
+      console.warn('[자격증 인증 요청 실패]', err)
+    }
+  }
   const [filterKind, setFilterKind] = useState<LogbookFilterKind>('all')
   const [filterValue, setFilterValue] = useState<string | null>(null)
   const [selectedEntry, setSelectedEntry] = useState<LogbookEntry | null>(null)
@@ -383,7 +420,7 @@ export function LogbookPage() {
             )}
 
             <p data-mbaas-oid="lgbpg15" className="mt-4 text-xs text-slate-400">
-              현재는 이 브라우저에만 저장되며, 실제 서버 저장은 별도 백엔드 기능 활성화가 필요합니다.
+              기록은 이 기기와 서버에 함께 안전하게 저장돼요.
             </p>
           </div>
         </section>
@@ -556,6 +593,11 @@ export function LogbookPage() {
                       accentHoverBorderClass={roleContent?.hoverBorderClass}
                     />
                   </div>
+                  {certificates
+                    .filter((c) => c.approvalStatus === 'pending' && c.approvalRequestPostId)
+                    .map((c) => (
+                      <CertificateApprovalStatusWatcher key={c.id} certificate={c} onUpdate={updateCertificate} />
+                    ))}
                 </Reveal>
               </div>
             </section>
@@ -598,7 +640,7 @@ export function LogbookPage() {
                     면허, 항공신체검사, 법정교육 등 자격 항목을 등록하면 만료 임박 시 카드에 경고 배지가 표시됩니다.
                   </p>
                   <div data-mbaas-oid="0ol2vj9" className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-                    <CertificateForm mode="create" onSubmit={(input) => addCertificate(input)} roleTemplate={roleContent} />
+                    <CertificateForm mode="create" onSubmit={(input, options) => void handleCreateCertificate(input, options?.approvalFile)} roleTemplate={roleContent} />
                   </div>
                 </Reveal>
               </div>
