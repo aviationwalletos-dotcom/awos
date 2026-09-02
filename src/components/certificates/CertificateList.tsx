@@ -39,6 +39,21 @@ interface CertificateListProps {
 }
 
 export function CertificateList({ certificates, onSelect, accentHoverBorderClass }: CertificateListProps) {
+  const sortedCertificates = [...certificates].sort((a, b) => {
+    // 만료일 있는 유효 자격(임박순) → 만료 개념 없는 자격 → 만료된 자격 순으로 정렬
+    const rank = (c: Certificate) => {
+      const status = getCertificateStatus(c.expiryDate)
+      if (status === 'expired') return 2
+      if (status === 'no_expiry') return 1
+      return 0
+    }
+    const byRank = rank(a) - rank(b)
+    if (byRank !== 0) return byRank
+    const da = a.expiryDate ?? '9999-12-31'
+    const db = b.expiryDate ?? '9999-12-31'
+    if (da !== db) return da < db ? -1 : 1
+    return b.updatedAt - a.updatedAt
+  })
   const hoverBorderClass = accentHoverBorderClass ?? 'hover:border-sky'
   if (certificates.length === 0) {
     return (
@@ -50,7 +65,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
 
   return (
     <ul data-mbaas-oid="as8g46c" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {certificates.map((cert) => {
+      {sortedCertificates.map((cert) => {
         const status = getCertificateStatus(cert.expiryDate)
         const remaining = cert.expiryDate ? daysUntil(cert.expiryDate) : null
         const Icon = STATUS_ICON[status]
@@ -76,6 +91,15 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
                 </div>
                 <h3 data-mbaas-oid="5w1lvoh" className="mt-2 font-display text-lg font-extrabold tracking-tight text-white">
                   {cert.name}
+                {cert.approvalStatus === 'approved' && (
+                  <span data-mbaas-oid="apvbdg1" className="ml-2 rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
+                )}
+                {cert.approvalStatus === 'pending' && (
+                  <span data-mbaas-oid="apvbdg2" className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
+                )}
+                {cert.approvalStatus === 'rejected' && (
+                  <span data-mbaas-oid="apvbdg3" className="ml-2 rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>
+                )}
                 </h3>
                 <p data-mbaas-oid="swve2gh" className="mt-1 text-xs text-white/60">{cert.issuer}</p>
               </div>

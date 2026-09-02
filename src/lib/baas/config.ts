@@ -68,6 +68,12 @@ export const PROFILE_SETTINGS_BOARD_ID = 'bf6c2b9a-b210-4c3f-a1ad-9bcd06805270'
 // API를 직접 호출하면 타인의 인증 요청 게시글을 볼 수 있는 구조적 한계가 있다(진짜 비공개가 아님).
 export const FLIGHT_EXPERIENCE_CERTIFICATE_BOARD_ID = 'df0315ce-3c41-4a96-8a34-7bd9c3c591ec'
 
+// "자격증 인증" 게시판 — 관리자 페이지의 자격증·항공신체검사 요청함.
+// 회원이 자격증 상세에서 사진과 함께 인증을 요청하면 이 게시판에 게시글 1건이 생성되고,
+// 관리자(authorized_orgs 등록 계정)의 [APPROVED]/[REJECTED] 댓글로 승인 상태가 결정된다.
+// board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
+export const CERTIFICATE_APPROVAL_BOARD_ID = '3e8f6a91-2c47-4d5b-9a13-6f0b8d24c7e5'
+
 function readViteEnvProjectId(): string | undefined {
   try {
     const env = (import.meta as unknown as { env?: Record<string, string | undefined> })?.env

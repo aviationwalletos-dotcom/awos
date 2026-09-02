@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 import { Button } from '../Button'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
@@ -24,6 +24,51 @@ interface EntryFormProps {
   aircraftTypePlaceholder?: string
   aircraftIdLabel?: string
   aircraftIdPlaceholder?: string
+  /** 자주 쓰는 공항·기종 칩 (LogbookPage가 기존 기록에서 계산해 전달) */
+  suggestions?: EntrySuggestions
+}
+
+export interface EntrySuggestions {
+  airports?: string[]
+  aircraftTypes?: string[]
+  registrations?: string[]
+}
+
+/** 기존 기록에서 자주 쓰는 공항·기종·등록기호를 빈도순으로 뽑는다(최대 6개). */
+export function buildEntrySuggestions(entries: LogbookEntry[]): EntrySuggestions {
+  const top = (values: (string | undefined)[]) => {
+    const count = new Map<string, number>()
+    values.forEach((v) => {
+      const key = (v ?? '').trim()
+      if (key) count.set(key, (count.get(key) ?? 0) + 1)
+    })
+    return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k]) => k)
+  }
+  return {
+    airports: top(entries.flatMap((e) => [e.departure, e.arrival])),
+    aircraftTypes: top(entries.map((e) => e.aircraftType)),
+    registrations: top(entries.map((e) => e.aircraftIdentification)),
+  }
+}
+
+type EntryRole = '' | 'student' | 'pic' | 'cfi'
+
+function Chips({ items, onPick }: { items?: string[]; onPick: (value: string) => void }) {
+  if (!items || items.length === 0) return null
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5" aria-label="자주 사용한 값">
+      {items.map((item) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => onPick(item)}
+          className="inline-flex items-center rounded border border-sky/30 bg-sky/5 px-2 py-0.5 font-mono-data text-[11px] tracking-wide text-sky transition hover:bg-sky/15"
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 // 아래 스타일 상수/헬퍼는 FlightExperienceCertificateForm.tsx(비행경력증명서로 가져오기)에서도
@@ -64,12 +109,68 @@ export function EntryForm({
   initialValues,
   onSubmit,
   onCancel,
+  suggestions,
   aircraftTypeLabel = '항공기 제작사 및 모델',
   aircraftTypePlaceholder = '예: Cessna C172, Boeing 737',
   aircraftIdLabel = '항공기 등록번호 / 테일넘버 (선택)',
   aircraftIdPlaceholder = '예: HL1234',
 }: EntryFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [entryRole, setEntryRole] = useState<EntryRole>('')
+  const formRef = useRef<HTMLFormElement>(null)
+  /** 자동으로 채운 필드 이름 — 사용자가 직접 고친 값은 덮어쓰지 않기 위해 추적 */
+  const autofilledRef = useRef<Set<string>>(new Set())
+
+  const getField = (name: string) => formRef.current?.elements.namedItem(name) as HTMLInputElement | null
+  const canAutofill = (name: string) => {
+    const el = getField(name)
+    return Boolean(el) && (el!.value.trim() === '' || autofilledRef.current.has(name))
+  }
+  const setField = (name: string, value: string, auto = false) => {
+    const el = getField(name)
+    if (!el) return
+    el.value = value
+    if (auto) autofilledRef.current.add(name)
+    else autofilledRef.current.delete(name)
+  }
+  const fmt = (n: number) => String(Math.round(n * 10) / 10)
+
+  /** 역할별 자동채움: 학생=dual+PIC, 기장=PIC, 교관=교관시간+PIC (비어 있거나 자동값인 칸만) */
+  const applyRoleAutofill = (role: EntryRole, total: number) => {
+    if (!role || !(total > 0)) return
+    const targets = role === 'student' ? ['dualReceived', 'picTime'] : role === 'pic' ? ['picTime'] : ['flightInstructorTime', 'picTime']
+    targets.forEach((name) => {
+      if (canAutofill(name)) setField(name, fmt(total), true)
+    })
+  }
+  const handleTotalInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value)
+    if (!Number.isFinite(value) || value <= 0) return
+    if (e.target.name !== 'blockTime' && canAutofill('blockTime')) setField('blockTime', fmt(value), true)
+    const total = Number(getField('blockTime')?.value) || value
+    applyRoleAutofill(entryRole, total)
+    // 주간이 이미 있으면 야간 = 총시간 − 주간
+    const day = Number(getField('conditionDay')?.value)
+    if (Number.isFinite(day) && day > 0 && total - day >= 0 && canAutofill('conditionNight')) setField('conditionNight', fmt(total - day), true)
+  }
+  /** 주간↔야간 자동 보완: 하나를 넣으면 나머지 = 총시간 − 입력값 */
+  const handleDayNight = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const total = Number(getField('blockTime')?.value)
+    const value = Number(e.target.value)
+    if (!(total > 0) || !Number.isFinite(value) || value < 0) return
+    const other = e.target.name === 'conditionDay' ? 'conditionNight' : 'conditionDay'
+    const rest = total - value
+    if (rest >= 0 && canAutofill(other)) setField(other, fmt(rest), true)
+  }
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const role = e.target.value as EntryRole
+    setEntryRole(role)
+    // 역할을 바꾸면 이전 자동값은 비우고 새 역할 기준으로 다시 채움
+    ;['dualReceived', 'picTime', 'flightInstructorTime'].forEach((name) => {
+      if (autofilledRef.current.has(name)) setField(name, '')
+    })
+    applyRoleAutofill(role, Number(getField('blockTime')?.value))
+  }
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(
     initialValues?.pilotCertification?.signatureDataUrl ?? null,
   )
@@ -166,7 +267,27 @@ export function EntryForm({
   }
 
   return (
-    <form data-mbaas-oid="lgbfrm1" noValidate onSubmit={handleSubmit} className="space-y-8">
+    <form data-mbaas-oid="lgbfrm1" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
+      <div className="rounded-lg border border-sky/30 bg-sky/5 p-4">
+        <label htmlFor="entryRole" className={labelClass}>
+          이 비행에서 나의 역할
+        </label>
+        <select
+          id="entryRole"
+          name="entryRole"
+          value={entryRole}
+          onChange={handleRoleChange}
+          className={inputClass}
+        >
+          <option value="">선택 안 함</option>
+          <option value="student">학생 (교육 비행)</option>
+          <option value="pic">기장 (PIC)</option>
+          <option value="cfi">교관 (CFI)</option>
+        </select>
+        <p className="mt-1.5 text-xs text-slate-400">
+          역할을 고르고 비행시간을 넣으면 교육·PIC·교관 시간과 야간 시간이 자동으로 채워져요. 직접 고친 값은 덮어쓰지 않아요.
+        </p>
+      </div>
       {/* 1. 기본 비행 정보 */}
       <fieldset data-mbaas-oid="upndrix">
         <legend data-mbaas-oid="2hufkaa" className={sectionTitleClass}>1. 기본 비행 정보</legend>
@@ -205,6 +326,7 @@ export function EntryForm({
               aria-invalid={Boolean(errors.aircraftType)}
               aria-describedby={errors.aircraftType ? 'aircraftType-error' : undefined}
             />
+            <Chips items={suggestions?.aircraftTypes} onPick={(v) => setField('aircraftType', v)} />
             {errors.aircraftType && (
               <p data-mbaas-oid="obspykq" id="aircraftType-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.aircraftType}
@@ -224,6 +346,7 @@ export function EntryForm({
               placeholder={aircraftIdPlaceholder}
               className={`${inputClass} font-mono-data`}
             />
+            <Chips items={suggestions?.registrations} onPick={(v) => setField('aircraftIdentification', v)} />
           </div>
         </div>
       </fieldset>
@@ -248,6 +371,7 @@ export function EntryForm({
               aria-invalid={Boolean(errors.departure)}
               aria-describedby={errors.departure ? 'departure-error' : undefined}
             />
+            <Chips items={suggestions?.airports} onPick={(v) => setField('departure', v)} />
             {errors.departure && (
               <p data-mbaas-oid="cdhrbb8" id="departure-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.departure}
@@ -269,6 +393,7 @@ export function EntryForm({
               aria-invalid={Boolean(errors.arrival)}
               aria-describedby={errors.arrival ? 'arrival-error' : undefined}
             />
+            <Chips items={suggestions?.airports} onPick={(v) => setField('arrival', v)} />
             {errors.arrival && (
               <p data-mbaas-oid="7pw8fvp" id="arrival-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.arrival}
@@ -306,6 +431,7 @@ export function EntryForm({
             <input
               data-mbaas-oid="cuozs2e" id="singleEngineLand"
               name="singleEngineLand"
+              onChange={handleTotalInput}
               type="number"
               step="0.1"
               min="0"
@@ -320,6 +446,7 @@ export function EntryForm({
             <input
               data-mbaas-oid="jw2zdea" id="multiEngineLand"
               name="multiEngineLand"
+              onChange={handleTotalInput}
               type="number"
               step="0.1"
               min="0"
@@ -472,6 +599,7 @@ export function EntryForm({
             <input
               data-mbaas-oid="wkof340" id="conditionDay"
               name="conditionDay"
+              onChange={handleDayNight}
               type="number"
               step="0.1"
               min="0"
@@ -486,6 +614,7 @@ export function EntryForm({
             <input
               data-mbaas-oid="h9nuzl6" id="conditionNight"
               name="conditionNight"
+              onChange={handleDayNight}
               type="number"
               step="0.1"
               min="0"
@@ -605,6 +734,7 @@ export function EntryForm({
             <input
               data-mbaas-oid="l1zf2xs" id="blockTime"
               name="blockTime"
+              onChange={handleTotalInput}
               type="number"
               step="0.1"
               min="0.1"

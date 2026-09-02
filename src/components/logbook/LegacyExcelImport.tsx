@@ -539,6 +539,10 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
           }
         : undefined
 
+      // 하단 합계·총계·서명 행은 형식 오류로 세지 않고 조용히 건너뛴다(항상 '오류 2건'이 뜨던 문제 해결).
+      const summaryLike = /합계|총계|소계|서명|total/i.test(rawDate) || (!rawDate.trim() && !aircraftType.trim())
+      if (!valid && summaryLike) return []
+
       return [{
         rowIndex,
         valid,
@@ -678,7 +682,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
             </h4>
             <p className="mt-2 text-xs leading-relaxed text-slate-400">
               날짜·기종이 없는 하단 합계/서명 행은 자동으로 제외됩니다. ·
-              엑셀에 계기접근 횟수 컬럼이 없는 경우(울진 서식 등) 0으로 저장되니, 계기 비행 기록은
+              엑셀에 계기접근 횟수 컬럼이 없는 경우(울진 탈론 리포트 등) 0으로 저장되니, 계기 비행 기록은
               가져온 뒤 목록에서 해당 기록을 눌러 횟수를 보완해 주세요.
             </p>
 

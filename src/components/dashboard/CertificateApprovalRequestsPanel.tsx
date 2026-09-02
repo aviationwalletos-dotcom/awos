@@ -9,7 +9,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useBoardPostDetail } from '../../hooks/baas/useBoardPostDetail'
 import { useComments } from '../../hooks/baas/useComments'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
-import { useFlightExperienceCertificateBoardPosts } from '../../hooks/baas/useFlightExperienceCertificateBoardPosts'
+import { useCertificateApprovalBoardPosts } from '../../hooks/baas/useCertificateApprovalBoardPosts'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
 import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
@@ -21,6 +21,7 @@ import {
 import type { ApprovalDecisionStatus } from '../../lib/baas/instructorApproval'
 import { createSignedBoardFileUrl } from '../../lib/baas/supabaseTransport'
 import type { BoardPostListItem } from '../../lib/baas/boardTypes'
+import { parseCertificateApprovalTitle } from '../../lib/certificateApproval'
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
 
@@ -106,7 +107,7 @@ function RequestRow({ item, onStatusResolved }: RequestRowProps) {
     <li data-mbaas-oid="c2b116x" className="rounded-control border border-white/10 bg-white/[0.04] p-4">
       <div data-mbaas-oid="n1w5v46" className="flex flex-wrap items-start justify-between gap-3">
         <div data-mbaas-oid="qppsyfa" className="min-w-0">
-          <p data-mbaas-oid="xwjv935" className="text-sm font-semibold text-white">{item.title}</p>
+          <p data-mbaas-oid="xwjv935" className="text-sm font-semibold text-white">{(() => { const t = parseCertificateApprovalTitle(item.title); return t ? `${t.userName}${t.affiliation ? ' · ' + t.affiliation : ''} — ${t.category}` : item.title })()}</p>
           <p data-mbaas-oid="tu2wxyt" className="mt-1 text-xs text-slate-400">
             {item.author_name} · {formatDateTime(item.created_at)}
           </p>
@@ -160,7 +161,7 @@ function RequestRow({ item, onStatusResolved }: RequestRowProps) {
         ) : (
           <img
           data-mbaas-oid="c1ypqnp" src={attachmentUrl}
-          alt="첨부된 비행경력증명서 사진"
+          alt="첨부된 자격증 사진"
           className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
         />
         )
@@ -213,17 +214,17 @@ function RequestRow({ item, onStatusResolved }: RequestRowProps) {
 // 주의: 이 패널은 프론트엔드 라우트 가드(`RequireUserType userType="organization"`)로만 접근을
 // 제한한다. 동적 게시판 API 자체에는 "기관 소속 관리자만 처리 가능" 같은 조직 단위 권한 개념이
 // 없어, 댓글 작성 API는 로그인한 프로젝트 소속 회원이면 누구나 호출할 수 있다(UI 레벨 제한).
-export function FlightExperienceCertificateApprovalPanel() {
+export function CertificateApprovalRequestsPanel({ categoryFilter = 'all' }: { categoryFilter?: 'all' | 'license' | 'medical' }) {
   const { account } = useAuth()
   const { override: affiliationOverride } = useOrganizationAffiliationOverride(account)
   const myAffiliation = affiliationOverride ?? account?.data?.organization_affiliation ?? undefined
 
-  const { data, isLoading, error, refetch } = useFlightExperienceCertificateBoardPosts({ limit: 100 })
+  const { data, isLoading, error, refetch } = useCertificateApprovalBoardPosts({ limit: 100 })
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [showAllAffiliations, setShowAllAffiliations] = useState(false)
   const [statusMap, setStatusMap] = useState<Record<string, ApprovalDecisionStatus>>({})
 
-  const items = data?.items ?? []
+  const items = (data?.items ?? []).filter((it) => { if (categoryFilter === 'all') return true; const cat = parseCertificateApprovalTitle(it.title)?.category ?? ''; const isMedical = cat.includes('신체'); return categoryFilter === 'medical' ? isMedical : !isMedical })
 
   const handleStatusResolved = useCallback((postId: string, status: ApprovalDecisionStatus) => {
     setStatusMap((prev) => (prev[postId] === status ? prev : { ...prev, [postId]: status }))
@@ -252,7 +253,7 @@ export function FlightExperienceCertificateApprovalPanel() {
         <div data-mbaas-oid="c4e4nbw">
           <h3 data-mbaas-oid="6817lbp" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
             <FileCheck2 className="h-4 w-4 text-sky" aria-hidden="true" />
-            비행경력증명서 승인 관리
+            자격증 승인 관리
           </h3>
           <p data-mbaas-dynamic="true" data-mbaas-oid="s7dn11a" className="mt-1 text-xs text-slate-400">
             {isScopedToMyAffiliation ? `내 소속(${myAffiliation}) ` : '전체 '}

@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Pencil, Trash2, X } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
+import { useCreateCertificateApprovalPost } from '../../hooks/baas/useCreateCertificateApprovalPost'
+import { useUploadBoardFile } from '../../hooks/baas/useUploadBoardFile'
+import { buildCertificateApprovalContent, buildCertificateApprovalTitle } from '../../lib/certificateApproval'
 
 import { Button } from '../Button'
 import { CertificateForm } from './CertificateForm'
@@ -25,6 +29,44 @@ const STATUS_TEXT: Record<CertificateStatus, string> = {
 }
 
 export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDelete, roleTemplate }: CertificateDetailDialogProps) {
+  const { account } = useAuth()
+  const { uploadFile } = useUploadBoardFile()
+  const { createCertificateApprovalPost, isLoading: isRequestingApproval } = useCreateCertificateApprovalPost()
+  const [approvalFile, setApprovalFile] = useState<File | null>(null)
+  const [approvalDone, setApprovalDone] = useState(false)
+  const [approvalError, setApprovalError] = useState<string | null>(null)
+
+  async function handleRequestApproval() {
+    if (!certificate) return
+    setApprovalError(null)
+    try {
+      let fileIds: number[] | undefined
+      if (approvalFile) {
+        const uploaded = await uploadFile(approvalFile, {
+          filename: approvalFile.name,
+          contentType: approvalFile.type || 'image/jpeg',
+        })
+        fileIds = [uploaded.fileId]
+      }
+      const post = await createCertificateApprovalPost({
+        title: buildCertificateApprovalTitle({
+          category: certificate.category,
+          certId: certificate.id,
+          userName: account?.name || account?.user_id || '사용자',
+          userId: account?.user_id || '',
+          affiliation: account?.data?.organization_affiliation || undefined,
+        }),
+        content: buildCertificateApprovalContent(certificate),
+        ...(fileIds ? { file_ids: fileIds } : {}),
+      })
+      const { id: _cid, createdAt: _cc, updatedAt: _cu, syncPostId: _cs, ...rest } = certificate
+      onUpdate(certificate.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: post.id })
+      setApprovalDone(true)
+    } catch (err) {
+      setApprovalError(err instanceof Error ? err.message : '인증 요청에 실패했습니다. 다시 시도해 주세요.')
+    }
+  }
+
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [mode, setMode] = useState<'view' | 'edit'>('view')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -130,6 +172,53 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                   <dd data-mbaas-oid="cwrxhki" className="mt-1 whitespace-pre-wrap text-sm text-slate-400">{certificate.notes}</dd>
                 </div>
               )}
+
+              {/* 관리자 인증 — 상태 표시 및 (재)요청 */}
+              {(() => {
+                const effectiveStatus = certificate.approvalStatus ?? (approvalDone ? 'pending' : undefined)
+                return (
+                  <div data-mbaas-oid="crtaprq" className="rounded-card border border-sky/25 bg-sky/5 p-4">
+                    <p data-mbaas-oid="crtaprq1" className="text-sm font-semibold text-ink">관리자 인증</p>
+                    {effectiveStatus === 'approved' && (
+                      <p data-mbaas-oid="crtaprqA" className="mt-2 text-sm font-semibold text-go">
+                        인증 완료 — 관리자가 확인한 자격입니다.
+                      </p>
+                    )}
+                    {effectiveStatus === 'pending' && (
+                      <p data-mbaas-oid="crtaprqP" className="mt-2 text-sm text-amber-300">
+                        승인 대기 중 — 관리자 확인 후 이 카드에 자동 반영됩니다.
+                      </p>
+                    )}
+                    {(effectiveStatus === undefined || effectiveStatus === 'rejected') && (
+                      <>
+                        {effectiveStatus === 'rejected' && (
+                          <p data-mbaas-oid="crtaprqR" className="mt-2 text-sm text-rose-300">
+                            반려됨 — 사진을 다시 첨부해 재요청할 수 있어요.
+                          </p>
+                        )}
+                        <p data-mbaas-oid="crtaprq3" className="mt-1 text-xs leading-relaxed text-slate-400">
+                          자격증 사진(이미지 또는 PDF)을 첨부해 관리자에게 인증을 요청하세요. 관리자 페이지의
+                          &lsquo;자격증·신체검사 요청함&rsquo;에서 확인 후 승인합니다.
+                        </p>
+                        <input
+                          data-mbaas-oid="crtaprq4" type="file"
+                          accept="image/*,application/pdf,.pdf"
+                          onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
+                          className="mt-3 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
+                        />
+                        {approvalError && (
+                          <p data-mbaas-oid="crtaprq5" className="mt-2 text-xs text-rose-300">{approvalError}</p>
+                        )}
+                        <div data-mbaas-oid="crtaprq6" className="mt-3">
+                          <Button data-mbaas-oid="crtaprq7" type="button" size="sm" onClick={() => void handleRequestApproval()} disabled={isRequestingApproval}>
+                            {isRequestingApproval ? '요청 보내는 중…' : effectiveStatus === 'rejected' ? '다시 인증 요청' : '관리자에게 인증 요청'}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })()}
 
               {confirmingDelete ? (
                 <div data-mbaas-oid="eowofus" role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">

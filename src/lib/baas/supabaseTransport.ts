@@ -231,6 +231,14 @@ function publicUrlFor(path: string): string {
  * 주의: 댓글에는 기존 형식의 public 경로 문자열이 그대로 저장되며(하위 호환),
  * 이 함수가 표시 시점에 경로만 추출해 서명한다.
  */
+/** 현재 로그인 토큰이 실린 Supabase 클라이언트(정규 테이블 RLS 조회용). 비로그인 시 null. */
+export function getAuthedDataClient() {
+  const packed = getStoredAccessToken()
+  if (!packed) return null
+  const { access } = unpackToken(packed)
+  return dataClientFor(access)
+}
+
 export async function createSignedBoardFileUrl(rawUrl: string, expiresInSeconds = 60 * 60): Promise<string | null> {
   if (!rawUrl) return null
   if (rawUrl.startsWith('data:')) return rawUrl

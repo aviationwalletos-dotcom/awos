@@ -8,9 +8,10 @@ import { Button } from '../components/Button'
 import { PersonnelFilterBar, type StatusFilter } from '../components/dashboard/PersonnelFilterBar'
 import { PersonnelTable, buildPersonnelRow } from '../components/dashboard/PersonnelTable'
 import { ExpiryAlertList } from '../components/dashboard/ExpiryAlertList'
+import { CertificateApprovalRequestsPanel } from '../components/dashboard/CertificateApprovalRequestsPanel'
 import { FlightExperienceCertificateApprovalPanel } from '../components/dashboard/FlightExperienceCertificateApprovalPanel'
 import { InstructorApprovalPanel } from '../components/dashboard/InstructorApprovalPanel'
-import { MemberStatusOverview } from '../components/dashboard/MemberStatusOverview'
+import { MemberDirectoryPanel } from '../components/dashboard/MemberDirectoryPanel'
 import { useAuth } from '../contexts/AuthContext'
 import { useStatusSharePosts } from '../hooks/baas/useStatusSharePosts'
 import { useOrganizationAffiliationOverride } from '../hooks/useOrganizationAffiliationOverride'
@@ -20,7 +21,7 @@ import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 
 const KNOWN_ROLE_LABELS = Object.values(INDIVIDUAL_ROLE_LABEL)
 
-type DashboardTabKey = 'goNoGo' | 'personnel' | 'instructorApproval' | 'certificateApproval'
+type DashboardTabKey = 'goNoGo' | 'personnel' | 'instructorApproval' | 'certificateApproval' | 'certApprovals'
 
 type DashboardTabDef = {
   key: DashboardTabKey
@@ -32,11 +33,12 @@ const DASHBOARD_TABS: DashboardTabDef[] = [
   { key: 'goNoGo', label: 'GO/NO-GO 현황', icon: Gauge },
   { key: 'personnel', label: '구성원 현황', icon: Users },
   { key: 'instructorApproval', label: '교관 승인 관리', icon: ShieldCheck },
-  { key: 'certificateApproval', label: '비행경력증명서 승인', icon: FileCheck2 },
+  { key: 'certificateApproval', label: '비행경력증명서 승인', icon: FileCheck2 },  { key: 'certApprovals', label: '자격증·신체검사 요청함', icon: ShieldCheck },
 ]
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('goNoGo')
+  const [certApprovalCategory, setCertApprovalCategory] = useState<'all' | 'license' | 'medical'>('all')
   const [role, setRole] = useState<string>('all')
   const [status, setStatus] = useState<StatusFilter>('all')
 
@@ -114,7 +116,7 @@ export function DashboardPage() {
             <Reveal>
               <span data-mbaas-oid="ny8obyn" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
                 <span data-mbaas-oid="r37dgwe" className="pulse-live h-2 w-2 rounded-full bg-go" aria-hidden="true" />
-                기관 관제 대시보드
+                관리자 페이지
               </span>
             </Reveal>
           </div>
@@ -159,7 +161,7 @@ export function DashboardPage() {
               </Reveal>
 
               <Reveal className="mt-8">
-                <MemberStatusOverview />
+                <MemberDirectoryPanel />
               </Reveal>
             </div>
           </section>
@@ -310,6 +312,36 @@ export function DashboardPage() {
               <Reveal className="mt-8">
                 <FlightExperienceCertificateApprovalPanel />
               </Reveal>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'certApprovals' && (
+          <section data-mbaas-oid="crtapsec" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <div data-mbaas-oid="crtapwrp" className="mx-auto max-w-7xl px-6">
+              <Reveal>
+                <h2 data-mbaas-oid="crtaph2" className="font-display text-2xl font-extrabold text-ink">자격증 · 항공신체검사 요청함</h2>
+                <p data-mbaas-oid="crtappd" className="mt-2 text-sm text-slate-400">
+                  회원이 사진과 함께 보낸 자격증·항공신체검사 인증 요청을 확인하고 승인/반려합니다.
+                </p>
+                <div data-mbaas-oid="crtapchp" className="mt-4 flex flex-wrap gap-2">
+                  {([['all', '전체'], ['license', '자격증'], ['medical', '항공신체검사']] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setCertApprovalCategory(value)}
+                      className={`rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        certApprovalCategory === value ? 'border-sky bg-sky/10 text-sky' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </Reveal>
+              <div data-mbaas-oid="crtappnl" className="mt-8">
+                <CertificateApprovalRequestsPanel categoryFilter={certApprovalCategory} />
+              </div>
             </div>
           </section>
         )}

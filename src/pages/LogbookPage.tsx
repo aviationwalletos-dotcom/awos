@@ -17,8 +17,7 @@ import {
 import { Footer } from '../components/Footer'
 import { Button } from '../components/Button'
 import { Reveal } from '../components/Reveal'
-import { EntryForm } from '../components/logbook/EntryForm'
-import { QuickEntryForm } from '../components/logbook/QuickEntryForm'
+import { EntryForm, buildEntrySuggestions } from '../components/logbook/EntryForm'
 import { EntryFilterBar, matchesFilter } from '../components/logbook/EntryFilterBar'
 import { EntryList } from '../components/logbook/EntryList'
 import { EntryDetailDialog } from '../components/logbook/EntryDetailDialog'
@@ -26,6 +25,7 @@ import { AutoSyncEntryDecisions } from '../components/logbook/AutoSyncEntryDecis
 import { LogbookTotalsSummary } from '../components/logbook/LogbookTotalsSummary'
 import { LogbookOnboarding } from '../components/logbook/LogbookOnboarding'
 import { LegacyImportSection } from '../components/logbook/LegacyImportSection'
+import { CertificateApprovalStatusWatcher } from '../components/certificates/CertificateApprovalStatusWatcher'
 import { CertificateForm } from '../components/certificates/CertificateForm'
 import { TsIntegrationCard } from '../components/certificates/TsIntegrationCard'
 import { CertificateList } from '../components/certificates/CertificateList'
@@ -47,6 +47,9 @@ import {
 } from '../lib/roleCompliance'
 import { downloadLogbookCsv } from '../lib/logbookCsv'
 import { printLogbook } from '../lib/logbookPrint'
+import { useCreateCertificateApprovalPost } from '../hooks/baas/useCreateCertificateApprovalPost'
+import { useUploadBoardFile } from '../hooks/baas/useUploadBoardFile'
+import { buildCertificateApprovalContent, buildCertificateApprovalTitle } from '../lib/certificateApproval'
 import { useLogbookEntries } from '../hooks/useLogbookEntries'
 import { useCertificates } from '../hooks/useCertificates'
 import { useWorkLogEntries } from '../hooks/useWorkLogEntries'
@@ -60,7 +63,7 @@ import { getRoleContentByIndividualRole } from '../data/content'
 import { WORK_LOG_ROLE_COPY } from '../types/workLog'
 import type { WorkLogEntry, WorkLogRole } from '../types/workLog'
 import type { LogbookEntry, LogbookEntryInput, LogbookFilterKind } from '../types/logbook'
-import type { Certificate } from '../types/certificate'
+import type { CertificateInput, Certificate } from '../types/certificate'
 
 type TabKey = 'myRecords' | 'certificates' | 'currency' | 'logbook' | 'signatureInbox' | 'workLog'
 
@@ -160,6 +163,40 @@ export function LogbookPage() {
     resyncFromServer: resyncLogbookEntries,
     retryPendingSync: retryLogbookPendingSync,
   } = useLogbookEntries(account)
+  const entrySuggestions = useMemo(() => buildEntrySuggestions(entries), [entries])
+  const { uploadFile } = useUploadBoardFile()
+  const { createCertificateApprovalPost } = useCreateCertificateApprovalPost()
+
+  /** 자격증 등록 → 사진 업로드 → 관리자 인증 요청 게시글 생성 → 요청 id를 카드에 기록 */
+  async function handleCreateCertificate(input: CertificateInput, approvalFile?: File) {
+    const created = addCertificate({ ...input, approvalStatus: 'pending' })
+    if (!created) return
+    try {
+      let fileIds: number[] | undefined
+      if (approvalFile) {
+        const uploaded = await uploadFile(approvalFile, {
+          filename: approvalFile.name,
+          contentType: approvalFile.type || 'image/jpeg',
+        })
+        fileIds = [uploaded.fileId]
+      }
+      const post = await createCertificateApprovalPost({
+        title: buildCertificateApprovalTitle({
+          category: created.category,
+          certId: created.id,
+          userName: account?.name || account?.user_id || '사용자',
+          userId: account?.user_id || '',
+          affiliation: account?.data?.organization_affiliation || undefined,
+        }),
+        content: buildCertificateApprovalContent(created),
+        ...(fileIds ? { file_ids: fileIds } : {}),
+      })
+      const { id: _id, createdAt: _c, updatedAt: _u, syncPostId: _s, ...rest } = created
+      updateCertificate(created.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: post.id })
+    } catch (err) {
+      console.warn('[자격증 인증 요청 실패]', err)
+    }
+  }
   const [filterKind, setFilterKind] = useState<LogbookFilterKind>('all')
   const [filterValue, setFilterValue] = useState<string | null>(null)
   const [selectedEntry, setSelectedEntry] = useState<LogbookEntry | null>(null)
@@ -324,7 +361,6 @@ export function LogbookPage() {
   const pendingSyncCount = useMemo(() => entries.filter((e) => !e.syncPostId).length, [entries])
 
   // 새 비행 기록 입력 모드: 비행 직후 최소 입력(quick)이 기본, 공식 양식 전체는 detail.
-  const [entryFormMode, setEntryFormMode] = useState<'quick' | 'detail'>('quick')
 
   // 드론 조종자는 "항공기" 대신 "기체" 개념을 사용하므로 입력 폼/상세 라벨만 자연스럽게 조정합니다.
   const aircraftLabelProps = isDrone
@@ -384,7 +420,7 @@ export function LogbookPage() {
             )}
 
             <p data-mbaas-oid="lgbpg15" className="mt-4 text-xs text-slate-400">
-              현재는 이 브라우저에만 저장되며, 실제 서버 저장은 별도 백엔드 기능 활성화가 필요합니다.
+              기록은 이 기기와 서버에 함께 안전하게 저장돼요.
             </p>
           </div>
         </section>
@@ -432,7 +468,6 @@ export function LogbookPage() {
                       }}
                       onStartNew={() => {
                         setActiveTab('logbook')
-                        setEntryFormMode('quick')
                         window.setTimeout(() => document.getElementById('new-entry')?.scrollIntoView({ behavior: 'smooth' }), 80)
                       }}
                     />
@@ -541,6 +576,16 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="x782ba2" className="font-display text-2xl font-extrabold text-ink">
                     내 자격증 목록
                   </h2>
+                  {certificates.some((c) => c.category === '조종교육증명' || c.name.includes('교육증명')) &&
+                    !isApprovedInstructor && (
+                      <div className="mt-4 rounded-card border border-sky/30 bg-sky/5 p-4 text-sm text-slate-300">
+                        조종교육증명을 보유하고 계시네요. <span className="font-semibold text-ink">교관 승인</span>을 받으면
+                        학생들의 서명 요청이 들어오는 <span className="font-semibold text-ink">서명요청함</span>이 열립니다.{' '}
+                        <Link to="/account" className="font-semibold text-sky underline underline-offset-2">
+                          계정정보에서 교관 승인 신청하기 →
+                        </Link>
+                      </div>
+                    )}
                   <div data-mbaas-oid="85jt1q8" className="mt-6">
                     <CertificateList
                       certificates={certificates}
@@ -548,6 +593,11 @@ export function LogbookPage() {
                       accentHoverBorderClass={roleContent?.hoverBorderClass}
                     />
                   </div>
+                  {certificates
+                    .filter((c) => c.approvalStatus === 'pending' && c.approvalRequestPostId)
+                    .map((c) => (
+                      <CertificateApprovalStatusWatcher key={c.id} certificate={c} onUpdate={updateCertificate} />
+                    ))}
                 </Reveal>
               </div>
             </section>
@@ -590,7 +640,7 @@ export function LogbookPage() {
                     면허, 항공신체검사, 법정교육 등 자격 항목을 등록하면 만료 임박 시 카드에 경고 배지가 표시됩니다.
                   </p>
                   <div data-mbaas-oid="0ol2vj9" className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-                    <CertificateForm mode="create" onSubmit={(input) => addCertificate(input)} roleTemplate={roleContent} />
+                    <CertificateForm mode="create" onSubmit={(input, options) => void handleCreateCertificate(input, options?.approvalFile)} roleTemplate={roleContent} />
                   </div>
                 </Reveal>
               </div>
@@ -632,32 +682,8 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="lgbpg18" className="font-display text-2xl font-extrabold text-ink">
                     새 비행 기록 추가
                   </h2>
-                  <div className="mt-4 inline-flex rounded-control border border-white/15 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setEntryFormMode('quick')}
-                      className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
-                        entryFormMode === 'quick' ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      ⚡ 퀵 기록 (30초)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEntryFormMode('detail')}
-                      className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
-                        entryFormMode === 'detail' ? 'bg-sky text-navy' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      상세 입력 (공식 양식)
-                    </button>
-                  </div>
                   <div data-mbaas-oid="lgbpg19" className="mt-4 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-                    {entryFormMode === 'quick' ? (
-                      <QuickEntryForm onSubmit={(input) => addEntry(input)} />
-                    ) : (
-                      <EntryForm mode="create" onSubmit={(input) => addEntry(input)} {...aircraftLabelProps} />
-                    )}
+                    <EntryForm mode="create" onSubmit={(input) => addEntry(input)} suggestions={entrySuggestions} {...aircraftLabelProps} />
                   </div>
                 </Reveal>
               </div>

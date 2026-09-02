@@ -174,7 +174,7 @@ export function FlightReadinessPanel({
 
       {account && (
         <p data-mbaas-oid="frpsh06" className="mt-2 text-[11px] text-slate-400">
-          이 버튼을 눌러야 최신 상태가 기관에 반영됩니다(자동 실시간 동기화가 아닙니다).
+          이 버튼을 눌러야 최신 상태가 관리자 화면에 반영됩니다(자동 실시간 동기화가 아닙니다).
         </p>
       )}
     </div>
