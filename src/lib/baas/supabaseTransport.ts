@@ -231,6 +231,11 @@ function publicUrlFor(path: string): string {
  * 주의: 댓글에는 기존 형식의 public 경로 문자열이 그대로 저장되며(하위 호환),
  * 이 함수가 표시 시점에 경로만 추출해 서명한다.
  */
+/** 이메일 인증 완료 페이지에서 링크에 실려 온 세션을 로그인 세션으로 채택한다. */
+export function adoptAuthSession(accessToken: string, refreshToken: string | null): void {
+  setStoredAccessToken(packToken(accessToken, refreshToken))
+}
+
 /** 현재 로그인 사용자의 auth uid (JWT sub). 비로그인/파싱 실패 시 null. */
 export function getAuthedUserId(): string | null {
   const packed = getStoredAccessToken()
@@ -353,14 +358,41 @@ async function handleLogin(body: Record<string, unknown> | null): Promise<Respon
   const auth = makeAuthClient()
   const { data, error } = await auth.auth.signInWithPassword({ email, password })
   if (error || !data.session) {
+    if (/confirm/i.test(error?.message ?? '')) {
+      return fail(401, '이메일 인증이 완료되지 않았어요. 받은 메일의 [이메일 인증하기] 버튼을 눌러주세요.')
+    }
     return fail(401, '아이디 또는 비밀번호가 올바르지 않습니다.')
   }
   const packed = packToken(data.session.access_token, data.session.refresh_token)
   return ok({ access_token: packed, token_type: 'bearer' })
 }
 
+/** 이메일 인증 가입 경로: 프로필이 아직 없으면 가입 시 동봉한 메타데이터로 즉석 생성한다. */
+async function ensureProfileFromMetadata(ctx: AuthCtx): Promise<ProfileRow | null> {
+  try {
+    const { access } = unpackToken(ctx.packed)
+    const { data: userData } = await makeAuthClient().auth.getUser(access)
+    const meta = (userData?.user?.user_metadata ?? {}) as Record<string, unknown>
+    const row = {
+      id: ctx.userId,
+      user_type: (meta.user_type as string) === 'organization' ? 'organization' : 'individual',
+      name: String(meta.name ?? ctx.email.split('@')[0] ?? '회원'),
+      individual_role: (meta.individual_role as string) ?? null,
+      institution: (meta.organization_affiliation as string) ?? null,
+      phone: (meta.phone as string) ?? null,
+    }
+    const { error } = await ctx.client.from('profiles').upsert(row)
+    if (error) return null
+    profileCache.delete(ctx.userId)
+    return await getProfile(ctx.client, ctx.userId)
+  } catch {
+    return null
+  }
+}
+
 async function accountResponseFor(ctx: AuthCtx): Promise<Record<string, unknown>> {
-  const profile = await getProfile(ctx.client, ctx.userId)
+  let profile = await getProfile(ctx.client, ctx.userId)
+  if (!profile) profile = await ensureProfileFromMetadata(ctx)
   return {
     id: ctx.userId,
     user_id: ctx.email,
@@ -392,17 +424,29 @@ async function handleSignup(body: Record<string, unknown> | null): Promise<Respo
   if (!email || !password || !name) return fail(400, '필수 정보를 입력해주세요.')
 
   const auth = makeAuthClient()
-  const { data, error } = await auth.auth.signUp({ email, password })
+  const { data, error } = await auth.auth.signUp({
+    email,
+    password,
+    options: {
+      // 인증 완료 후 첫 계정 조회 때 프로필을 자동 생성할 수 있도록 가입 정보를 메타데이터로 동봉
+      data: {
+        name,
+        phone: phone || null,
+        user_type: (extra.user_type as string) === 'organization' ? 'organization' : 'individual',
+        individual_role: (extra.individual_role as string) ?? null,
+        organization_affiliation: (extra.organization_affiliation as string) ?? null,
+      },
+      emailRedirectTo: `${window.location.origin}/verify-email`,
+    },
+  })
   if (error) {
     const msg = /already/i.test(error.message) ? '이미 가입된 이메일입니다.' : error.message
     return fail(400, msg)
   }
   const session = data.session
   if (!session) {
-    return fail(
-      500,
-      '가입은 접수되었으나 자동 로그인에 실패했습니다. 관리자에게 문의해주세요(이메일 확인 설정).',
-    )
+    // 이메일 인증(Confirm email) 사용 중 — 인증 메일이 발송되었고, 인증 완료 시 프로필이 자동 생성된다.
+    return ok({ pending_verification: true, user_id: email })
   }
 
   const client = dataClientFor(session.access_token)

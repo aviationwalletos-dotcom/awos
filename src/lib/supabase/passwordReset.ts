@@ -35,3 +35,17 @@ export async function updatePasswordWithToken(accessToken: string, newPassword: 
     throw new Error(body?.msg || '비밀번호 변경에 실패했습니다. 링크가 만료되었을 수 있으니 재설정 메일을 다시 요청해 주세요.')
   }
 }
+
+/** 가입 인증 메일 재발송 */
+export async function resendSignupConfirmation(email: string): Promise<void> {
+  const redirectTo = `${window.location.origin}/verify-email`
+  const response = await fetch(`${AUTH_BASE}/resend?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+    body: JSON.stringify({ type: 'signup', email }),
+  })
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { msg?: string } | null
+    throw new Error(body?.msg || '인증 메일 재발송에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+  }
+}

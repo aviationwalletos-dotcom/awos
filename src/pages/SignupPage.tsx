@@ -5,11 +5,11 @@ import { ArrowLeft, CheckCircle2, UserPlus } from 'lucide-react'
 import { Button } from '../components/Button'
 import { InstitutionSelect } from '../components/InstitutionSelect'
 import { useSignup } from '../hooks/baas/useSignup'
+import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
 import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
 import type { IndividualRole, UserType } from '../lib/baas/types'
 
 interface FieldErrors {
-  emailConfirm?: string
   name?: string
   email?: string
   phone?: string
@@ -28,7 +28,6 @@ export function SignupPage() {
   const [organizationAffiliation, setOrganizationAffiliation] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [emailConfirm, setEmailConfirm] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -36,6 +35,19 @@ export function SignupPage() {
   const [agreedPrivacy, setAgreedPrivacy] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isDone, setIsDone] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
+
+  async function handleResend() {
+    if (!pendingEmail || resendState === 'sending') return
+    setResendState('sending')
+    try {
+      await resendSignupConfirmation(pendingEmail)
+      setResendState('sent')
+    } catch {
+      setResendState('idle')
+    }
+  }
 
   function validate(): boolean {
     const errors: FieldErrors = {}
@@ -43,7 +55,6 @@ export function SignupPage() {
     if (!name.trim()) errors.name = '이름을 입력해주세요.'
     if (!email.trim()) errors.email = '이메일을 입력해주세요.'
     else if (!validateEmail(email)) errors.email = '올바른 이메일 형식이 아닙니다.'
-    if (email.trim() && emailConfirm.trim() !== email.trim()) errors.emailConfirm = '이메일이 서로 달라요. 오타가 없는지 확인해 주세요.'
 
     if (!phone.trim()) errors.phone = '전화번호를 입력해주세요.'
     else if (!validatePhone(phone)) errors.phone = '010-1234-5678 형식으로 입력해주세요.'
@@ -70,7 +81,7 @@ export function SignupPage() {
     }
 
     try {
-      await signup(email.trim(), password, name.trim(), phone, {
+      const result = await signup(email.trim(), password, name.trim(), phone, {
         terms_agreed: agreedTerms,
         privacy_agreed: agreedPrivacy,
         data: {
@@ -79,10 +90,41 @@ export function SignupPage() {
           organization_affiliation: organizationAffiliation.trim() || undefined,
         },
       })
+      if ((result as { pending_verification?: boolean } | null)?.pending_verification) {
+        setPendingEmail(email.trim())
+        return
+      }
       setIsDone(true)
     } catch {
       // submitError 상태로 화면에 안내됨
     }
+  }
+
+  if (pendingEmail) {
+    return (
+      <div data-mbaas-oid="pvw01" className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
+        <div data-mbaas-oid="pvw02" className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
+          <span data-mbaas-oid="pvw03" className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky/15 text-2xl">📮</span>
+          <h1 data-mbaas-oid="pvw04" className="mt-4 font-display text-xl font-extrabold">인증 메일을 보냈어요!</h1>
+          <p data-mbaas-oid="pvw05" className="mt-3 text-sm leading-relaxed text-slate-400">
+            <span data-mbaas-oid="pvw06" className="break-all font-semibold text-sky">{pendingEmail}</span> 의 받은편지함(또는 스팸함)에서
+            <span data-mbaas-oid="pvw07" className="font-semibold text-white"> [이메일 인증하기]</span> 버튼을 누르면 가입이 완료돼요.
+          </p>
+          <div data-mbaas-oid="pvw08" className="mt-6 flex flex-col gap-2">
+            <Button
+              data-mbaas-oid="pvw09" type="button" variant="outline" tone="neutral"
+              onClick={() => void handleResend()}
+              disabled={resendState === 'sending'}
+            >
+              {resendState === 'sent' ? '재발송 완료 — 메일함을 확인하세요' : resendState === 'sending' ? '보내는 중…' : '인증 메일 다시 보내기'}
+            </Button>
+            <Link data-mbaas-oid="pvw10" to="/login" className="text-sm font-semibold text-sky hover:underline">
+              인증을 마쳤어요 — 로그인하러 가기
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (isDone) {
@@ -186,23 +228,6 @@ export function SignupPage() {
               {fieldErrors.email && <p data-mbaas-oid="sgnf02e" className="text-xs text-rose-400">{fieldErrors.email}</p>}
             </div>
 
-            <div data-mbaas-oid="sgnf03" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf03l" htmlFor="signup-email2" className="text-xs font-semibold text-slate-300">
-                이메일 확인
-              </label>
-              <input
-                data-mbaas-oid="sgnf03i" id="signup-email2"
-                type="email"
-                autoComplete="email"
-                value={emailConfirm}
-                onChange={(e) => setEmailConfirm(e.target.value)}
-                placeholder="같은 이메일을 한 번 더 입력하세요"
-                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              />
-              <p data-mbaas-oid="sgnf03h" className="text-xs text-slate-500">비밀번호 재설정 메일이 이 주소로 발송되니 오타가 없는지 꼭 확인하세요.</p>
-              {fieldErrors.emailConfirm && <p data-mbaas-oid="sgnf03e" className="text-xs text-rose-400">{fieldErrors.emailConfirm}</p>}
-            </div>
 
             <div data-mbaas-oid="sgnf04" className="flex flex-col gap-1.5">
               <label data-mbaas-oid="sgnf04l" htmlFor="signup-phone" className="text-xs font-semibold text-slate-300">

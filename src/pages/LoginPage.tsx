@@ -4,11 +4,25 @@ import { ArrowLeft, LogIn } from 'lucide-react'
 
 import { Button } from '../components/Button'
 import { useAuth } from '../contexts/AuthContext'
+import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
 import { useLogin } from '../hooks/baas/useLogin'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const { login, isLoading, error } = useLogin()
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const needsVerification = Boolean(error && error.includes('이메일 인증이 완료되지'))
+
+  async function handleResendVerification() {
+    if (!email.trim() || resendState === 'sending') return
+    setResendState('sending')
+    try {
+      await resendSignupConfirmation(email.trim())
+      setResendState('sent')
+    } catch {
+      setResendState('idle')
+    }
+  }
   const { refetchAccount } = useAuth()
 
   const [email, setEmail] = useState('')
@@ -79,6 +93,16 @@ export function LoginPage() {
               <p data-mbaas-oid="hh3qsba" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
                 {formError || error}
               </p>
+            )}
+            {needsVerification && (
+              <button
+                data-mbaas-oid="lgnrsd" type="button"
+                onClick={() => void handleResendVerification()}
+                disabled={resendState === 'sending'}
+                className="rounded-control border border-sky/40 bg-sky/10 px-4 py-2.5 text-sm font-semibold text-sky transition hover:bg-sky/20 disabled:opacity-60"
+              >
+                {resendState === 'sent' ? '재발송 완료 — 메일함(스팸함)을 확인하세요' : resendState === 'sending' ? '보내는 중…' : '인증 메일 다시 보내기'}
+              </button>
             )}
 
             <div data-mbaas-oid="lgnpg20" className="flex flex-col gap-1.5">
