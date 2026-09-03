@@ -171,7 +171,8 @@ export function InstructorApprovalPanel() {
   const myAffiliation = affiliationOverride ?? account?.data?.organization_affiliation ?? undefined
 
   const { data, isLoading, error, refetch } = useInstructorApplications({ limit: 100 })
-  const [filter, setFilter] = useState<StatusFilter>('all')
+  // 기본은 '대기중' — 관리자가 열자마자 처리할 건이 보이게 (v1.1)
+  const [filter, setFilter] = useState<StatusFilter>('pending')
   const [showAllAffiliations, setShowAllAffiliations] = useState(false)
   const [statusMap, setStatusMap] = useState<Record<string, ApprovalDecisionStatus>>({})
 

@@ -6,7 +6,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { RoleContent } from '../../data/content'
 import { DECK_BY_TRACK, TRACK_SHARED_CATEGORIES } from '../../data/deckDefs'
-import { PILOT_TRACK_LABEL, PILOT_TRACK_LEGAL_BASIS } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
 import { certificateTrack, daysUntil } from '../../types/certificate'
 import type { Certificate, CertificateCategory } from '../../types/certificate'
@@ -116,9 +115,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
       <div data-mbaas-oid="mcshead" className="flex items-baseline justify-between gap-3">
         <div data-mbaas-oid="mcshead1" className="min-w-0">
           <p data-mbaas-oid="xczv64y" className="text-xs font-semibold uppercase tracking-wide text-sky">내 자격 현황</p>
-          <p data-mbaas-oid="d2gdtsk" className="mt-0.5 truncate text-sm text-slate-400">
-            {PILOT_TRACK_LABEL[track]} · 카드 {DECK.length}장 · {PILOT_TRACK_LEGAL_BASIS[track]}
-          </p>
+
         </div>
         {totalHours !== undefined ? (
           <div data-mbaas-oid="mcstotal" className="shrink-0 text-right">

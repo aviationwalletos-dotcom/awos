@@ -256,7 +256,6 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                   </button>
                 )
               })}
-              <p data-mbaas-oid="optognote" className="self-center text-[11px] text-slate-500">계정정보와 같은 값이에요. 여기서 바꿔도 저장됩니다.</p>
             </div>
             <div data-mbaas-oid="4f1ymr8" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
               최근 {recency.windowDays}일 이내 이·착륙 합계가 3회 이상이어야 하며, 그 중 야간 이·착륙이 1회 이상 포함되어야 야간비행이
@@ -370,9 +369,6 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                     </button>
                   )}
                 </div>
-                <p data-mbaas-oid="vjdn5at" className="mt-2 text-xs text-slate-400">
-                  이 값은 이 브라우저에 즉시 저장되며 "개인설정" 게시판을 통해 서버에도 자동으로 동기화되어 다른 기기에서도 확인할 수 있습니다. 실제 심사 이수 증빙 서류 연동은 이번 범위에 포함되지 않습니다.
-                </p>
               </div>
             </div>
           </section>
@@ -463,7 +459,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 </label>
                 <p data-mbaas-oid="80c2e1t" className="mt-2 text-xs text-slate-400">
                   동승자의 자격 보유 여부는 로그북 데이터로 자동 판별할 수 없어 본인 확인에 따른 자기 신고 항목입니다.
-                  이 값들은 이 브라우저에 즉시 저장되며 "개인설정" 게시판을 통해 서버에도 자동으로 동기화됩니다.
+                  
                 </p>
               </div>
             </div>

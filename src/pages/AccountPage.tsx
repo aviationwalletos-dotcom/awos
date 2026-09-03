@@ -60,7 +60,6 @@ export function AccountPage() {
   const navigate = useNavigate()
   const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut, refetchAccount } = useAuth()
   const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'working'>('idle')
-  const isSetupMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('setup') === '1'
   // 한 번이라도 계정정보를 본 계정은 다음 소셜 로그인부터 환영 화면을 건너뛴다(AuthCallbackPage 참조)
   useEffect(() => {
     if (!account?.id) return
@@ -131,6 +130,16 @@ export function AccountPage() {
     setBirthDate,
     setOperationType,
   } = usePilotTracks(account)
+
+  const hasSetupParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('setup') === '1'
+  // "신규 가입"은 역할·자격 구분이 아직 저장되지 않은 계정만. 이미 설정된 계정이 setup=1로 들어오면 로그북으로 보낸다.
+  const alreadySetUp = Boolean(account?.data?.individual_role) || !isDerivedFromLegacyRole
+  const isSetupMode = hasSetupParam && !alreadySetUp
+  useEffect(() => {
+    if (hasSetupParam && alreadySetUp && account?.id) {
+      window.location.replace('/logbook')
+    }
+  }, [hasSetupParam, alreadySetUp, account?.id])
   const { override: affiliationOverride, setOverride: setAffiliationOverride } = useOrganizationAffiliationOverride(account)
   const { isApproved: isApprovedInstructor, isLoading: isApprovalStatusLoading } = useInstructorApprovalStatus(
     userType === 'individual' ? account : null,
@@ -293,7 +302,7 @@ export function AccountPage() {
               👋 환영해요! 소셜 계정으로 가입이 완료됐어요. 아래에서 <span data-mbaas-oid="accwelc2" className="font-semibold text-sky">역할</span>과{' '}
               <span data-mbaas-oid="accwelc3" className="font-semibold text-sky">소속 기관</span>을 설정하면 로그북 준비 끝 — 설정 후 위의 "AWOS 시작하기"를 눌러주세요.
               <p data-mbaas-oid="accwelc4" className="mt-2 text-xs text-slate-400">
-                이미 이메일로 가입한 적이 있다면? 이 계정 대신 <span data-mbaas-oid="accwelc5" className="font-semibold text-slate-200">기존 계정으로 로그인한 뒤</span> 아래 "로그인 방법 연결"에서 소셜 계정을 붙이면 기록이 한 계정에 모여요. (이 계정은 회원 탈퇴로 정리)
+                이미 이메일로 가입한 적이 있다면? 이 계정 대신 <span data-mbaas-oid="accwelc5" className="font-semibold text-slate-200">기존 계정으로 로그인한 뒤</span> 아래 "로그인 방법 연결"에서 소셜 계정을 붙이면 기록이 한 계정에 모여요.
               </p>
             </div>
           )}
@@ -364,7 +373,7 @@ export function AccountPage() {
             </h2>
             <p data-mbaas-oid="09rvkqu" className="mt-1 flex items-start gap-2 text-xs text-slate-400">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
-              이 설정은 이 브라우저에 즉시 저장되며, "개인설정" 게시판을 통해 서버에도 자동으로 동기화되어 다른 기기에서도 확인할 수 있습니다(서버 동기화 실패 시에도 이 브라우저의 값은 그대로 유지됩니다). 교관 승인 신청 및 서명 요청 시 소속 기관 필터에 사용됩니다.
+              교관 승인 신청 및 서명 요청 시 소속 기관 필터에 사용됩니다.
             </p>
 
             <form data-mbaas-oid="stl3cxh" onSubmit={handleSaveAffiliation} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -405,7 +414,6 @@ export function AccountPage() {
               <p data-mbaas-oid="le1951t" className="mt-1 flex items-start gap-2 text-xs text-slate-400">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
                 자격을 여러 개 갖고 있으면 여러 개 고를 수 있어요. 비행기록·자격증·커런시는 구분별로 따로 계산되어 섞이지 않습니다.
-                이 설정은 이 브라우저에 즉시 저장되고 서버에도 동기화됩니다.
               </p>
               {isDerivedFromLegacyRole && (
                 <p data-mbaas-oid="trklegacy" className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">

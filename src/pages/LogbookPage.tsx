@@ -47,7 +47,6 @@ import {
   computeUltralightCompliance,
 } from '../lib/roleCompliance'
 import { downloadLogbookCsv } from '../lib/logbookCsv'
-import { printLogbook } from '../lib/logbookPrint'
 import { useCreateCertificateApprovalPost } from '../hooks/baas/useCreateCertificateApprovalPost'
 import { useUploadBoardFile } from '../hooks/baas/useUploadBoardFile'
 import { buildCertificateApprovalContent, buildCertificateApprovalTitle } from '../lib/certificateApproval'
@@ -66,6 +65,7 @@ import { useToast } from '../components/Toast'
 import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
 import { VehicleCards } from '../components/logbook/VehicleCards'
 import { printFlightExperienceCertificate } from '../lib/flightExperienceCertificatePrint'
+import { printPilotFlightExperienceCertificate } from '../lib/pilotFlightExperienceCertificatePrint'
 import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
 import { getRoleContentByIndividualRole } from '../data/content'
@@ -463,17 +463,21 @@ export function LogbookPage() {
           <div data-mbaas-oid="flk85t0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(0,212,255,0.14),transparent_55%)]" />
           <div data-mbaas-dynamic="true" data-mbaas-oid="lgbpg10" className="relative mx-auto max-w-4xl px-6">
             <div data-mbaas-oid="herotop" className="flex flex-wrap items-start justify-between gap-3">
-              <span data-mbaas-oid="lgbpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
-                <NotebookPen className="h-3.5 w-3.5" aria-hidden="true" />
-                AWOS 디지털 자격 월렛
-              </span>
-
-              {account && (
-                <div data-mbaas-oid="heroright" className="flex flex-col items-end gap-2">
+              <div data-mbaas-oid="heroleft" className="flex flex-col items-start gap-2">
+                <span data-mbaas-oid="lgbpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
+                  <NotebookPen className="h-3.5 w-3.5" aria-hidden="true" />
+                  AWOS 디지털 자격 월렛
+                </span>
+                {account && (
                   <p data-mbaas-dynamic="true" data-mbaas-oid="lgbpg25" className="text-sm font-semibold text-sky">
                     {workLogRole ? (individualRoleLabel ?? '역할 미설정') : PILOT_TRACK_LABEL[activeTrack]} ·{' '}
                     <span data-mbaas-oid="bvzpidt" data-mbaas-dynamic="true">{account.name}</span>님
                   </p>
+                )}
+              </div>
+
+              {account && (
+                <div data-mbaas-oid="heroright" className="flex flex-col items-end gap-2">
                   {!workLogRole && pilotTracks.length > 1 && (
                     <div data-mbaas-oid="trkswitch" role="tablist" aria-label="자격 구분 전환" className="flex flex-wrap justify-end gap-1.5">
                       {pilotTracks.map((t: PilotTrack) => {
@@ -686,11 +690,11 @@ export function LogbookPage() {
                         else deleteEntries(ids)
                       }}
                       onExportCsv={() => downloadLogbookCsv(trackEntries)}
-                      printLabel={isDrone ? '비행경력증명서 PDF' : '인쇄/PDF'}
+                      printLabel="비행경력증명서 PDF"
                       onPrint={() =>
                         isDrone
                           ? printFlightExperienceCertificate(trackEntries, vehicles, { name: account?.name, birthDate })
-                          : printLogbook(trackEntries)
+                          : printPilotFlightExperienceCertificate(trackEntries, { name: account?.name, company: String(account?.data?.organization_affiliation || account?.data?.institution || '') || undefined })
                       }
                     />
                   </div>

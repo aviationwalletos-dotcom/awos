@@ -4,7 +4,7 @@
 // 무인은 "비행 횟수", 유인(동력비행장치·회전익 등)은 "착륙 횟수"와 FROM/TO 경로를 쓴다(별지 제2호 차이).
 // 저장 단위는 앱 전체와 맞춰 "시간"으로 하되, 입력은 로그기록지처럼 "분"으로 받는다(48분 → 0.8h, 둘째자리 버림).
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { Button } from '../Button'
 import { scrollToFirstError } from '../../lib/ui/scrollToFirstError'
@@ -60,6 +60,12 @@ interface Errors {
 export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, onCancel, holderName }: UltralightEntryFormProps) {
   const [errors, setErrors] = useState<Errors>({})
   const [vehicleId, setVehicleId] = useState(initialValues?.vehicleId ?? vehicles[0]?.id ?? '')
+  // 기체 목록이 폼보다 늦게 로드되면 초기값이 비어 있으므로, 목록이 오면 첫 기체로 맞춘다.
+  // (select는 값이 비어도 첫 항목을 보여주기 때문에 "고른 것처럼 보이는데 저장이 막히는" 문제가 있었다)
+  useEffect(() => {
+    if (!vehicleId && vehicles.length > 0) setVehicleId(vehicles[0].id)
+    else if (vehicleId && !vehicles.some((v) => v.id === vehicleId)) setVehicleId(vehicles[0]?.id ?? '')
+  }, [vehicles, vehicleId])
   const vehicle = vehicles.find((v) => v.id === vehicleId)
   const unmanned = vehicle ? isUnmannedKind(vehicle.kindKey) : true
 

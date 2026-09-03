@@ -8,6 +8,7 @@
 import { sumHours } from './hours'
 
 import type { LogbookEntry } from '../types/logbook'
+import { printHtmlDocument } from './ui/printHtml'
 
 function esc(v: string): string {
   return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -111,11 +112,5 @@ export function printLogbook(entries: LogbookEntry[]): void {
 </body>
 </html>`
 
-  const win = window.open('', '_blank', 'noopener,noreferrer')
-  if (!win) {
-    window.alert('팝업이 차단되어 인쇄 창을 열 수 없습니다. 브라우저 주소창의 팝업 허용을 눌러 주세요.')
-    return
-  }
-  win.document.write(html)
-  win.document.close()
+  printHtmlDocument(html)
 }

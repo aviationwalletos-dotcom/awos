@@ -12,6 +12,7 @@
 //   - 무인은 ② 비행횟수, 유인은 ② 착륙횟수 + ④ 비행경로(FROM/TO)
 
 import type { LogbookEntry } from '../types/logbook'
+import { printHtmlDocument } from './ui/printHtml'
 import { isInspectionValidOn } from '../types/vehicle'
 import type { Vehicle } from '../types/vehicle'
 import { isUnmannedKind, vehicleKindLabel } from './tracks'
@@ -194,11 +195,5 @@ export function printFlightExperienceCertificate(entries: LogbookEntry[], vehicl
 </body>
 </html>`
 
-  const win = window.open('', '_blank', 'noopener,noreferrer')
-  if (!win) {
-    window.alert('팝업이 차단되어 인쇄 창을 열 수 없습니다. 브라우저 주소창의 팝업 허용을 눌러 주세요.')
-    return
-  }
-  win.document.write(html)
-  win.document.close()
+  printHtmlDocument(html)
 }
