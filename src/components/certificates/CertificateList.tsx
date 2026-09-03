@@ -55,7 +55,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
     if (da !== db) return da < db ? -1 : 1
     return b.updatedAt - a.updatedAt
   })
-  const hoverBorderClass = accentHoverBorderClass ?? 'hover:border-sky'
+  void accentHoverBorderClass // 목록이 한 줄 행으로 바뀌어 카테고리 강조색은 왼쪽 띠로만 쓴다
   if (certificates.length === 0) {
     return (
       <div data-mbaas-oid="9j885qt" className="rounded-card border border-dashed border-white/15 bg-panel p-cardpad text-center text-sm text-slate-400">
@@ -65,7 +65,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
   }
 
   return (
-    <ul data-mbaas-oid="as8g46c" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <ul data-mbaas-oid="as8g46c" className="divide-y divide-white/[0.08] overflow-hidden rounded-card border border-white/10 bg-panel">
       {sortedCertificates.map((cert) => {
         const status = getCertificateStatus(cert.expiryDate)
         const remaining = cert.expiryDate ? daysUntil(cert.expiryDate) : null
@@ -76,46 +76,38 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
             <button
               data-mbaas-oid="f519jek" type="button"
               onClick={() => onSelect(cert)}
-              className={`w-full overflow-hidden rounded-card border border-white/10 bg-panel text-left transition-all duration-200
-                ${hoverBorderClass} hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky`}
+              className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky sm:px-4"
             >
-              {/* 월렛 카드 헤더 — 실물 자격증처럼 카테고리별 색 밴드로 종류를 즉시 구분한다 */}
-              <div className={`bg-gradient-to-br ${wallet.gradient} px-5 pb-4 pt-4`}>
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-mono-data text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">
-                    {cert.category}
-                  </span>
-                  <span data-mbaas-oid="1jmrsue" className={`inline-flex shrink-0 items-center gap-1 rounded-control px-2.5 py-1 text-xs font-bold ${STATUS_BADGE[status]}`}>
-                    <Icon className="h-3.5 w-3.5" aria-hidden />
-                    {CERTIFICATE_STATUS_LABEL[status]}
-                  </span>
-                </div>
-                <h3 data-mbaas-oid="5w1lvoh" className="mt-2 font-display text-lg font-extrabold tracking-tight text-white">
-                  {cert.name}
-                {cert.approvalStatus === 'approved' && (
-                  <span data-mbaas-oid="apvbdg1" className="ml-2 rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
-                )}
-                {cert.approvalStatus === 'pending' && (
-                  <span data-mbaas-oid="apvbdg2" className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
-                )}
-                {cert.category === '무선통신사' && isCommEducationDue(cert.issuedDate) && cert.approvalStatus !== 'approved' && (
-                  <span data-mbaas-oid="commbdg" className="ml-2 rounded bg-orange-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-orange-300">교육 확인 필요</span>
-                )}
-                {cert.approvalStatus === 'rejected' && (
-                  <span data-mbaas-oid="apvbdg3" className="ml-2 rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>
-                )}
-                </h3>
-                <p data-mbaas-oid="swve2gh" className="mt-1 text-xs text-white/60">{cert.issuer}</p>
-              </div>
-
-              <div data-mbaas-oid="o4n89gc" className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm">
-                <span data-mbaas-oid="kbrjwb9" className="font-mono-data tabular-nums text-slate-400">
-                  {cert.expiryDate ? `만료일 ${cert.expiryDate}` : `발급일 ${cert.issuedDate}`}
+              <span className={`h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${wallet.gradient}`} aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span data-mbaas-oid="5w1lvoh" className="truncate text-sm font-bold text-ink">{cert.name}</span>
+                  {cert.approvalStatus === 'approved' && (
+                    <span data-mbaas-oid="apvbdg1" className="rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
+                  )}
+                  {cert.approvalStatus === 'pending' && (
+                    <span data-mbaas-oid="apvbdg2" className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
+                  )}
+                  {cert.approvalStatus === 'rejected' && (
+                    <span data-mbaas-oid="apvbdg3" className="rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>
+                  )}
+                  {cert.category === '무선통신사' && isCommEducationDue(cert.issuedDate) && cert.approvalStatus !== 'approved' && (
+                    <span data-mbaas-oid="commbdg" className="rounded bg-orange-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-orange-300">교육 확인 필요</span>
+                  )}
                 </span>
-                <span data-mbaas-oid="wu1emyu" className="font-mono-data tabular-nums text-xs font-semibold text-ink">
-                  {remaining === null ? '만료 없음' : remaining >= 0 ? `D-${remaining}` : `만료 ${Math.abs(remaining)}일 경과`}
+                <span data-mbaas-oid="swve2gh" className="mt-0.5 block truncate text-[11px] text-slate-400">
+                  {cert.category} · {cert.issuer} · {cert.expiryDate ? `만료 ${cert.expiryDate}` : `발급 ${cert.issuedDate}`}
                 </span>
-              </div>
+              </span>
+              <span className="flex shrink-0 flex-col items-end gap-1">
+                <span data-mbaas-oid="1jmrsue" className={`inline-flex items-center gap-1 rounded-control px-2 py-0.5 text-[11px] font-bold ${STATUS_BADGE[status]}`}>
+                  <Icon className="h-3 w-3" aria-hidden />
+                  {CERTIFICATE_STATUS_LABEL[status]}
+                </span>
+                <span data-mbaas-oid="wu1emyu" className="font-mono-data text-[11px] font-semibold tabular-nums text-slate-300">
+                  {remaining === null ? '' : remaining >= 0 ? `D-${remaining}` : `만료 ${Math.abs(remaining)}일 경과`}
+                </span>
+              </span>
             </button>
           </li>
         )

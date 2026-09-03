@@ -34,9 +34,21 @@ interface UseUploadSignatureImageReturn {
 const SIGNATURE_FILE_NAME = 'signature.png'
 const SIGNATURE_CONTENT_TYPE = 'image/png'
 
+/**
+ * [BUGFIX] 이전에는 fetch(dataUrl)로 Blob을 만들었는데, CSP connect-src에 data: 가 없어
+ * 브라우저가 요청 자체를 막았다("Failed to fetch"). 네트워크 없이 base64를 직접 디코드한다.
+ */
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
-  const response = await baasFetch(dataUrl)
-  return response.blob()
+  const match = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(dataUrl)
+  if (!match) throw new Error('서명 이미지 형식이 올바르지 않습니다.')
+  const mime = match[1] || SIGNATURE_CONTENT_TYPE
+  const isBase64 = Boolean(match[2])
+  const payload = match[3]
+  if (!isBase64) return new Blob([decodeURIComponent(payload)], { type: mime })
+  const binary = atob(payload)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+  return new Blob([bytes], { type: mime })
 }
 
 export function useUploadSignatureImage(): UseUploadSignatureImageReturn {

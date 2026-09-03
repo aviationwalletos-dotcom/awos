@@ -196,9 +196,15 @@ export function EntryForm({
     if (e.target.name !== 'blockTime' && canAutofill('blockTime')) setField('blockTime', fmt(value), true)
     const total = Number(getField('blockTime')?.value) || value
     applyRoleAutofill(entryRole, total)
-    // 주간이 이미 있으면 야간 = 총시간 − 주간
+    // 주간 = 총시간, 야간 = 0 을 기본으로 채운다(야간이면 사용자가 야간 칸을 고치면 주간이 자동 보정됨).
+    // 사용자가 직접 고친 값은 덮어쓰지 않는다.
     const day = Number(getField('conditionDay')?.value)
-    if (Number.isFinite(day) && day > 0 && total - day >= 0 && canAutofill('conditionNight')) setField('conditionNight', fmt(total - day), true)
+    if (canAutofill('conditionDay')) {
+      setField('conditionDay', fmt(total), true)
+      if (canAutofill('conditionNight')) setField('conditionNight', '0', true)
+    } else if (Number.isFinite(day) && day > 0 && total - day >= 0 && canAutofill('conditionNight')) {
+      setField('conditionNight', fmt(total - day), true)
+    }
   }
   /** 주간↔야간 자동 보완: 하나를 넣으면 나머지 = 총시간 − 입력값 */
   const handleDayNight = (e: React.ChangeEvent<HTMLInputElement>) => {

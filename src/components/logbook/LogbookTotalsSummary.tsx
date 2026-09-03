@@ -1,3 +1,4 @@
+import { Collapsible } from '../Collapsible'
 import React from 'react'
 import { Gauge, PlaneTakeoff } from 'lucide-react'
 
@@ -95,6 +96,12 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
         </div>
       </div>
 
+      <Collapsible
+        id="totals-detail"
+        className="mt-4"
+        title="상세 내역"
+        summary={<span className="text-slate-400">범주·임무·조건별 누적</span>}
+      >
       <div data-mbaas-oid="v7u2bc0" className="mt-6">
         <h3 data-mbaas-oid="98sf1q1" className="text-xs font-bold uppercase tracking-wide text-slate-400">항공기 범주별 누적</h3>
         <dl data-mbaas-oid="lq0232k" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
@@ -169,6 +176,7 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
           </p>
         </div>
       )}
+      </Collapsible>
     </div>
   )
 }

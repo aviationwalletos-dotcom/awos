@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, FileCheck2, Inbox, ShieldCheck, Users } from 'lucide-react'
 
@@ -26,13 +26,25 @@ const DASHBOARD_TABS: DashboardTabDef[] = [
 ]
 
 export function DashboardPage() {
+  // 탭바를 헤더 바로 아래에 고정(LogbookPage와 동일한 실측 방식)
+  const headerRef = useRef<HTMLElement>(null)
+  const [headerHeight, setHeaderHeight] = useState(57)
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const update = () => setHeaderHeight(el.offsetHeight)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('personnel')
   const [certApprovalCategory, setCertApprovalCategory] = useState<'all' | 'license' | 'medical'>('all')
 
 
   return (
     <div data-mbaas-oid="1s3qk1u" className="min-h-screen bg-surface font-body text-ink">
-      <header data-mbaas-oid="kh64ok5" className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur">
+      <header ref={headerRef} data-mbaas-oid="kh64ok5" className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur">
         <div data-mbaas-oid="800ewhj" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
             data-mbaas-oid="yivs8m4" to="/"
@@ -61,9 +73,9 @@ export function DashboardPage() {
           </div>
         </section>
 
-        <section data-mbaas-oid="m7owuca" className="sticky top-[121px] z-30 border-b border-white/10 bg-navy/95 backdrop-blur">
+        <section data-mbaas-oid="m7owuca" style={{ top: headerHeight }} className="sticky z-30 border-b border-white/10 bg-navy/95 backdrop-blur">
           <div data-mbaas-oid="y554ky0" className="mx-auto max-w-7xl px-6">
-            <div data-mbaas-oid="pe86nli" role="tablist" aria-label="기관 대시보드 화면 선택" className="flex flex-wrap gap-2 py-4">
+            <div data-mbaas-oid="pe86nli" role="tablist" aria-label="기관 대시보드 화면 선택" className="-mx-6 flex gap-2 overflow-x-auto px-6 py-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
               {DASHBOARD_TABS.map(({ key, label, icon: Icon }) => {
                 const isActive = activeTab === key
                 return (

@@ -5,6 +5,7 @@ import type { LogbookEntry } from '../../types/logbook'
 import type { Certificate, CertificateStatus } from '../../types/certificate'
 import { CERTIFICATE_STATUS_LABEL } from '../../types/certificate'
 import type { AccountResponse } from '../../lib/baas/types'
+import { Collapsible } from '../Collapsible'
 import { useCurrencyOverrides } from '../../hooks/useCurrencyOverrides'
 import { usePilotTracks } from '../../hooks/usePilotTracks'
 import { OPERATION_TYPE_DESCRIPTION, OPERATION_TYPE_LABEL } from '../../lib/tracks'
@@ -228,12 +229,18 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
           이착륙 횟수·계기접근·비행교관 시간을 포함한 기록을 추가해 보세요.
         </div>
       ) : (
-        <div data-mbaas-oid="curwrap" className="mt-6 flex flex-col gap-10">
+        <div data-mbaas-oid="curwrap" className="mt-4 flex flex-col gap-3 divide-y divide-white/[0.06]">
           {/* 1. 최근 비행경험(일반 및 야간) */}
-          <section data-mbaas-oid="6vkjm7q">
-            <h3 data-mbaas-oid="wz7y9h3" className="font-display text-lg font-extrabold text-ink">
-              최근 비행경험(일반 및 야간 비행)
-            </h3>
+          <Collapsible
+            id="cur-recency"
+            title="최근 비행경험(일반 및 야간 비행)"
+            summary={
+              <>
+                <StatusBadge tone={recency.baseMet ? 'met' : 'unmet'} label={recency.baseMet ? '일반 충족' : '일반 미달'} />
+                <StatusBadge tone={recency.nightMet ? 'met' : 'unmet'} label={recency.nightMet ? '야간 충족' : '야간 미달'} />
+              </>
+            }
+          >
             <div data-mbaas-oid="optoggle" role="radiogroup" aria-label="운항형태 선택" className="mt-3 flex flex-wrap gap-2">
               {(['general', 'commercial'] as OperationType[]).map((o) => {
                 const active = operationType === o
@@ -295,13 +302,14 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 </p>
               </div>
             </div>
-          </section>
+          </Collapsible>
 
           {/* 2. 계기비행 경험(IFR) */}
-          <section data-mbaas-oid="pd70wax">
-            <h3 data-mbaas-oid="cgsz7xd" className="font-display text-lg font-extrabold text-ink">
-              계기비행의 경험(IFR Currency)
-            </h3>
+          <Collapsible
+            id="cur-ifr"
+            title="계기비행의 경험(IFR Currency)"
+            summary={<StatusBadge tone={ifr.met ? 'met' : 'unmet'} label={ifr.met ? '기준 충족' : '기준 미달'} />}
+          >
             <div data-mbaas-oid="w0j7sfn" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
               최근 6개월 이내 계기접근 6회 이상 및 실제·모의계기 비행시간 합계 6시간 이상을 모두 충족해야 합니다.
               국토교통부장관이 인정한 자로부터 계기비행심사를 이수한 경우 이수일로부터 6개월간 유지된 것으로 봅니다.
@@ -369,14 +377,15 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 </div>
               </div>
             </div>
-          </section>
+          </Collapsible>
 
           {/* 3. 조종교육 비행경험(교관) — 승인된 교관 계정에게만 노출 */}
           {isApprovedInstructor && (
-          <section data-mbaas-oid="qv0ondt">
-            <h3 data-mbaas-oid="72adiix" className="font-display text-lg font-extrabold text-ink">
-              조종교육 비행경험(교관 커런시)
-            </h3>
+          <Collapsible
+            id="cur-cfi"
+            title="조종교육 비행경험(교관 커런시)"
+            summary={<StatusBadge tone={instructor.met || instructor.isNewInstructorGrace ? 'met' : 'unmet'} label={instructor.isNewInstructorGrace ? '신임 유예' : instructor.met ? '기준 충족' : '기준 미달'} />}
+          >
             <div data-mbaas-oid="djr0gnx" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
               최근 1년 이내 비행교관으로서의 비행시간 합계가 10시간 이상이어야 합니다. 조종교육증명을 최초로 취득한 날부터
               1년까지는 이 요건을 적용받지 않으며, 자격을 갖춘 자와 동승하여 야간 이·착륙 1회 이상을 포함한 10시간 이상
@@ -436,7 +445,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 </p>
               </div>
             </div>
-          </section>
+          </Collapsible>
           )}
         </div>
       )}

@@ -1,6 +1,7 @@
 import { Check, ShieldCheck } from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 
 import { Button } from '../Button'
 import { HERO_STAT } from '../../data/content'
@@ -72,6 +73,7 @@ function LogbookPreview() {
 }
 
 export function Hero() {
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
   return (
@@ -126,8 +128,8 @@ export function Hero() {
           </TechFrame>
 
           <div data-mbaas-oid="tk5xlsd" className="mt-10 flex flex-wrap gap-4">
-            <Button data-mbaas-oid="2722r3q" size="lg" onClick={() => navigate('/signup')}>
-              시작하기
+            <Button data-mbaas-oid="2722r3q" size="lg" onClick={() => navigate(isAuthenticated ? '/logbook' : '/signup')}>
+              {isAuthenticated ? '내 로그북 열기' : '시작하기'}
             </Button>
             <Button
               data-mbaas-oid="frdm1ui" size="lg"
