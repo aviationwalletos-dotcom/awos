@@ -68,8 +68,6 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
     setInstrumentCheckDate,
     clearInstrumentCheckDate,
     instructorFirstCertDate,
-    setInstructorFirstCertDate,
-    clearInstructorFirstCertDate,
     instructorRecoveryChecked,
     setInstructorRecoveryChecked,
   } = useCurrencyOverrides(account)
@@ -408,7 +406,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
 
               {instructor.isNewInstructorGrace && (
                 <p data-mbaas-oid="012nkp6" className="mt-3 rounded-control bg-sky/10 px-3 py-2 text-xs font-medium text-[#00D4FF]">
-                  조종교육증명 최초 취득일({formatDate(instructorFirstCertDate as string)}) 기준 1년 이내로, 신임 교관
+                  자격증 탭에 등록된 조종교육증명 발급일({formatDate(instructor.firstCertDate as string)}) 기준 1년 이내로, 신임 교관
                   유예기간이 적용되어 이 요건이 적용되지 않습니다.
                 </p>
               )}
@@ -420,31 +418,6 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
               )}
 
               <div data-mbaas-oid="zkkhsfh" className="mt-5 border-t border-white/[0.08] pt-4">
-                <label data-mbaas-oid="kgoo318" htmlFor="instructor-first-cert-date" className="text-xs font-semibold text-slate-400">
-                  조종교육증명 최초 취득일(선택 입력)
-                </label>
-                <div data-mbaas-oid="120hhf2" className="mt-2 flex flex-wrap items-center gap-2">
-                  <input
- data-mbaas-oid="enfmix2" id="instructor-first-cert-date"
-                    type="date"
-                    value={instructorFirstCertDate ?? ''}
-                    onChange={(e) => {
-                      if (e.target.value) setInstructorFirstCertDate(e.target.value)
-                    }}
-                    className="min-h-[44px] rounded-control border border-white/10 bg-panel px-3 py-2 text-sm text-ink
-                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-                  />
-                  {instructorFirstCertDate && (
-                    <button
- data-mbaas-oid="o9dlt2z" type="button"
-                      onClick={clearInstructorFirstCertDate}
-                      className="inline-flex min-h-[44px] items-center rounded-control border border-white/10 bg-panel px-3 py-2 text-xs font-semibold text-slate-400
-                        hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-                    >
-                      지우기
-                    </button>
-                  )}
-                </div>
 
                 <label data-mbaas-oid="bv2o9e1" className="mt-4 flex min-h-[44px] items-start gap-2 text-sm text-slate-400">
                   <input

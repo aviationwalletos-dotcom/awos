@@ -207,18 +207,17 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
             ),
           ]
           const dimCodes = def.standards.filter((code) => !heldCodes.includes(code)).slice(0, 3)
-          const soonest = held
-            .map((c) => (c.expiryDate ? daysUntil(c.expiryDate) : null))
-            .filter((d): d is number => d !== null)
-            .sort((a, b) => a - b)[0]
+          const soonestCert = held
+            .filter((c) => c.expiryDate)
+            .sort((a, b) => daysUntil(a.expiryDate as string) - daysUntil(b.expiryDate as string))[0]
+          const soonest = soonestCert ? daysUntil(soonestCert.expiryDate as string) : undefined
+          const soonestDate = soonestCert?.expiryDate
 
           // ── 마스터 카드(실물 자격증 구조) 데이터
           const licences = (byCategory.get(def.category) ?? []).slice().sort((a, b) => (LICENCE_RANK[certCode(b)] ?? 0) - (LICENCE_RANK[certCode(a)] ?? 0))
           const primary = licences[0]
           const primaryCode = primary ? certCode(primary) : ''
           const ratings = [...new Set(held.flatMap(ratingLine))]
-          const epta = (byCategory.get('항공영어구술능력증명') ?? []).slice().sort((a, b) => (b.expiryDate ?? '9').localeCompare(a.expiryDate ?? '9'))[0]
-          const eptaLevel = epta ? /(\d)등급/.exec(epta.name)?.[1] : undefined
 
           if (def.master) {
             return (
@@ -242,7 +241,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
 
                 <div data-mbaas-oid="mcsm4" className="relative mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
                   <div className="min-w-0">
-                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">II. 자격명 (TITLE OF LICENSE)</p>
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">I. 자격명 (TITLE OF LICENSE)</p>
                     <p className={`truncate font-display font-extrabold text-white ${compact ? 'text-lg' : 'text-xl'}`}>
                       {primary ? primary.name.split(' · ')[0].replace(/\([A-Z]+\)$/, '').trim() : def.category}
                     </p>
@@ -251,17 +250,17 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">III. 자격번호</p>
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">II. 자격번호</p>
                     <p className="font-mono-data text-base font-extrabold tabular-nums text-white">{primary?.licenceNumber ?? '—'}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">IV. 성명 (NAME)</p>
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">III. 성명 (NAME)</p>
                     <p className="truncate font-display text-base font-extrabold text-white">{holderName ?? '—'}</p>
                   </div>
                 </div>
 
                 <div data-mbaas-oid="mcsm5" className="relative mt-3 border-t border-white/15 pt-2">
-                  <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">XII. 한정사항 (RATINGS)</p>
+                  <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">IV. 한정사항 (RATINGS)</p>
                   {ratings.length > 0 ? (
                     <p className="mt-0.5 text-[12px] leading-relaxed text-white/90">{ratings.join(', ')}</p>
                   ) : (
@@ -271,14 +270,15 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
 
                 <div data-mbaas-oid="mcsm6" className="relative mt-2 grid grid-cols-[1fr_auto] gap-3 border-t border-white/15 pt-2">
                   <div className="min-w-0">
-                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">XIII. 특기사항 (REMARKS)</p>
-                    <p className="mt-0.5 truncate text-[11px] text-white/85">
-                      {eptaLevel ? `항공영어구술능력등급 LEVEL ${eptaLevel}${epta?.expiryDate ? ` · VALID UNTIL ${fmtDate(epta.expiryDate)}` : ' · 영구'}` : '항공영어구술능력등급 —'}
-                      {primary?.limitations ? ` · 제한사항: ${primary.limitations}` : ''}
-                    </p>
+                    {primary?.limitations ? (
+                      <>
+                        <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">V. 제한사항 (LIMITATIONS)</p>
+                        <p className="mt-0.5 truncate text-[11px] text-white/85">{primary.limitations}</p>
+                      </>
+                    ) : null}
                   </div>
                   <div className="text-right">
-                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">X. 발급일</p>
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">{primary?.limitations ? 'VI' : 'V'}. 발급일</p>
                     <p className="font-mono-data text-[11px] font-bold text-white">{fmtDate(primary?.issuedDate) || '—'}</p>
                     <p className="truncate text-[10px] text-white/60">{primary?.issuer ?? ''}</p>
                   </div>
@@ -303,7 +303,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
               <div data-mbaas-oid="mcsc1" className="relative flex items-center justify-between gap-2">
                 <p data-mbaas-oid="mcsc2" className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
                 <span data-mbaas-oid="mcsc3" className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${held.length > 0 ? 'bg-white/20 text-white' : 'bg-black/25 text-white/50'}`}>
-                  {held.length > 0 ? `보유 ${held.length}` : '미등록'}
+                  {held.length > 0 ? '등록' : '미등록'}
                 </span>
               </div>
               <p data-mbaas-oid="mcsc4" className="relative mt-5 font-mono-data text-[10px] font-semibold tracking-[0.12em] text-white/70">{def.en}</p>
@@ -323,12 +323,18 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                     {code}
                   </span>
                 ))}
-                {soonest !== undefined && (
-                  <span data-mbaas-oid="mcscC" className={`ml-auto font-mono-data text-[11px] font-bold ${soonest < 0 ? 'text-rose-200' : soonest <= 30 ? 'text-amber-200' : 'text-white/70'}`}>
-                    {soonest < 0 ? `만료 ${Math.abs(soonest)}일 경과` : `최단 D-${soonest}`}
-                  </span>
-                )}
               </div>
+              {soonest !== undefined && soonestDate && (
+                <div data-mbaas-oid="mcscexp" className="relative mt-3 flex items-end justify-between gap-2 border-t border-white/15 pt-2">
+                  <div>
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">만료일 (VALID UNTIL)</p>
+                    <p className="font-mono-data text-base font-extrabold tabular-nums text-white">{fmtDate(soonestDate)}</p>
+                  </div>
+                  <span data-mbaas-oid="mcscC" className={`rounded px-2 py-1 font-mono-data text-sm font-extrabold ${soonest < 0 ? 'bg-rose-500/30 text-white' : soonest <= 30 ? 'bg-amber-400/30 text-white' : 'bg-white/15 text-white'}`}>
+                    {soonest < 0 ? `만료 ${Math.abs(soonest)}일 경과` : `D-${soonest}`}
+                  </span>
+                </div>
+              )}
               {def.hint && (
                 <p data-mbaas-oid="mcschint" className="relative mt-3 truncate text-[11px] text-white/55">{def.hint}</p>
               )}

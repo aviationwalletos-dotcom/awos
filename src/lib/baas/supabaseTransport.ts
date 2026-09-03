@@ -411,6 +411,10 @@ async function ensureProfileFromMetadata(ctx: AuthCtx): Promise<ProfileRow | nul
     }
     const { error } = await ctx.client.from('profiles').upsert(row)
     if (error) return null
+    // v1.1 — pilot_tracks 컬럼은 schema10 적용 후에만 존재. 없으면 조용히 무시.
+    if (Array.isArray(meta.pilot_tracks)) {
+      await ctx.client.from('profiles').update({ pilot_tracks: meta.pilot_tracks }).eq('id', ctx.userId).then(() => undefined, () => undefined)
+    }
     profileCache.delete(ctx.userId)
     return await getProfile(ctx.client, ctx.userId)
   } catch {
@@ -433,6 +437,9 @@ async function accountResponseFor(ctx: AuthCtx): Promise<Record<string, unknown>
       user_type: profile?.user_type ?? 'individual',
       individual_role: profile?.individual_role ?? undefined,
       organization_affiliation: profile?.institution ?? undefined,
+      pilot_tracks: (profile as { pilot_tracks?: string[] } | null)?.pilot_tracks ?? undefined,
+      birth_date: (profile as { birth_date?: string } | null)?.birth_date ?? undefined,
+      operation_type: (profile as { operation_type?: string } | null)?.operation_type ?? undefined,
     },
   }
 }
@@ -462,6 +469,7 @@ async function handleSignup(body: Record<string, unknown> | null): Promise<Respo
         phone: phone || null,
         user_type: (extra.user_type as string) === 'organization' ? 'organization' : 'individual',
         individual_role: (extra.individual_role as string) ?? null,
+        pilot_tracks: Array.isArray(extra.pilot_tracks) ? extra.pilot_tracks : null,
         organization_affiliation: (extra.organization_affiliation as string) ?? null,
       },
       emailRedirectTo: `${window.location.origin}/verify-email`,

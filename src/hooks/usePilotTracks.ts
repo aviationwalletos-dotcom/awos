@@ -16,6 +16,7 @@ import {
   NATIONALITY_KEY_PREFIX,
   OPERATION_TYPE_KEY_PREFIX,
   PILOT_TRACKS_KEY_PREFIX,
+  SIGNUP_TRACKS_KEY_PREFIX,
   buildProfileFieldKey,
   isValidDateString,
 } from '../lib/profileSettingsSync'
@@ -147,7 +148,24 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
     initialFillDoneRef.current = true
 
     if (!tracksState) {
-      const fromServer = serverSettings?.pilotTracks ?? parsePilotTracks(account?.data?.pilot_tracks)
+      let fromServer = serverSettings?.pilotTracks ?? parsePilotTracks(account?.data?.pilot_tracks)
+      if (fromServer.length === 0 && account?.user_id) {
+        // 가입 폼에서 고른 구분(이 브라우저에 이메일 키로 보관) 복원 — profiles 컬럼이 없는 환경 대비
+        const pendingKey = `${SIGNUP_TRACKS_KEY_PREFIX}:${account.user_id.toLowerCase()}`
+        const pending = readLocal(pendingKey)
+        if (pending) {
+          try {
+            fromServer = parsePilotTracks(JSON.parse(pending))
+          } catch {
+            fromServer = []
+          }
+          writeLocal(pendingKey, null)
+          if (fromServer.length > 0) {
+            syncNow()
+            void updateMyProfileFields({ pilot_tracks: fromServer }).catch(() => undefined)
+          }
+        }
+      }
       if (fromServer.length > 0) {
         writeLocal(keys.tracks, JSON.stringify(fromServer))
         setTracksState(fromServer)
@@ -179,7 +197,7 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
       writeLocal(keys.nat, serverSettings.nationality)
       setNatState(serverSettings.nationality)
     }
-  }, [ready, serverReady, serverSettings, keys, tracksState, activeState, birthState, opState, addrState, natState, account])
+  }, [ready, serverReady, serverSettings, keys, tracksState, activeState, birthState, opState, addrState, natState, account, syncNow])
 
   // 파생값: 명시 저장이 없으면 기존 역할에서 이관
   const legacyRole = account?.data?.individual_role as IndividualRole | undefined

@@ -9,6 +9,9 @@ import { useSignup } from '../hooks/baas/useSignup'
 import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
 import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
 import type { IndividualRole, UserType } from '../lib/baas/types'
+import { ALL_PILOT_TRACKS, PILOT_TRACK_LABEL, PILOT_TRACK_SHORT } from '../lib/tracks'
+import type { PilotTrack } from '../lib/tracks'
+import { SIGNUP_TRACKS_KEY_PREFIX } from '../lib/profileSettingsSync'
 
 interface FieldErrors {
   name?: string
@@ -25,7 +28,12 @@ export function SignupPage() {
   const { signup, isLoading, error: submitError } = useSignup()
 
   const userType: UserType = 'individual' // 조종사 전용 단순화 — 기관 가입은 별도 채널로 이관
-  const [individualRole, setIndividualRole] = useState<IndividualRole>('pilot') // 우선 조종사·드론 조종사만 오픈
+  // v1.1 — 자격 구분(항공기/경량항공기/초경량) 복수 선택. 기존 individual_role은 첫 구분에서 파생해 호환 유지.
+  const [pilotTracks, setPilotTracks] = useState<PilotTrack[]>(['aircraft'])
+  const individualRole: IndividualRole = pilotTracks.includes('aircraft') || pilotTracks.includes('lsa') ? 'pilot' : 'drone_pilot'
+  function toggleTrack(t: PilotTrack) {
+    setPilotTracks((prev) => (prev.includes(t) ? (prev.length > 1 ? prev.filter((x) => x !== t) : prev) : [...prev, t]))
+  }
   const [organizationAffiliation, setOrganizationAffiliation] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -88,9 +96,18 @@ export function SignupPage() {
         data: {
           user_type: userType,
           individual_role: userType === 'individual' ? individualRole ?? undefined : undefined,
+          pilot_tracks: userType === 'individual' ? pilotTracks : undefined,
           organization_affiliation: organizationAffiliation.trim() || undefined,
         },
       })
+      // 프로필 컬럼(schema10) 유무와 무관하게 첫 로그인 때 자격 구분을 복원할 수 있도록 이 브라우저에 임시 보관
+      if (userType === 'individual') {
+        try {
+          window.localStorage.setItem(`${SIGNUP_TRACKS_KEY_PREFIX}:${email.trim().toLowerCase()}`, JSON.stringify(pilotTracks))
+        } catch {
+          // 무시
+        }
+      }
       if ((result as { pending_verification?: boolean } | null)?.pending_verification) {
         setPendingEmail(email.trim())
         return
@@ -253,21 +270,29 @@ export function SignupPage() {
             </div>
 
             <div data-mbaas-oid="sgnrole" className="flex flex-col gap-1.5">
-              <span data-mbaas-oid="sgnrole1" className="text-xs font-semibold text-slate-300">역할</span>
-              <div data-mbaas-oid="sgnrole2" className="grid grid-cols-2 gap-2">
-                {([['pilot', '조종사'], ['drone_pilot', '드론 조종사']] as const).map(([value, label]) => (
-                  <button
-                    data-mbaas-oid="sgnrole3" key={value}
-                    type="button"
-                    onClick={() => setIndividualRole(value)}
-                    className={`rounded-control border px-4 py-3 text-sm font-semibold transition-colors ${
-                      individualRole === value ? 'border-sky bg-sky/10 text-sky' : 'border-white/15 bg-navy text-slate-300 hover:border-white/30'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <span data-mbaas-oid="sgnrole1" className="text-xs font-semibold text-slate-300">자격 구분 <span className="font-normal text-slate-500">(여러 개 선택 가능)</span></span>
+              <div data-mbaas-oid="sgnrole2" role="group" aria-label="자격 구분 선택" className="grid grid-cols-3 gap-2">
+                {ALL_PILOT_TRACKS.map((value) => {
+                  const on = pilotTracks.includes(value)
+                  return (
+                    <button
+                      data-mbaas-oid="sgnrole3" key={value}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={on}
+                      onClick={() => toggleTrack(value)}
+                      className={`rounded-control border px-2 py-3 text-sm font-semibold transition-colors ${
+                        on ? 'border-sky bg-sky/10 text-sky' : 'border-white/15 bg-navy text-slate-300 hover:border-white/30'
+                      }`}
+                    >
+                      {PILOT_TRACK_SHORT[value]}
+                    </button>
+                  )
+                })}
               </div>
+              <p data-mbaas-oid="sgnrole4" className="text-xs text-slate-500">
+                {pilotTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')} — 나중에 계정정보에서 바꿀 수 있어요.
+              </p>
             </div>
 
             <div data-mbaas-oid="sgnf05" className="flex flex-col gap-1.5">

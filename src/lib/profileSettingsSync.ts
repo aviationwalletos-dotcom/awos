@@ -131,6 +131,8 @@ export const BIRTH_DATE_KEY_PREFIX = 'awos_birth_date'
 export const OPERATION_TYPE_KEY_PREFIX = 'awos_operation_type'
 export const VEHICLES_KEY_PREFIX = 'awos_vehicles'
 export const ADDRESS_KEY_PREFIX = 'awos_address'
+/** 가입 시 고른 자격 구분을 첫 로그인 전까지 이메일 키로 보관 */
+export const SIGNUP_TRACKS_KEY_PREFIX = 'awos_signup_tracks'
 export const NATIONALITY_KEY_PREFIX = 'awos_nationality'
 
 /** 계정별로 스코프된 localStorage 키를 만든다. */

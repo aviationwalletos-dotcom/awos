@@ -91,6 +91,8 @@ export interface InstructorReadiness {
   instructorHours: number
   flownMet: boolean
   isNewInstructorGrace: boolean
+  /** 유예 판정에 쓴 조종교육증명 최초 발급일(등록된 자격증에서 파생) */
+  firstCertDate: string | null
   met: boolean
 }
 
@@ -121,7 +123,15 @@ export function computeFlightReadiness(
   overrides: FlightReadinessOverrides = {},
 ): FlightReadinessResult {
   const today = startOfDay(new Date())
-  const { instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked = false, operationType = 'general' } = overrides
+  const { instrumentCheckDate, instructorRecoveryChecked = false, operationType = 'general' } = overrides
+  // v1.1 — 조종교육증명 최초 취득일은 별도 입력 대신 등록된 조종교육증명 중 가장 이른 발급일에서 파생한다.
+  const instructorFirstCertDate =
+    overrides.instructorFirstCertDate ??
+    certificates
+      .filter((c) => c.category === '조종교육증명' && c.issuedDate)
+      .map((c) => c.issuedDate as string)
+      .sort()[0] ??
+    null
 
   // 0) 항공신체검사 커런시
   const meds = certificates.filter((c) => c.category === '항공신체검사')
@@ -194,6 +204,7 @@ export function computeFlightReadiness(
     instructorHours,
     flownMet: instructorFlownMet,
     isNewInstructorGrace,
+    firstCertDate: instructorFirstCertDate,
     met: instructorFlownMet || instructorRecoveryChecked,
   }
 
