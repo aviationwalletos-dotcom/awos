@@ -10,6 +10,63 @@ import type { PilotTrack } from '../../lib/tracks'
 import { certificateTrack, daysUntil } from '../../types/certificate'
 import type { Certificate, CertificateCategory } from '../../types/certificate'
 
+/** 자격증명 등급 서열(여러 장 보유 시 최상위를 자격명으로) */
+const LICENCE_RANK: Record<string, number> = { ATPL: 4, CPL: 3, MPL: 2, PPL: 1 }
+const LICENCE_EN: Record<string, string> = {
+  ATPL: 'AIRLINE TRANSPORT PILOT',
+  CPL: 'COMMERCIAL PILOT',
+  MPL: 'MULTI-CREW PILOT',
+  PPL: 'PRIVATE PILOT',
+}
+const CLASS_KR: Record<string, string> = { SEL: '육상단발', MEL: '육상다발', SES: '수상단발', MES: '수상다발' }
+
+function fmtDate(iso?: string): string {
+  if (!iso) return ''
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  return m ? `${m[1]}.${m[2]}.${m[3]}` : iso
+}
+
+/** 실물 자격증 XII 한정사항 표기(예: 비행기/육상다발, 계기비행증명(비행기), 조종교육증명 초급(비행기/육상단발)) */
+function ratingLine(cert: Certificate): string[] {
+  const n = cert.name
+  const catKr = cert.aircraftCategory === 'HELICOPTER' ? '헬리콥터' : cert.aircraftCategory === 'AIRPLANE' ? '비행기' : ''
+  switch (cert.category) {
+    case '조종사 자격증명':
+      if (!catKr) return []
+      return [cert.classRating ? `${catKr}/${CLASS_KR[cert.classRating]}` : catKr]
+    case '한정': {
+      if (cert.aircraftCategory) {
+        const base = cert.classRating ? `${catKr}/${CLASS_KR[cert.classRating]}` : catKr
+        return cert.typeRating ? [base, `형식한정(${cert.typeRating})`] : [base]
+      }
+      if (n.includes('수상다발')) return ['비행기/수상다발']
+      if (n.includes('수상단발')) return ['비행기/수상단발']
+      if (n.includes('육상다발')) return ['비행기/육상다발']
+      if (n.includes('육상단발')) return ['비행기/육상단발']
+      const t = /형식한정\(([^)]+)\)/.exec(n)
+      if (t) return [`형식한정(${t[1]})`]
+      if (n.includes('헬리콥터')) return ['헬리콥터']
+      if (n.includes('비행기')) return ['비행기']
+      return [n]
+    }
+    case '계기비행증명':
+      return [n.includes('헬리콥터') ? '계기비행증명(헬리콥터)' : '계기비행증명(비행기)']
+    case '조종교육증명': {
+      const grade = n.includes('선임') ? '선임' : '초급'
+      const kind = n.includes('헬리콥터') ? '헬리콥터' : '비행기'
+      return [`조종교육증명 ${grade}(${kind})`]
+    }
+    case '경량항공기 조종사 자격증명':
+    case '초경량비행장치 조종자증명':
+      return [n.replace(/^경량항공기 조종사 - |^초경량비행장치 조종자 - /, '').replace(/ 조종자$/, '')]
+    case '경량항공기 조종교육증명':
+    case '지도조종자':
+      return [n]
+    default:
+      return []
+  }
+}
+
 /** 자격 명칭 → 카드 칩용 짧은 코드 */
 function certCode(cert: Certificate): string {
   const n = cert.name
@@ -135,13 +192,101 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
         className="mt-4 flex snap-x snap-mandatory overflow-x-auto rounded-card [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {DECK.map((def) => {
-          const held = byCategory.get(def.category) ?? []
-          const heldCodes = [...new Set(held.map(certCode))]
+          const held = [
+            ...(byCategory.get(def.category) ?? []),
+            ...(def.extraCategories ?? []).flatMap((c) => byCategory.get(c) ?? []),
+          ]
+          // 자격증명 자체에 기록된 종류·등급도 칩으로 보여준다(예: CPL · 비행기 · MEL)
+          const heldCodes = [
+            ...new Set(
+              held.flatMap((c) => [
+                certCode(c),
+                ...(c.aircraftCategory ? [c.aircraftCategory === 'AIRPLANE' ? '비행기' : '헬리콥터'] : []),
+                ...(c.classRating ? [c.classRating] : []),
+              ]),
+            ),
+          ]
           const dimCodes = def.standards.filter((code) => !heldCodes.includes(code)).slice(0, 3)
           const soonest = held
             .map((c) => (c.expiryDate ? daysUntil(c.expiryDate) : null))
             .filter((d): d is number => d !== null)
             .sort((a, b) => a - b)[0]
+
+          // ── 마스터 카드(실물 자격증 구조) 데이터
+          const licences = (byCategory.get(def.category) ?? []).slice().sort((a, b) => (LICENCE_RANK[certCode(b)] ?? 0) - (LICENCE_RANK[certCode(a)] ?? 0))
+          const primary = licences[0]
+          const primaryCode = primary ? certCode(primary) : ''
+          const ratings = [...new Set(held.flatMap(ratingLine))]
+          const epta = (byCategory.get('항공영어구술능력증명') ?? []).slice().sort((a, b) => (b.expiryDate ?? '9').localeCompare(a.expiryDate ?? '9'))[0]
+          const eptaLevel = epta ? /(\d)등급/.exec(epta.name)?.[1] : undefined
+
+          if (def.master) {
+            return (
+              <button
+                data-mbaas-oid="mcsmaster" key={def.category}
+                type="button"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  goTo(active + (e.clientX - rect.left < rect.width / 2 ? -1 : 1))
+                }}
+                className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'min-h-[220px] p-4' : 'min-h-[260px] p-5'}`}
+                aria-label={`${def.category} 카드`}
+              >
+                <div data-mbaas-oid="mcsm0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" aria-hidden="true" />
+                <div data-mbaas-oid="mcsm1" className="relative flex items-center justify-between gap-2">
+                  <p data-mbaas-oid="mcsm2" className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
+                  <span data-mbaas-oid="mcsm3" className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${primary ? 'bg-white/20 text-white' : 'bg-black/30 text-white/60'}`}>
+                    {primary ? '보유' : '미등록'}
+                  </span>
+                </div>
+
+                <div data-mbaas-oid="mcsm4" className="relative mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
+                  <div className="min-w-0">
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">II. 자격명 (TITLE OF LICENSE)</p>
+                    <p className={`truncate font-display font-extrabold text-white ${compact ? 'text-lg' : 'text-xl'}`}>
+                      {primary ? primary.name.split(' · ')[0].replace(/\([A-Z]+\)$/, '').trim() : def.category}
+                    </p>
+                    {primaryCode && LICENCE_EN[primaryCode] && (
+                      <p className="font-mono-data text-[10px] tracking-wider text-white/70">({LICENCE_EN[primaryCode]})</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">III. 자격번호</p>
+                    <p className="font-mono-data text-base font-extrabold tabular-nums text-white">{primary?.licenceNumber ?? '—'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">IV. 성명 (NAME)</p>
+                    <p className="truncate font-display text-base font-extrabold text-white">{holderName ?? '—'}</p>
+                  </div>
+                </div>
+
+                <div data-mbaas-oid="mcsm5" className="relative mt-3 border-t border-white/15 pt-2">
+                  <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">XII. 한정사항 (RATINGS)</p>
+                  {ratings.length > 0 ? (
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-white/90">{ratings.join(', ')}</p>
+                  ) : (
+                    <p className="mt-0.5 text-[11px] text-white/50">등록된 한정 없음 — 자격증명 등록 시 종류·등급을 함께 입력하세요</p>
+                  )}
+                </div>
+
+                <div data-mbaas-oid="mcsm6" className="relative mt-2 grid grid-cols-[1fr_auto] gap-3 border-t border-white/15 pt-2">
+                  <div className="min-w-0">
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">XIII. 특기사항 (REMARKS)</p>
+                    <p className="mt-0.5 truncate text-[11px] text-white/85">
+                      {eptaLevel ? `항공영어구술능력등급 LEVEL ${eptaLevel}${epta?.expiryDate ? ` · VALID UNTIL ${fmtDate(epta.expiryDate)}` : ' · 영구'}` : '항공영어구술능력등급 —'}
+                      {primary?.limitations ? ` · 제한사항: ${primary.limitations}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">X. 발급일</p>
+                    <p className="font-mono-data text-[11px] font-bold text-white">{fmtDate(primary?.issuedDate) || '—'}</p>
+                    <p className="truncate text-[10px] text-white/60">{primary?.issuer ?? ''}</p>
+                  </div>
+                </div>
+              </button>
+            )
+          }
+
           return (
             <button
               data-mbaas-oid="mcscard" key={def.category}

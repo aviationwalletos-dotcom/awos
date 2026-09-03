@@ -28,8 +28,21 @@ export interface Certificate {
   id: string
   // v1.1 — 이 자격이 속한 트랙. 값이 없으면 카테고리로 추정한다(certificateTrack 참고).
   track?: PilotTrack
-  name: string // 예: 사업용 조종사(CPL), 형식한정(B737)
+  name: string // 예: 사업용 조종사(CPL) · 비행기 · 육상단발
   category: CertificateCategory
+  // v1.1 — 항공안전법 제37조: 자격증명은 항공기 종류·등급·형식을 "한정"하여 발급된다. 한정은 자격증명의 속성이다.
+  //   최초 발급 시의 종류·등급은 자격증명 자체에 기록하고, 이후 추가 취득한 한정(다른 등급·형식)은
+  //   category '한정'으로 따로 등록하되 덱에서는 자격증명 카드 안에 함께 보인다.
+  aircraftCategory?: 'AIRPLANE' | 'HELICOPTER'
+  classRating?: 'SEL' | 'MEL' | 'SES' | 'MES'
+  /** '한정' 항목이 붙는 자격증명의 id (한정 추가 시 선택). 카드에서 함께 표시할 때 사용 */
+  linkedCertificateId?: string
+  /** 형식 한정(예: B737). '한정' 항목 전용 */
+  typeRating?: string
+  /** 자격번호(III. SERIAL NO.) — 예: 12-015238. 실물 자격증의 핵심 식별자 */
+  licenceNumber?: string
+  /** 제한사항(XIII. LIMITATIONS) — 실물 특기사항란 */
+  limitations?: string
   issuer: string // 발급기관
   issuedDate: string // YYYY-MM-DD
   /** 항공신체검사/법정교육 등 실제 만료가 있는 자격만 값을 가집니다. 조종사 자격증명/한정/조종교육증명은 만료 개념이 없어 비어 있을 수 있습니다. */

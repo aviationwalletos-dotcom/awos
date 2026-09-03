@@ -126,9 +126,13 @@ export function AccountPage() {
     isDerivedFromLegacyRole,
     birthDate,
     operationType,
+    address,
+    nationality,
     setTracks: setPilotTracks,
     setBirthDate,
     setOperationType,
+    setAddress,
+    setNationality,
   } = usePilotTracks(account)
 
   const hasSetupParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('setup') === '1'
@@ -162,6 +166,12 @@ export function AccountPage() {
   const [tracksSaved, setTracksSaved] = useState(false)
   const [birthInput, setBirthInput] = useState('')
   const [birthSaved, setBirthSaved] = useState(false)
+  const [addressInput, setAddressInput] = useState('')
+  const [nationalityInput, setNationalityInput] = useState('')
+  useEffect(() => {
+    setAddressInput(address ?? '')
+    setNationalityInput(nationality ?? '대한민국')
+  }, [address, nationality])
   useEffect(() => {
     setSelectedTracks(pilotTracks)
   }, [pilotTracks])
@@ -186,6 +196,8 @@ export function AccountPage() {
   function handleSaveBirth(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setBirthDate(birthInput || null)
+    setAddress(addressInput || null)
+    setNationality(nationalityInput || null)
     setBirthSaved(true)
   }
 
@@ -463,7 +475,7 @@ export function AccountPage() {
             <div data-mbaas-oid="birthblk" className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
               <h2 data-mbaas-oid="birthh2" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
                 <User className="h-4 w-4 text-sky" aria-hidden="true" />
-                생년월일 · 운항형태
+                생년월일 · 국적 · 주소 · 운항형태
               </h2>
               <p data-mbaas-oid="birthntc" className="mt-1 flex items-start gap-2 text-xs text-slate-400">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
@@ -472,6 +484,27 @@ export function AccountPage() {
               </p>
               <form data-mbaas-oid="birthform" onSubmit={handleSaveBirth} className="mt-5 flex flex-col gap-4">
                 <div data-mbaas-oid="birthrow" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div data-mbaas-oid="natcol">
+                    <label data-mbaas-oid="natlbl" htmlFor="nationality" className="mb-1.5 block text-sm font-medium text-ink">국적 <span className="text-slate-500">(자격증 VI 항목)</span></label>
+                    <input
+                      data-mbaas-oid="natinp" id="nationality"
+                      type="text"
+                      value={nationalityInput}
+                      onChange={(e) => { setNationalityInput(e.target.value); setBirthSaved(false) }}
+                      className="w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                    />
+                  </div>
+                  <div data-mbaas-oid="addrcol">
+                    <label data-mbaas-oid="addrlbl" htmlFor="address" className="mb-1.5 block text-sm font-medium text-ink">주소 <span className="text-slate-500">(자격증 V 항목 · 증명서 소속란 참고용)</span></label>
+                    <input
+                      data-mbaas-oid="addrinp" id="address"
+                      type="text"
+                      value={addressInput}
+                      onChange={(e) => { setAddressInput(e.target.value); setBirthSaved(false) }}
+                      placeholder="예: 인천광역시"
+                      className="w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                    />
+                  </div>
                   <div data-mbaas-oid="birthcol">
                     <label data-mbaas-oid="birthlbl" htmlFor="birth-date" className="mb-1.5 block text-sm font-medium text-ink">생년월일</label>
                     <input
@@ -515,7 +548,7 @@ export function AccountPage() {
                   </p>
                 )}
                 <Button data-mbaas-oid="birthbtn" type="submit" size="md" tone="brand" className="self-start">
-                  생년월일 저장
+                  저장
                 </Button>
               </form>
             </div>

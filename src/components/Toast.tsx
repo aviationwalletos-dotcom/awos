@@ -19,7 +19,8 @@ export function useToast(): { toast: React.ReactNode; showToast: (message: strin
       data-mbaas-oid="toast"
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] flex justify-center px-4"
+      className="pointer-events-none fixed inset-x-0 z-[70] flex justify-center px-4"
+      style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
     >
       <div className="flex items-center gap-2 rounded-control border border-go/40 bg-[#0B1220]/95 px-4 py-2.5 text-sm font-semibold text-go shadow-lg backdrop-blur">
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />

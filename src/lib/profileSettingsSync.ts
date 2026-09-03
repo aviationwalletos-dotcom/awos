@@ -37,6 +37,9 @@ export interface ProfileSettings {
   operationType?: OperationType
   /** v1.1 — 초경량 기체 카드 목록 */
   vehicles?: Vehicle[]
+  /** 실물 자격증 V·VI 항목. 카드에는 표기하지 않고 증명서·계정정보에서만 쓴다 */
+  address?: string
+  nationality?: string
 }
 
 /** "개인설정" 게시글 제목 — 본인 게시글 필터링용으로 계정 아이디(이메일)를 포함한다. */
@@ -98,6 +101,8 @@ export function parseProfileSettingsFromContent(content: string | null | undefin
     if (active) settings.activeTrack = active
     if (isValidDateStringValue(candidate.birthDate)) settings.birthDate = candidate.birthDate
     if (isOperationType(candidate.operationType)) settings.operationType = candidate.operationType
+    if (typeof candidate.address === 'string' && candidate.address.trim()) settings.address = candidate.address.trim()
+    if (typeof candidate.nationality === 'string' && candidate.nationality.trim()) settings.nationality = candidate.nationality.trim()
     if (Array.isArray(candidate.vehicles)) {
       const vehicles = candidate.vehicles.filter(isVehicle)
       if (vehicles.length > 0) settings.vehicles = vehicles
@@ -125,6 +130,8 @@ export const ACTIVE_TRACK_KEY_PREFIX = 'awos_active_track'
 export const BIRTH_DATE_KEY_PREFIX = 'awos_birth_date'
 export const OPERATION_TYPE_KEY_PREFIX = 'awos_operation_type'
 export const VEHICLES_KEY_PREFIX = 'awos_vehicles'
+export const ADDRESS_KEY_PREFIX = 'awos_address'
+export const NATIONALITY_KEY_PREFIX = 'awos_nationality'
 
 /** 계정별로 스코프된 localStorage 키를 만든다. */
 export function buildProfileFieldKey(prefix: string, accountId: string): string {
@@ -189,6 +196,10 @@ export function readLocalProfileSettings(accountId: string): ProfileSettings {
   if (birth && isValidDateStringValue(birth)) settings.birthDate = birth
   const op = readRawLocal(buildProfileFieldKey(OPERATION_TYPE_KEY_PREFIX, accountId))
   if (isOperationType(op)) settings.operationType = op
+  const addr = readRawLocal(buildProfileFieldKey(ADDRESS_KEY_PREFIX, accountId))
+  if (addr && addr.trim()) settings.address = addr.trim()
+  const nat = readRawLocal(buildProfileFieldKey(NATIONALITY_KEY_PREFIX, accountId))
+  if (nat && nat.trim()) settings.nationality = nat.trim()
   const vehiclesRaw = readRawLocal(buildProfileFieldKey(VEHICLES_KEY_PREFIX, accountId))
   if (vehiclesRaw) {
     try {

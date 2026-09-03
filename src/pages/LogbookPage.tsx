@@ -26,6 +26,7 @@ import { LogbookTotalsSummary } from '../components/logbook/LogbookTotalsSummary
 import { LogbookOnboarding } from '../components/logbook/LogbookOnboarding'
 import { LegacyImportSection } from '../components/logbook/LegacyImportSection'
 import { CertificateApprovalStatusWatcher } from '../components/certificates/CertificateApprovalStatusWatcher'
+import { CertificateApprovalLinkRepair } from '../components/certificates/CertificateApprovalLinkRepair'
 import { CertificateForm } from '../components/certificates/CertificateForm'
 import { TsIntegrationCard } from '../components/certificates/TsIntegrationCard'
 import { CertificateList } from '../components/certificates/CertificateList'
@@ -62,6 +63,7 @@ import type { IndividualRole } from '../lib/baas/types'
 import { usePilotTracks } from '../hooks/usePilotTracks'
 import { useVehicles } from '../hooks/useVehicles'
 import { useToast } from '../components/Toast'
+import { useConfirm } from '../components/ConfirmDialog'
 import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
 import { VehicleCards } from '../components/logbook/VehicleCards'
 import { printFlightExperienceCertificate } from '../lib/flightExperienceCertificatePrint'
@@ -138,6 +140,7 @@ export function LogbookPage() {
   const { tracks: pilotTracks, activeTrack, setActiveTrack, birthDate, operationType } = usePilotTracks(account)
   const { vehicles, addVehicle, deleteVehicle } = useVehicles(account)
   const { toast, showToast } = useToast()
+  const confirm = useConfirm()
 
   // 탭바는 상단 헤더 바로 아래에 붙는다. 헤더 높이를 실측해 반영(고정값 121px이 중간에 떠 보이던 문제).
   const headerRef = useRef<HTMLElement>(null)
@@ -258,15 +261,20 @@ export function LogbookPage() {
   )
 
   // v1.1 — 자격 구분이 없는 예전 기록을 현재 추정값 그대로 명시 저장한다(추정 배너 해소).
-  const confirmInferredEntries = useCallback(() => {
+  const confirmInferredEntries = useCallback(async () => {
     const targets = entries.filter((e) => !e.vehicleClass)
     if (targets.length === 0) return
-    if (!window.confirm(`예전 기록 ${targets.length}건의 자격 구분을 기종명 기준 자동 분류대로 확정할까요? (나중에 기록을 열어 바꿀 수 있어요)`)) return
+    const ok = await confirm({
+      title: '자동 분류 확정',
+      message: `예전 기록 ${targets.length}건의 자격 구분을 기종명 기준 자동 분류대로 확정할까요?\n나중에 기록을 열어 바꿀 수 있어요.`,
+      confirmLabel: '확정',
+    })
+    if (!ok) return
     for (const e of targets) {
       const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = e
       updateEntry(e.id, { ...rest, vehicleClass: entryTrack(e) })
     }
-  }, [entries, updateEntry])
+  }, [entries, updateEntry, confirm])
 
   // 엑셀 대량 가져오기 시 동시 요청 폭주 완화(BUG-020, BUG-014/BUG-019 후속): 수십~수백 건을 한꺼번에
   // addEntry로 넘기면 그만큼의 서버 게시글 생성 요청이 거의 동시에 나가, 일부가 네트워크 과부하/일시적
@@ -511,7 +519,7 @@ export function LogbookPage() {
                 <button
                   data-mbaas-oid="trkuntagbtn"
                   type="button"
-                  onClick={confirmInferredEntries}
+                  onClick={() => void confirmInferredEntries()}
                   className="rounded-control border border-amber-300/50 bg-amber-300/15 px-2.5 py-1 text-[11px] font-semibold text-amber-100 hover:bg-amber-300/25"
                 >
                   자동 분류 그대로 확정
@@ -541,7 +549,7 @@ export function LogbookPage() {
 
         <section data-mbaas-oid="tabnav1" style={{ top: headerHeight }} className="sticky z-30 border-b border-white/10 bg-navy/95 backdrop-blur">
           <div data-mbaas-oid="tabnav2" className="mx-auto max-w-4xl px-6">
-            <div data-mbaas-oid="tabnav3" role="tablist" aria-label="AWOS 기능 선택" className="flex flex-wrap gap-2 py-2">
+            <div data-mbaas-oid="tabnav3" role="tablist" aria-label="AWOS 기능 선택" className="-mx-6 flex gap-2 overflow-x-auto px-6 py-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
               {TABS.map(({ key, label, icon: Icon }) => {
                 const isActive = activeTab === key
                 return (
@@ -690,7 +698,7 @@ export function LogbookPage() {
                         else deleteEntries(ids)
                       }}
                       onExportCsv={() => downloadLogbookCsv(trackEntries)}
-                      printLabel="비행경력증명서 PDF"
+                      printLabel="비행경력증명서 PDF 저장"
                       onPrint={() =>
                         isDrone
                           ? printFlightExperienceCertificate(trackEntries, vehicles, { name: account?.name, birthDate })
@@ -729,6 +737,7 @@ export function LogbookPage() {
                       accentHoverBorderClass={roleContent?.hoverBorderClass}
                     />
                   </div>
+                  <CertificateApprovalLinkRepair certificates={certificates} onUpdate={updateCertificate} />
                   {certificates
                     .filter((c) => c.approvalStatus === 'pending' && c.approvalRequestPostId)
                     .map((c) => (
@@ -783,6 +792,7 @@ export function LogbookPage() {
                       track={activeTrack}
                       birthDate={birthDate}
                       commercialSinglePilot={operationType === 'commercial'}
+                      existingCertificates={certificates}
                     />
                   </div>
                 </Reveal>

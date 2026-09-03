@@ -24,8 +24,9 @@ export const LICENCE_TYPES: CertificateSubType[] = [
  * 계기비행증명은 법상 "한정"이 아니라 별도 증명(제44조)이므로 분리했다(INSTRUMENT_RATING_TYPES).
  */
 export const RATING_TYPES: CertificateSubType[] = [
-  { key: 'CAT_AIRPLANE', label: '종류한정 - 비행기' },
-  { key: 'CAT_HELICOPTER', label: '종류한정 - 헬리콥터' },
+  // 종류 한정(비행기/헬리콥터)은 자격증명 등록 시 함께 받는다. 여기서는 추가 등급·형식만.
+  { key: 'CAT_AIRPLANE', label: '종류한정 추가 - 비행기' },
+  { key: 'CAT_HELICOPTER', label: '종류한정 추가 - 헬리콥터' },
   { key: 'SEL', label: '등급한정 - 육상단발(SEL)' },
   { key: 'MEL', label: '등급한정 - 육상다발(MEL)' },
   { key: 'SES', label: '등급한정 - 수상단발(SES)' },

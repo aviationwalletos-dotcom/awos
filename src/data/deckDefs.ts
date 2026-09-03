@@ -17,6 +17,10 @@ export interface DeckCardDef {
   standards: string[]
   /** 카드 하단 한 줄 안내(선택) */
   hint?: string
+  /** 이 카드에 함께 표시할 추가 카테고리(예: 자격증명 카드에 '한정'을 합쳐 보임) */
+  extraCategories?: CertificateCategory[]
+  /** 실물 자격증(자격명·자격번호·한정사항·특기사항·발급일) 형태로 크게 그리는 마스터 카드 */
+  master?: boolean
 }
 
 const G = {
@@ -31,38 +35,20 @@ const G = {
   lime: 'from-[#365314] via-[#4D7C0F] to-[#65A30D]',
 }
 
-/** 조종사(항공기) 덱 — 7장 */
+/**
+ * 조종사(항공기) 덱 — 4장. 실물 자격증 1장에 자격명·자격번호·한정사항(종류·등급·형식·계기·교육증명)·특기사항(EPTA)이
+ * 모두 인쇄되므로 디지털에서도 같은 구조를 따른다. 별도 문서인 신체검사·EPTA(유효기간 관리)·무선통신사만 따로.
+ */
 export const AIRCRAFT_DECK: DeckCardDef[] = [
   {
+    // 실물 자격증과 같은 구조: XII 한정사항에 종류·등급·형식 + 계기비행증명 + 조종교육증명이 함께 인쇄된다.
     category: '조종사 자격증명',
     en: 'PILOT LICENCE',
-    refText: '항공안전법 제34조 · 시행규칙 별표 4',
+    refText: '항공안전법 제34조 · 제35조 · 제37조 · 제44조',
     gradient: G.navy,
     standards: ['PPL', 'CPL', 'ATPL', 'MPL'],
-    hint: '조종연습생은 조종연습허가서(제46조)로 표시됩니다',
-  },
-  {
-    category: '한정',
-    en: 'RATINGS',
-    refText: '항공안전법 제37조',
-    gradient: G.violet,
-    standards: ['비행기', '헬리콥터', 'SEL', 'MEL', 'SES', 'MES'],
-    hint: '종류 · 등급(수상 포함) · 형식',
-  },
-  {
-    category: '계기비행증명',
-    en: 'INSTRUMENT RATING',
-    refText: '항공안전법 제44조',
-    gradient: G.indigo,
-    standards: ['비행기', '헬리콥터'],
-  },
-  {
-    category: '조종교육증명',
-    en: 'FLIGHT INSTRUCTOR',
-    refText: '항공안전법 제35조 · 별표 4',
-    gradient: G.amber,
-    standards: ['초급', '선임'],
-    hint: '초급·선임 × 종류',
+    extraCategories: ['한정', '계기비행증명', '조종교육증명'],
+    master: true,
   },
   {
     category: '항공신체검사',
@@ -94,18 +80,12 @@ export const AIRCRAFT_DECK: DeckCardDef[] = [
 export const LSA_DECK: DeckCardDef[] = [
   {
     category: '경량항공기 조종사 자격증명',
-    en: 'LIGHT SPORT PILOT',
+    en: 'LIGHT SPORT PILOT LICENCE',
     refText: '항공안전법 제109조 · 규칙 제113조',
     gradient: G.navy,
     standards: ['타면조종형', '체중이동형', '경량헬리콥터', '자이로플레인', '동력패러슈트'],
-    hint: '자격 + 종류 한정 5종',
-  },
-  {
-    category: '경량항공기 조종교육증명',
-    en: 'LSA INSTRUCTOR',
-    refText: '항공안전법 제109조 · 별표 4 제2호',
-    gradient: G.amber,
-    standards: [],
+    extraCategories: ['경량항공기 조종교육증명'],
+    master: true,
   },
   {
     category: '항공신체검사',
@@ -129,11 +109,11 @@ export const LSA_DECK: DeckCardDef[] = [
 export const ULTRALIGHT_DECK: DeckCardDef[] = [
   {
     category: '초경량비행장치 조종자증명',
-    en: 'ULTRALIGHT OPERATOR',
+    en: 'ULTRALIGHT OPERATOR LICENCE',
     refText: '항공안전법 제125조 · 운영세칙',
     gradient: G.navy,
     standards: ['동력비행장치', '회전익', '무인멀티콥터', '무인비행기', '무인헬리콥터', '무인수직이착륙기'],
-    hint: '유인 종류 + 무인 5종류 × 1~4종',
+    master: true,
   },
   {
     category: '지도조종자',

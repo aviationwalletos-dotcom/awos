@@ -12,6 +12,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+const DISCOVERY_TTL_MS = 30_000
+const discoveryCache = new Map<string, { at: number; promise: Promise<{ id: string; content: string } | null> }>()
+
 import type { AccountResponse } from '../../lib/baas/types'
 import {
   type ProfileSettings,
@@ -53,6 +56,8 @@ export function useProfileSettingsSync(account: AccountResponse | null | undefin
   const { updatePost } = useUpdateBoardPost()
 
   // 초기 서버 조회: 계정(이메일)당 최초 1회만 시도한다.
+  // 같은 훅이 한 화면에서 여러 컴포넌트(usePilotTracks·useVehicles·역할·소속·커런시)에 의해 4~6번 마운트되므로
+  // 조회 Promise 를 모듈 수준에서 공유해 네트워크 요청은 사용자당 1번만 나가게 한다(30초 캐시).
   const discoveredForUserIdRef = useRef<string | null>(null)
   useEffect(() => {
     if (!userId) {
@@ -69,18 +74,26 @@ export function useProfileSettingsSync(account: AccountResponse | null | undefin
 
     void (async () => {
       try {
-        const list = await refetchProfileSettingsPosts()
-        if (!list || cancelled) return
+        const cached = discoveryCache.get(userId)
+        const fresh = cached && Date.now() - cached.at < DISCOVERY_TTL_MS
+        const promise = fresh
+          ? cached.promise
+          : (async () => {
+              const list = await refetchProfileSettingsPosts()
+              if (!list) return null
+              const found = findProfileSettingsPostByUserId(list.items, userId)
+              if (!found) return null
+              const detail = await fetchDetail(found.id)
+              return { id: detail.id, content: detail.content }
+            })()
+        if (!fresh) discoveryCache.set(userId, { at: Date.now(), promise })
+        const result = await promise
+        if (cancelled || !result) return
 
-        const found = findProfileSettingsPostByUserId(list.items, userId)
-        if (!found) return
-
-        const detail = await fetchDetail(found.id)
-        if (cancelled) return
-
-        postIdRef.current = detail.id
-        setServerSettings(parseProfileSettingsFromContent(detail.content))
+        postIdRef.current = result.id
+        setServerSettings(parseProfileSettingsFromContent(result.content))
       } catch (err) {
+        discoveryCache.delete(userId)
         console.warn('[개인설정 초기 서버 조회 실패]', err)
       } finally {
         if (!cancelled) setReady(true)

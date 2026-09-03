@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
@@ -10,17 +10,19 @@ import { Hero } from './components/sections/Hero'
 import { Problem } from './components/sections/Problem'
 import { Features } from './components/sections/Features'
 import { FinalCta } from './components/sections/FinalCta'
-import { LogbookPage } from './pages/LogbookPage'
-import { DashboardPage } from './pages/DashboardPage'
+const LogbookPage = lazy(() => import('./pages/LogbookPage').then((m) => ({ default: m.LogbookPage })))
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
-import { InquiryPage } from './pages/InquiryPage'
+const InquiryPage = lazy(() => import('./pages/InquiryPage').then((m) => ({ default: m.InquiryPage })))
 import { LoginPage } from './pages/LoginPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { SignupPage } from './pages/SignupPage'
-import { AccountPage } from './pages/AccountPage'
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })))
 import { AuthProvider } from './contexts/AuthContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { ConfirmProvider } from './components/ConfirmDialog'
 
 const queryClient = new QueryClient()
 
@@ -56,7 +58,16 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
+        <ConfirmProvider>
+        <ErrorBoundary>
           <div data-mbaas-oid="nc8cen2" className="min-h-screen bg-surface font-body text-ink">
+            <Suspense
+              fallback={
+                <div data-mbaas-oid="lazyfb" className="flex min-h-[40vh] items-center justify-center text-sm text-slate-400" role="status">
+                  불러오는 중…
+                </div>
+              }
+            >
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -85,7 +96,10 @@ function App() {
               />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </Suspense>
           </div>
+        </ErrorBoundary>
+        </ConfirmProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

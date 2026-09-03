@@ -63,7 +63,7 @@ interface EntryListProps {
   onExportCsv: () => void
   /** 계정 전체 비행기록을 인쇄용 문서로 연다(브라우저 인쇄에서 "PDF로 저장" 가능). */
   onPrint: () => void
-  /** 인쇄 버튼 라벨(기본 '인쇄/PDF'). 초경량 구분에서는 '비행경력증명서 PDF' */
+  /** PDF 버튼 라벨(기본 'PDF 저장') */
   printLabel?: string
 }
 
@@ -76,7 +76,7 @@ export function EntryList({
   onDeleteAll,
   onExportCsv,
   onPrint,
-  printLabel = '인쇄/PDF',
+  printLabel = 'PDF 저장',
 }: EntryListProps) {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -205,7 +205,7 @@ export function EntryList({
             size="sm"
             disabled={totalAccountEntryCount === 0}
             onClick={onPrint}
-            title="계정의 모든 비행기록을 인쇄용 문서로 엽니다. 인쇄 대화상자에서 'PDF로 저장'을 선택하면 파일로 만들 수 있어요."
+            title="이 자격 구분의 비행기록 전체를 비행경력증명서 서식으로 만들어요. 대화상자에서 'PDF로 저장'을 고르면 파일이 됩니다."
           >
             <Printer className="h-4 w-4" aria-hidden="true" />
             {printLabel}

@@ -13,7 +13,6 @@ import {
   LSA_INSTRUCTOR_TYPES,
   LSA_LICENCE_TYPES,
   MEDICAL_CERTIFICATE_TYPES,
-  RATING_TYPES,
   ULTRALIGHT_CERT_TYPES,
   ULTRALIGHT_EDUCATION_TYPES,
   ULTRALIGHT_INSTRUCTOR_TYPES,
@@ -49,6 +48,8 @@ interface CertificateFormProps {
   birthDate?: string | null
   /** v1.1 — 1종 6개월 예외(여객 1인조종 등) 판정용 */
   commercialSinglePilot?: boolean
+  /** "한정 추가" 시 어느 자격증명에 붙일지 고르기 위한 보유 자격 목록 */
+  existingCertificates?: Certificate[]
 }
 
 const inputClass =
@@ -62,7 +63,6 @@ const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
  */
 const SUBTYPES_BY_CATEGORY: Partial<Record<CertificateCategory, CertificateSubType[]>> = {
   '조종사 자격증명': LICENCE_TYPES,
-  '한정': RATING_TYPES,
   '계기비행증명': INSTRUMENT_RATING_TYPES,
   '조종교육증명': FLIGHT_INSTRUCTOR_TYPES,
   '항공신체검사': MEDICAL_CERTIFICATE_TYPES,
@@ -93,6 +93,28 @@ const DEFAULT_ISSUER_BY_CATEGORY: Partial<Record<CertificateCategory, string>> =
   '운전면허': '경찰청(도로교통공단)',
 }
 
+const LICENCE_RANK: Record<string, number> = { ATPL: 4, CPL: 3, MPL: 2, PPL: 1 }
+function licenceCode(c: Certificate): string {
+  const n = c.name
+  if (n.includes('운송용')) return 'ATPL'
+  if (n.includes('사업용')) return 'CPL'
+  if (n.includes('부조종사')) return 'MPL'
+  if (n.includes('자가용')) return 'PPL'
+  return ''
+}
+
+const CLASS_RATING_LABEL: Record<'SEL' | 'MEL' | 'SES' | 'MES', string> = {
+  SEL: '육상단발',
+  MEL: '육상다발',
+  SES: '수상단발',
+  MES: '수상다발',
+}
+
+/** 드롭다운에서만 다르게 보여줄 구분 이름. 저장되는 category 값은 그대로다. */
+const CATEGORY_OPTION_LABEL: Partial<Record<CertificateCategory, string>> = {
+  '한정': '한정 추가 (기존 자격증명에 등급·형식 추가)',
+}
+
 /** 세부 종류 + 보조 텍스트로 자격 명칭을 만든다(한정은 기존 buildRatingName 규칙 유지) */
 function buildName(category: CertificateCategory, sub: CertificateSubType | undefined, detail: string): string {
   if (!sub) return ''
@@ -110,6 +132,7 @@ export function CertificateForm({
   track = 'aircraft',
   birthDate,
   commercialSinglePilot,
+  existingCertificates = [],
 }: CertificateFormProps) {
   const categories = CERTIFICATE_CATEGORIES_BY_TRACK[track]
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -124,16 +147,48 @@ export function CertificateForm({
   const subTypes = useMemo(() => SUBTYPES_BY_CATEGORY[category] ?? [], [category])
   const [subKey, setSubKey] = useState<string>(SUBTYPES_BY_CATEGORY[categories[0]]?.[0]?.key ?? '')
   const [subDetail, setSubDetail] = useState('')
+  // v1.1 — 조종사 자격증명은 종류·등급 한정과 함께 발급된다(제37조). 자격증명 등록 시 같이 받는다.
+  const [aircraftCategory, setAircraftCategory] = useState<'AIRPLANE' | 'HELICOPTER' | ''>(initialValues?.aircraftCategory ?? 'AIRPLANE')
+  const [classRating, setClassRating] = useState<'SEL' | 'MEL' | 'SES' | 'MES' | ''>(initialValues?.classRating ?? 'SEL')
+  const isLicenceCategory = category === '조종사 자격증명'
+  const isRatingCategory = category === '한정'
+  // 한정 추가: 자격증명 · 종류 · 등급 · 형식(선택)을 한 번에
+  const licenceOptions = useMemo(
+    () => existingCertificates.filter((c) => c.category === '조종사 자격증명').slice().sort((a, b) => (LICENCE_RANK[licenceCode(b)] ?? 0) - (LICENCE_RANK[licenceCode(a)] ?? 0)),
+    [existingCertificates],
+  )
+  const [linkedId, setLinkedId] = useState<string>(initialValues?.linkedCertificateId ?? '')
+  const [typeRating, setTypeRating] = useState<string>(initialValues?.typeRating ?? '')
+  useEffect(() => {
+    if (isRatingCategory && !linkedId && licenceOptions[0]) setLinkedId(licenceOptions[0].id)
+  }, [isRatingCategory, linkedId, licenceOptions])
+  const linkedLicence = licenceOptions.find((c) => c.id === linkedId)
+  // 자격번호가 있는 구분(실물 증서의 III. SERIAL NO.)
+  const hasLicenceNumber =
+    category === '조종사 자격증명' || category === '경량항공기 조종사 자격증명' || category === '초경량비행장치 조종자증명' || category === '지도조종자'
   const [approvalFile, setApprovalFile] = useState<File | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const currentSub = subTypes.find((t) => t.key === subKey) ?? subTypes[0]
-  const isFreeText = subTypes.length === 0
+  const isFreeText = subTypes.length === 0 && category !== '한정'
 
   // 5) 세부 종류·보조 표기가 바뀌면 명칭 자동 연동
   useEffect(() => {
     if (nameTouched || isFreeText) return
-    setNameValue(buildName(category, currentSub, subDetail))
-  }, [category, currentSub, subDetail, nameTouched, isFreeText])
+    let n = buildName(category, currentSub, subDetail)
+    if (isLicenceCategory && currentSub) {
+      const cat = aircraftCategory === 'HELICOPTER' ? '헬리콥터' : aircraftCategory === 'AIRPLANE' ? '비행기' : ''
+      const cls = aircraftCategory === 'AIRPLANE' && classRating ? ` · ${CLASS_RATING_LABEL[classRating]}` : ''
+      if (cat) n = `${n} · ${cat}${cls}`
+    }
+    if (isRatingCategory) {
+      const base = linkedLicence ? linkedLicence.name.split(' · ')[0] : '한정'
+      const cat = aircraftCategory === 'HELICOPTER' ? '헬리콥터' : '비행기'
+      const cls = aircraftCategory === 'AIRPLANE' && classRating ? ` · ${CLASS_RATING_LABEL[classRating]}` : ''
+      const type = typeRating.trim() ? ` · 형식한정(${typeRating.trim()})` : ''
+      n = `${base} · ${cat}${cls}${type}`
+    }
+    setNameValue(n)
+  }, [category, currentSub, subDetail, nameTouched, isFreeText, isLicenceCategory, isRatingCategory, aircraftCategory, classRating, linkedLicence, typeRating])
 
   // 6) 구분별 기본 발급기관
   useEffect(() => {
@@ -220,6 +275,12 @@ export function CertificateForm({
         name,
         category,
         track: initialValues?.track ?? track,
+        licenceNumber: hasLicenceNumber ? String(form.get('licenceNumber') || '').trim() || undefined : initialValues?.licenceNumber,
+        limitations: isLicenceCategory ? String(form.get('limitations') || '').trim() || undefined : initialValues?.limitations,
+        aircraftCategory: (isLicenceCategory || isRatingCategory) && aircraftCategory ? aircraftCategory : initialValues?.aircraftCategory,
+        classRating: (isLicenceCategory || isRatingCategory) && aircraftCategory === 'AIRPLANE' && classRating ? classRating : undefined,
+        linkedCertificateId: isRatingCategory ? linkedId || undefined : initialValues?.linkedCertificateId,
+        typeRating: isRatingCategory ? typeRating.trim() || undefined : initialValues?.typeRating,
         issuer,
         issuedDate,
         expiryDate,
@@ -253,7 +314,7 @@ export function CertificateForm({
           >
             {categories.map((c) => (
               <option data-mbaas-oid="xm36egu" key={c} value={c}>
-                {c}
+                {CATEGORY_OPTION_LABEL[c] ?? c}
               </option>
             ))}
           </select>
@@ -278,6 +339,94 @@ export function CertificateForm({
               ))}
             </select>
           </div>
+        )}
+
+        {hasLicenceNumber && (
+          <div data-mbaas-oid="licno">
+            <label htmlFor="licenceNumber" className={labelClass}>자격번호 <span className="text-slate-500">(III. SERIAL NO.)</span></label>
+            <input
+              id="licenceNumber"
+              name="licenceNumber"
+              type="text"
+              defaultValue={initialValues?.licenceNumber}
+              placeholder="예: 12-015238"
+              className={`${inputClass} font-mono-data`}
+            />
+            {isLicenceCategory && (
+              <p className="mt-1 text-[11px] text-slate-500">계기비행증명·조종교육증명·추가 한정은 같은 자격번호로 자격증에 인쇄되므로 따로 번호를 받지 않아요.</p>
+            )}
+          </div>
+        )}
+
+        {isRatingCategory && (
+          <>
+            <div data-mbaas-oid="rtlink" className="sm:col-span-2">
+              <label htmlFor="rt-link" className={labelClass}>어느 자격증명에 추가하나요?</label>
+              {licenceOptions.length > 0 ? (
+                <select id="rt-link" value={linkedId} onChange={(e) => setLinkedId(e.target.value)} className={inputClass}>
+                  {licenceOptions.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}{c.licenceNumber ? ` (${c.licenceNumber})` : ''}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                  먼저 조종사 자격증명을 등록해 주세요. 한정은 자격증명에 붙는 항목이에요(제37조).
+                </p>
+              )}
+            </div>
+            <div data-mbaas-oid="rtcat">
+              <label htmlFor="rt-cat" className={labelClass}>종류</label>
+              <select id="rt-cat" value={aircraftCategory} onChange={(e) => setAircraftCategory(e.target.value as 'AIRPLANE' | 'HELICOPTER')} className={inputClass}>
+                <option value="AIRPLANE">비행기</option>
+                <option value="HELICOPTER">헬리콥터</option>
+              </select>
+            </div>
+            {aircraftCategory === 'AIRPLANE' && (
+              <div data-mbaas-oid="rtcls">
+                <label htmlFor="rt-cls" className={labelClass}>등급</label>
+                <select id="rt-cls" value={classRating} onChange={(e) => setClassRating(e.target.value as 'SEL' | 'MEL' | 'SES' | 'MES')} className={inputClass}>
+                  <option value="SEL">육상단발(SEL)</option>
+                  <option value="MEL">육상다발(MEL)</option>
+                  <option value="SES">수상단발(SES)</option>
+                  <option value="MES">수상다발(MES)</option>
+                </select>
+              </div>
+            )}
+            <div data-mbaas-oid="rttype" className={aircraftCategory === 'AIRPLANE' ? '' : 'sm:col-span-1'}>
+              <label htmlFor="rt-type" className={labelClass}>형식 <span className="text-slate-500">(있으면, 예: B737)</span></label>
+              <input id="rt-type" type="text" value={typeRating} onChange={(e) => setTypeRating(e.target.value)} placeholder="없으면 비워 두세요" className={`${inputClass} font-mono-data`} />
+            </div>
+          </>
+        )}
+
+        {isLicenceCategory && (
+          <>
+            <div data-mbaas-oid="liclim" className="sm:col-span-2">
+              <label htmlFor="limitations" className={labelClass}>제한사항 <span className="text-slate-500">(XIII. LIMITATIONS, 없으면 비워 두세요)</span></label>
+              <input id="limitations" name="limitations" type="text" defaultValue={initialValues?.limitations} className={inputClass} />
+            </div>
+            <div data-mbaas-oid="liccat">
+              <label htmlFor="lic-cat" className={labelClass}>종류 한정</label>
+              <select id="lic-cat" value={aircraftCategory} onChange={(e) => setAircraftCategory(e.target.value as 'AIRPLANE' | 'HELICOPTER')} className={inputClass}>
+                <option value="AIRPLANE">비행기</option>
+                <option value="HELICOPTER">헬리콥터</option>
+              </select>
+            </div>
+            {aircraftCategory === 'AIRPLANE' && (
+              <div data-mbaas-oid="liccls">
+                <label htmlFor="lic-cls" className={labelClass}>등급 한정</label>
+                <select id="lic-cls" value={classRating} onChange={(e) => setClassRating(e.target.value as 'SEL' | 'MEL' | 'SES' | 'MES')} className={inputClass}>
+                  <option value="SEL">육상단발(SEL)</option>
+                  <option value="MEL">육상다발(MEL)</option>
+                  <option value="SES">수상단발(SES)</option>
+                  <option value="MES">수상다발(MES)</option>
+                </select>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  나중에 추가로 딴 등급·형식 한정은 구분을 "한정 추가"로 따로 등록하세요. 카드에는 자격증명과 함께 보여요.
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {category === '무선통신사' && (

@@ -308,11 +308,22 @@ export function useCertificates(account: AccountResponse | null | undefined) {
     [userId, createCertificatePost],
   )
 
+  // [BUGFIX] updateCertificate가 렌더 시점의 certificates 클로저를 읽어, `addCertificate(...)` 뒤에 `await`를 거친
+  // 호출(예: 인증 요청 게시글 생성 후 approvalRequestPostId 저장)에서 방금 추가한 자격증을 못 찾고 조용히 return 했다.
+  // 그 결과 게시글 ID가 저장되지 않아 관리자가 승인해도 카드가 영원히 "승인 대기"였다. 항상 최신 목록을 ref로 읽는다.
+  const certificatesRef = useRef<Certificate[]>(certificates)
+  useEffect(() => {
+    certificatesRef.current = certificates
+  }, [certificates])
+
   const updateCertificate = useCallback(
     (id: string, input: CertificateInput) => {
       const now = Date.now()
-      const current = certificates.find((c) => c.id === id)
-      if (!current) return
+      const current = certificatesRef.current.find((c) => c.id === id)
+      if (!current) {
+        console.warn('[자격증 수정] 대상을 찾지 못했습니다:', id)
+        return
+      }
       const updated: Certificate = { ...current, ...input, updatedAt: now }
 
       // 로컬 수정(기존 동작 유지)
@@ -337,7 +348,7 @@ export function useCertificates(account: AccountResponse | null | undefined) {
         })()
       }
     },
-    [certificates, userId, updatePost, createCertificatePost],
+    [userId, updatePost, createCertificatePost],
   )
 
   const deleteCertificate = useCallback(

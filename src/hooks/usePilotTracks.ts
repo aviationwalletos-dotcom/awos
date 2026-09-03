@@ -11,7 +11,9 @@ import { updateMyProfileFields } from '../lib/baas/supabaseTransport'
 import type { AccountResponse, IndividualRole } from '../lib/baas/types'
 import {
   ACTIVE_TRACK_KEY_PREFIX,
+  ADDRESS_KEY_PREFIX,
   BIRTH_DATE_KEY_PREFIX,
+  NATIONALITY_KEY_PREFIX,
   OPERATION_TYPE_KEY_PREFIX,
   PILOT_TRACKS_KEY_PREFIX,
   buildProfileFieldKey,
@@ -19,6 +21,16 @@ import {
 } from '../lib/profileSettingsSync'
 import { isOperationType, isPilotTrack, parsePilotTracks, tracksFromLegacyRole } from '../lib/tracks'
 import type { OperationType, PilotTrack } from '../lib/tracks'
+
+/**
+ * 같은 훅이 여러 컴포넌트(LogbookPage·CurrencyDashboard·FlightReadinessPanel·AccountPage)에서 동시에 쓰인다.
+ * 각 인스턴스가 자기 state만 갖고 있으면 한쪽에서 바꾼 운항형태가 다른 쪽엔 새로고침 전까지 반영되지 않는다.
+ * 쓰기 후 커스텀 이벤트를 쏘고 모든 인스턴스가 localStorage를 다시 읽어 맞춘다.
+ */
+const CHANGE_EVENT = 'awos:pilot-tracks-changed'
+function broadcast() {
+  window.dispatchEvent(new Event(CHANGE_EVENT))
+}
 
 function readLocal(key: string | undefined): string | null {
   if (!key) return null
@@ -46,6 +58,8 @@ export interface PilotTracksState {
   activeTrack: PilotTrack
   birthDate: string | null
   operationType: OperationType
+  address: string | null
+  nationality: string | null
   /** tracks가 명시 저장된 값이 아니라 기존 individual_role에서 파생된 값인지 */
   isDerivedFromLegacyRole: boolean
   ready: boolean
@@ -53,6 +67,8 @@ export interface PilotTracksState {
   setActiveTrack: (track: PilotTrack) => void
   setBirthDate: (date: string | null) => void
   setOperationType: (type: OperationType) => void
+  setAddress: (v: string | null) => void
+  setNationality: (v: string | null) => void
 }
 
 export function usePilotTracks(account: AccountResponse | null | undefined): PilotTracksState {
@@ -65,6 +81,8 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
             active: buildProfileFieldKey(ACTIVE_TRACK_KEY_PREFIX, accountId),
             birth: buildProfileFieldKey(BIRTH_DATE_KEY_PREFIX, accountId),
             op: buildProfileFieldKey(OPERATION_TYPE_KEY_PREFIX, accountId),
+            addr: buildProfileFieldKey(ADDRESS_KEY_PREFIX, accountId),
+            nat: buildProfileFieldKey(NATIONALITY_KEY_PREFIX, accountId),
           }
         : undefined,
     [accountId],
@@ -76,9 +94,11 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
   const [activeState, setActiveState] = useState<PilotTrack | null>(null)
   const [birthState, setBirthState] = useState<string | null>(null)
   const [opState, setOpState] = useState<OperationType | null>(null)
+  const [addrState, setAddrState] = useState<string | null>(null)
+  const [natState, setNatState] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
 
-  // 1) 로컬 로드
+  // 1) 로컬 로드 (+ 다른 인스턴스의 변경 이벤트 시 재로드)
   useEffect(() => {
     if (!keys) {
       setTracksState(null)
@@ -88,24 +108,35 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
       setReady(false)
       return
     }
-    const rawTracks = readLocal(keys.tracks)
-    let tracks: PilotTrack[] | null = null
-    if (rawTracks) {
-      try {
-        const parsed = parsePilotTracks(JSON.parse(rawTracks))
-        tracks = parsed.length > 0 ? parsed : null
-      } catch {
-        tracks = null
+    const load = () => {
+      const rawTracks = readLocal(keys.tracks)
+      let tracks: PilotTrack[] | null = null
+      if (rawTracks) {
+        try {
+          const parsed = parsePilotTracks(JSON.parse(rawTracks))
+          tracks = parsed.length > 0 ? parsed : null
+        } catch {
+          tracks = null
+        }
       }
+      setTracksState(tracks)
+      const active = readLocal(keys.active)
+      setActiveState(isPilotTrack(active) ? active : null)
+      const birth = readLocal(keys.birth)
+      setBirthState(birth && isValidDateString(birth) ? birth : null)
+      const op = readLocal(keys.op)
+      setOpState(isOperationType(op) ? op : null)
+      setAddrState(readLocal(keys.addr))
+      setNatState(readLocal(keys.nat))
+      setReady(true)
     }
-    setTracksState(tracks)
-    const active = readLocal(keys.active)
-    setActiveState(isPilotTrack(active) ? active : null)
-    const birth = readLocal(keys.birth)
-    setBirthState(birth && isValidDateString(birth) ? birth : null)
-    const op = readLocal(keys.op)
-    setOpState(isOperationType(op) ? op : null)
-    setReady(true)
+    load()
+    window.addEventListener(CHANGE_EVENT, load)
+    window.addEventListener('storage', load) // 다른 탭
+    return () => {
+      window.removeEventListener(CHANGE_EVENT, load)
+      window.removeEventListener('storage', load)
+    }
   }, [keys])
 
   // 2) 서버 값으로 초기 채움(로컬 우선, 최초 1회)
@@ -140,7 +171,15 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
         setOpState(o)
       }
     }
-  }, [ready, serverReady, serverSettings, keys, tracksState, activeState, birthState, opState, account])
+    if (!addrState && serverSettings?.address) {
+      writeLocal(keys.addr, serverSettings.address)
+      setAddrState(serverSettings.address)
+    }
+    if (!natState && serverSettings?.nationality) {
+      writeLocal(keys.nat, serverSettings.nationality)
+      setNatState(serverSettings.nationality)
+    }
+  }, [ready, serverReady, serverSettings, keys, tracksState, activeState, birthState, opState, addrState, natState, account])
 
   // 파생값: 명시 저장이 없으면 기존 역할에서 이관
   const legacyRole = account?.data?.individual_role as IndividualRole | undefined
@@ -161,6 +200,7 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
         writeLocal(keys.active, normalized[0] ?? null)
         setActiveState(normalized[0] ?? null)
       }
+      broadcast()
       syncNow()
       void updateMyProfileFields({ pilot_tracks: normalized }).catch(() => undefined)
     },
@@ -172,6 +212,7 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
       if (!keys) return
       writeLocal(keys.active, track)
       setActiveState(track)
+      broadcast()
       syncNow()
     },
     [keys, syncNow],
@@ -184,6 +225,7 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
       const valid = date && isValidDateString(date) ? date : null
       writeLocal(keys.birth, valid)
       setBirthState(valid)
+      broadcast()
       syncNow()
       void updateMyProfileFields({ birth_date: valid }).catch(() => undefined)
     },
@@ -196,8 +238,32 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
       initialFillDoneRef.current = true
       writeLocal(keys.op, type)
       setOpState(type)
+      broadcast()
       syncNow()
       void updateMyProfileFields({ operation_type: type }).catch(() => undefined)
+    },
+    [keys, syncNow],
+  )
+
+  const setAddress = useCallback(
+    (v: string | null) => {
+      if (!keys) return
+      const clean = v?.trim() || null
+      writeLocal(keys.addr, clean)
+      setAddrState(clean)
+      broadcast()
+      syncNow()
+    },
+    [keys, syncNow],
+  )
+  const setNationality = useCallback(
+    (v: string | null) => {
+      if (!keys) return
+      const clean = v?.trim() || null
+      writeLocal(keys.nat, clean)
+      setNatState(clean)
+      broadcast()
+      syncNow()
     },
     [keys, syncNow],
   )
@@ -207,6 +273,10 @@ export function usePilotTracks(account: AccountResponse | null | undefined): Pil
     activeTrack,
     birthDate: birthState,
     operationType,
+    address: addrState,
+    nationality: natState,
+    setAddress,
+    setNationality,
     isDerivedFromLegacyRole,
     ready,
     setTracks,

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Plane, Trash2 } from 'lucide-react'
 
 import { Button } from '../Button'
+import { useConfirm } from '../ConfirmDialog'
 import { ULTRALIGHT_KINDS, isUnmannedKind, vehicleKindLabel } from '../../lib/tracks'
 import { daysUntil } from '../../types/certificate'
 import { inferUasClass, vehicleDisplayName } from '../../types/vehicle'
@@ -27,6 +28,7 @@ function numOrUndef(v: FormDataEntryValue | null): number | undefined {
 }
 
 export function VehicleCards({ vehicles, onAdd, onDelete }: VehicleCardsProps) {
+  const confirm = useConfirm()
   const [open, setOpen] = useState(vehicles.length === 0)
   const [kindKey, setKindKey] = useState(ULTRALIGHT_KINDS[2].key) // 무인멀티콥터 기본
   const [exempt, setExempt] = useState(false)
@@ -96,7 +98,9 @@ export function VehicleCards({ vehicles, onAdd, onDelete }: VehicleCardsProps) {
                 <button
                   data-mbaas-oid="vehdel"
                   type="button"
-                  onClick={() => { if (window.confirm(`${vehicleDisplayName(v)} 기체를 삭제할까요? 기록은 남고 기체 연결만 끊깁니다.`)) onDelete(v.id) }}
+                  onClick={() => {
+                    void confirm({ title: '기체 삭제', message: `${vehicleDisplayName(v)} 기체를 삭제할까요?\n기록은 남고 기체 연결만 끊깁니다.`, confirmLabel: '삭제', danger: true }).then((ok) => { if (ok) onDelete(v.id) })
+                  }}
                   className="shrink-0 rounded p-1 text-slate-500 hover:bg-white/10 hover:text-rose-300"
                   aria-label="기체 삭제"
                 >

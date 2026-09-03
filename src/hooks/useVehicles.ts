@@ -30,6 +30,8 @@ function saveLocal(key: string | undefined, vehicles: Vehicle[]) {
   }
 }
 
+const CHANGE_EVENT = 'awos:vehicles-changed'
+
 function makeId(): string {
   return `veh_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }
@@ -43,8 +45,17 @@ export function useVehicles(account: AccountResponse | null | undefined) {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    setVehicles(loadLocal(storageKey))
-    setReady(Boolean(storageKey))
+    const load = () => {
+      setVehicles(loadLocal(storageKey))
+      setReady(Boolean(storageKey))
+    }
+    load()
+    window.addEventListener(CHANGE_EVENT, load)
+    window.addEventListener('storage', load)
+    return () => {
+      window.removeEventListener(CHANGE_EVENT, load)
+      window.removeEventListener('storage', load)
+    }
   }, [storageKey])
 
   // 서버 값으로 초기 채움(로컬이 비어 있을 때만, 1회)
@@ -65,6 +76,7 @@ export function useVehicles(account: AccountResponse | null | undefined) {
       filledRef.current = true
       saveLocal(storageKey, next)
       setVehicles(next)
+      window.dispatchEvent(new Event(CHANGE_EVENT))
       syncNow()
     },
     [storageKey, syncNow],
