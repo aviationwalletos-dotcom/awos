@@ -66,8 +66,7 @@ import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
 import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
 import { VehicleCards } from '../components/logbook/VehicleCards'
-import { printFlightExperienceCertificate } from '../lib/flightExperienceCertificatePrint'
-import { printPilotFlightExperienceCertificate } from '../lib/pilotFlightExperienceCertificatePrint'
+import { savePilotFlightExperienceCertificatePdf, saveUltralightCertificatePdf } from '../lib/pdf'
 import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
 import { getRoleContentByIndividualRole } from '../data/content'
@@ -692,11 +691,15 @@ export function LogbookPage() {
                       }}
                       onExportCsv={() => downloadLogbookCsv(trackEntries)}
                       printLabel="비행경력증명서 PDF 저장"
-                      onPrint={() =>
-                        isDrone
-                          ? printFlightExperienceCertificate(trackEntries, vehicles, { name: account?.name, birthDate })
-                          : printPilotFlightExperienceCertificate(trackEntries, { name: account?.name, company: String(account?.data?.organization_affiliation || account?.data?.institution || '') || undefined })
-                      }
+                      onPrint={() => {
+                        const holderName = account?.name
+                        const company = String(account?.data?.organization_affiliation || account?.data?.institution || '') || undefined
+                        const run = isDrone
+                          ? saveUltralightCertificatePdf(trackEntries, vehicles, { name: holderName, birthDate, company })
+                          : savePilotFlightExperienceCertificatePdf(trackEntries, { name: holderName, company })
+                        showToast('PDF를 만드는 중이에요…')
+                        void run.then(() => showToast('PDF가 준비됐어요.')).catch((err) => showToast(`PDF 생성 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`))
+                      }}
                     />
                   </div>
                 </Reveal>

@@ -8,6 +8,7 @@
 import { sumHours } from './hours'
 
 import type { LogbookEntry } from '../types/logbook'
+import { saveBlob } from './ui/saveFile'
 
 const HEADERS = [
   '날짜',
@@ -124,18 +125,11 @@ export function buildLogbookCsv(entries: LogbookEntry[]): string {
   return '\uFEFF' + HEADERS.join(',') + '\n' + rows.join('\n')
 }
 
-/** CSV 파일을 브라우저 다운로드로 내려준다. */
+/** CSV 파일을 저장한다(iOS·홈 화면 앱은 공유 시트, 그 외 다운로드). */
 export function downloadLogbookCsv(entries: LogbookEntry[]): void {
   const now = new Date()
   const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+  // buildLogbookCsv 가 이미 BOM 을 붙인다(엑셀 한글 깨짐 방지)
   const blob = new Blob([buildLogbookCsv(entries)], { type: 'text/csv;charset=utf-8' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = `AWOS_logbook_${stamp}.csv`
-  document.body.appendChild(a)
-  a.click()
-  window.setTimeout(() => {
-    URL.revokeObjectURL(a.href)
-    a.remove()
-  }, 400)
+  void saveBlob(blob, `AWOS_logbook_${stamp}.csv`)
 }
