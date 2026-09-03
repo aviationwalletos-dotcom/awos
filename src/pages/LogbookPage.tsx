@@ -42,8 +42,9 @@ import { ComplianceSection } from '../components/compliance/ComplianceSection'
 import {
   computeAtcCompliance,
   computeDispatcherCompliance,
-  computeDroneCompliance,
+  computeLsaCompliance,
   computeMechanicCompliance,
+  computeUltralightCompliance,
 } from '../lib/roleCompliance'
 import { downloadLogbookCsv } from '../lib/logbookCsv'
 import { printLogbook } from '../lib/logbookPrint'
@@ -59,6 +60,9 @@ import { useDeleteBoardPost } from '../hooks/baas/useDeleteBoardPost'
 import { useAuth } from '../contexts/AuthContext'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import type { IndividualRole } from '../lib/baas/types'
+import { usePilotTracks } from '../hooks/usePilotTracks'
+import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countEntriesByTrack, countUntaggedEntries, filterEntriesByTrack } from '../lib/tracks'
+import type { PilotTrack } from '../lib/tracks'
 import { getRoleContentByIndividualRole } from '../data/content'
 import { WORK_LOG_ROLE_COPY } from '../types/workLog'
 import type { WorkLogEntry, WorkLogRole } from '../types/workLog'
@@ -79,12 +83,15 @@ const PILOT_TABS: TabDef[] = [
 
 const SIGNATURE_INBOX_TAB: TabDef = { key: 'signatureInbox', label: '서명 요청함', icon: Inbox }
 
-// 드론 조종자용 탭 구성: 비행기록 구조는 재사용하되 커런시/실시간 적합성 등 조종사 전용 개념은 제외합니다.
+// 초경량 조종자용 탭 구성: 비행기록 구조는 재사용하되 커런시/실시간 적합성 등 조종사 전용 개념은 제외합니다.
 const DRONE_TABS: TabDef[] = [
   { key: 'myRecords', label: '비행기록', icon: ListChecks },
   { key: 'logbook', label: '기록 입력·가져오기', icon: PlaneTakeoff },
   { key: 'certificates', label: '자격증', icon: ShieldCheck },
 ]
+
+// v1.1 — 경량항공기 조종사용 탭. 야간비행 금지(규칙 제311조)라 커런시 탭은 두지 않는다(응시경력은 비행기록 탭에서).
+const LSA_TABS: TabDef[] = DRONE_TABS
 
 const WORK_LOG_TAB_ICON: Record<WorkLogRole, TabDef['icon']> = {
   mechanic: ClipboardList,
@@ -122,12 +129,16 @@ export function LogbookPage() {
   const individualRoleLabel = individualRole ? INDIVIDUAL_ROLE_LABEL[individualRole] : null
   const roleContent = useMemo(() => getRoleContentByIndividualRole(individualRole), [individualRole])
 
-  // 조종사 전용 개념(항공신체검사/커런시/실시간 비행 적합성/승무시간 한도/교관 서명 요청함)은
-  // 조종사이거나 역할이 아직 설정되지 않은 계정(기존 관례상 조종사와 유사한 기본 화면으로 폴백)에게만 노출합니다.
-  const isPilotLike = !individualRole || individualRole === 'pilot'
-  const isDrone = individualRole === 'drone_pilot'
+  // v1.1 — 보유 트랙(복수) + 지금 보고 있는 트랙. 모든 집계·커런시·덱은 activeTrack 기준으로만 계산한다.
+  const { tracks: pilotTracks, activeTrack, setActiveTrack, birthDate, operationType } = usePilotTracks(account)
+
+  // 비조종 직군(관제사·정비사·운항관리사)은 트랙과 무관하게 업무기록 화면을 쓴다.
   const workLogRole = isWorkLogRole(individualRole) ? individualRole : undefined
   const workLogCopy = workLogRole ? WORK_LOG_ROLE_COPY[workLogRole] : undefined
+  // 조종사 전용 개념(항공신체검사/커런시/실시간 비행 적합성/승무시간 한도/교관 서명 요청함)은 항공기 트랙에서만.
+  const isPilotLike = !workLogRole && activeTrack === 'aircraft'
+  const isLsa = !workLogRole && activeTrack === 'lsa'
+  const isDrone = !workLogRole && activeTrack === 'ultralight'
 
   const { isApproved: isApprovedInstructor } = useInstructorApprovalStatus(
     userType === 'individual' ? account ?? null : null,
@@ -143,8 +154,11 @@ export function LogbookPage() {
     if (isDrone) {
       return DRONE_TABS
     }
+    if (isLsa) {
+      return LSA_TABS
+    }
     return isApprovedInstructor ? [...PILOT_TABS, SIGNATURE_INBOX_TAB] : PILOT_TABS
-  }, [workLogRole, workLogCopy, isDrone, isApprovedInstructor])
+  }, [workLogRole, workLogCopy, isDrone, isLsa, isApprovedInstructor])
 
   // 역할/승인 상태가 바뀌어 현재 선택된 탭이 더 이상 목록에 없으면, 목록의 첫 번째 탭으로 되돌린다.
   useEffect(() => {
@@ -163,7 +177,12 @@ export function LogbookPage() {
     resyncFromServer: resyncLogbookEntries,
     retryPendingSync: retryLogbookPendingSync,
   } = useLogbookEntries(account)
-  const entrySuggestions = useMemo(() => buildEntrySuggestions(entries), [entries])
+
+  // v1.1 — 현재 트랙의 기록만. 이것이 버그 수정의 핵심이다: 드론 트랙에서 C172·DA42 시간이 섞이지 않는다.
+  const trackEntries = useMemo(() => filterEntriesByTrack(entries, activeTrack), [entries, activeTrack])
+  const entryCountByTrack = useMemo(() => countEntriesByTrack(entries), [entries])
+  const untaggedCount = useMemo(() => countUntaggedEntries(entries), [entries])
+  const entrySuggestions = useMemo(() => buildEntrySuggestions(trackEntries), [trackEntries])
   const { uploadFile } = useUploadBoardFile()
   const { createCertificateApprovalPost } = useCreateCertificateApprovalPost()
 
@@ -223,11 +242,13 @@ export function LogbookPage() {
           const batch = inputs.slice(i, i + LEGACY_IMPORT_BATCH_SIZE)
           // 배치 단위로 addEntry 호출이 모두 처리된 뒤에만 다음 배치로 넘어가, 동시에 나가는
           // 서버 생성 요청 수를 배치 크기로 제한한다.
-          await Promise.allSettled(batch.map((input) => Promise.resolve().then(() => addEntry(input))))
+          await Promise.allSettled(
+            batch.map((input) => Promise.resolve().then(() => addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack }))),
+          )
         }
       })()
     },
-    [addEntry],
+    [addEntry, activeTrack],
   )
 
   // 비행기록이 삭제되면, 그 기록에 연결된 "서명 요청" 게시판 게시글도 함께 정리한다(교관 서명
@@ -348,12 +369,13 @@ export function LogbookPage() {
   }, [workLogRole, certificates, workLogEntries])
   const workLogComplianceTitle = workLogRole ? WORK_LOG_COMPLIANCE_TITLE[workLogRole] : ''
 
-  // 드론/UAM 조종자 법정 요건 안내/현황(비행기록의 누적 비행시간 기반).
-  const droneComplianceItems = useMemo(() => (isDrone ? computeDroneCompliance(entries) : []), [isDrone, entries])
+  // 초경량·경량 법정 요건 안내/현황 — 반드시 트랙 필터된 기록으로 계산한다.
+  const droneComplianceItems = useMemo(() => (isDrone ? computeUltralightCompliance(trackEntries) : []), [isDrone, trackEntries])
+  const lsaComplianceItems = useMemo(() => (isLsa ? computeLsaCompliance(trackEntries) : []), [isLsa, trackEntries])
 
   const filteredEntries = useMemo(
-    () => entries.filter((e) => matchesFilter(e, filterKind, filterValue)),
-    [entries, filterKind, filterValue],
+    () => trackEntries.filter((e) => matchesFilter(e, filterKind, filterValue)),
+    [trackEntries, filterKind, filterValue],
   )
 
   // 서버에 아직 저장되지 않은(미동기화) 기록 수. syncPostId가 없으면 서버 게시글 생성이
@@ -400,22 +422,53 @@ export function LogbookPage() {
             </span>
             {account && (
               <p data-mbaas-dynamic="true" data-mbaas-oid="lgbpg25" className="mt-3 text-sm font-semibold text-sky">
-                {individualRoleLabel ?? '역할 미설정'} ·{' '}
+                {workLogRole ? (individualRoleLabel ?? '역할 미설정') : PILOT_TRACK_LABEL[activeTrack]} ·{' '}
                 <span data-mbaas-oid="bvzpidt" data-mbaas-dynamic="true">{account.name}</span>님
+              </p>
+            )}
+
+            {!workLogRole && pilotTracks.length > 1 && (
+              <div data-mbaas-oid="trkswitch" role="tablist" aria-label="보유 트랙 전환" className="mt-3 flex flex-wrap gap-2">
+                {pilotTracks.map((t: PilotTrack) => {
+                  const isActive = t === activeTrack
+                  return (
+                    <button
+                      data-mbaas-oid="trkswbtn"
+                      key={t}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActiveTrack(t)}
+                      className={`inline-flex min-h-[36px] items-center gap-2 rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors
+                        ${isActive ? 'border-sky bg-sky/15 text-[#00D4FF]' : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/30'}`}
+                    >
+                      {PILOT_TRACK_SHORT[t]}
+                      <span data-mbaas-oid="trkswcnt" className={`rounded px-1.5 font-mono-data text-[10px] ${isActive ? 'bg-sky/20' : 'bg-white/10'}`}>
+                        {entryCountByTrack[t]}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {!workLogRole && untaggedCount > 0 && (
+              <p data-mbaas-oid="trkuntag" className="mt-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                기종명으로 트랙을 추정한 기록이 {untaggedCount}건 있어요. 기록을 열어 트랙을 확인하면 추정 표시가 사라집니다.
               </p>
             )}
 
             {isPilotLike ? (
               <div data-mbaas-oid="rdnscmp" className="mt-4 flex flex-col gap-4">
-                <FlightReadinessPanel entries={entries} certificates={certificates} account={account} compact />
+                <FlightReadinessPanel entries={trackEntries} certificates={certificates} account={account} compact />
                 <div data-mbaas-oid="6w3w4t6" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} />
-                  <DutyTimeLimitCard entries={entries} compact />
+                  <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={activeTrack} />
+                  <DutyTimeLimitCard entries={trackEntries} compact />
                 </div>
               </div>
             ) : (
               <div data-mbaas-oid="rdnscmp" className="mt-4">
-                <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} />
+                <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={workLogRole ? 'aircraft' : activeTrack} />
               </div>
             )}
 
@@ -453,7 +506,7 @@ export function LogbookPage() {
 
         {activeTab === 'myRecords' && (
           <>
-            {entries.length === 0 && (
+            {trackEntries.length === 0 && (
               <section className="bg-surface pt-[clamp(48px,6vw,80px)]">
                 <div className="mx-auto max-w-4xl px-6">
                   <Reveal>
@@ -481,9 +534,23 @@ export function LogbookPage() {
                 <div data-mbaas-oid="cpldrn2" className="mx-auto max-w-4xl px-6">
                   <Reveal>
                     <ComplianceSection
-                      title="드론조종자 법정 요건 안내/현황"
-                      description="아래 항목은 등록한 자격증·비행기록을 바탕으로 자동 계산한 참고 정보입니다."
+                      title="초경량비행장치 조종자 법정 요건 안내/현황"
+                      description="아래 항목은 이 트랙(초경량)의 비행기록만으로 자동 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
                       items={droneComplianceItems}
+                    />
+                  </Reveal>
+                </div>
+              </section>
+            )}
+
+            {isLsa && (
+              <section data-mbaas-oid="cpllsa1" className="bg-panel py-[clamp(64px,8vw,120px)]">
+                <div data-mbaas-oid="cpllsa2" className="mx-auto max-w-4xl px-6">
+                  <Reveal>
+                    <ComplianceSection
+                      title="경량항공기 조종사 응시경력 안내/현황"
+                      description="시행규칙 별표 4 제2호 기준. 이 트랙(경량항공기)의 비행기록만으로 계산한 참고 정보입니다."
+                      items={lsaComplianceItems}
                     />
                   </Reveal>
                 </div>
@@ -500,7 +567,7 @@ export function LogbookPage() {
                     지금까지 등록한 비행 기록을 기준으로 범주·자격·조건별 누적 시간을 계산합니다.
                   </p>
                   <div data-mbaas-oid="avfp5fw" className="mt-6">
-                    <LogbookTotalsSummary entries={entries} accountId={account?.id} />
+                    <LogbookTotalsSummary entries={trackEntries} accountId={account?.id} />
                   </div>
                 </Reveal>
               </div>
@@ -537,7 +604,7 @@ export function LogbookPage() {
                   </div>
                   <div data-mbaas-oid="lgbpg23" className="mt-6">
                     <EntryFilterBar
-                      entries={entries}
+                      entries={trackEntries}
                       kind={filterKind}
                       value={filterValue}
                       onKindChange={setFilterKind}
@@ -547,7 +614,7 @@ export function LogbookPage() {
                   <div data-mbaas-oid="lgbpg24" className="mt-6">
                     <EntryList
                       entries={filteredEntries}
-                      totalAccountEntryCount={entries.length}
+                      totalAccountEntryCount={trackEntries.length}
                       pendingSyncCount={pendingSyncCount}
                       onSelect={setSelectedEntry}
                       onDeleteMany={(ids) => {
@@ -555,11 +622,14 @@ export function LogbookPage() {
                         deleteEntries(ids)
                       }}
                       onDeleteAll={() => {
-                        cleanupSignatureRequestPosts(entries.map((e) => e.id))
-                        clearAll()
+                        // 전체 삭제는 현재 트랙만 — 다른 트랙 기록은 보존
+                        const ids = trackEntries.map((e) => e.id)
+                        cleanupSignatureRequestPosts(ids)
+                        if (trackEntries.length === entries.length) clearAll()
+                        else deleteEntries(ids)
                       }}
-                      onExportCsv={() => downloadLogbookCsv(entries)}
-                      onPrint={() => printLogbook(entries)}
+                      onExportCsv={() => downloadLogbookCsv(trackEntries)}
+                      onPrint={() => printLogbook(trackEntries)}
                     />
                   </div>
                 </Reveal>
@@ -640,7 +710,14 @@ export function LogbookPage() {
                     면허, 항공신체검사, 법정교육 등 자격 항목을 등록하면 만료 임박 시 카드에 경고 배지가 표시됩니다.
                   </p>
                   <div data-mbaas-oid="0ol2vj9" className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-                    <CertificateForm mode="create" onSubmit={(input, options) => void handleCreateCertificate(input, options?.approvalFile)} roleTemplate={roleContent} />
+                    <CertificateForm
+                      mode="create"
+                      onSubmit={(input, options) => void handleCreateCertificate({ ...input, track: input.track ?? activeTrack }, options?.approvalFile)}
+                      roleTemplate={roleContent}
+                      track={activeTrack}
+                      birthDate={birthDate}
+                      commercialSinglePilot={operationType === 'commercial'}
+                    />
                   </div>
                 </Reveal>
               </div>
@@ -663,10 +740,11 @@ export function LogbookPage() {
                 </p>
                 <div data-mbaas-oid="cursec5" className="mt-6">
                   <CurrencyDashboard
-                    entries={entries}
+                    entries={trackEntries}
                     account={account}
                     certificates={certificates}
                     isApprovedInstructor={isApprovedInstructor}
+                    operationType={operationType}
                   />
                 </div>
               </Reveal>
@@ -683,7 +761,13 @@ export function LogbookPage() {
                     새 비행 기록 추가
                   </h2>
                   <div data-mbaas-oid="lgbpg19" className="mt-4 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-                    <EntryForm mode="create" onSubmit={(input) => addEntry(input)} suggestions={entrySuggestions} {...aircraftLabelProps} />
+                    <EntryForm
+                      mode="create"
+                      onSubmit={(input) => addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack })}
+                      suggestions={entrySuggestions}
+                      track={activeTrack}
+                      {...aircraftLabelProps}
+                    />
                   </div>
                 </Reveal>
               </div>

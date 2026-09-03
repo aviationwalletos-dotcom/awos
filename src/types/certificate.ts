@@ -1,17 +1,33 @@
 // 디지털 자격 월렛 — 자격/면허 데이터 모델
 // 실 서버 연동 전까지 브라우저 localStorage에 저장되는 자격증 타입 정의입니다.
 
+import type { PilotTrack } from '../lib/tracks'
+
 export type CertificateCategory =
+  // ── 항공기 조종사 트랙 (조종사 덱 7장)
   | '조종사 자격증명'
   | '한정'
+  | '계기비행증명'
   | '조종교육증명'
-  | '무선통신사'
   | '항공신체검사'
+  | '항공영어구술능력증명'
+  | '무선통신사'
+  // ── 경량항공기 조종사 트랙 (경량 덱 4장) — 신체검사·무선은 위 카테고리를 공유
+  | '경량항공기 조종사 자격증명'
+  | '경량항공기 조종교육증명'
+  // ── 초경량비행장치 조종자 트랙 (초경량 덱 3장)
+  | '초경량비행장치 조종자증명'
+  | '지도조종자'
+  | '교육이수'
+  // ── 공통
+  | '운전면허'
   | '법정교육'
   | '기타 자격'
 
 export interface Certificate {
   id: string
+  // v1.1 — 이 자격이 속한 트랙. 값이 없으면 카테고리로 추정한다(certificateTrack 참고).
+  track?: PilotTrack
   name: string // 예: 사업용 조종사(CPL), 형식한정(B737)
   category: CertificateCategory
   issuer: string // 발급기관
@@ -37,12 +53,43 @@ export type CertificateInput = Omit<Certificate, 'id' | 'createdAt' | 'updatedAt
 export const CERTIFICATE_CATEGORIES: CertificateCategory[] = [
   '조종사 자격증명',
   '한정',
+  '계기비행증명',
   '조종교육증명',
   '항공신체검사',
+  '항공영어구술능력증명',
   '무선통신사',
+  '경량항공기 조종사 자격증명',
+  '경량항공기 조종교육증명',
+  '초경량비행장치 조종자증명',
+  '지도조종자',
+  '교육이수',
+  '운전면허',
   '법정교육',
   '기타 자격',
 ]
+
+/** 트랙별로 등록 가능한 카테고리(자격증 등록 폼의 선택지) */
+export const CERTIFICATE_CATEGORIES_BY_TRACK: Record<PilotTrack, CertificateCategory[]> = {
+  aircraft: ['조종사 자격증명', '한정', '계기비행증명', '조종교육증명', '항공신체검사', '항공영어구술능력증명', '무선통신사', '법정교육', '기타 자격'],
+  lsa: ['경량항공기 조종사 자격증명', '경량항공기 조종교육증명', '항공신체검사', '운전면허', '무선통신사', '법정교육', '기타 자격'],
+  ultralight: ['초경량비행장치 조종자증명', '지도조종자', '교육이수', '항공신체검사', '운전면허', '법정교육', '기타 자격'],
+}
+
+/** 카테고리로 트랙을 추정한다(공유 카테고리는 항공기 기본). 기존 데이터의 track 미설정 보완용. */
+export function certificateTrack(cert: Pick<Certificate, 'track' | 'category'>): PilotTrack {
+  if (cert.track) return cert.track
+  switch (cert.category) {
+    case '경량항공기 조종사 자격증명':
+    case '경량항공기 조종교육증명':
+      return 'lsa'
+    case '초경량비행장치 조종자증명':
+    case '지도조종자':
+    case '교육이수':
+      return 'ultralight'
+    default:
+      return 'aircraft'
+  }
+}
 
 export type CertificateStatus = 'valid' | 'warning' | 'urgent' | 'expired' | 'no_expiry'
 

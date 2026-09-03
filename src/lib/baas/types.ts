@@ -19,6 +19,12 @@ export const INDIVIDUAL_ROLE_LABEL: Record<IndividualRole, string> = {
 export interface AccountExtraData {
   user_type?: UserType
   individual_role?: IndividualRole
+  /** v1.1 — 보유 조종 트랙(복수). 없으면 individual_role에서 이관 규칙으로 파생한다. */
+  pilot_tracks?: string[] | string
+  /** v1.1 — 생년월일(YYYY-MM-DD). 항공신체검사 유효기간(별표 8)이 연령으로 갈리므로 필요하다. */
+  birth_date?: string
+  /** v1.1 — 운항형태(general/commercial). 커런시 기준(180일/90일+야간)을 가른다. */
+  operation_type?: string
   /** 소속 기관(예: "항공대학교 비행교육원"). 개인/기관 계정 모두 설정 가능한 자유 입력 텍스트. */
   organization_affiliation?: string
   [key: string]: unknown

@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react'
 import { getEntryPresets, mergePresetChips } from '../../data/entryPresets'
+import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, entryTrack, isUnmannedKind, vehicleKindsForTrack } from '../../lib/tracks'
+import type { PilotTrack } from '../../lib/tracks'
+import { FLIGHT_CATEGORIES, SIM_DEVICE_LABEL } from '../../types/logbook'
+import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types/logbook'
 
 import { Button } from '../Button'
-import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import { SignaturePad } from './SignaturePad'
-import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
 
 interface FieldErrors {
   date?: string
@@ -28,6 +30,8 @@ interface EntryFormProps {
   aircraftIdPlaceholder?: string
   /** 자주 쓰는 공항·기종 칩 (LogbookPage가 기존 기록에서 계산해 전달) */
   suggestions?: EntrySuggestions
+  /** v1.1 — 이 기록이 속할 트랙. 신규 입력의 기본값이며, 사용자가 폼에서 바꿀 수 있다. */
+  track?: PilotTrack
 }
 
 export interface EntrySuggestions {
@@ -116,6 +120,7 @@ export function EntryForm({
   aircraftTypePlaceholder = '예: Cessna 172R, C172, Boeing 737',
   aircraftIdLabel = '항공기 등록번호 / 테일넘버 (선택)',
   aircraftIdPlaceholder = '예: HL1234',
+  track,
 }: EntryFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [entryRole, setEntryRole] = useState<EntryRole>('')
@@ -176,6 +181,15 @@ export function EntryForm({
     })
     applyRoleAutofill(role, Number(getField('blockTime')?.value))
   }
+
+  // v1.1 — 트랙·장치 종류·시뮬 장치 구분
+  const [vehicleClass, setVehicleClass] = useState<PilotTrack>(
+    initialValues ? entryTrack(initialValues) : (track ?? 'aircraft'),
+  )
+  const [vehicleKind, setVehicleKind] = useState<string>(initialValues?.vehicleKind ?? '')
+  const [simDevice, setSimDevice] = useState<SimDeviceKind>(initialValues?.simDevice ?? 'FTD')
+  const kindOptions = vehicleKindsForTrack(vehicleClass)
+  const isUnmanned = vehicleClass === 'ultralight' && isUnmannedKind(vehicleKind)
 
   const isSimKind = entryKind === 'sim'
   const presets = getEntryPresets(entryKind)
@@ -253,23 +267,32 @@ export function EntryForm({
         otherLabel: String(form.get('categoryOtherLabel') || '').trim() || undefined,
         otherHours: numOrUndef(form.get('categoryOtherHours')),
       },
+      vehicleClass,
+      vehicleKind: vehicleClass === 'aircraft' ? undefined : vehicleKind || undefined,
+      simDevice: isSim ? simDevice : undefined,
       pilotingTime: {
         dualReceived: numOrUndef(form.get('dualReceived')),
         pic: numOrUndef(form.get('picTime')),
         sic: numOrUndef(form.get('sicTime')),
         flightInstructor: numOrUndef(form.get('flightInstructorTime')),
+        solo: numOrUndef(form.get('soloTime')),
+        picSupervised: numOrUndef(form.get('picSupervisedTime')),
       },
       groundTrainerTime: numOrUndef(form.get('groundTrainerTime')),
       conditions: {
         day: numOrUndef(form.get('conditionDay')),
-        night: numOrUndef(form.get('conditionNight')),
+        // 경량·초경량은 야간비행 금지 — 값이 있어도 저장하지 않는다
+        night: vehicleClass === 'aircraft' ? numOrUndef(form.get('conditionNight')) : undefined,
         crossCountry: numOrUndef(form.get('crossCountry')),
         actualInstrument: numOrUndef(form.get('actualInstrument')),
         simulatedInstrument: numOrUndef(form.get('simulatedInstrument')),
+        soloCrossCountry: numOrUndef(form.get('soloCrossCountry')),
+        crossCountryDistanceKm: numOrUndef(form.get('crossCountryDistanceKm')),
       },
       instrumentApproaches: numOrUndef(form.get('instrumentApproaches')),
       dayLandings: Number.isFinite(dayLandings) && dayLandings > 0 ? dayLandings : 0,
-      nightLandings: Number.isFinite(nightLandings) && nightLandings > 0 ? nightLandings : 0,
+      nightLandings: vehicleClass === 'aircraft' && Number.isFinite(nightLandings) && nightLandings > 0 ? nightLandings : 0,
+      nightTakeoffs: vehicleClass === 'aircraft' ? numOrUndef(form.get('nightTakeoffs')) : undefined,
       notes: String(form.get('notes') || '').trim() || undefined,
       pilotCertification: isCertifyAction
         ? { signatureDataUrl: signatureDataUrl ?? undefined, certifiedAt: Date.now() }
@@ -288,6 +311,58 @@ export function EntryForm({
 
   return (
     <form data-mbaas-oid="lgbfrm1" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
+      {/* v1.1 — 트랙·장치 종류. 여기서 고른 트랙의 집계에만 이 기록이 들어간다. */}
+      <div data-mbaas-oid="trkblk" className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+        <p className={labelClass}>이 기록의 트랙</p>
+        <div data-mbaas-oid="trkchips" className="mt-2 flex flex-wrap gap-2">
+          {(['aircraft', 'lsa', 'ultralight'] as PilotTrack[]).map((t) => (
+            <button
+              data-mbaas-oid="trkchip"
+              key={t}
+              type="button"
+              onClick={() => {
+                setVehicleClass(t)
+                setVehicleKind('')
+              }}
+              className={`rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                vehicleClass === t ? 'border-sky bg-sky/15 text-[#00D4FF]' : 'border-white/15 text-slate-300 hover:border-white/30'
+              }`}
+              aria-pressed={vehicleClass === t}
+            >
+              {PILOT_TRACK_SHORT[t]}
+            </button>
+          ))}
+          <span data-mbaas-oid="trkname" className="self-center text-[11px] text-slate-500">{PILOT_TRACK_LABEL[vehicleClass]}</span>
+        </div>
+        {kindOptions.length > 0 && (
+          <div data-mbaas-oid="kindblk" className="mt-3">
+            <label htmlFor="vehicleKind" className={labelClass}>장치 종류</label>
+            <select
+              id="vehicleKind"
+              name="vehicleKind"
+              value={vehicleKind}
+              onChange={(e) => setVehicleKind(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">선택 (자격 한정 단위라 남겨두면 응시경력 계산에 쓰여요)</option>
+              {kindOptions.map((k) => (
+                <option key={k.key} value={k.key}>{k.label}</option>
+              ))}
+            </select>
+            {isUnmanned && (
+              <p data-mbaas-oid="uasntc" className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                무인비행장치 기록은 참고·보조 자료예요. 응시·등록용 비행경력은 지도조종자 확인과 교육기관 증명(비행경력증명서)으로만 인정됩니다.
+              </p>
+            )}
+          </div>
+        )}
+        {vehicleClass !== 'aircraft' && (
+          <p data-mbaas-oid="nonightntc" className="mt-2 text-[11px] text-slate-500">
+            경량·초경량은 야간비행이 금지되어 야간 시간·야간 이착륙은 저장되지 않습니다.
+          </p>
+        )}
+      </div>
+
       <div className="rounded-lg border border-sky/30 bg-sky/5 p-4">
         <label htmlFor="entryRole" className={labelClass}>
           이 비행에서 나의 역할
@@ -325,9 +400,22 @@ export function EntryForm({
           ))}
         </div>
         {entryKind === 'sim' && (
-          <p data-mbaas-oid="simntc" className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
-            시뮬레이터 기록 모드: <span data-mbaas-oid="simntc2" className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리됩니다.
-          </p>
+          <>
+            <p data-mbaas-oid="simntc" className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
+              시뮬레이터 기록 모드: <span data-mbaas-oid="simntc2" className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리됩니다.
+            </p>
+            <div data-mbaas-oid="simdev" className="mt-3">
+              <label htmlFor="simDevice" className={labelClass}>모의비행훈련장치 구분</label>
+              <select id="simDevice" name="simDevice" value={simDevice} onChange={(e) => setSimDevice(e.target.value as SimDeviceKind)} className={inputClass}>
+                {(['FFS', 'FTD', 'BATD'] as SimDeviceKind[]).map((d) => (
+                  <option key={d} value={d}>{SIM_DEVICE_LABEL[d]}</option>
+                ))}
+              </select>
+              <p data-mbaas-oid="simdevntc" className="mt-1 text-[11px] text-slate-500">
+                별표 4 인정 상한이 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치입니다.
+              </p>
+            </div>
+          </>
         )}
       </div>
       {/* 1. 기본 비행 정보 */}

@@ -8,7 +8,7 @@ import { buildCertificateApprovalContent, buildCertificateApprovalTitle } from '
 
 import { Button } from '../Button'
 import { CertificateForm } from './CertificateForm'
-import { CERTIFICATE_STATUS_LABEL, daysUntil, getCertificateStatus } from '../../types/certificate'
+import { CERTIFICATE_STATUS_LABEL, certificateTrack, daysUntil, getCertificateStatus } from '../../types/certificate'
 import type { Certificate, CertificateInput, CertificateStatus } from '../../types/certificate'
 import type { RoleContent } from '../../data/content'
 
@@ -129,6 +129,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                 initialValues={certificate}
                 onCancel={() => setMode('view')}
                 roleTemplate={roleTemplate}
+                track={certificateTrack(certificate)}
                 onSubmit={(input) => {
                   onUpdate(certificate.id, input)
                   setMode('view')

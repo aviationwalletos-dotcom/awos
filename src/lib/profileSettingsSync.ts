@@ -16,6 +16,8 @@
 
 import type { IndividualRole } from './baas/types'
 import type { BoardPostListItem } from './baas/boardTypes'
+import { isOperationType, parsePilotTracks } from './tracks'
+import type { OperationType, PilotTrack } from './tracks'
 
 const TITLE_PREFIX = '개인설정'
 
@@ -26,6 +28,11 @@ export interface ProfileSettings {
   instrumentCheckDate?: string
   instructorFirstCertDate?: string
   instructorRecoveryChecked?: boolean
+  // v1.1
+  pilotTracks?: PilotTrack[]
+  activeTrack?: PilotTrack
+  birthDate?: string
+  operationType?: OperationType
 }
 
 /** "개인설정" 게시글 제목 — 본인 게시글 필터링용으로 계정 아이디(이메일)를 포함한다. */
@@ -80,6 +87,13 @@ export function parseProfileSettingsFromContent(content: string | null | undefin
     if (typeof candidate.instructorRecoveryChecked === 'boolean') {
       settings.instructorRecoveryChecked = candidate.instructorRecoveryChecked
     }
+    // v1.1
+    const tracks = parsePilotTracks(candidate.pilotTracks)
+    if (tracks.length > 0) settings.pilotTracks = tracks
+    const active = parsePilotTracks([candidate.activeTrack])[0]
+    if (active) settings.activeTrack = active
+    if (isValidDateStringValue(candidate.birthDate)) settings.birthDate = candidate.birthDate
+    if (isOperationType(candidate.operationType)) settings.operationType = candidate.operationType
 
     return settings
   } catch {
@@ -97,6 +111,11 @@ export const AFFILIATION_OVERRIDE_KEY_PREFIX = 'awos_organization_affiliation_ov
 export const INSTRUMENT_CHECK_DATE_KEY_PREFIX = 'awos_currency_instrument_check_date'
 export const INSTRUCTOR_FIRST_CERT_DATE_KEY_PREFIX = 'awos_currency_instructor_first_cert_date'
 export const INSTRUCTOR_RECOVERY_CHECK_KEY_PREFIX = 'awos_currency_instructor_recovery_check'
+// v1.1
+export const PILOT_TRACKS_KEY_PREFIX = 'awos_pilot_tracks'
+export const ACTIVE_TRACK_KEY_PREFIX = 'awos_active_track'
+export const BIRTH_DATE_KEY_PREFIX = 'awos_birth_date'
+export const OPERATION_TYPE_KEY_PREFIX = 'awos_operation_type'
 
 /** 계정별로 스코프된 localStorage 키를 만든다. */
 export function buildProfileFieldKey(prefix: string, accountId: string): string {
@@ -143,6 +162,24 @@ export function readLocalProfileSettings(accountId: string): ProfileSettings {
 
   const instructorRecoveryChecked = readRawLocal(buildProfileFieldKey(INSTRUCTOR_RECOVERY_CHECK_KEY_PREFIX, accountId))
   settings.instructorRecoveryChecked = instructorRecoveryChecked === 'true'
+
+  // v1.1
+  const tracksRaw = readRawLocal(buildProfileFieldKey(PILOT_TRACKS_KEY_PREFIX, accountId))
+  if (tracksRaw) {
+    try {
+      const tracks = parsePilotTracks(JSON.parse(tracksRaw))
+      if (tracks.length > 0) settings.pilotTracks = tracks
+    } catch {
+      // 손상된 값은 무시
+    }
+  }
+  const activeRaw = readRawLocal(buildProfileFieldKey(ACTIVE_TRACK_KEY_PREFIX, accountId))
+  const active = parsePilotTracks([activeRaw])[0]
+  if (active) settings.activeTrack = active
+  const birth = readRawLocal(buildProfileFieldKey(BIRTH_DATE_KEY_PREFIX, accountId))
+  if (birth && isValidDateStringValue(birth)) settings.birthDate = birth
+  const op = readRawLocal(buildProfileFieldKey(OPERATION_TYPE_KEY_PREFIX, accountId))
+  if (isOperationType(op)) settings.operationType = op
 
   return settings
 }

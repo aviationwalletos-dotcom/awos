@@ -73,6 +73,8 @@ export interface RecencyReadiness {
   nightLandingCount: number
   baseMet: boolean
   nightMet: boolean
+  /** v1.1 — 적용된 기간(일). 일반 180 / 여객·2인조종·운송사업 90 */
+  windowDays: number
 }
 
 export interface IfrReadiness {
@@ -96,6 +98,8 @@ export interface FlightReadinessOverrides {
   instrumentCheckDate?: string | null
   instructorFirstCertDate?: string | null
   instructorRecoveryChecked?: boolean
+  /** v1.1 — 운항형태. commercial이면 최근 비행경험 기간이 180일 → 90일로 줄고 야간 요건이 붙는다. */
+  operationType?: 'general' | 'commercial'
 }
 
 export interface FlightReadinessResult {
@@ -117,7 +121,7 @@ export function computeFlightReadiness(
   overrides: FlightReadinessOverrides = {},
 ): FlightReadinessResult {
   const today = startOfDay(new Date())
-  const { instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked = false } = overrides
+  const { instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked = false, operationType = 'general' } = overrides
 
   // 0) 항공신체검사 커런시
   const meds = certificates.filter((c) => c.category === '항공신체검사')
@@ -143,8 +147,9 @@ export function computeFlightReadiness(
     class1Missing,
   }
 
-  // 1) 최근 비행경험(일반/야간) — 180일
-  const recencyStart = daysAgo(today, 180)
+  // 1) 최근 비행경험(일반/야간) — 일반 180일, 여객·2인조종·운송사업 90일 (v1.1 확정안)
+  const windowDays = operationType === 'commercial' ? 90 : 180
+  const recencyStart = daysAgo(today, windowDays)
   const recencyRecent = entries.filter((e) => isWithinWindow(e.date, recencyStart, today))
   const landingCount = recencyRecent.reduce((sum, e) => sum + (e.dayLandings ?? 0) + (e.nightLandings ?? 0), 0)
   const nightLandingCount = recencyRecent.reduce((sum, e) => sum + (e.nightLandings ?? 0), 0)
@@ -156,6 +161,7 @@ export function computeFlightReadiness(
     nightLandingCount,
     baseMet,
     nightMet,
+    windowDays,
   }
 
   // 2) 계기비행 경험(IFR) — 6개월(월 단위 소급)

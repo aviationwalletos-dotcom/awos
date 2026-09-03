@@ -55,9 +55,11 @@ interface CurrencyDashboardProps {
   certificates?: Certificate[]
   /** 승인된 교관 계정일 때만 "조종교육 비행경험(교관 커런시)" 섹션을 노출합니다. */
   isApprovedInstructor?: boolean
+  /** v1.1 — 운항형태(계정정보에서 설정). 최근 비행경험 기간을 가른다. */
+  operationType?: 'general' | 'commercial'
 }
 
-export function CurrencyDashboard({ entries, account, certificates = [], isApprovedInstructor = false }: CurrencyDashboardProps) {
+export function CurrencyDashboard({ entries, account, certificates = [], isApprovedInstructor = false, operationType = 'general' }: CurrencyDashboardProps) {
   const {
     instrumentCheckDate,
     setInstrumentCheckDate,
@@ -75,8 +77,9 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
         instrumentCheckDate,
         instructorFirstCertDate,
         instructorRecoveryChecked,
+        operationType,
       }),
-    [entries, certificates, instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked],
+    [entries, certificates, instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked, operationType],
   )
 
   return (
@@ -231,11 +234,11 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
               최근 비행경험(일반 및 야간 비행)
             </h3>
             <div data-mbaas-oid="4f1ymr8" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
-              최근 180일 이내 이·착륙 합계가 3회 이상이어야 하며, 그 중 야간 이·착륙이 1회 이상 포함되어야 야간비행이
+              최근 {recency.windowDays}일 이내 이·착륙 합계가 3회 이상이어야 하며, 그 중 야간 이·착륙이 1회 이상 포함되어야 야간비행이
               가능합니다. 모의비행장치를 이용한 이착륙 경험도 인정됩니다.
             </div>
             <p data-mbaas-oid="xpxybbu" className="mt-4 text-sm text-slate-400">
-              최근 180일 이내 비행 기록 <span data-mbaas-oid="vto2od8" className="font-mono-data tabular-nums font-semibold text-ink">{recency.recentCount}</span>건 기준
+              최근 {recency.windowDays}일 이내 비행 기록 <span data-mbaas-oid="vto2od8" className="font-mono-data tabular-nums font-semibold text-ink">{recency.recentCount}</span>건 기준
             </p>
             <div data-mbaas-oid="3unzjmp" className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div data-mbaas-oid="jlquqoz" className="rounded-card border border-white/10 bg-panel p-cardpad">
@@ -249,7 +252,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 <p data-mbaas-oid="a5s6jue" className="mt-4 font-mono-data text-3xl font-extrabold tabular-nums text-ink">
                   {recency.landingCount}<span data-mbaas-oid="rfg4guc" className="ml-1 text-base font-medium text-slate-400">/ 3회</span>
                 </p>
-                <p data-mbaas-oid="bbj1bpl" className="mt-1 text-sm text-slate-400">최근 180일 누적 이·착륙 횟수(주간+야간)</p>
+                <p data-mbaas-oid="bbj1bpl" className="mt-1 text-sm text-slate-400">최근 {recency.windowDays}일 누적 이·착륙 횟수(주간+야간)</p>
               </div>
 
               <div data-mbaas-oid="sye5t68" className="rounded-card border border-white/10 bg-panel p-cardpad">
@@ -265,7 +268,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 </p>
                 <p data-mbaas-oid="1p4bf7l" className="mt-1 text-sm text-slate-400">
                   {recency.baseMet
-                    ? '최근 180일 누적 야간 이·착륙 횟수'
+                    ? `최근 ${recency.windowDays}일 누적 야간 이·착륙 횟수`
                     : '기본 이·착륙 요건 미충족 시 야간 비행 요건도 함께 미충족으로 표시됩니다'}
                 </p>
               </div>

@@ -1,47 +1,65 @@
 // "내 자격 현황" — 실물 자격증 느낌의 카드 덱.
-// 카테고리(자격증명·한정·신체검사·교육증명·무선통신사)별 카드 1장씩, 카드를 누르거나
-// 옆으로 넘기면 다음 카드로 이동한다(스크롤바는 숨김, 하단 점으로 위치 표시).
+// v1.1: 트랙(조종사/경량/초경량)별로 덱 구성이 다르다(7장/4장/3장). 어떤 카드를 보여줄지는
+// data/deckDefs.ts 에서만 정한다. 카드를 누르거나 옆으로 넘기면 다음 카드로 이동한다.
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { RoleContent } from '../../data/content'
-import { daysUntil } from '../../types/certificate'
+import { DECK_BY_TRACK, TRACK_SHARED_CATEGORIES } from '../../data/deckDefs'
+import { PILOT_TRACK_LABEL, PILOT_TRACK_LEGAL_BASIS } from '../../lib/tracks'
+import type { PilotTrack } from '../../lib/tracks'
+import { certificateTrack, daysUntil } from '../../types/certificate'
 import type { Certificate, CertificateCategory } from '../../types/certificate'
-
-interface DeckCardDef {
-  category: CertificateCategory
-  en: string
-  refText: string
-  gradient: string
-  standards: string[]
-}
-
-const DECK: DeckCardDef[] = [
-  { category: '조종사 자격증명', en: 'AERONAUTICAL PERSONNEL', refText: 'ICAO Annex 1 · 항공안전법 제34조', gradient: 'from-[#0B2A6B] via-[#123C8F] to-[#1D4ED8]', standards: ['PPL', 'CPL', 'ATPL'] },
-  { category: '한정', en: 'RATINGS', refText: '항공안전법 제37조', gradient: 'from-[#312E81] via-[#4C1D95] to-[#7C3AED]', standards: ['IR', 'ME'] },
-  { category: '항공신체검사', en: 'MEDICAL CERTIFICATE', refText: '항공안전법 제40조', gradient: 'from-[#064E3B] via-[#047857] to-[#0D9488]', standards: ['1종', '2종', '3종'] },
-  { category: '조종교육증명', en: 'FLIGHT INSTRUCTOR', refText: 'ICAO Annex 1', gradient: 'from-[#7C2D12] via-[#9A3412] to-[#D97706]', standards: ['초급', '선임'] },
-  { category: '무선통신사', en: 'RADIO OPERATOR', refText: '전파법', gradient: 'from-[#155E75] via-[#0E7490] to-[#0891B2]', standards: [] },
-]
 
 /** 자격 명칭 → 카드 칩용 짧은 코드 */
 function certCode(cert: Certificate): string {
   const n = cert.name
+  // 조종사
   if (n.includes('운송용')) return 'ATPL'
-  if (n.includes('사업용')) return 'CPL'
-  if (n.includes('자가용')) return 'PPL'
-  if (n.includes('경량')) return 'LSA'
-  if (n.includes('계기')) return 'IR'
-  if (n.includes('다발')) return 'ME'
-  if (n.includes('단발')) return 'SE'
+  if (n.includes('사업용') && !n.includes('유인자유기구')) return 'CPL'
+  if (n.includes('자가용') && !n.includes('유인자유기구')) return 'PPL'
+  if (n.includes('부조종사')) return 'MPL'
+  if (n.includes('종류한정 - 비행기') || n === '비행기') return '비행기'
+  if (n.includes('종류한정 - 헬리콥터') || n === '헬리콥터') return '헬리콥터'
+  if (n.includes('수상다발')) return 'MES'
+  if (n.includes('수상단발')) return 'SES'
+  if (n.includes('육상다발') || n.includes('다발')) return 'MEL'
+  if (n.includes('육상단발') || n.includes('단발')) return 'SEL'
   const type = /형식한정\(([^)]+)\)/.exec(n)
   if (type) return type[1]
+  if (n.includes('계기비행증명 - 비행기')) return '비행기'
+  if (n.includes('계기비행증명 - 헬리콥터')) return '헬리콥터'
+  if (n.includes('계기')) return 'IR'
+  if (n.includes('초급')) return '초급'
+  if (n.includes('선임')) return '선임'
+  if (n.includes('4등급')) return '4등급'
+  if (n.includes('5등급')) return '5등급'
+  if (n.includes('6등급')) return '6등급'
+  // 경량
+  if (n.includes('타면조종형')) return '타면조종형'
+  if (n.includes('체중이동형')) return '체중이동형'
+  if (n.includes('경량헬리콥터')) return '경량헬리콥터'
+  if (n.includes('자이로플레인')) return '자이로플레인'
+  if (n.includes('동력패러슈트')) return '동력패러슈트'
+  if (n.includes('운전면허')) return '운전면허'
+  // 초경량
+  if (n.includes('동력비행장치')) return '동력비행장치'
+  if (n.includes('회전익비행장치')) return '회전익'
+  if (n.includes('무인멀티콥터')) return '무인멀티콥터'
+  if (n.includes('무인비행기')) return '무인비행기'
+  if (n.includes('무인헬리콥터')) return '무인헬리콥터'
+  if (n.includes('무인수직이착륙기')) return '무인수직이착륙기'
+  if (n.includes('실기평가')) return '실기평가조종자'
+  if (n.includes('지도조종자')) return '지도조종자'
+  if (n.includes('이러닝')) return '4종 이러닝'
+  if (n.includes('교관과정')) return '교관과정'
+  if (n.includes('평가과정')) return '평가과정'
+  if (n.includes('보수교육')) return '보수교육'
+  // 신체검사
   if (n.includes('제1종') || n.includes('1종')) return '1종'
   if (n.includes('제2종') || n.includes('2종')) return '2종'
   if (n.includes('제3종') || n.includes('3종')) return '3종'
-  if (n.includes('초급')) return '초급'
-  if (n.includes('선임')) return '선임'
-  return n.replace(/\s/g, '').slice(0, 5)
+  return n.replace(/\s/g, '').slice(0, 6)
 }
 
 interface MyCertificateStatusCardProps {
@@ -50,20 +68,33 @@ interface MyCertificateStatusCardProps {
   compact?: boolean
   /** 카드에 표기할 보유자 이름(계정 이름) */
   holderName?: string
+  /** v1.1 — 어느 트랙의 덱을 보여줄지. 없으면 항공기. */
+  track?: PilotTrack
 }
 
-export function MyCertificateStatusCard({ certificates, roleContent, compact = false, holderName }: MyCertificateStatusCardProps) {
+export function MyCertificateStatusCard({ certificates, roleContent, compact = false, holderName, track = 'aircraft' }: MyCertificateStatusCardProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
+  const DECK = DECK_BY_TRACK[track]
 
+  // 트랙이 바뀌면 첫 카드로
+  useEffect(() => {
+    setActive(0)
+    scrollerRef.current?.scrollTo({ left: 0 })
+  }, [track])
+
+  // 이 트랙의 자격만 — 단, 신체검사·무선통신사 등 공유 카테고리는 트랙과 무관하게 모두 포함
   const byCategory = useMemo(() => {
     const map = new Map<CertificateCategory, Certificate[]>()
     for (const cert of certificates) {
+      const shared = TRACK_SHARED_CATEGORIES.includes(cert.category)
+      if (!shared && certificateTrack(cert) !== track) continue
       if (!map.has(cert.category)) map.set(cert.category, [])
       map.get(cert.category)!.push(cert)
     }
+    // 1종 신체검사 보유 시 2·3종 간주(별표 8) — 경량 덱의 "2종" 칩을 채워주기 위해 표시용으로만 처리
     return map
-  }, [certificates])
+  }, [certificates, track])
 
   const goTo = (index: number) => {
     const el = scrollerRef.current
@@ -84,7 +115,8 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
         <div data-mbaas-oid="mcshead1" className="min-w-0">
           <p data-mbaas-oid="xczv64y" className="text-xs font-semibold uppercase tracking-wide text-sky">내 자격 현황</p>
           <p data-mbaas-oid="d2gdtsk" className="mt-0.5 truncate text-sm text-slate-400">
-            {roleContent ? `${roleContent.name} 자격 요약` : '등록된 자격 요약'}
+            {PILOT_TRACK_LABEL[track]} 덱 {DECK.length}장 · {PILOT_TRACK_LEGAL_BASIS[track]}
+            {roleContent ? '' : ''}
           </p>
         </div>
         <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">← 카드 좌·우를 눌러 넘겨보세요 →</p>
@@ -145,6 +177,9 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
                   </span>
                 )}
               </div>
+              {def.hint && (
+                <p data-mbaas-oid="mcschint" className="relative mt-3 truncate text-[11px] text-white/55">{def.hint}</p>
+              )}
             </button>
           )
         })}

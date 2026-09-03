@@ -7,6 +7,7 @@ import type { Certificate } from '../../types/certificate'
 import { type AccountResponse, INDIVIDUAL_ROLE_LABEL } from '../../lib/baas/types'
 import { useCurrencyOverrides } from '../../hooks/useCurrencyOverrides'
 import { useIndividualRoleOverride } from '../../hooks/useIndividualRoleOverride'
+import { usePilotTracks } from '../../hooks/usePilotTracks'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
 import { useMyStatusSharePost } from '../../hooks/baas/useMyStatusSharePost'
 import { useCreateStatusSharePost } from '../../hooks/baas/useCreateStatusSharePost'
@@ -51,6 +52,7 @@ export function FlightReadinessPanel({
   compact = false,
 }: FlightReadinessPanelProps) {
   const { instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked } = useCurrencyOverrides(account)
+  const { operationType } = usePilotTracks(account)
 
   const result = useMemo(
     () =>
@@ -58,8 +60,9 @@ export function FlightReadinessPanel({
         instrumentCheckDate,
         instructorFirstCertDate,
         instructorRecoveryChecked,
+        operationType,
       }),
-    [entries, certificates, instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked],
+    [entries, certificates, instrumentCheckDate, instructorFirstCertDate, instructorRecoveryChecked, operationType],
   )
   const summary = useMemo(() => computeReadinessStates(result, certificates), [result, certificates])
 

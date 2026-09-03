@@ -10,6 +10,7 @@ import type { Certificate, CertificateCategory } from '../types/certificate'
 import { getCertificateStatus } from '../types/certificate'
 import type { WorkLogEntry } from '../types/workLog'
 import type { LogbookEntry } from '../types/logbook'
+import { isUnmannedKind, vehicleKindLabel } from './tracks'
 
 export type RequirementStatus = 'met' | 'unmet' | 'info'
 
@@ -199,22 +200,72 @@ export function computeDispatcherCompliance(
   ]
 }
 
-// ── 드론/UAM 조종자(DRONE) ────────────────────────────────────────────────
+// ── 초경량비행장치 조종자(ULTRALIGHT) ───────────────────────────────────────
+// v1.1: 반드시 트랙 필터링된 entries(filterEntriesByTrack(entries, 'ultralight'))를 받아야 한다.
+// 이전 computeDroneCompliance는 전체 로그를 합산해 C172·DA42 시간이 드론 누적시간으로 잡히는 오염이 있었다.
 
-export function computeDroneCompliance(entries: LogbookEntry[]): RequirementItem[] {
-  const totalHours = entries.reduce((sum, e) => sum + (typeof e.blockTime === 'number' ? e.blockTime : 0), 0)
-  const isInstructorEligible = totalHours >= 100
+/** 초경량 기록을 유인/무인으로 나눠 누적시간을 계산한다 */
+function splitUltralightHours(entries: LogbookEntry[]): { manned: number; unmanned: number; byKind: Record<string, number> } {
+  let manned = 0
+  let unmanned = 0
+  const byKind: Record<string, number> = {}
+  for (const e of entries) {
+    const h = typeof e.blockTime === 'number' ? e.blockTime : 0
+    const kind = e.vehicleKind ?? 'UNSPECIFIED'
+    byKind[kind] = (byKind[kind] ?? 0) + h
+    if (isUnmannedKind(e.vehicleKind)) unmanned += h
+    else manned += h
+  }
+  return { manned, unmanned, byKind }
+}
 
-  return [
-    {
-      key: 'instructor_hours',
-      title: '지도조종자 요건(누적 100시간)',
-      legalBasis: '항공안전법 시행규칙 제306조의2',
-      status: isInstructorEligible ? 'met' : 'unmet',
-      badgeLabel: isInstructorEligible ? '지도조종자 자격 취득 가능' : undefined,
-      detail: `누적 비행시간 ${totalHours.toFixed(1)} / 100시간`,
-      progress: { value: totalHours, max: 100, unit: '시간' },
-    },
+export function computeUltralightCompliance(entries: LogbookEntry[]): RequirementItem[] {
+  const { manned, unmanned, byKind } = splitUltralightHours(entries)
+  const topUnmannedKind = Object.entries(byKind)
+    .filter(([k]) => isUnmannedKind(k))
+    .sort((a, b) => b[1] - a[1])[0]
+  const topMannedKind = Object.entries(byKind)
+    .filter(([k]) => k !== 'UNSPECIFIED' && !isUnmannedKind(k))
+    .sort((a, b) => b[1] - a[1])[0]
+
+  const items: RequirementItem[] = []
+
+  if (unmanned > 0 || !topMannedKind) {
+    const kindLabel = topUnmannedKind ? (vehicleKindLabel(topUnmannedKind[0]) ?? '무인비행장치') : '무인비행장치'
+    const hours = topUnmannedKind ? topUnmannedKind[1] : unmanned
+    items.push({
+      key: 'uas_instructor_hours',
+      title: `지도조종자 요건 — ${kindLabel} 1종 100시간`,
+      legalBasis: '무인비행장치 조종자 증명 운영세칙 별표 3',
+      status: hours >= 100 ? 'met' : 'unmet',
+      badgeLabel: hours >= 100 ? '등록 요건 충족' : undefined,
+      detail: `${kindLabel} 누적 ${hours.toFixed(1)} / 100시간 (실기평가조종자는 150시간). 종류별로 따로 계산됩니다.`,
+      progress: { value: hours, max: 100, unit: '시간' },
+    })
+    items.push({
+      key: 'uas_experience_proof',
+      title: '비행경력 증빙 방식',
+      legalBasis: '운영세칙 제9조 · 제10조',
+      status: 'info',
+      detail: '응시·등록용 비행경력은 지도조종자 확인 + 교육기관 대표 증명(비행경력증명서)만 인정됩니다. 이 로그북의 무인 기록은 참고·보조 자료입니다.',
+    })
+  }
+
+  if (manned > 0 || topMannedKind) {
+    const kindLabel = topMannedKind ? (vehicleKindLabel(topMannedKind[0]) ?? '유인 초경량') : '유인 초경량'
+    const hours = topMannedKind ? topMannedKind[1] : manned
+    items.push({
+      key: 'ul_instructor_hours',
+      title: `지도조종자 요건 — ${kindLabel} 200시간`,
+      legalBasis: '초경량비행장치 조종자 증명 운영세칙 별표 1의2',
+      status: hours >= 200 ? 'met' : 'unmet',
+      badgeLabel: hours >= 200 ? '등록 요건 충족' : undefined,
+      detail: `${kindLabel} 누적 ${hours.toFixed(1)} / 200시간 (동력비행장치는 비행기 100시간, 회전익은 헬리콥터 100시간까지 합산 가능).`,
+      progress: { value: hours, max: 200, unit: '시간' },
+    })
+  }
+
+  items.push(
     {
       key: 'airworthiness',
       title: '기체 안전성 인증 유효성',
@@ -227,7 +278,54 @@ export function computeDroneCompliance(entries: LogbookEntry[]): RequirementItem
       title: '비행금지·제한구역 검증',
       legalBasis: '항공안전법 제127조',
       status: 'info',
-      detail: '자동 계산이 어려운 항목입니다. 비행 전 공식 채널(드론원스톱 등)에서 비행금지·제한구역 여부를 반드시 직접 확인해 주세요.',
+      detail: '비행 전 드론원스톱 등 공식 채널에서 비행금지·제한구역 여부를 반드시 직접 확인해 주세요.',
+    },
+  )
+  return items
+}
+
+/** @deprecated v1.1 — 트랙 필터 없이 전체 로그를 합산했던 옛 함수. computeUltralightCompliance로 대체. */
+export function computeDroneCompliance(entries: LogbookEntry[]): RequirementItem[] {
+  return computeUltralightCompliance(entries)
+}
+
+// ── 경량항공기 조종사(LSA) ─────────────────────────────────────────────────
+
+export function computeLsaCompliance(entries: LogbookEntry[]): RequirementItem[] {
+  const total = entries.reduce((s, e) => s + (typeof e.blockTime === 'number' ? e.blockTime : 0), 0)
+  const solo = entries.reduce((s, e) => s + (e.pilotingTime?.solo ?? 0), 0)
+  const xc = entries.reduce((s, e) => s + (e.conditions?.crossCountry ?? 0), 0)
+  return [
+    {
+      key: 'lsa_licence_hours',
+      title: '경량항공기 조종사 응시경력 — 총 20시간',
+      legalBasis: '시행규칙 별표 4 제2호',
+      status: total >= 20 ? 'met' : 'unmet',
+      detail: `경량항공기 누적 ${total.toFixed(1)} / 20시간 (항공기 조종사 자격 보유자는 단독 2시간 포함 5시간)`,
+      progress: { value: total, max: 20, unit: '시간' },
+    },
+    {
+      key: 'lsa_solo',
+      title: '단독 비행 5시간',
+      legalBasis: '시행규칙 별표 4 제2호',
+      status: solo >= 5 ? 'met' : 'unmet',
+      detail: `단독 ${solo.toFixed(1)} / 5시간`,
+      progress: { value: solo, max: 5, unit: '시간' },
+    },
+    {
+      key: 'lsa_xc',
+      title: '야외비행 5시간 (120km 이상 · 1개 이상 다른 지점 이착륙)',
+      legalBasis: '시행규칙 별표 4 제2호',
+      status: xc >= 5 ? 'met' : 'unmet',
+      detail: `야외 ${xc.toFixed(1)} / 5시간 — 타면조종형비행기·경량헬리콥터·자이로플레인만 해당. 거리·지점 조건은 직접 확인.`,
+      progress: { value: xc, max: 5, unit: '시간' },
+    },
+    {
+      key: 'lsa_night',
+      title: '야간비행',
+      legalBasis: '항공안전법 제120조 · 규칙 제311조',
+      status: 'info',
+      detail: '경량항공기는 야간비행이 금지됩니다. 이 트랙에서는 야간 카드·야간 커런시를 계산하지 않습니다.',
     },
   ]
 }

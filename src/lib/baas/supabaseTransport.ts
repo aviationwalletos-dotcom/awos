@@ -237,7 +237,14 @@ export function adoptAuthSession(accessToken: string, refreshToken: string | nul
 }
 
 /** 내 프로필(profiles) 일부 필드를 저장하고 캐시를 비운다. 계정정보 페이지의 역할·소속 저장에 사용. */
-export async function updateMyProfileFields(fields: { individual_role?: string | null; institution?: string | null }): Promise<void> {
+export async function updateMyProfileFields(fields: {
+  individual_role?: string | null
+  institution?: string | null
+  // v1.1 — schema10-pilot-tracks.sql 적용 전에는 컬럼이 없어 실패할 수 있다. 호출부는 best-effort로 다룬다.
+  pilot_tracks?: string[] | null
+  birth_date?: string | null
+  operation_type?: string | null
+}): Promise<void> {
   const client = getAuthedDataClient()
   const userId = getAuthedUserId()
   if (!client || !userId) throw new Error('로그인이 필요합니다.')

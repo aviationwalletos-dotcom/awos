@@ -12,12 +12,20 @@ import { fetchLinkedProviders, startLinkProvider } from '../lib/supabase/oauth'
 import type { OAuthProvider } from '../lib/supabase/oauth'
 import { useChangePassword } from '../hooks/baas/useChangePassword'
 import { useIndividualRoleOverride } from '../hooks/useIndividualRoleOverride'
+import { usePilotTracks } from '../hooks/usePilotTracks'
+import {
+  ALL_PILOT_TRACKS,
+  OPERATION_TYPE_DESCRIPTION,
+  OPERATION_TYPE_LABEL,
+  PILOT_TRACK_DESCRIPTION,
+  PILOT_TRACK_LABEL,
+} from '../lib/tracks'
+import type { OperationType, PilotTrack } from '../lib/tracks'
 import { useInstructorApprovalStatus } from '../hooks/baas/useInstructorApprovalStatus'
 import { useOrganizationAffiliationOverride } from '../hooks/useOrganizationAffiliationOverride'
 
 import type { IndividualRole } from '../lib/baas/types'
 
-const INDIVIDUAL_ROLE_OPTIONS: IndividualRole[] = ['pilot', 'drone_pilot'] // 우선 조종사·드론 조종사만 오픈
 
 function formatDateTime(value: string | null): string {
   if (!value) return '-'
@@ -105,6 +113,15 @@ export function AccountPage() {
   }
   const { changePassword, isLoading: isChangingPassword, error: changeError, isSuccess, reset: resetChangePassword } = useChangePassword()
   const { override: roleOverride, setOverride: setRoleOverride } = useIndividualRoleOverride(account)
+  const {
+    tracks: pilotTracks,
+    isDerivedFromLegacyRole,
+    birthDate,
+    operationType,
+    setTracks: setPilotTracks,
+    setBirthDate,
+    setOperationType,
+  } = usePilotTracks(account)
   const { override: affiliationOverride, setOverride: setAffiliationOverride } = useOrganizationAffiliationOverride(account)
   const { isApproved: isApprovedInstructor, isLoading: isApprovalStatusLoading } = useInstructorApprovalStatus(
     userType === 'individual' ? account : null,
@@ -121,27 +138,45 @@ export function AccountPage() {
   const accountAffiliation = account?.data?.organization_affiliation
   const effectiveAffiliation: string | undefined = affiliationOverride ?? accountAffiliation ?? undefined
 
-  const [selectedRole, setSelectedRole] = useState<IndividualRole | ''>('')
-  const [roleSaved, setRoleSaved] = useState(false)
+
+  // v1.1 — 보유 트랙(복수) / 생년월일 / 운항형태
+  const [selectedTracks, setSelectedTracks] = useState<PilotTrack[]>([])
+  const [tracksSaved, setTracksSaved] = useState(false)
+  const [birthInput, setBirthInput] = useState('')
+  const [birthSaved, setBirthSaved] = useState(false)
+  useEffect(() => {
+    setSelectedTracks(pilotTracks)
+  }, [pilotTracks])
+  useEffect(() => {
+    setBirthInput(birthDate ?? '')
+  }, [birthDate])
+
+  function toggleTrack(t: PilotTrack) {
+    setTracksSaved(false)
+    setSelectedTracks((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))
+  }
+  function handleSaveTracks(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (selectedTracks.length === 0) return
+    setPilotTracks(selectedTracks)
+    setTracksSaved(true)
+    // 기존 단일 역할도 첫 트랙에 맞춰 갱신해 옛 화면·기관 대시보드와 어긋나지 않게 한다.
+    const legacy: IndividualRole = selectedTracks.includes('aircraft') ? 'pilot' : selectedTracks.includes('ultralight') ? 'drone_pilot' : 'pilot'
+    setRoleOverride(legacy)
+    void updateMyProfileFields({ individual_role: legacy }).then(() => refetchAccount()).catch(() => undefined)
+  }
+  function handleSaveBirth(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setBirthDate(birthInput || null)
+    setBirthSaved(true)
+  }
 
   const [affiliationInput, setAffiliationInput] = useState('')
   const [affiliationSaved, setAffiliationSaved] = useState(false)
 
   useEffect(() => {
-    setSelectedRole(effectiveIndividualRole ?? '')
-  }, [effectiveIndividualRole])
-
-  useEffect(() => {
     setAffiliationInput(effectiveAffiliation ?? '')
   }, [effectiveAffiliation])
-
-  function handleSaveRole(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!selectedRole) return
-    setRoleOverride(selectedRole)
-    setRoleSaved(true)
-    void updateMyProfileFields({ individual_role: selectedRole }).then(() => refetchAccount()).catch(() => undefined)
-  }
 
   function handleSaveAffiliation(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -352,58 +387,122 @@ export function AccountPage() {
           </div>
 
           {userType === 'individual' && (
+            <>
             <div data-mbaas-oid="xoayoig" className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
               <h2 data-mbaas-oid="f2ir82j" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
                 <User className="h-4 w-4 text-sky" aria-hidden="true" />
-                역할 설정
+                보유 트랙 설정
               </h2>
               <p data-mbaas-oid="le1951t" className="mt-1 flex items-start gap-2 text-xs text-slate-400">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
-                이 설정은 이 브라우저에 즉시 저장되며, "개인설정" 게시판을 통해 서버에도 자동으로 동기화되어 다른 기기에서도 확인할 수 있습니다(서버 동기화 실패 시에도 이 브라우저의 값은 그대로 유지됩니다).
+                자격을 여러 개 갖고 있으면 여러 개 고를 수 있어요. 비행기록·자격증·커런시는 트랙별로 따로 계산되어 섞이지 않습니다.
+                이 설정은 이 브라우저에 즉시 저장되고 서버에도 동기화됩니다.
               </p>
+              {isDerivedFromLegacyRole && (
+                <p data-mbaas-oid="trklegacy" className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                  아직 트랙을 직접 고르지 않아 기존 역할({individualRoleLabel})에서 추정한 값이에요. 한 번 저장해 두면 추정 표시가 사라집니다.
+                </p>
+              )}
 
-              <form data-mbaas-oid="yta84vp" onSubmit={handleSaveRole} className="mt-5 flex flex-col gap-4">
-                <div
-                  data-mbaas-oid="701ds1i" role="radiogroup"
-                  aria-label="개인 역할 선택"
-                  className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-                >
-                  {INDIVIDUAL_ROLE_OPTIONS.map((role) => {
-                    const isChecked = selectedRole === role
+              <form data-mbaas-oid="yta84vp" onSubmit={handleSaveTracks} className="mt-5 flex flex-col gap-4">
+                <div data-mbaas-oid="701ds1i" role="group" aria-label="보유 트랙 선택" className="grid grid-cols-1 gap-2">
+                  {ALL_PILOT_TRACKS.map((t) => {
+                    const isChecked = selectedTracks.includes(t)
                     return (
                       <label
-                        data-mbaas-oid="9kqk7vs" key={role}
-                        className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border px-4 py-2.5 text-sm font-medium transition-colors
+                        data-mbaas-oid="9kqk7vs" key={t}
+                        className={`flex min-h-[44px] cursor-pointer items-start gap-3 rounded-control border px-4 py-3 text-sm font-medium transition-colors
                           ${isChecked ? 'border-sky bg-sky/10 text-sky' : 'border-white/15 bg-navy text-slate-300 hover:border-white/30'}`}
                       >
                         <input
-                          data-mbaas-oid="r2nubxn" type="radio"
-                          name="individual-role"
-                          value={role}
+                          data-mbaas-oid="r2nubxn" type="checkbox"
+                          name="pilot-track"
+                          value={t}
                           checked={isChecked}
-                          onChange={() => {
-                            setSelectedRole(role)
-                            setRoleSaved(false)
-                          }}
-                          className="h-4 w-4 accent-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                          onChange={() => toggleTrack(t)}
+                          className="mt-0.5 h-4 w-4 accent-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                         />
-                        {INDIVIDUAL_ROLE_LABEL[role]}
+                        <span data-mbaas-oid="trklbl" className="flex flex-col">
+                          <span>{PILOT_TRACK_LABEL[t]}</span>
+                          <span data-mbaas-oid="trkdesc" className="mt-0.5 text-[11px] font-normal text-slate-500">{PILOT_TRACK_DESCRIPTION[t]}</span>
+                        </span>
                       </label>
                     )
                   })}
                 </div>
 
-                {roleSaved && (
+                {tracksSaved && (
                   <p data-mbaas-oid="x1byfxi" role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                    역할이 저장되었습니다. ({individualRoleLabel})
+                    트랙이 저장되었습니다. ({selectedTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')})
                   </p>
                 )}
 
-                <Button data-mbaas-oid="71ty616" type="submit" size="md" tone="brand" disabled={!selectedRole} className="self-start">
-                  역할 저장
+                <Button data-mbaas-oid="71ty616" type="submit" size="md" tone="brand" disabled={selectedTracks.length === 0} className="self-start">
+                  트랙 저장
                 </Button>
               </form>
             </div>
+
+            <div data-mbaas-oid="birthblk" className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
+              <h2 data-mbaas-oid="birthh2" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
+                <User className="h-4 w-4 text-sky" aria-hidden="true" />
+                생년월일 · 운항형태
+              </h2>
+              <p data-mbaas-oid="birthntc" className="mt-1 flex items-start gap-2 text-xs text-slate-400">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
+                항공신체검사 유효기간은 연령으로 갈려요(별표 8: 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월).
+                운항형태는 커런시 기준(180일 / 90일+야간)과 1종 신체검사 6개월 예외를 가릅니다.
+              </p>
+              <form data-mbaas-oid="birthform" onSubmit={handleSaveBirth} className="mt-5 flex flex-col gap-4">
+                <div data-mbaas-oid="birthrow" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div data-mbaas-oid="birthcol">
+                    <label data-mbaas-oid="birthlbl" htmlFor="birth-date" className="mb-1.5 block text-sm font-medium text-ink">생년월일</label>
+                    <input
+                      data-mbaas-oid="birthinp" id="birth-date"
+                      type="date"
+                      value={birthInput}
+                      onChange={(e) => { setBirthInput(e.target.value); setBirthSaved(false) }}
+                      className="w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                    />
+                  </div>
+                  <div data-mbaas-oid="opcol">
+                    <span data-mbaas-oid="oplbl" className="mb-1.5 block text-sm font-medium text-ink">운항형태</span>
+                    <div data-mbaas-oid="opgrp" role="radiogroup" aria-label="운항형태" className="flex flex-col gap-2">
+                      {(['general', 'commercial'] as OperationType[]).map((o) => (
+                        <label
+                          data-mbaas-oid="oplab" key={o}
+                          className={`flex cursor-pointer items-start gap-2 rounded-control border px-3 py-2 text-xs transition-colors ${
+                            operationType === o ? 'border-sky bg-sky/10 text-sky' : 'border-white/15 text-slate-300 hover:border-white/30'
+                          }`}
+                        >
+                          <input
+                            data-mbaas-oid="opradio" type="radio"
+                            name="operation-type"
+                            value={o}
+                            checked={operationType === o}
+                            onChange={() => setOperationType(o)}
+                            className="mt-0.5 h-3.5 w-3.5 accent-sky"
+                          />
+                          <span data-mbaas-oid="optxt" className="flex flex-col">
+                            <span className="font-semibold">{OPERATION_TYPE_LABEL[o]}</span>
+                            <span className="text-[11px] text-slate-500">{OPERATION_TYPE_DESCRIPTION[o]}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {birthSaved && (
+                  <p data-mbaas-oid="birthok" role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
+                    저장되었습니다.
+                  </p>
+                )}
+                <Button data-mbaas-oid="birthbtn" type="submit" size="md" tone="brand" className="self-start">
+                  생년월일 저장
+                </Button>
+              </form>
+            </div>
+            </>
           )}
 
           {userType === 'individual' && <InstructorApprovalSection account={account} affiliation={effectiveAffiliation} />}

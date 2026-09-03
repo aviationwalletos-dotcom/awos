@@ -1,17 +1,31 @@
-import React, { useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 
 import { Button } from '../Button'
-import { CERTIFICATE_CATEGORIES } from '../../types/certificate'
+import { CERTIFICATE_CATEGORIES_BY_TRACK } from '../../types/certificate'
 import type { Certificate, CertificateCategory, CertificateInput } from '../../types/certificate'
 import {
+  DRIVER_LICENCE_TYPES,
+  EPTA_LEVELS,
+  FLIGHT_INSTRUCTOR_TYPES,
+  INSTRUMENT_RATING_TYPES,
   LICENCE_TYPES,
+  LSA_INSTRUCTOR_TYPES,
+  LSA_LICENCE_TYPES,
   MEDICAL_CERTIFICATE_TYPES,
   RATING_TYPES,
+  ULTRALIGHT_CERT_TYPES,
+  ULTRALIGHT_EDUCATION_TYPES,
+  ULTRALIGHT_INSTRUCTOR_TYPES,
   buildRatingName,
+  computeEptaExpiryDate,
   computeMedicalExpiryDate,
   getExpiryRequirement,
+  medicalValidityMonths,
 } from '../../data/certificateOptions'
+import type { CertificateSubType } from '../../data/certificateOptions'
 import type { RoleContent } from '../../data/content'
+import { PILOT_TRACK_LABEL } from '../../lib/tracks'
+import type { PilotTrack } from '../../lib/tracks'
 
 interface FieldErrors {
   name?: string
@@ -28,6 +42,12 @@ interface CertificateFormProps {
   onCancel?: () => void
   /** 로그인한 사용자의 역할에 해당하는 자격 템플릿(빠른 추가 칩)과 강조 색상 */
   roleTemplate?: RoleContent
+  /** v1.1 — 어느 트랙의 자격을 등록하는지. 구분(카테고리) 선택지가 이 값으로 정해진다. */
+  track?: PilotTrack
+  /** v1.1 — 항공신체검사 유효기간이 연령으로 갈리므로(별표 8) 생년월일이 있으면 정확히 계산한다. */
+  birthDate?: string | null
+  /** v1.1 — 1종 6개월 예외(여객 1인조종 등) 판정용 */
+  commercialSinglePilot?: boolean
 }
 
 const inputClass =
@@ -35,79 +55,102 @@ const inputClass =
 
 const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
 
-function findRatingType(key: string) {
-  return RATING_TYPES.find((r) => r.key === key) ?? RATING_TYPES[0]
+/**
+ * v1.1 — 구분(카테고리)별 세부 종류 선택지. 여기 없는 구분은 자유 입력.
+ * 새 자격을 추가할 때는 이 표와 data/deckDefs.ts 두 곳만 손대면 된다.
+ */
+const SUBTYPES_BY_CATEGORY: Partial<Record<CertificateCategory, CertificateSubType[]>> = {
+  '조종사 자격증명': LICENCE_TYPES,
+  '한정': RATING_TYPES,
+  '계기비행증명': INSTRUMENT_RATING_TYPES,
+  '조종교육증명': FLIGHT_INSTRUCTOR_TYPES,
+  '항공신체검사': MEDICAL_CERTIFICATE_TYPES,
+  '항공영어구술능력증명': EPTA_LEVELS,
+  '경량항공기 조종사 자격증명': LSA_LICENCE_TYPES,
+  '경량항공기 조종교육증명': LSA_INSTRUCTOR_TYPES,
+  '초경량비행장치 조종자증명': ULTRALIGHT_CERT_TYPES,
+  '지도조종자': ULTRALIGHT_INSTRUCTOR_TYPES,
+  '교육이수': ULTRALIGHT_EDUCATION_TYPES,
+  '운전면허': DRIVER_LICENCE_TYPES,
 }
 
-export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleTemplate }: CertificateFormProps) {
+/** 세부 종류 + 보조 텍스트로 자격 명칭을 만든다(한정은 기존 buildRatingName 규칙 유지) */
+function buildName(category: CertificateCategory, sub: CertificateSubType | undefined, detail: string): string {
+  if (!sub) return ''
+  if (category === '한정') return buildRatingName(sub, detail)
+  if (sub.requiresDetail && detail.trim()) return `${sub.label} (${detail.trim()})`
+  return sub.label
+}
+
+export function CertificateForm({
+  mode,
+  initialValues,
+  onSubmit,
+  onCancel,
+  roleTemplate,
+  track = 'aircraft',
+  birthDate,
+  commercialSinglePilot,
+}: CertificateFormProps) {
+  const categories = CERTIFICATE_CATEGORIES_BY_TRACK[track]
   const [errors, setErrors] = useState<FieldErrors>({})
   const [nameValue, setNameValue] = useState(initialValues?.name ?? '')
-  const [category, setCategory] = useState<CertificateCategory>(initialValues?.category ?? CERTIFICATE_CATEGORIES[0])
-  const [licenceKey, setLicenceKey] = useState(LICENCE_TYPES[0].key)
-  const [ratingKey, setRatingKey] = useState(RATING_TYPES[0].key)
-  const [ratingDetail, setRatingDetail] = useState('')
-  const [medicalKey, setMedicalKey] = useState(MEDICAL_CERTIFICATE_TYPES[0].key)
-  const [instructorGrade, setInstructorGrade] = useState<'초급' | '선임'>('초급')
+  const [category, setCategory] = useState<CertificateCategory>(
+    initialValues?.category && categories.includes(initialValues.category) ? initialValues.category : categories[0],
+  )
+  const subTypes = useMemo(() => SUBTYPES_BY_CATEGORY[category] ?? [], [category])
+  const [subKey, setSubKey] = useState<string>(SUBTYPES_BY_CATEGORY[categories[0]]?.[0]?.key ?? '')
+  const [subDetail, setSubDetail] = useState('')
   const [approvalFile, setApprovalFile] = useState<File | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const currentSub = subTypes.find((t) => t.key === subKey) ?? subTypes[0]
+  const isFreeText = subTypes.length === 0
 
-  /** 항공신체검사: 발급일·종별이 바뀌면 만료일을 월말 원칙으로 자동 계산해 채운다(수정 가능). */
-  function autofillMedicalExpiry(nextIssued?: string, nextKey?: string) {
-    if (category !== '항공신체검사') return
+  /** 항공신체검사·EPTA: 발급일·종별이 바뀌면 만료일을 자동 계산해 채운다(수정 가능). */
+  function autofillExpiry(nextIssued?: string, nextKey?: string) {
     const formEl = formRef.current
     if (!formEl) return
     const issuedEl = formEl.elements.namedItem('issuedDate') as HTMLInputElement | null
     const expiryEl = formEl.elements.namedItem('expiryDate') as HTMLInputElement | null
     const issued = nextIssued ?? issuedEl?.value ?? ''
-    const expiry = computeMedicalExpiryDate(issued, nextKey ?? medicalKey)
-    if (expiry && expiryEl) expiryEl.value = expiry
+    const key = nextKey ?? subKey
+    let expiry: string | null = null
+    if (category === '항공신체검사') expiry = computeMedicalExpiryDate(issued, key, { birthDate, commercialSinglePilot })
+    else if (category === '항공영어구술능력증명') expiry = computeEptaExpiryDate(issued, key)
+    else return
+    if (expiryEl) expiryEl.value = expiry ?? ''
   }
 
   const expiryRequirement = getExpiryRequirement(category)
   const showExpiryField = expiryRequirement !== 'hidden'
 
+  const medicalNote = useMemo(() => {
+    if (category !== '항공신체검사') return null
+    const issuedEl = formRef.current?.elements.namedItem('issuedDate') as HTMLInputElement | null
+    const issued = issuedEl?.value || new Date().toISOString().slice(0, 10)
+    const { months, assumedAge } = medicalValidityMonths({ medicalKey: subKey, issuedDate: issued, birthDate, commercialSinglePilot })
+    return { months, assumedAge }
+  }, [category, subKey, birthDate, commercialSinglePilot])
+
   function handleCategoryChange(next: CertificateCategory) {
     setCategory(next)
-    if (next === '조종사 자격증명') {
-      setLicenceKey(LICENCE_TYPES[0].key)
-      setNameValue(LICENCE_TYPES[0].label)
-    } else if (next === '한정') {
-      setRatingKey(RATING_TYPES[0].key)
-      setRatingDetail('')
-      setNameValue(buildRatingName(RATING_TYPES[0], ''))
-    } else if (next === '조종교육증명') {
-      setInstructorGrade('초급')
-      setNameValue('초급 조종교육증명')
-    } else if (next === '항공신체검사') {
-      setMedicalKey(MEDICAL_CERTIFICATE_TYPES[0].key)
-      setInstructorGrade('초급')
-      setApprovalFile(null)
-      setNameValue(MEDICAL_CERTIFICATE_TYPES[0].label)
-    }
+    const first = SUBTYPES_BY_CATEGORY[next]?.[0]
+    setSubKey(first?.key ?? '')
+    setSubDetail('')
+    setApprovalFile(null)
+    setNameValue(first ? buildName(next, first, '') : '')
   }
 
-  function handleLicenceChange(key: string) {
-    setLicenceKey(key)
-    const sub = LICENCE_TYPES.find((l) => l.key === key) ?? LICENCE_TYPES[0]
-    setNameValue(sub.label)
+  function handleSubChange(key: string) {
+    setSubKey(key)
+    const sub = subTypes.find((t) => t.key === key)
+    setNameValue(buildName(category, sub, subDetail))
+    if (category === '항공신체검사' || category === '항공영어구술능력증명') autofillExpiry(undefined, key)
   }
 
-  function handleRatingChange(key: string) {
-    setRatingKey(key)
-    const sub = findRatingType(key)
-    setNameValue(buildRatingName(sub, ratingDetail))
-  }
-
-  function handleRatingDetailChange(value: string) {
-    setRatingDetail(value)
-    const sub = findRatingType(ratingKey)
-    setNameValue(buildRatingName(sub, value))
-  }
-
-  function handleMedicalChange(key: string) {
-    setMedicalKey(key)
-    const sub = MEDICAL_CERTIFICATE_TYPES.find((m) => m.key === key) ?? MEDICAL_CERTIFICATE_TYPES[0]
-    setNameValue(sub.label)
+  function handleDetailChange(value: string) {
+    setSubDetail(value)
+    setNameValue(buildName(category, currentSub, value))
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -137,6 +180,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
       {
         name,
         category,
+        track: initialValues?.track ?? track,
         issuer,
         issuedDate,
         expiryDate,
@@ -148,11 +192,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
     if (mode === 'create') {
       e.currentTarget.reset()
       setNameValue('')
-      setCategory(CERTIFICATE_CATEGORIES[0])
-      setLicenceKey(LICENCE_TYPES[0].key)
-      setRatingKey(RATING_TYPES[0].key)
-      setRatingDetail('')
-      setMedicalKey(MEDICAL_CERTIFICATE_TYPES[0].key)
+      handleCategoryChange(categories[0])
     }
   }
 
@@ -193,114 +233,54 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
             onChange={(e) => handleCategoryChange(e.target.value as CertificateCategory)}
             className={inputClass}
           >
-            {CERTIFICATE_CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option data-mbaas-oid="xm36egu" key={c} value={c}>
                 {c}
               </option>
             ))}
           </select>
+          <p data-mbaas-oid="trkhint" className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 트랙의 자격으로 등록됩니다.</p>
         </div>
 
-        {category === '조종사 자격증명' && (
+        {subTypes.length > 0 && (
           <div data-mbaas-oid="tkpsfji">
-            <label data-mbaas-oid="dumjtel" htmlFor="licence-type" className={labelClass}>
+            <label data-mbaas-oid="dumjtel" htmlFor="sub-type" className={labelClass}>
               세부 종류
             </label>
             <select
- data-mbaas-oid="5evy6af" id="licence-type"
-              value={licenceKey}
-              onChange={(e) => handleLicenceChange(e.target.value)}
+              data-mbaas-oid="5evy6af" id="sub-type"
+              value={subKey}
+              onChange={(e) => handleSubChange(e.target.value)}
               className={inputClass}
             >
-              {LICENCE_TYPES.map((l) => (
-                <option data-mbaas-oid="7s40zvb" key={l.key} value={l.key}>
-                  {l.label}
+              {subTypes.map((t) => (
+                <option data-mbaas-oid="7s40zvb" key={t.key} value={t.key}>
+                  {t.label}
                 </option>
               ))}
-            </select>
-          </div>
-        )}
-
-        {category === '한정' && (
-          <div data-mbaas-oid="njr7d5z">
-            <label data-mbaas-oid="ag0te6e" htmlFor="rating-type" className={labelClass}>
-              세부 종류
-            </label>
-            <select
- data-mbaas-oid="xcvjeg4" id="rating-type"
-              value={ratingKey}
-              onChange={(e) => handleRatingChange(e.target.value)}
-              className={inputClass}
-            >
-              {RATING_TYPES.map((r) => (
-                <option data-mbaas-oid="7o0ks7l" key={r.key} value={r.key}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {category === '조종교육증명' && (
-          <div data-mbaas-oid="6g4qv1x">
-            <label data-mbaas-oid="9hluw75" htmlFor="instructor-grade" className={labelClass}>
-              세부 종류
-            </label>
-            <select
-              data-mbaas-oid="instrsel" id="instructor-grade"
-              value={instructorGrade}
-              onChange={(e) => {
-                const grade = e.target.value as '초급' | '선임'
-                setInstructorGrade(grade)
-                setNameValue(`${grade} 조종교육증명`)
-              }}
-              className={inputClass}
-            >
-              <option data-mbaas-oid="instro1" value="초급">초급 조종교육증명</option>
-              <option data-mbaas-oid="instro2" value="선임">선임 조종교육증명</option>
             </select>
           </div>
         )}
 
         {category === '무선통신사' && (
-          <p data-mbaas-oid="commntc" className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200">
-            무선통신사는 <span data-mbaas-oid="commntc2" className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요. 발급 5년이 지나면
+          <p data-mbaas-oid="commntc" className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
+            무선통신사는 <span data-mbaas-oid="commntc2" className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며, 발급 5년이 지나면
             교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리됩니다.
           </p>
         )}
-
-        {category === '항공신체검사' && (
-          <div data-mbaas-oid="7gu05tf">
-            <label data-mbaas-oid="8uy4kpa" htmlFor="medical-type" className={labelClass}>
-              세부 종류
-            </label>
-            <select
- data-mbaas-oid="siuo4zq" id="medical-type"
-              value={medicalKey}
-              onChange={(e) => { handleMedicalChange(e.target.value); autofillMedicalExpiry(undefined, e.target.value) }}
-              className={inputClass}
-            >
-              {MEDICAL_CERTIFICATE_TYPES.map((m) => (
-                <option data-mbaas-oid="qt9hka1" key={m.key} value={m.key}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
-      {category === '한정' && findRatingType(ratingKey).requiresDetail && (
+      {currentSub?.requiresDetail && (
         <div data-mbaas-oid="gkbgsj8">
           <label data-mbaas-oid="rb5s77p" htmlFor="rating-detail" className={labelClass}>
-            기종명
+            {category === '한정' ? '기종명' : '세부 표기'}
           </label>
           <input
- data-mbaas-oid="frpv77y" id="rating-detail"
+            data-mbaas-oid="frpv77y" id="rating-detail"
             type="text"
-            value={ratingDetail}
-            onChange={(e) => handleRatingDetailChange(e.target.value)}
-            placeholder={findRatingType(ratingKey).detailPlaceholder}
+            value={subDetail}
+            onChange={(e) => handleDetailChange(e.target.value)}
+            placeholder={currentSub.detailPlaceholder}
             className={inputClass}
           />
         </div>
@@ -310,7 +290,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
         <label data-mbaas-oid="6f3kux3" htmlFor="name" className={labelClass}>
           자격/면허 명칭
         </label>
-        {category === '법정교육' || category === '기타 자격' ? (
+        {isFreeText ? (
           <>
             <input
               data-mbaas-oid="q0shiuh" id="name"
@@ -375,7 +355,7 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
             aria-invalid={Boolean(errors.issuedDate)}
             aria-describedby={errors.issuedDate ? 'issuedDate-error' : undefined}
           
-              onChange={(e) => autofillMedicalExpiry(e.target.value)}
+              onChange={(e) => autofillExpiry(e.target.value)}
             />
           {errors.issuedDate && (
             <p data-mbaas-oid="nuy6rc8" id="issuedDate-error" className="mt-1.5 text-xs text-rose-600">
@@ -398,10 +378,17 @@ export function CertificateForm({ mode, initialValues, onSubmit, onCancel, roleT
               aria-invalid={Boolean(errors.expiryDate)}
               aria-describedby={errors.expiryDate ? 'expiryDate-error' : undefined}
             />
-            {category === '항공신체검사' && (
+            {category === '항공신체검사' && medicalNote && (
               <p data-mbaas-oid="medauto1" className="mt-1.5 text-xs text-slate-400">
-                발급일을 넣으면 <span data-mbaas-oid="medauto2" className="font-semibold text-slate-300">월말 만료 원칙</span>으로 자동 계산돼요(수정 가능).
-                종별 유효기간은 검증 중(v0.9)입니다.
+                발급일을 넣으면 <span data-mbaas-oid="medauto2" className="font-semibold text-slate-300">별표 8 기준 {medicalNote.months}개월</span>, 월말 만료 원칙으로 자동 계산돼요(수정 가능).
+                {medicalNote.assumedAge && (
+                  <span data-mbaas-oid="medauto3" className="text-amber-300"> 생년월일이 없어 가장 짧은 기간으로 잡았어요. 계정정보에 생년월일을 넣으면 정확해집니다.</span>
+                )}
+              </p>
+            )}
+            {category === '항공영어구술능력증명' && (
+              <p data-mbaas-oid="eptaauto1" className="mt-1.5 text-xs text-slate-400">
+                4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③). 6등급은 만료일을 비워 두세요.
               </p>
             )}
             {errors.expiryDate && (

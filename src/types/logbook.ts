@@ -1,7 +1,18 @@
 // 디지털 로그북 데이터 모델
 // 실 서버 연동 전까지 브라우저 localStorage에 저장되는 비행 기록 타입 정의입니다.
 
+import type { PilotTrack } from '../lib/tracks'
+
 export type FlightCategory = '주간' | '야간' | '계기'
+
+/** 모의비행훈련장치 구분 — 별표 4 인정 상한이 장치별로 다르므로 시뮬 기록에 남긴다 */
+export type SimDeviceKind = 'FFS' | 'FTD' | 'BATD'
+
+export const SIM_DEVICE_LABEL: Record<SimDeviceKind, string> = {
+  FFS: '모의비행장치(FFS)',
+  FTD: '비행훈련장치(FTD)',
+  BATD: '기본비행훈련장치(BATD)',
+}
 
 // 이 기록이 어떻게 만들어졌는지 구분합니다.
 // - manual: 앱에서 직접 입력한 일반 기록(값이 없으면 manual로 간주)
@@ -25,6 +36,9 @@ export interface PilotingTime {
   pic?: number // 기장(PIC) 시간
   sic?: number // 부기장(SIC) 시간
   flightInstructor?: number // 비행교관으로서 탑승 시간
+  // v1.1 — 별표 4 응시경력 계산에 필요한 세부 구분(선택 입력)
+  solo?: number // 단독 비행
+  picSupervised?: number // 기장 감독 하 기장 임무 수행(SIC U/S) — 운송용 응시경력
 }
 
 // 비행 조건별 시간 (모두 선택 입력, 기본 0)
@@ -34,10 +48,20 @@ export interface FlightConditionHours {
   crossCountry?: number // 크로스컨트리
   actualInstrument?: number // 실제계기
   simulatedInstrument?: number // 모의계기
+  // v1.1 — 별표 4 응시경력 계산용(선택 입력)
+  soloCrossCountry?: number // 단독 야외
+  crossCountryDistanceKm?: number // 야외비행 구간거리(270km·540km 조건 판정용)
 }
 
 export interface LogbookEntry {
   id: string
+  // v1.1 — 이 비행이 어떤 트랙(항공기/경량/초경량)의 기록인지. 값이 없으면 기종명으로 추정한다
+  // (entryTrack 참고). 신규 입력은 항상 채워진다.
+  vehicleClass?: PilotTrack
+  // v1.1 — 경량·초경량 종류(타면조종형비행기·무인멀티콥터 등). 항공기 트랙은 비워 둔다.
+  vehicleKind?: string
+  // v1.1 — 시뮬레이터 기록의 장치 구분. groundTrainerTime > 0 일 때만 의미가 있다.
+  simDevice?: SimDeviceKind
   year?: number // 연도(선택, 없으면 date에서 파생해 표시)
   date: string // YYYY-MM-DD
   departure: string
@@ -54,6 +78,7 @@ export interface LogbookEntry {
   instrumentApproaches?: number // 계기 접근 횟수, 선택
   dayLandings?: number // 주간 이착륙 횟수(선택, 기본 0)
   nightLandings?: number // 야간 이착륙 횟수(선택, 기본 0)
+  nightTakeoffs?: number // v1.1 — 야간 이륙 횟수(사업용 응시경력: 야간 이륙·착륙 각 5회)
   notes?: string
   // 조종사 본인 서명(자기 인증). 교관 서명 요청과 별개로, 본인이 직접 캔버스에 서명해
   // "이 기록에 기재된 내용이 사실임"을 스스로 확정하는 용도입니다.
