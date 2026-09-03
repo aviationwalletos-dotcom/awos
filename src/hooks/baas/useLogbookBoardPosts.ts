@@ -52,7 +52,7 @@ async function fetchLogbookPostsPage(offset: number, limit: number): Promise<Boa
   // 재시도 대상이면 RetryableHttpError를 던진다(그 외 실패/비정상 result는 일반 Error로 전파).
   return withRetry(async () => {
     const response = await baasFetch(
-      `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${LOGBOOK_BOARD_ID}/posts?${params.toString()}`,
+      `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${LOGBOOK_BOARD_ID}/posts?${params.toString()}&author=me`,
       {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },

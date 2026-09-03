@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, Clock3, Inbox, RefreshCw, ShieldCheck } from 'lucide-react'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight, Clock3, Inbox, ShieldCheck } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { EMPTY_ID_SET, useApprovedInstructorIdSet } from '../../lib/baas/authorization'
 import {
@@ -12,14 +12,14 @@ import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
 import { SignaturePad } from '../logbook/SignaturePad'
-import { useComments } from '../../hooks/baas/useComments'
+import { useCommentsBatch } from '../../hooks/baas/useCommentsBatch'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
 import { useSignatureRequests } from '../../hooks/baas/useSignatureRequests'
 import { useUploadSignatureImage } from '../../hooks/baas/useUploadSignatureImage'
 
 import type { AccountResponse } from '../../lib/baas/types'
-import type { BoardPostListItem } from '../../lib/baas/boardTypes'
+import type { BoardPostListItem, CommentItem } from '../../lib/baas/boardTypes'
 
 function formatDateTime(value: string): string {
   try {
@@ -32,22 +32,22 @@ function formatDateTime(value: string): string {
 interface SignatureRequestCardProps {
   post: BoardPostListItem
   account: AccountResponse
-  onStatusResolved: (postId: string, isSigned: boolean) => void
+  /** 상위에서 배치로 받아온 이 게시글의 댓글 */
+  comments: CommentItem[]
+  /** 승인 교관 id 집합(상위에서 1회 조회) */
+  instructorIds: ReadonlySet<string> | null
+  /** 서명 등록 후 상위 배치 재조회 */
+  onSigned: () => Promise<void> | void
 }
 
-function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequestCardProps) {
-  const { data: commentsData, isLoading: isCheckingComments, error: commentsError, refetch: refetchComments } = useComments(post.id)
+function SignatureRequestCard({ post, account, comments, instructorIds, onSigned }: SignatureRequestCardProps) {
   const { createComment, isLoading: isSigning, error: signError, reset: resetSign } = useCreateComment(post.id)
   const { uploadSignatureImage, isLoading: isUploading, error: uploadError, reset: resetUpload } = useUploadSignatureImage()
 
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
 
   // [SEC-001] 승인 교관 계정이 남긴 [SIGNED] 댓글만 유효 서명으로 인정한다.
-  const { instructorIds } = useApprovedInstructorIdSet()
-  const signedComment = useMemo(
-    () => findSignedComment(commentsData?.items ?? [], instructorIds ?? EMPTY_ID_SET),
-    [commentsData, instructorIds],
-  )
+  const signedComment = useMemo(() => findSignedComment(comments, instructorIds ?? EMPTY_ID_SET), [comments, instructorIds])
   const signedImageRawUrl = useMemo(
     () => (signedComment ? parseSignatureImageUrlFromComment(signedComment) : undefined),
     [signedComment],
@@ -55,9 +55,6 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
   // [SEC-003] 비공개 버킷 전환 후에도 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
   const signedImageUrl = useSignedFileUrl(signedImageRawUrl)
 
-  useEffect(() => {
-    if (!isCheckingComments) onStatusResolved(post.id, Boolean(signedComment))
-  }, [post.id, signedComment, isCheckingComments, onStatusResolved])
 
   const isProcessing = isUploading || isSigning
   const [localError, setLocalError] = useState<string | null>(null)
@@ -87,7 +84,7 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
         createComment(buildSignedCommentContent(account.name, new Date(), imageUrl)),
         new Promise((_, reject) => window.setTimeout(() => reject(new Error('서버 응답 시간 초과(20초)')), 20000)),
       ])
-      await refetchComments()
+      await onSigned()
       setSignatureDataUrl(null)
     } catch (err) {
       const message = err instanceof Error ? err.message : '서명 등록에 실패했습니다.'
@@ -119,17 +116,7 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
       )}
 
       <div data-mbaas-oid="6316nwp" className="mt-3">
-        {isCheckingComments ? (
-          <p data-mbaas-oid="gyn76p3" className="text-xs text-slate-400">서명 상태를 확인하는 중입니다...</p>
-        ) : commentsError ? (
-          <div data-mbaas-oid="hfsni3z" className="flex items-center gap-2">
-            <p data-mbaas-oid="asmw4pc" className="text-xs font-medium text-rose-300">{commentsError}</p>
-            <Button data-mbaas-oid="211u7f0" type="button" variant="outline" tone="neutral" size="sm" onClick={() => void refetchComments()}>
-              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-              다시 시도
-            </Button>
-          </div>
-        ) : signedComment ? (
+        {signedComment ? (
           <div data-mbaas-oid="98n32ca" className="space-y-2">
             {signedImageUrl && (
               <img
@@ -194,20 +181,29 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
   )
   const hiddenByTargetingCount = allItems.length - items.length
 
-  // 각 카드가 댓글 조회로 서명 여부를 확인하면 이 맵에 결과를 채운다.
-  // true = 완료됨. 아직 값이 없으면 확인 중이거나 대기중인 것으로 간주한다.
-  const [statusMap, setStatusMap] = useState<Record<string, boolean>>({})
-
-  const handleStatusResolved = useCallback((postId: string, isSigned: boolean) => {
-    setStatusMap((prev) => (prev[postId] === isSigned ? prev : { ...prev, [postId]: isSigned }))
-  }, [])
+  // v1.1 — 요청마다 댓글을 따로 조회하던 구조(N+1, 그리고 화면에 안 보이는 페이지의 상태는 아예 모름)를
+  // 배치 1회 조회로 바꿨다. 요청이 수백 건이어도 요청 2번(목록 + 댓글 배치)으로 끝난다.
+  const postIds = useMemo(() => items.map((i) => i.id), [items])
+  const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(postIds)
+  const { instructorIds } = useApprovedInstructorIdSet()
+  const statusMap = useMemo(() => {
+    const map: Record<string, boolean> = {}
+    for (const item of items) map[item.id] = Boolean(findSignedComment(byPost[item.id] ?? [], instructorIds ?? EMPTY_ID_SET))
+    return map
+  }, [items, byPost, instructorIds])
 
   const [activeTab, setActiveTab] = useState<TabFilter>('pending')
+  // 날짜 필터 — 제목의 비행 일자([서명요청] 2026-09-03 …) 기준
+  const [dateFilter, setDateFilter] = useState('')
+  const flightDateOf = (post: BoardPostListItem) => /(\d{4}-\d{2}-\d{2})/.exec(post.title)?.[1] ?? post.created_at.slice(0, 10)
 
   const pendingItems = useMemo(() => items.filter((item) => statusMap[item.id] !== true), [items, statusMap])
   const completedItems = useMemo(() => items.filter((item) => statusMap[item.id] === true), [items, statusMap])
 
-  const filteredItems = activeTab === 'pending' ? pendingItems : completedItems
+  const filteredItems = useMemo(() => {
+    const base = activeTab === 'pending' ? pendingItems : completedItems
+    return dateFilter ? base.filter((p) => flightDateOf(p) === dateFilter) : base
+  }, [activeTab, pendingItems, completedItems, dateFilter])
 
   // 클라이언트 사이드 페이지네이션 — 탭 필터링된 목록을 5개 단위로만 잘라 화면에 보여준다.
   const [currentPage, setCurrentPage] = useState(0)
@@ -256,6 +252,18 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
               {option.label} ({option.value === 'pending' ? pendingItems.length : completedItems.length})
             </button>
           ))}
+          <input
+            data-mbaas-oid="sgdate"
+            type="date"
+            value={dateFilter}
+            onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(0) }}
+            aria-label="비행 일자로 필터"
+            className="rounded-control border border-white/15 bg-panel px-2.5 py-1.5 text-xs text-ink"
+          />
+          {dateFilter && (
+            <button type="button" onClick={() => setDateFilter('')} className="text-xs text-slate-400 underline hover:text-sky">전체</button>
+          )}
+          {isLoadingComments && <span className="self-center text-[11px] text-slate-500">확인 중…</span>}
         </div>
       </div>
 
@@ -289,7 +297,14 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
       ) : (
         <div data-mbaas-oid="n88j9go" className="mt-5 space-y-3">
           {pagedItems.map((post) => (
-            <SignatureRequestCard key={post.id} post={post} account={account} onStatusResolved={handleStatusResolved} />
+            <SignatureRequestCard
+              key={post.id}
+              post={post}
+              account={account}
+              comments={byPost[post.id] ?? []}
+              instructorIds={instructorIds}
+              onSigned={refetchBatch}
+            />
           ))}
 
           {totalPages > 1 && (

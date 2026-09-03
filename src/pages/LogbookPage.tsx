@@ -140,6 +140,12 @@ export function LogbookPage() {
   const { tracks: pilotTracks, activeTrack, setActiveTrack, birthDate, operationType } = usePilotTracks(account)
   const { vehicles, addVehicle, deleteVehicle } = useVehicles(account)
   const { toast, showToast } = useToast()
+  // 로컬 저장(오프라인 사본) 실패 알림 — 서버에는 저장되지만 이 브라우저 용량이 찼을 때
+  useEffect(() => {
+    const onFail = () => showToast('브라우저 저장 공간이 부족해 오프라인 사본을 갱신하지 못했어요. 서버에는 저장됩니다.')
+    window.addEventListener('awos:local-storage-failed', onFail)
+    return () => window.removeEventListener('awos:local-storage-failed', onFail)
+  }, [showToast])
   const confirm = useConfirm()
 
   // 탭바는 상단 헤더 바로 아래에 붙는다. 헤더 높이를 실측해 반영(고정값 121px이 중간에 떠 보이던 문제).
@@ -725,11 +731,7 @@ export function LogbookPage() {
                     />
                   </div>
                   <CertificateApprovalLinkRepair certificates={certificates} onUpdate={updateCertificate} />
-                  {certificates
-                    .filter((c) => c.approvalStatus === 'pending' && c.approvalRequestPostId)
-                    .map((c) => (
-                      <CertificateApprovalStatusWatcher key={c.id} certificate={c} onUpdate={updateCertificate} />
-                    ))}
+                  <CertificateApprovalStatusWatcher certificates={certificates} onUpdate={updateCertificate} />
                 </Reveal>
               </div>
             </section>

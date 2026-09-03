@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Clock3, Info, ShieldCheck, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -6,7 +6,7 @@ import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
 import { useAuth } from '../../contexts/AuthContext'
-import { useComments } from '../../hooks/baas/useComments'
+import { useCommentsBatch } from '../../hooks/baas/useCommentsBatch'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
 import { useInstructorApplications } from '../../hooks/baas/useInstructorApplications'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
@@ -19,7 +19,7 @@ import {
   resolveApprovalDecision,
 } from '../../lib/baas/instructorApproval'
 import type { ApprovalDecisionStatus } from '../../lib/baas/instructorApproval'
-import type { BoardPostListItem } from '../../lib/baas/boardTypes'
+import type { BoardPostListItem, CommentItem } from '../../lib/baas/boardTypes'
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
 
@@ -40,7 +40,11 @@ function formatDateTime(value: string): string {
 
 interface ApplicationRowProps {
   item: BoardPostListItem
-  onStatusResolved: (postId: string, status: ApprovalDecisionStatus) => void
+  /** 상위 배치 조회로 받은 이 게시글의 댓글 */
+  comments: CommentItem[]
+  isCheckingDecision: boolean
+  /** 승인/반려 후 상위 배치 재조회 */
+  onDecided: () => Promise<void> | void
 }
 
 // [BUG-004 수정] 게시글 숨김 토글(`PATCH .../hidden`)은 작성자 본인 또는 실제 BaaS 프로젝트 소유자만
@@ -51,9 +55,11 @@ interface ApplicationRowProps {
 // [BUG 수정] 소속 기관 파싱은 목록 조회 API에서 가공 없이 그대로 내려오는 title을 우선 사용한다
 // (content는 "내용 미리보기" 가공으로 줄바꿈이 보존되지 않을 수 있어 content 기반 파싱이 항상
 // 실패했었다). 제목에 소속 접미사가 없는 구 형식 신청서는 content 파싱으로 폴백한다.
-function ApplicationRow({ item, onStatusResolved }: ApplicationRowProps) {
+function ApplicationRow({ item, comments, isCheckingDecision, onDecided }: ApplicationRowProps) {
   const { account } = useAuth()
-  const { data: commentsData, isLoading: isCheckingDecision, error: commentsError, refetch: refetchComments } = useComments(item.id)
+  const commentsData = useMemo(() => ({ items: comments }), [comments])
+  const commentsError: string | null = null
+  const refetchComments = onDecided
   const { createComment, isLoading: isSubmitting, error: submitError, reset: resetSubmit } = useCreateComment(item.id)
 
   const { orgIds } = useAuthorizedOrgIds()
@@ -66,9 +72,6 @@ function ApplicationRow({ item, onStatusResolved }: ApplicationRowProps) {
     [item.title, item.content],
   )
 
-  useEffect(() => {
-    if (!isCheckingDecision) onStatusResolved(item.id, decision.status)
-  }, [item.id, decision.status, isCheckingDecision, onStatusResolved])
 
   async function handleDecision(next: 'approved' | 'rejected') {
     resetSubmit()
@@ -174,13 +177,9 @@ export function InstructorApprovalPanel() {
   // 기본은 '대기중' — 관리자가 열자마자 처리할 건이 보이게 (v1.1)
   const [filter, setFilter] = useState<StatusFilter>('pending')
   const [showAllAffiliations, setShowAllAffiliations] = useState(false)
-  const [statusMap, setStatusMap] = useState<Record<string, ApprovalDecisionStatus>>({})
 
   const items = data?.items ?? []
 
-  const handleStatusResolved = useCallback((postId: string, status: ApprovalDecisionStatus) => {
-    setStatusMap((prev) => (prev[postId] === status ? prev : { ...prev, [postId]: status }))
-  }, [])
 
   // 소속 기관이 설정되어 있지 않으면 필터링할 기준이 없으므로 전체 보기로 동작한다.
   const isScopedToMyAffiliation = Boolean(myAffiliation) && !showAllAffiliations
@@ -191,6 +190,16 @@ export function InstructorApprovalPanel() {
       (item) => (parseAffiliationFromTitle(item.title) ?? parseAffiliationFromContent(item.content)) === myAffiliation,
     )
   }, [items, isScopedToMyAffiliation, myAffiliation])
+
+  // v1.1 — 항목마다 댓글을 따로 조회하던 N+1 대신 배치 1회. 화면에 없는 페이지 항목의 상태도 정확히 센다.
+  const scopedIds = useMemo(() => scopedItems.map((i) => i.id), [scopedItems])
+  const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(scopedIds)
+  const { orgIds: panelOrgIds } = useAuthorizedOrgIds()
+  const statusMap = useMemo(() => {
+    const map: Record<string, ApprovalDecisionStatus> = {}
+    for (const item of scopedItems) map[item.id] = resolveApprovalDecision(byPost[item.id] ?? [], panelOrgIds ?? EMPTY_ID_SET).status
+    return map
+  }, [scopedItems, byPost, panelOrgIds])
 
   const pendingCount = scopedItems.filter((item) => (statusMap[item.id] ?? 'pending') === 'pending').length
   const approvedCount = scopedItems.filter((item) => statusMap[item.id] === 'approved').length
@@ -278,10 +287,11 @@ export function InstructorApprovalPanel() {
       ) : (
         <ul data-mbaas-oid="iapan14" className="mt-6 space-y-3">
           {filtered.map((item) => (
-            <ApplicationRow key={item.id} item={item} onStatusResolved={handleStatusResolved} />
+            <ApplicationRow key={item.id} item={item} comments={byPost[item.id] ?? []} isCheckingDecision={isLoadingComments || !panelOrgIds} onDecided={refetchBatch} />
           ))}
         </ul>
       )}
     </div>
   )
+
 }

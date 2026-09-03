@@ -28,7 +28,7 @@ import {
 import { parseInstructorApplicationTitle, resolveApprovalDecision } from './instructorApproval'
 import { supabase } from '../supabase/client'
 
-import type { BoardPostListItem, BoardPostListResponse, CommentListResponse } from './boardTypes'
+import type { BoardPostListItem, BoardPostListResponse, CommentItem, CommentListResponse } from './boardTypes'
 
 /** 로딩 중이거나 실패했을 때 쓰는 빈 집합(어떤 작성자도 통과 못 함 = fail-closed). */
 export const EMPTY_ID_SET: ReadonlySet<string> = new Set<string>()
@@ -117,16 +117,24 @@ async function fetchApprovedInstructorIdsOnce(): Promise<ReadonlySet<string>> {
   // [BUGFIX] 승인 교관 집합에는 신청서 제목의 userId(이메일)만 들어 있었는데, 서명 댓글의 author_id는
   // auth uuid 라서 findSignedComment()가 한 번도 일치한 적이 없었다(= 교관 서명이 영원히 "대기중").
   // 이메일(기존 소비자 호환)과 신청 게시글 작성자 uuid를 둘 다 넣는다.
-  const ids = await Promise.all(
-    items.map(async (item) => {
-      const parsed = parseInstructorApplicationTitle(item.title)
-      if (!parsed) return []
-      const comments = await fetchJson<CommentListResponse>(`${BAAS_BASE_URL}/public/boards/posts/${item.id}/comments`)
-      const decision = resolveApprovalDecision(comments?.items ?? [], orgIds)
-      if (decision.status !== 'approved') return []
-      return [parsed.userId, ...(item.author_id ? [item.author_id] : [])]
-    }),
+  // 댓글은 배치 1회로 (신청서 수만큼 요청하던 N+1 제거)
+  const applications = items
+    .map((item) => ({ item, parsed: parseInstructorApplicationTitle(item.title) }))
+    .filter((x): x is { item: BoardPostListItem; parsed: { name: string; userId: string } } => Boolean(x.parsed))
+  const batch = await fetchJson<CommentListResponse>(
+    `${BAAS_BASE_URL}/public/boards/comments/batch?post_ids=${encodeURIComponent(applications.map((a) => a.item.id).join(','))}`,
   )
+  const byPost = new Map<string, CommentItem[]>()
+  for (const c of batch?.items ?? []) {
+    const list = byPost.get(c.post_id) ?? []
+    list.push(c)
+    byPost.set(c.post_id, list)
+  }
+  const ids = applications.map(({ item, parsed }) => {
+    const decision = resolveApprovalDecision(byPost.get(item.id) ?? [], orgIds)
+    if (decision.status !== 'approved') return []
+    return [parsed.userId, ...(item.author_id ? [item.author_id] : [])]
+  })
   return new Set(ids.flat().filter((id): id is string => Boolean(id)))
 }
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Clock3, FileCheck2, Image as ImageIcon, Info, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -7,7 +7,7 @@ import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
 import { useAuth } from '../../contexts/AuthContext'
 import { useBoardPostDetail } from '../../hooks/baas/useBoardPostDetail'
-import { useComments } from '../../hooks/baas/useComments'
+import { useCommentsBatch } from '../../hooks/baas/useCommentsBatch'
 import { useCreateComment } from '../../hooks/baas/useCreateComment'
 import { useCertificateApprovalBoardPosts } from '../../hooks/baas/useCertificateApprovalBoardPosts'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
@@ -20,7 +20,7 @@ import {
 } from '../../lib/baas/instructorApproval'
 import type { ApprovalDecisionStatus } from '../../lib/baas/instructorApproval'
 import { createSignedBoardFileUrl } from '../../lib/baas/supabaseTransport'
-import type { BoardPostListItem } from '../../lib/baas/boardTypes'
+import type { BoardPostListItem, CommentItem } from '../../lib/baas/boardTypes'
 import { parseCertificateApprovalTitle } from '../../lib/certificateApproval'
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
@@ -42,7 +42,11 @@ function formatDateTime(value: string): string {
 
 interface RequestRowProps {
   item: BoardPostListItem
-  onStatusResolved: (postId: string, status: ApprovalDecisionStatus) => void
+  /** 상위 배치 조회로 받은 이 게시글의 댓글 */
+  comments: CommentItem[]
+  isCheckingDecision: boolean
+  /** 승인/반려 후 상위 배치 재조회 */
+  onDecided: () => Promise<void> | void
 }
 
 // [BUG-004/BUG-006 교훈] 게시글 숨김 토글(`PATCH .../hidden`)은 작성자 본인 또는 실제 BaaS 프로젝트
@@ -50,9 +54,11 @@ interface RequestRowProps {
 // 게시판과 동일하게, 로그인한 회원이면 누구나(기관 계정 포함) 다른 사람의 게시글에 자신의 명의로
 // 댓글을 작성할 수 있는 점을 이용해 승인/반려를 댓글로 표시한다. 첨부 사진은 목록 조회 API에는
 // 포함되지 않으므로(attachments는 상세 조회 응답에만 있음), 카드별로 상세 조회를 한 번씩 수행한다.
-function RequestRow({ item, onStatusResolved }: RequestRowProps) {
+function RequestRow({ item, comments, isCheckingDecision, onDecided }: RequestRowProps) {
   const { account } = useAuth()
-  const { data: commentsData, isLoading: isCheckingDecision, error: commentsError, refetch: refetchComments } = useComments(item.id)
+  const commentsData = useMemo(() => ({ items: comments }), [comments])
+  const commentsError: string | null = null
+  const refetchComments = onDecided
   const { createComment, isLoading: isSubmitting, error: submitError, reset: resetSubmit } = useCreateComment(item.id)
   const { fetchDetail, isLoading: isLoadingDetail } = useBoardPostDetail()
 
@@ -66,9 +72,6 @@ function RequestRow({ item, onStatusResolved }: RequestRowProps) {
   )
   const affiliation = useMemo(() => parseAffiliationFromTitle(item.title), [item.title])
 
-  useEffect(() => {
-    if (!isCheckingDecision) onStatusResolved(item.id, decision.status)
-  }, [item.id, decision.status, isCheckingDecision, onStatusResolved])
 
   useEffect(() => {
     let cancelled = false
@@ -223,13 +226,9 @@ export function CertificateApprovalRequestsPanel({ categoryFilter = 'all' }: { c
   // 기본은 '대기중' — 관리자가 열자마자 처리할 건이 보이게 (v1.1)
   const [filter, setFilter] = useState<StatusFilter>('pending')
   const [showAllAffiliations, setShowAllAffiliations] = useState(false)
-  const [statusMap, setStatusMap] = useState<Record<string, ApprovalDecisionStatus>>({})
 
   const items = (data?.items ?? []).filter((it) => { if (categoryFilter === 'all') return true; const cat = parseCertificateApprovalTitle(it.title)?.category ?? ''; const isMedical = cat.includes('신체'); return categoryFilter === 'medical' ? isMedical : !isMedical })
 
-  const handleStatusResolved = useCallback((postId: string, status: ApprovalDecisionStatus) => {
-    setStatusMap((prev) => (prev[postId] === status ? prev : { ...prev, [postId]: status }))
-  }, [])
 
   // 소속 기관이 설정되어 있지 않으면 필터링할 기준이 없으므로 전체 보기로 동작한다.
   const isScopedToMyAffiliation = Boolean(myAffiliation) && !showAllAffiliations
@@ -238,6 +237,16 @@ export function CertificateApprovalRequestsPanel({ categoryFilter = 'all' }: { c
     if (!isScopedToMyAffiliation) return items
     return items.filter((item) => parseAffiliationFromTitle(item.title) === myAffiliation)
   }, [items, isScopedToMyAffiliation, myAffiliation])
+
+  // v1.1 — 항목마다 댓글을 따로 조회하던 N+1 대신 배치 1회. 화면에 없는 페이지 항목의 상태도 정확히 센다.
+  const scopedIds = useMemo(() => scopedItems.map((i) => i.id), [scopedItems])
+  const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(scopedIds)
+  const { orgIds: panelOrgIds } = useAuthorizedOrgIds()
+  const statusMap = useMemo(() => {
+    const map: Record<string, ApprovalDecisionStatus> = {}
+    for (const item of scopedItems) map[item.id] = resolveApprovalDecision(byPost[item.id] ?? [], panelOrgIds ?? EMPTY_ID_SET).status
+    return map
+  }, [scopedItems, byPost, panelOrgIds])
 
   const pendingCount = scopedItems.filter((item) => (statusMap[item.id] ?? 'pending') === 'pending').length
   const approvedCount = scopedItems.filter((item) => statusMap[item.id] === 'approved').length
@@ -325,10 +334,11 @@ export function CertificateApprovalRequestsPanel({ categoryFilter = 'all' }: { c
       ) : (
         <ul data-mbaas-oid="3glw15b" className="mt-6 space-y-3">
           {filtered.map((item) => (
-            <RequestRow key={item.id} item={item} onStatusResolved={handleStatusResolved} />
+            <RequestRow key={item.id} item={item} comments={byPost[item.id] ?? []} isCheckingDecision={isLoadingComments || !panelOrgIds} onDecided={refetchBatch} />
           ))}
         </ul>
       )}
     </div>
   )
+
 }

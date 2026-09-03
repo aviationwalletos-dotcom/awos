@@ -357,6 +357,8 @@ export async function baasFetch(input: RequestInfo | URL, init?: RequestInit): P
 
     const publicComments = path.match(/^\/public\/boards\/posts\/([^/]+)\/comments$/)
     if (publicComments && method === 'GET') return await handleListComments(publicComments[1], init)
+    // v1.1 — 여러 게시글의 댓글을 한 번에 (서명 요청함·승인 목록의 N+1 조회 제거)
+    if (path === '/public/boards/comments/batch' && method === 'GET') return await handleListCommentsBatch(query.get('post_ids') ?? '', init)
 
     const createComment = path.match(/^\/boards\/posts\/([^/]+)\/comments$/)
     if (createComment && method === 'POST') return await handleCreateComment(createComment[1], body, init)
@@ -541,12 +543,14 @@ async function handleListPosts(boardId: string, query: URLSearchParams, init?: R
   const offset = Number(query.get('offset') ?? 0)
   const limit = Math.min(Number(query.get('limit') ?? 20), 100)
 
-  const { data, count, error } = await ctx.client
+  // v1.1 — author=me: 본인 게시글만 서버에서 거른다. 로그북·자격증·개인설정처럼 "내 것"만 필요한 목록이
+  // 게시판 전체(모든 사용자)를 100건씩 끝까지 내려받던 문제 해결. 사용자·기록이 늘어도 요청 수가 늘지 않는다.
+  let q = ctx.client
     .from('board_posts')
     .select('*', { count: 'exact' })
     .eq('board_id', boardId)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
+  if (query.get('author') === 'me') q = q.eq('author_id', ctx.userId)
+  const { data, count, error } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1)
   if (error) return fail(500, error.message)
 
   return ok({
@@ -656,6 +660,21 @@ async function handleListComments(postId: string, init?: RequestInit): Promise<R
   if (error) return fail(500, error.message)
   const items = (data as CommentRow[]).map((c) => ({ ...c, replies: [] as never[] }))
   return ok({ items, total_count: count ?? items.length })
+}
+
+async function handleListCommentsBatch(postIdsCsv: string, init?: RequestInit): Promise<Response> {
+  const ctx = await resolveAuth(init)
+  if (!ctx) return fail(401, '로그인이 필요합니다.')
+  const ids = postIdsCsv.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 500)
+  if (ids.length === 0) return ok({ items: [], total_count: 0 })
+  const { data, error } = await ctx.client
+    .from('board_comments')
+    .select('*')
+    .in('post_id', ids)
+    .order('created_at', { ascending: true })
+  if (error) return fail(500, error.message)
+  const items = (data as CommentRow[]).map((c) => ({ ...c, replies: [] as never[] }))
+  return ok({ items, total_count: items.length })
 }
 
 async function handleCreateComment(postId: string, body: Record<string, unknown> | null, init?: RequestInit): Promise<Response> {

@@ -64,8 +64,11 @@ function loadEntries(storageKey: string): LogbookEntry[] {
 function saveEntries(storageKey: string, entries: LogbookEntry[]) {
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(entries))
-  } catch {
-    // 저장 공간이 부족하거나 접근이 차단된 경우 조용히 무시합니다(브라우저 저장 한계 안내는 UI에서 별도 처리).
+  } catch (err) {
+    // 저장 공간 부족(QuotaExceededError) 등. 서버 동기화는 별도로 진행되므로 데이터 유실은 아니지만,
+    // 이 브라우저의 오프라인 사본이 갱신되지 않았음을 화면에 알린다(LogbookPage가 이벤트를 받아 토스트).
+    console.warn('[로컬 저장 실패]', err)
+    window.dispatchEvent(new CustomEvent('awos:local-storage-failed', { detail: { key: storageKey } }))
   }
 }
 

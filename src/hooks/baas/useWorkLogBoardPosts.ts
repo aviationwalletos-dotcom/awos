@@ -46,7 +46,7 @@ const MAX_PAGES = 50
 async function fetchWorkLogPostsPage(offset: number, limit: number): Promise<BoardPostListResponse> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) })
   const response = await baasFetch(
-    `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${WORK_LOG_BOARD_ID}/posts?${params.toString()}`,
+    `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${WORK_LOG_BOARD_ID}/posts?${params.toString()}&author=me`,
     {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },

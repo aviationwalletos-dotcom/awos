@@ -49,7 +49,7 @@ export function useProfileSettingsBoardPosts(
     try {
       const params = new URLSearchParams({ limit: String(limitRef.current) })
       const response = await baasFetch(
-        `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${PROFILE_SETTINGS_BOARD_ID}/posts?${params.toString()}`,
+        `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${PROFILE_SETTINGS_BOARD_ID}/posts?${params.toString()}&author=me`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },

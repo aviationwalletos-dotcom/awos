@@ -11,6 +11,27 @@ interface SignaturePadProps {
  * 외부 라이브러리 없이 HTML5 canvas + pointer 이벤트만으로 동작하는 간단한 서명 캡처 패드입니다.
  * 빈 캔버스 상태에서는 onChange(null)을, 한 번이라도 그려지면 onChange(dataUrl)을 호출합니다.
  */
+/**
+ * 저장용 PNG는 축소해서 내보낸다. 원본 캔버스는 devicePixelRatio 배율(예: 1200×320)이라 PNG가 15~30KB이고,
+ * 기록마다 본인 서명이 붙으면 수백 건에서 localStorage 5MB 상한에 닿는다. 480×128로 줄이면 2~5KB.
+ */
+function exportDownscaled(source: HTMLCanvasElement): string {
+  const targetW = 480
+  const ratio = source.height / source.width
+  const targetH = Math.max(1, Math.round(targetW * ratio))
+  const out = document.createElement('canvas')
+  out.width = targetW
+  out.height = targetH
+  const ctx = out.getContext('2d')
+  if (!ctx) return source.toDataURL('image/png')
+  ctx.fillStyle = '#FFFFFF'
+  ctx.fillRect(0, 0, targetW, targetH)
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(source, 0, 0, targetW, targetH)
+  return out.toDataURL('image/png')
+}
+
 export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const isDrawingRef = useRef(false)
@@ -76,7 +97,7 @@ export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) 
     lastPointRef.current = null
     const canvas = canvasRef.current
     if (canvas && hasStrokeRef.current) {
-      onChange(canvas.toDataURL('image/png'))
+      onChange(exportDownscaled(canvas))
     }
   }
 
