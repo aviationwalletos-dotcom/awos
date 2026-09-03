@@ -26,7 +26,7 @@ export function CertificateApprovalStatusWatcher({ certificates, onUpdate }: Pro
       const decision = resolveApprovalDecision(comments, orgIds ?? EMPTY_ID_SET)
       if (decision.status === 'pending' || decision.status === cert.approvalStatus) continue
       const { id, createdAt: _c, updatedAt: _u, syncPostId: _s, ...rest } = cert
-      onUpdate(id, { ...rest, approvalStatus: decision.status })
+      onUpdate(id, { ...rest, approvalStatus: decision.status, approvalRevokedAt: undefined })
     }
   }, [isLoading, orgIds, pending, byPost, onUpdate])
 

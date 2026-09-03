@@ -95,3 +95,16 @@ describe('제안 칩 — 경로 분해·시뮬 제외', () => {
     expect(s.airports).not.toContain('FTD')
   })
 })
+
+describe('자격증 편집 — 세부 종류 복원', () => {
+  it('저장된 명칭에서 세부 종류와 보조 표기를 복원한다', async () => {
+    const mod = await import('../components/certificates/CertificateForm')
+    const infer = (mod as unknown as { __inferSubTypeFromName: (c: string, n: string) => { key: string | null; detail: string } }).__inferSubTypeFromName
+    expect(infer('조종사 자격증명', '사업용 조종사(CPL) · 비행기 · 육상다발').key).toBe('CPL')
+    expect(infer('조종사 자격증명', '자가용 조종사(PPL)').key).toBe('PPL')
+    expect(infer('항공신체검사', '제2종 항공신체검사증명').key).toBe('CLASS2')
+    expect(infer('초경량비행장치 조종자증명', '무인멀티콥터 (1종)')).toEqual({ key: 'UAS_MULTICOPTER', detail: '1종' })
+    expect(infer('조종교육증명', '선임 조종교육증명 - 헬리콥터').key).toBe('CFI_SENIOR_HELICOPTER')
+    expect(infer('기타 자격', '아무 이름').key).toBeNull()
+  })
+})

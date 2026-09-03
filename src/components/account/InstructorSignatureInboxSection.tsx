@@ -47,7 +47,9 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
 
   // [SEC-001] 승인 교관 계정이 남긴 [SIGNED] 댓글만 유효 서명으로 인정한다.
+  const [signedLocally, setSignedLocally] = useState(false)
   const signedComment = useMemo(() => findSignedComment(comments, instructorIds ?? EMPTY_ID_SET), [comments, instructorIds])
+  const isSigned = Boolean(signedComment) || signedLocally
   const signedImageRawUrl = useMemo(
     () => (signedComment ? parseSignatureImageUrlFromComment(signedComment) : undefined),
     [signedComment],
@@ -84,8 +86,9 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
         createComment(buildSignedCommentContent(account.name, new Date(), imageUrl)),
         new Promise((_, reject) => window.setTimeout(() => reject(new Error('서버 응답 시간 초과(20초)')), 20000)),
       ])
-      await onSigned()
+      setSignedLocally(true)
       setSignatureDataUrl(null)
+      await onSigned()
     } catch (err) {
       const message = err instanceof Error ? err.message : '서명 등록에 실패했습니다.'
       setLocalError(`서명 등록 실패: ${message}. 네트워크를 확인한 뒤 다시 눌러 주세요.`)
@@ -102,7 +105,7 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
             요청일: {formatDateTime(post.created_at)} · 요청자: {post.author_name}
           </p>
         </div>
-        {signedComment ? (
+        {isSigned ? (
           <StatusBadge tone="success" surface="dark" icon={ShieldCheck} label="완료됨" />
         ) : (
           <StatusBadge tone="pending" surface="dark" icon={Clock3} label="대기중" />
@@ -116,17 +119,17 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
       )}
 
       <div data-mbaas-oid="6316nwp" className="mt-3">
-        {signedComment ? (
+        {isSigned ? (
           <div data-mbaas-oid="98n32ca" className="space-y-2">
             {signedImageUrl && (
               <img
                 data-mbaas-oid="98n32cb" src={signedImageUrl}
-                alt={`${signedComment.author_name} 교관 서명 이미지`}
-                className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
+                alt="교관 서명 이미지"
+                className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
               />
             )}
             <p data-mbaas-oid="98n32cv" className="font-mono-data text-xs tabular-nums text-slate-400">
-              서명자: {signedComment.author_name} · {formatDateTime(signedComment.created_at)}
+              {signedComment ? `서명자: ${signedComment.author_name} · ${formatDateTime(signedComment.created_at)}` : `서명자: ${account.name} · 방금 등록됨`}
             </p>
           </div>
         ) : (
@@ -186,11 +189,19 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
   const postIds = useMemo(() => items.map((i) => i.id), [items])
   const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(postIds)
   const { instructorIds } = useApprovedInstructorIdSet()
+  // 서명 직후에는 서버 재조회를 기다리지 않고 바로 "완료됨"으로 옮긴다(낙관적 반영). 재조회가 끝나면 서버 값이 덮는다.
+  const [justSigned, setJustSigned] = useState<Set<string>>(() => new Set())
   const statusMap = useMemo(() => {
     const map: Record<string, boolean> = {}
-    for (const item of items) map[item.id] = Boolean(findSignedComment(byPost[item.id] ?? [], instructorIds ?? EMPTY_ID_SET))
+    for (const item of items) {
+      map[item.id] = justSigned.has(item.id) || Boolean(findSignedComment(byPost[item.id] ?? [], instructorIds ?? EMPTY_ID_SET))
+    }
     return map
-  }, [items, byPost, instructorIds])
+  }, [items, byPost, instructorIds, justSigned])
+  const handleSigned = async (postId: string) => {
+    setJustSigned((prev) => new Set(prev).add(postId))
+    await refetchBatch()
+  }
 
   const [activeTab, setActiveTab] = useState<TabFilter>('pending')
   // 날짜 필터 — 제목의 비행 일자([서명요청] 2026-09-03 …) 기준
@@ -303,7 +314,7 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
               account={account}
               comments={byPost[post.id] ?? []}
               instructorIds={instructorIds}
-              onSigned={refetchBatch}
+              onSigned={() => handleSigned(post.id)}
             />
           ))}
 

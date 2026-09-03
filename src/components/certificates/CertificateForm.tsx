@@ -115,6 +115,21 @@ const CATEGORY_OPTION_LABEL: Partial<Record<CertificateCategory, string>> = {
   '한정': '한정 추가 (기존 자격증명에 등급·형식 추가)',
 }
 
+/**
+ * 저장된 명칭에서 세부 종류(key)와 보조 표기(detail)를 복원한다. 명칭은 buildName()으로 만들어지므로
+ * "세부 종류 라벨"로 시작하고, 형식 등 보조 표기는 "(…)" 안에 있다. 가장 긴 라벨이 우선.
+ */
+function inferSubTypeFromName(category: CertificateCategory | undefined, name: string | undefined): { key: string | null; detail: string } {
+  if (!category || !name) return { key: null, detail: '' }
+  const list = SUBTYPES_BY_CATEGORY[category] ?? []
+  const head = name.split(' · ')[0].trim()
+  const sorted = [...list].sort((a, b) => b.label.length - a.label.length)
+  const hit = sorted.find((t) => head.startsWith(t.label) || head.startsWith(t.label.replace(/\s*\(.*\)$/, '')))
+  if (!hit) return { key: null, detail: '' }
+  const detail = hit.requiresDetail ? (/\(([^)]+)\)\s*$/.exec(head)?.[1] ?? '') : ''
+  return { key: hit.key, detail }
+}
+
 /** 세부 종류 + 보조 텍스트로 자격 명칭을 만든다(한정은 기존 buildRatingName 규칙 유지) */
 function buildName(category: CertificateCategory, sub: CertificateSubType | undefined, detail: string): string {
   if (!sub) return ''
@@ -138,15 +153,21 @@ export function CertificateForm({
   const [errors, setErrors] = useState<FieldErrors>({})
   const [nameValue, setNameValue] = useState(initialValues?.name ?? '')
   // 사용자가 명칭을 직접 고치기 전까지는 세부 종류에서 자동으로 채운다(모바일 select는 onChange 타이밍이 달라 effect로 처리).
-  const [nameTouched, setNameTouched] = useState(Boolean(initialValues))
+  // 편집 모드: 저장된 명칭에서 세부 종류를 복원할 수 있으면 자동 연동을 켠다(세부 종류를 바꾸면 명칭도 따라감).
+  // 복원이 안 되는 이름(옛 형식·자유 입력)은 그대로 둔다.
+  const [nameTouched, setNameTouched] = useState(() =>
+    Boolean(initialValues) && !inferSubTypeFromName(initialValues?.category, initialValues?.name).key,
+  )
   const [issuerValue, setIssuerValue] = useState(initialValues?.issuer ?? '')
   const [issuerTouched, setIssuerTouched] = useState(Boolean(initialValues))
   const [category, setCategory] = useState<CertificateCategory>(
     initialValues?.category && categories.includes(initialValues.category) ? initialValues.category : categories[0],
   )
   const subTypes = useMemo(() => SUBTYPES_BY_CATEGORY[category] ?? [], [category])
-  const [subKey, setSubKey] = useState<string>(SUBTYPES_BY_CATEGORY[categories[0]]?.[0]?.key ?? '')
-  const [subDetail, setSubDetail] = useState('')
+  // [BUGFIX] 편집 모드에서 세부 종류가 항상 첫 항목(자가용)으로 열리던 문제 — 저장된 명칭에서 세부 종류·보조 표기를 복원한다.
+  const inferred = useMemo(() => inferSubTypeFromName(initialValues?.category, initialValues?.name), [initialValues?.category, initialValues?.name])
+  const [subKey, setSubKey] = useState<string>(inferred.key ?? SUBTYPES_BY_CATEGORY[initialValues?.category ?? categories[0]]?.[0]?.key ?? '')
+  const [subDetail, setSubDetail] = useState(inferred.detail)
   // v1.1 — 조종사 자격증명은 종류·등급 한정과 함께 발급된다(제37조). 자격증명 등록 시 같이 받는다.
   const [aircraftCategory, setAircraftCategory] = useState<'AIRPLANE' | 'HELICOPTER' | ''>(initialValues?.aircraftCategory ?? 'AIRPLANE')
   const [classRating, setClassRating] = useState<'SEL' | 'MEL' | 'SES' | 'MES' | ''>(initialValues?.classRating ?? 'SEL')
@@ -625,3 +646,6 @@ export function CertificateForm({
     </form>
   )
 }
+
+/** 테스트용 노출 */
+export const __inferSubTypeFromName = inferSubTypeFromName

@@ -50,6 +50,8 @@ export interface Certificate {
   notes?: string
   /** 관리자 인증 상태 — undefined는 인증 요청 이력이 없는 기존 자격 */
   approvalStatus?: 'pending' | 'approved' | 'rejected'
+  /** 인증 후 내용을 수정해 인증이 해제된 시각(재요청 안내용). 다시 승인되면 지운다 */
+  approvalRevokedAt?: number
   /** "자격증 인증" 게시판의 요청 게시글 id */
   approvalRequestPostId?: string
   createdAt: number

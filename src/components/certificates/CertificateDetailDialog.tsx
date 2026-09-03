@@ -61,7 +61,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
         ...(fileIds ? { file_ids: fileIds } : {}),
       })
       const { id: _cid, createdAt: _cc, updatedAt: _cu, syncPostId: _cs, ...rest } = certificate
-      onUpdate(certificate.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: post.id })
+      onUpdate(certificate.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: post.id, approvalRevokedAt: undefined })
       setApprovalDone(true)
     } catch (err) {
       setApprovalError(err instanceof Error ? err.message : '인증 요청에 실패했습니다. 다시 시도해 주세요.')
@@ -131,7 +131,16 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                 roleTemplate={roleTemplate}
                 track={certificateTrack(certificate)}
                 onSubmit={(input) => {
-                  onUpdate(certificate.id, input)
+                  // 인증(또는 인증 요청) 뒤에 자격 내용을 바꾸면 관리자가 확인한 것과 달라지므로 인증을 해제하고 재요청하게 한다.
+                  // 메모만 바뀐 경우는 유지.
+                  const substantiveKeys = ['name', 'category', 'issuer', 'issuedDate', 'expiryDate', 'licenceNumber', 'aircraftCategory', 'classRating', 'typeRating', 'limitations', 'linkedCertificateId'] as const
+                  const changed = substantiveKeys.some((k) => (certificate[k] ?? '') !== (input[k] ?? ''))
+                  const wasVerified = certificate.approvalStatus === 'approved' || (certificate.approvalStatus === 'pending' && certificate.approvalRequestPostId)
+                  if (changed && wasVerified) {
+                    onUpdate(certificate.id, { ...input, approvalStatus: undefined, approvalRequestPostId: undefined, approvalRevokedAt: Date.now() })
+                  } else {
+                    onUpdate(certificate.id, input)
+                  }
                   setMode('view')
                 }}
               />
@@ -202,6 +211,11 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                     {effectiveStatus === 'pending' && !requestNotSent && (
                       <p data-mbaas-oid="crtaprqP" className="mt-2 text-sm text-amber-300">
                         승인 대기 중 — 관리자 확인 후 이 카드에 자동 반영됩니다.
+                      </p>
+                    )}
+                    {effectiveStatus === undefined && certificate.approvalRevokedAt && (
+                      <p data-mbaas-oid="crtrevoked" className="rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                        내용을 수정해 이전 인증이 해제되었어요. 수정한 내용이 실물과 맞는지 관리자가 다시 확인해야 하므로 인증을 다시 요청해 주세요.
                       </p>
                     )}
                     {(effectiveStatus === undefined || effectiveStatus === 'rejected' || requestNotSent) && (
