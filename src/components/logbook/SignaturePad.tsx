@@ -27,6 +27,9 @@ export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) 
     const ctx = canvas.getContext('2d')
     if (ctx) {
       ctx.scale(ratio, ratio)
+      // 내보내는 PNG가 투명 배경이면 어두운 화면에서 검은 획이 안 보인다 → 흰 배경을 먼저 칠한다
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(0, 0, rect.width, rect.height)
       ctx.lineWidth = 2.5
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
@@ -82,6 +85,10 @@ export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) 
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+    // 흰 배경 유지(내보내는 PNG가 투명이 되지 않도록). scale이 적용된 좌표계이므로 CSS 크기로 칠한다
+    const rect = canvas.getBoundingClientRect()
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, 0, rect.width, rect.height)
     hasStrokeRef.current = false
     onChange(null)
   }

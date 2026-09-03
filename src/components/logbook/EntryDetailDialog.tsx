@@ -528,7 +528,7 @@ export function EntryDetailDialog({
                       <img
                         data-mbaas-oid="yhkzgbo" src={entry.pilotCertification.signatureDataUrl}
                         alt="조종사 본인 서명 이미지"
-                        className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
+                        className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
                       />
                     )}
                     <p data-mbaas-oid="j3utrf5" className="font-mono-data text-xs tabular-nums text-slate-400">

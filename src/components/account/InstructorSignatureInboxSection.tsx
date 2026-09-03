@@ -60,20 +60,39 @@ function SignatureRequestCard({ post, account, onStatusResolved }: SignatureRequ
   }, [post.id, signedComment, isCheckingComments, onStatusResolved])
 
   const isProcessing = isUploading || isSigning
-  const error = uploadError || signError
+  const [localError, setLocalError] = useState<string | null>(null)
+  const error = localError || signError
+  void uploadError
 
   async function handleSign() {
     if (!signatureDataUrl) return
     resetUpload()
     resetSign()
+    setLocalError(null)
+    // 핵심 기능이므로 저장소 업로드가 실패하거나 15초 안에 끝나지 않으면 서명 이미지를 댓글에 직접(data URL) 담아 진행한다.
+    // 학생 화면은 data: URL을 그대로 표시하므로 두 경로 모두 정상 동작한다.
+    let imageUrl: string = signatureDataUrl
     try {
-      const imageUrl = await uploadSignatureImage(signatureDataUrl)
-      await createComment(buildSignedCommentContent(account.name, new Date(), imageUrl))
+      const uploaded = await Promise.race<string>([
+        uploadSignatureImage(signatureDataUrl),
+        new Promise<string>((_, reject) => window.setTimeout(() => reject(new Error('업로드 시간 초과')), 15000)),
+      ])
+      if (uploaded) imageUrl = uploaded
+    } catch (err) {
+      console.warn('[서명] 이미지 저장소 업로드 실패 → 인라인 저장으로 진행', err)
+      resetUpload()
+    }
+    try {
+      await Promise.race([
+        createComment(buildSignedCommentContent(account.name, new Date(), imageUrl)),
+        new Promise((_, reject) => window.setTimeout(() => reject(new Error('서버 응답 시간 초과(20초)')), 20000)),
+      ])
       await refetchComments()
       setSignatureDataUrl(null)
-    } catch {
-      // uploadError/signError 상태로 화면에 안내됨. 서명은 저장하지 않으므로(캔버스는 그대로 남아있음)
-      // 다시 "서명 완료" 버튼을 눌러 재시도할 수 있다.
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '서명 등록에 실패했습니다.'
+      setLocalError(`서명 등록 실패: ${message}. 네트워크를 확인한 뒤 다시 눌러 주세요.`)
+      console.error('[서명] 댓글 등록 실패', err)
     }
   }
 
