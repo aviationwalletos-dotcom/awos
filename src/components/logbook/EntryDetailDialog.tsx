@@ -18,6 +18,9 @@ import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { Button } from '../Button'
 import { StatusBadge } from '../StatusBadge'
 import { EntryForm } from './EntryForm'
+import { UltralightEntryForm } from './UltralightEntryForm'
+import { entryTrack } from '../../lib/tracks'
+import type { Vehicle } from '../../types/vehicle'
 import { useApprovedInstructors } from '../../hooks/baas/useApprovedInstructors'
 import { useAuth } from '../../contexts/AuthContext'
 import { useComments } from '../../hooks/baas/useComments'
@@ -64,11 +67,14 @@ interface EntryDetailDialogProps {
   aircraftTypePlaceholder?: string
   aircraftIdLabel?: string
   aircraftIdPlaceholder?: string
+  /** v1.1 — 초경량 기록 편집 시 기체 선택지 */
+  vehicles?: Vehicle[]
 }
 
 export function EntryDetailDialog({
   entry,
   onClose,
+  vehicles,
   onUpdate,
   onDelete,
   aircraftTypeLabel = '항공기 제작사 및 모델',
@@ -269,6 +275,15 @@ export function EntryDetailDialog({
                   이 기록은 교관 서명이 완료된 상태입니다. 내용을 수정하고 저장하면 기존 서명이 취소됩니다.
                 </p>
               )}
+              {entryTrack(entry) === 'ultralight' ? (
+                <UltralightEntryForm
+                  mode="edit"
+                  initialValues={entry}
+                  vehicles={vehicles ?? []}
+                  onCancel={() => setMode('view')}
+                  onSubmit={handleEditSubmit}
+                />
+              ) : (
               <EntryForm
                 mode="edit"
                 initialValues={entry}
@@ -279,6 +294,7 @@ export function EntryDetailDialog({
                 aircraftIdLabel={aircraftIdLabel}
                 aircraftIdPlaceholder={aircraftIdPlaceholder}
               />
+              )}
             </div>
           ) : (
             <div data-mbaas-oid="lgbdlg8" className="mt-5 space-y-4">
@@ -417,6 +433,46 @@ export function EntryDetailDialog({
                   <dt data-mbaas-oid="1pjrfm8" className="text-xs font-medium uppercase tracking-wide text-slate-400">비행 종류</dt>
                   <dd data-mbaas-oid="radoise" className="mt-0.5 text-ink">{entry.flightCategory}</dd>
                 </div>
+                {entryTrack(entry) === 'ultralight' && (
+                  <>
+                    {(entry.takeoffTime || entry.landingTime) && (
+                      <div data-mbaas-oid="uldet1">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">이륙 → 착륙 시각</dt>
+                        <dd className="mt-0.5 font-mono-data text-ink">{entry.takeoffTime ?? '–'} → {entry.landingTime ?? '–'}</dd>
+                      </div>
+                    )}
+                    {(entry.hourMeterStart != null || entry.hourMeterEnd != null) && (
+                      <div data-mbaas-oid="uldet2">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">아워미터</dt>
+                        <dd className="mt-0.5 font-mono-data text-ink">{entry.hourMeterStart ?? '–'} → {entry.hourMeterEnd ?? '–'}</dd>
+                      </div>
+                    )}
+                    {entry.flightCount != null && (
+                      <div data-mbaas-oid="uldet3">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">비행 횟수</dt>
+                        <dd className="mt-0.5 font-mono-data text-ink">{entry.flightCount}회</dd>
+                      </div>
+                    )}
+                    <div data-mbaas-oid="uldet4">
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">임무별 (기장/훈련/교관)</dt>
+                      <dd className="mt-0.5 font-mono-data text-ink">
+                        {(entry.pilotingTime?.pic ?? 0).toFixed(1)} / {(entry.pilotingTime?.training ?? 0).toFixed(1)} / {(entry.pilotingTime?.flightInstructor ?? 0).toFixed(1)}시간
+                      </dd>
+                    </div>
+                    {entry.flightPurpose && (
+                      <div data-mbaas-oid="uldet5" className="col-span-2">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">비행목적 / 훈련내용</dt>
+                        <dd className="mt-0.5 text-ink">{entry.flightPurpose}</dd>
+                      </div>
+                    )}
+                    {entry.instructorLicenceNo && (
+                      <div data-mbaas-oid="uldet6">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">지도조종자 자격번호</dt>
+                        <dd className="mt-0.5 font-mono-data text-ink">{entry.instructorLicenceNo}</dd>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div data-mbaas-oid="lnddet1">
                   <dt data-mbaas-oid="lnddet2" className="text-xs font-medium uppercase tracking-wide text-slate-400">계기접근 / 주간 / 야간 이착륙</dt>
                   <dd data-mbaas-oid="lnddet3" className="mt-0.5 font-mono-data tabular-nums text-ink">

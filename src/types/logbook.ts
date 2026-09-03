@@ -39,6 +39,8 @@ export interface PilotingTime {
   // v1.1 — 별표 4 응시경력 계산에 필요한 세부 구분(선택 입력)
   solo?: number // 단독 비행
   picSupervised?: number // 기장 감독 하 기장 임무 수행(SIC U/S) — 운송용 응시경력
+  // v1.1 초경량 — 운영세칙 제10조 "훈련시간": 지도조종자의 조종장치와 연결된 훈련용 조종장치로 비행한 시간
+  training?: number
 }
 
 // 비행 조건별 시간 (모두 선택 입력, 기본 0)
@@ -79,6 +81,16 @@ export interface LogbookEntry {
   dayLandings?: number // 주간 이착륙 횟수(선택, 기본 0)
   nightLandings?: number // 야간 이착륙 횟수(선택, 기본 0)
   nightTakeoffs?: number // v1.1 — 야간 이륙 횟수(사업용 응시경력: 야간 이륙·착륙 각 5회)
+  // ── v1.1 초경량(로그기록지 · 비행경력증명서 별지 제2호) 전용 ──
+  vehicleId?: string // 기체 카드 참조(types/vehicle.ts). 종류·형식·신고번호·인증검사일은 카드에서 가져온다
+  flightCount?: number // 무인: 해당 일자 비행 횟수(②). 유인은 dayLandings(착륙횟수)를 쓴다
+  takeoffTime?: string // HH:MM
+  landingTime?: string // HH:MM
+  hourMeterStart?: number // 이륙시점 아워미터
+  hourMeterEnd?: number // 착륙시점 아워미터
+  flightPurpose?: string // 비행목적(자격 보유자) 또는 훈련내용(교육생)
+  instructorLicenceNo?: string // 지도조종자 자격번호(⑧)
+  traineeName?: string // 로그기록지 ⑥ 교육생 성명(본인이 아닌 경우)
   notes?: string
   // 조종사 본인 서명(자기 인증). 교관 서명 요청과 별개로, 본인이 직접 캔버스에 서명해
   // "이 기록에 기재된 내용이 사실임"을 스스로 확정하는 용도입니다.

@@ -61,7 +61,11 @@ import { useAuth } from '../contexts/AuthContext'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import type { IndividualRole } from '../lib/baas/types'
 import { usePilotTracks } from '../hooks/usePilotTracks'
-import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countEntriesByTrack, countUntaggedEntries, filterEntriesByTrack } from '../lib/tracks'
+import { useVehicles } from '../hooks/useVehicles'
+import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
+import { VehicleCards } from '../components/logbook/VehicleCards'
+import { printFlightExperienceCertificate } from '../lib/flightExperienceCertificatePrint'
+import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countEntriesByTrack, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
 import { getRoleContentByIndividualRole } from '../data/content'
 import { WORK_LOG_ROLE_COPY } from '../types/workLog'
@@ -131,6 +135,7 @@ export function LogbookPage() {
 
   // v1.1 — 보유 트랙(복수) + 지금 보고 있는 트랙. 모든 집계·커런시·덱은 activeTrack 기준으로만 계산한다.
   const { tracks: pilotTracks, activeTrack, setActiveTrack, birthDate, operationType } = usePilotTracks(account)
+  const { vehicles, addVehicle, deleteVehicle } = useVehicles(account)
 
   // 비조종 직군(관제사·정비사·운항관리사)은 트랙과 무관하게 업무기록 화면을 쓴다.
   const workLogRole = isWorkLogRole(individualRole) ? individualRole : undefined
@@ -183,6 +188,13 @@ export function LogbookPage() {
   const entryCountByTrack = useMemo(() => countEntriesByTrack(entries), [entries])
   const untaggedCount = useMemo(() => countUntaggedEntries(entries), [entries])
   const entrySuggestions = useMemo(() => buildEntrySuggestions(trackEntries), [trackEntries])
+  // 덱 상단 표기용 총 비행시간(LogbookTotalsSummary와 같은 기준: 미인증 비행경력증명서 기록 제외)
+  const trackTotalHours = useMemo(
+    () => trackEntries
+      .filter((e) => !(e.origin === 'flight_experience_certificate' && e.certificateApprovalStatus !== 'confirmed'))
+      .reduce((sum, e) => sum + (e.blockTime || 0), 0),
+    [trackEntries],
+  )
   const { uploadFile } = useUploadBoardFile()
   const { createCertificateApprovalPost } = useCreateCertificateApprovalPost()
 
@@ -229,6 +241,17 @@ export function LogbookPage() {
     },
     [updateEntry],
   )
+
+  // v1.1 — 자격 구분이 없는 예전 기록을 현재 추정값 그대로 명시 저장한다(추정 배너 해소).
+  const confirmInferredEntries = useCallback(() => {
+    const targets = entries.filter((e) => !e.vehicleClass)
+    if (targets.length === 0) return
+    if (!window.confirm(`예전 기록 ${targets.length}건의 자격 구분을 기종명 기준 자동 분류대로 확정할까요? (나중에 기록을 열어 바꿀 수 있어요)`)) return
+    for (const e of targets) {
+      const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = e
+      updateEntry(e.id, { ...rest, vehicleClass: entryTrack(e) })
+    }
+  }, [entries, updateEntry])
 
   // 엑셀 대량 가져오기 시 동시 요청 폭주 완화(BUG-020, BUG-014/BUG-019 후속): 수십~수백 건을 한꺼번에
   // addEntry로 넘기면 그만큼의 서버 게시글 생성 요청이 거의 동시에 나가, 일부가 네트워크 과부하/일시적
@@ -370,7 +393,7 @@ export function LogbookPage() {
   const workLogComplianceTitle = workLogRole ? WORK_LOG_COMPLIANCE_TITLE[workLogRole] : ''
 
   // 초경량·경량 법정 요건 안내/현황 — 반드시 트랙 필터된 기록으로 계산한다.
-  const droneComplianceItems = useMemo(() => (isDrone ? computeUltralightCompliance(trackEntries) : []), [isDrone, trackEntries])
+  const droneComplianceItems = useMemo(() => (isDrone ? computeUltralightCompliance(trackEntries, vehicles) : []), [isDrone, trackEntries, vehicles])
   const lsaComplianceItems = useMemo(() => (isLsa ? computeLsaCompliance(trackEntries) : []), [isLsa, trackEntries])
 
   const filteredEntries = useMemo(
@@ -416,59 +439,73 @@ export function LogbookPage() {
         <section data-mbaas-oid="zm0n7fe" className="relative overflow-hidden bg-navy-dark py-[clamp(24px,3vw,40px)] text-white">
           <div data-mbaas-oid="flk85t0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(0,212,255,0.14),transparent_55%)]" />
           <div data-mbaas-dynamic="true" data-mbaas-oid="lgbpg10" className="relative mx-auto max-w-4xl px-6">
-            <span data-mbaas-oid="lgbpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
-              <NotebookPen className="h-3.5 w-3.5" aria-hidden="true" />
-              AWOS 디지털 자격 월렛
-            </span>
-            {account && (
-              <p data-mbaas-dynamic="true" data-mbaas-oid="lgbpg25" className="mt-3 text-sm font-semibold text-sky">
-                {workLogRole ? (individualRoleLabel ?? '역할 미설정') : PILOT_TRACK_LABEL[activeTrack]} ·{' '}
-                <span data-mbaas-oid="bvzpidt" data-mbaas-dynamic="true">{account.name}</span>님
-              </p>
-            )}
+            <div data-mbaas-oid="herotop" className="flex flex-wrap items-start justify-between gap-3">
+              <span data-mbaas-oid="lgbpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
+                <NotebookPen className="h-3.5 w-3.5" aria-hidden="true" />
+                AWOS 디지털 자격 월렛
+              </span>
 
-            {!workLogRole && pilotTracks.length > 1 && (
-              <div data-mbaas-oid="trkswitch" role="tablist" aria-label="보유 트랙 전환" className="mt-3 flex flex-wrap gap-2">
-                {pilotTracks.map((t: PilotTrack) => {
-                  const isActive = t === activeTrack
-                  return (
-                    <button
-                      data-mbaas-oid="trkswbtn"
-                      key={t}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      onClick={() => setActiveTrack(t)}
-                      className={`inline-flex min-h-[36px] items-center gap-2 rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors
-                        ${isActive ? 'border-sky bg-sky/15 text-[#00D4FF]' : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/30'}`}
-                    >
-                      {PILOT_TRACK_SHORT[t]}
-                      <span data-mbaas-oid="trkswcnt" className={`rounded px-1.5 font-mono-data text-[10px] ${isActive ? 'bg-sky/20' : 'bg-white/10'}`}>
-                        {entryCountByTrack[t]}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
+              {account && (
+                <div data-mbaas-oid="heroright" className="flex flex-col items-end gap-2">
+                  <p data-mbaas-dynamic="true" data-mbaas-oid="lgbpg25" className="text-sm font-semibold text-sky">
+                    {workLogRole ? (individualRoleLabel ?? '역할 미설정') : PILOT_TRACK_LABEL[activeTrack]} ·{' '}
+                    <span data-mbaas-oid="bvzpidt" data-mbaas-dynamic="true">{account.name}</span>님
+                  </p>
+                  {!workLogRole && pilotTracks.length > 1 && (
+                    <div data-mbaas-oid="trkswitch" role="tablist" aria-label="자격 구분 전환" className="flex flex-wrap justify-end gap-1.5">
+                      {pilotTracks.map((t: PilotTrack) => {
+                        const isActive = t === activeTrack
+                        return (
+                          <button
+                            data-mbaas-oid="trkswbtn"
+                            key={t}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => setActiveTrack(t)}
+                            className={`inline-flex min-h-[30px] items-center gap-1.5 rounded-control border px-2.5 py-1 text-[11px] font-semibold transition-colors
+                              ${isActive ? 'border-sky bg-sky/15 text-[#00D4FF]' : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/30'}`}
+                          >
+                            {PILOT_TRACK_SHORT[t]}
+                            <span data-mbaas-oid="trkswcnt" className={`rounded px-1 font-mono-data text-[10px] ${isActive ? 'bg-sky/20' : 'bg-white/10'}`}>
+                              {entryCountByTrack[t]}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {!workLogRole && untaggedCount > 0 && (
-              <p data-mbaas-oid="trkuntag" className="mt-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-                기종명으로 트랙을 추정한 기록이 {untaggedCount}건 있어요. 기록을 열어 트랙을 확인하면 추정 표시가 사라집니다.
-              </p>
+              <div data-mbaas-oid="trkuntag" className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                <span data-mbaas-oid="trkuntagtxt">
+                  예전 기록 {untaggedCount}건은 자격 구분이 저장돼 있지 않아 기종명으로 자동 분류했어요.
+                </span>
+                <button
+                  data-mbaas-oid="trkuntagbtn"
+                  type="button"
+                  onClick={confirmInferredEntries}
+                  className="rounded-control border border-amber-300/50 bg-amber-300/15 px-2.5 py-1 text-[11px] font-semibold text-amber-100 hover:bg-amber-300/25"
+                >
+                  자동 분류 그대로 확정
+                </button>
+              </div>
             )}
 
             {isPilotLike ? (
               <div data-mbaas-oid="rdnscmp" className="mt-4 flex flex-col gap-4">
                 <FlightReadinessPanel entries={trackEntries} certificates={certificates} account={account} compact />
                 <div data-mbaas-oid="6w3w4t6" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={activeTrack} />
+                  <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={activeTrack} totalHours={trackTotalHours} />
                   <DutyTimeLimitCard entries={trackEntries} compact />
                 </div>
               </div>
             ) : (
               <div data-mbaas-oid="rdnscmp" className="mt-4">
-                <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={workLogRole ? 'aircraft' : activeTrack} />
+                <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={workLogRole ? 'aircraft' : activeTrack} totalHours={workLogRole ? undefined : trackTotalHours} />
               </div>
             )}
 
@@ -535,7 +572,7 @@ export function LogbookPage() {
                   <Reveal>
                     <ComplianceSection
                       title="초경량비행장치 조종자 법정 요건 안내/현황"
-                      description="아래 항목은 이 트랙(초경량)의 비행기록만으로 자동 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
+                      description="아래 항목은 초경량 구분의 비행기록만으로 자동 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
                       items={droneComplianceItems}
                     />
                   </Reveal>
@@ -549,7 +586,7 @@ export function LogbookPage() {
                   <Reveal>
                     <ComplianceSection
                       title="경량항공기 조종사 응시경력 안내/현황"
-                      description="시행규칙 별표 4 제2호 기준. 이 트랙(경량항공기)의 비행기록만으로 계산한 참고 정보입니다."
+                      description="시행규칙 별표 4 제2호 기준. 경량항공기 구분의 비행기록만으로 계산한 참고 정보입니다."
                       items={lsaComplianceItems}
                     />
                   </Reveal>
@@ -629,7 +666,11 @@ export function LogbookPage() {
                         else deleteEntries(ids)
                       }}
                       onExportCsv={() => downloadLogbookCsv(trackEntries)}
-                      onPrint={() => printLogbook(trackEntries)}
+                      onPrint={() =>
+                        isDrone
+                          ? printFlightExperienceCertificate(trackEntries, vehicles, { name: account?.name, birthDate })
+                          : printLogbook(trackEntries)
+                      }
                     />
                   </div>
                 </Reveal>
@@ -744,7 +785,6 @@ export function LogbookPage() {
                     account={account}
                     certificates={certificates}
                     isApprovedInstructor={isApprovedInstructor}
-                    operationType={operationType}
                   />
                 </div>
               </Reveal>
@@ -760,7 +800,20 @@ export function LogbookPage() {
                   <h2 data-mbaas-oid="lgbpg18" className="font-display text-2xl font-extrabold text-ink">
                     새 비행 기록 추가
                   </h2>
+                  {isDrone && (
+                    <div data-mbaas-oid="vehsec" className="mt-4">
+                      <VehicleCards vehicles={vehicles} onAdd={addVehicle} onDelete={deleteVehicle} />
+                    </div>
+                  )}
                   <div data-mbaas-oid="lgbpg19" className="mt-4 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
+                    {isDrone ? (
+                      <UltralightEntryForm
+                        mode="create"
+                        vehicles={vehicles}
+                        holderName={account?.name}
+                        onSubmit={(input) => addEntry(input)}
+                      />
+                    ) : (
                     <EntryForm
                       mode="create"
                       onSubmit={(input) => addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack })}
@@ -768,6 +821,7 @@ export function LogbookPage() {
                       track={activeTrack}
                       {...aircraftLabelProps}
                     />
+                    )}
                   </div>
                 </Reveal>
               </div>
@@ -855,6 +909,7 @@ export function LogbookPage() {
       <AutoSyncEntryDecisions entries={entries} onUpdate={handleUpdateEntry} />
 
       <EntryDetailDialog
+        vehicles={vehicles}
         entry={selectedEntry}
         onClose={() => setSelectedEntry(null)}
         onUpdate={handleUpdateEntry}

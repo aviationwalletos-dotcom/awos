@@ -18,6 +18,8 @@ import type { IndividualRole } from './baas/types'
 import type { BoardPostListItem } from './baas/boardTypes'
 import { isOperationType, parsePilotTracks } from './tracks'
 import type { OperationType, PilotTrack } from './tracks'
+import { isVehicle } from '../types/vehicle'
+import type { Vehicle } from '../types/vehicle'
 
 const TITLE_PREFIX = '개인설정'
 
@@ -33,6 +35,8 @@ export interface ProfileSettings {
   activeTrack?: PilotTrack
   birthDate?: string
   operationType?: OperationType
+  /** v1.1 — 초경량 기체 카드 목록 */
+  vehicles?: Vehicle[]
 }
 
 /** "개인설정" 게시글 제목 — 본인 게시글 필터링용으로 계정 아이디(이메일)를 포함한다. */
@@ -94,6 +98,10 @@ export function parseProfileSettingsFromContent(content: string | null | undefin
     if (active) settings.activeTrack = active
     if (isValidDateStringValue(candidate.birthDate)) settings.birthDate = candidate.birthDate
     if (isOperationType(candidate.operationType)) settings.operationType = candidate.operationType
+    if (Array.isArray(candidate.vehicles)) {
+      const vehicles = candidate.vehicles.filter(isVehicle)
+      if (vehicles.length > 0) settings.vehicles = vehicles
+    }
 
     return settings
   } catch {
@@ -116,6 +124,7 @@ export const PILOT_TRACKS_KEY_PREFIX = 'awos_pilot_tracks'
 export const ACTIVE_TRACK_KEY_PREFIX = 'awos_active_track'
 export const BIRTH_DATE_KEY_PREFIX = 'awos_birth_date'
 export const OPERATION_TYPE_KEY_PREFIX = 'awos_operation_type'
+export const VEHICLES_KEY_PREFIX = 'awos_vehicles'
 
 /** 계정별로 스코프된 localStorage 키를 만든다. */
 export function buildProfileFieldKey(prefix: string, accountId: string): string {
@@ -180,6 +189,18 @@ export function readLocalProfileSettings(accountId: string): ProfileSettings {
   if (birth && isValidDateStringValue(birth)) settings.birthDate = birth
   const op = readRawLocal(buildProfileFieldKey(OPERATION_TYPE_KEY_PREFIX, accountId))
   if (isOperationType(op)) settings.operationType = op
+  const vehiclesRaw = readRawLocal(buildProfileFieldKey(VEHICLES_KEY_PREFIX, accountId))
+  if (vehiclesRaw) {
+    try {
+      const parsed = JSON.parse(vehiclesRaw)
+      if (Array.isArray(parsed)) {
+        const vehicles = parsed.filter(isVehicle)
+        if (vehicles.length > 0) settings.vehicles = vehicles
+      }
+    } catch {
+      // 손상된 값은 무시
+    }
+  }
 
   return settings
 }

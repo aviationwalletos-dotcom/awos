@@ -239,7 +239,7 @@ export function CertificateForm({
               </option>
             ))}
           </select>
-          <p data-mbaas-oid="trkhint" className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 트랙의 자격으로 등록됩니다.</p>
+          <p data-mbaas-oid="trkhint" className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 자격으로 등록됩니다.</p>
         </div>
 
         {subTypes.length > 0 && (

@@ -11,6 +11,8 @@ import { getCertificateStatus } from '../types/certificate'
 import type { WorkLogEntry } from '../types/workLog'
 import type { LogbookEntry } from '../types/logbook'
 import { isUnmannedKind, vehicleKindLabel } from './tracks'
+import { isInspectionValidOn } from '../types/vehicle'
+import type { Vehicle } from '../types/vehicle'
 
 export type RequirementStatus = 'met' | 'unmet' | 'info'
 
@@ -219,8 +221,12 @@ function splitUltralightHours(entries: LogbookEntry[]): { manned: number; unmann
   return { manned, unmanned, byKind }
 }
 
-export function computeUltralightCompliance(entries: LogbookEntry[]): RequirementItem[] {
-  const { manned, unmanned, byKind } = splitUltralightHours(entries)
+export function computeUltralightCompliance(entries: LogbookEntry[], vehicles: Vehicle[] = []): RequirementItem[] {
+  // 기재요령 주의사항 2: 최종인증검사 유효기간이 지난 기체로 한 비행은 경력 인정 제외(면제 기체 제외)
+  const vehicleById = new Map(vehicles.map((v) => [v.id, v]))
+  const excluded = entries.filter((e) => e.vehicleId && !isInspectionValidOn(vehicleById.get(e.vehicleId), e.date))
+  const counted = excluded.length > 0 ? entries.filter((e) => !excluded.includes(e)) : entries
+  const { manned, unmanned, byKind } = splitUltralightHours(counted)
   const topUnmannedKind = Object.entries(byKind)
     .filter(([k]) => isUnmannedKind(k))
     .sort((a, b) => b[1] - a[1])[0]
@@ -265,13 +271,22 @@ export function computeUltralightCompliance(entries: LogbookEntry[]): Requiremen
     })
   }
 
+  const expiredVehicles = vehicles.filter((v) => !v.inspectionExempt && v.inspectionValidUntil && v.inspectionValidUntil < new Date().toISOString().slice(0, 10))
   items.push(
     {
       key: 'airworthiness',
       title: '기체 안전성 인증 유효성',
-      legalBasis: '항공안전법 제124조',
-      status: 'info',
-      detail: '자동 계산이 어려운 항목입니다. 자격증 관리 탭에서 "기체 안전성 인증" 명칭으로 등록하면 만료 알림(D-30/D-7)을 받을 수 있습니다.',
+      legalBasis: '항공안전법 제124조 · 별지 제2호 기재요령',
+      status: excluded.length > 0 || expiredVehicles.length > 0 ? 'unmet' : vehicles.length > 0 ? 'met' : 'info',
+      badgeLabel: excluded.length > 0 ? `${excluded.length}건 경력 제외` : undefined,
+      detail:
+        vehicles.length === 0
+          ? '기록 입력 탭의 "내 기체"에 기체를 등록하고 인증 유효기간을 넣으면, 만료 후 비행을 자동으로 걸러줍니다.'
+          : excluded.length > 0
+            ? `인증 만료 후 비행 ${excluded.length}건은 위 누적시간과 증명서에서 제외했어요.${expiredVehicles.length > 0 ? ` 만료 기체: ${expiredVehicles.map((v) => v.model).join(', ')}` : ''}`
+            : expiredVehicles.length > 0
+              ? `인증이 만료된 기체가 있어요: ${expiredVehicles.map((v) => v.model).join(', ')}. 재검사 전 비행은 경력에서 제외됩니다.`
+              : '등록된 기체의 인증이 모두 유효해요.',
     },
     {
       key: 'no_fly_zone',
@@ -325,7 +340,7 @@ export function computeLsaCompliance(entries: LogbookEntry[]): RequirementItem[]
       title: '야간비행',
       legalBasis: '항공안전법 제120조 · 규칙 제311조',
       status: 'info',
-      detail: '경량항공기는 야간비행이 금지됩니다. 이 트랙에서는 야간 카드·야간 커런시를 계산하지 않습니다.',
+      detail: '경량항공기는 야간비행이 금지됩니다. 경량항공기 구분에서는 야간 카드·야간 커런시를 계산하지 않습니다.',
     },
   ]
 }

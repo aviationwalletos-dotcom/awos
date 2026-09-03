@@ -391,21 +391,21 @@ export function AccountPage() {
             <div data-mbaas-oid="xoayoig" className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
               <h2 data-mbaas-oid="f2ir82j" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
                 <User className="h-4 w-4 text-sky" aria-hidden="true" />
-                보유 트랙 설정
+                보유 자격 구분
               </h2>
               <p data-mbaas-oid="le1951t" className="mt-1 flex items-start gap-2 text-xs text-slate-400">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
-                자격을 여러 개 갖고 있으면 여러 개 고를 수 있어요. 비행기록·자격증·커런시는 트랙별로 따로 계산되어 섞이지 않습니다.
+                자격을 여러 개 갖고 있으면 여러 개 고를 수 있어요. 비행기록·자격증·커런시는 구분별로 따로 계산되어 섞이지 않습니다.
                 이 설정은 이 브라우저에 즉시 저장되고 서버에도 동기화됩니다.
               </p>
               {isDerivedFromLegacyRole && (
                 <p data-mbaas-oid="trklegacy" className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-                  아직 트랙을 직접 고르지 않아 기존 역할({individualRoleLabel})에서 추정한 값이에요. 한 번 저장해 두면 추정 표시가 사라집니다.
+                  아직 직접 고르지 않아 기존 역할({individualRoleLabel})에서 가져온 값이에요. 한 번 저장해 두면 이 안내가 사라집니다.
                 </p>
               )}
 
               <form data-mbaas-oid="yta84vp" onSubmit={handleSaveTracks} className="mt-5 flex flex-col gap-4">
-                <div data-mbaas-oid="701ds1i" role="group" aria-label="보유 트랙 선택" className="grid grid-cols-1 gap-2">
+                <div data-mbaas-oid="701ds1i" role="group" aria-label="보유 자격 구분 선택" className="grid grid-cols-1 gap-2">
                   {ALL_PILOT_TRACKS.map((t) => {
                     const isChecked = selectedTracks.includes(t)
                     return (
@@ -433,12 +433,12 @@ export function AccountPage() {
 
                 {tracksSaved && (
                   <p data-mbaas-oid="x1byfxi" role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                    트랙이 저장되었습니다. ({selectedTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')})
+                    자격 구분이 저장되었습니다. ({selectedTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')})
                   </p>
                 )}
 
                 <Button data-mbaas-oid="71ty616" type="submit" size="md" tone="brand" disabled={selectedTracks.length === 0} className="self-start">
-                  트랙 저장
+                  자격 구분 저장
                 </Button>
               </form>
             </div>

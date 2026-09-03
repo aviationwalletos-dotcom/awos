@@ -68,11 +68,13 @@ interface MyCertificateStatusCardProps {
   compact?: boolean
   /** 카드에 표기할 보유자 이름(계정 이름) */
   holderName?: string
-  /** v1.1 — 어느 트랙의 덱을 보여줄지. 없으면 항공기. */
+  /** v1.1 — 어느 자격 구분의 덱을 보여줄지. 없으면 항공기. */
   track?: PilotTrack
+  /** v1.1 — 이 구분의 총 비행시간(시간). 있으면 덱 헤더에 크게 표기 */
+  totalHours?: number
 }
 
-export function MyCertificateStatusCard({ certificates, roleContent, compact = false, holderName, track = 'aircraft' }: MyCertificateStatusCardProps) {
+export function MyCertificateStatusCard({ certificates, roleContent: _roleContent, compact = false, holderName, track = 'aircraft', totalHours }: MyCertificateStatusCardProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const DECK = DECK_BY_TRACK[track]
@@ -115,11 +117,19 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
         <div data-mbaas-oid="mcshead1" className="min-w-0">
           <p data-mbaas-oid="xczv64y" className="text-xs font-semibold uppercase tracking-wide text-sky">내 자격 현황</p>
           <p data-mbaas-oid="d2gdtsk" className="mt-0.5 truncate text-sm text-slate-400">
-            {PILOT_TRACK_LABEL[track]} 덱 {DECK.length}장 · {PILOT_TRACK_LEGAL_BASIS[track]}
-            {roleContent ? '' : ''}
+            {PILOT_TRACK_LABEL[track]} · 카드 {DECK.length}장 · {PILOT_TRACK_LEGAL_BASIS[track]}
           </p>
         </div>
-        <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">← 카드 좌·우를 눌러 넘겨보세요 →</p>
+        {totalHours !== undefined ? (
+          <div data-mbaas-oid="mcstotal" className="shrink-0 text-right">
+            <p data-mbaas-oid="mcstotal1" className="font-mono-data text-[10px] font-semibold uppercase tracking-wider text-slate-500">총 비행시간</p>
+            <p data-mbaas-oid="mcstotal2" className="font-mono-data text-xl font-extrabold tabular-nums text-[#00D4FF]">
+              {totalHours.toFixed(1)}<span data-mbaas-oid="mcstotal3" className="ml-0.5 text-xs font-semibold text-slate-400">h</span>
+            </p>
+          </div>
+        ) : (
+          <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">← 카드 좌·우를 눌러 넘겨보세요 →</p>
+        )}
       </div>
 
       <div

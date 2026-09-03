@@ -6,6 +6,9 @@ import type { Certificate, CertificateStatus } from '../../types/certificate'
 import { CERTIFICATE_STATUS_LABEL } from '../../types/certificate'
 import type { AccountResponse } from '../../lib/baas/types'
 import { useCurrencyOverrides } from '../../hooks/useCurrencyOverrides'
+import { usePilotTracks } from '../../hooks/usePilotTracks'
+import { OPERATION_TYPE_DESCRIPTION, OPERATION_TYPE_LABEL } from '../../lib/tracks'
+import type { OperationType } from '../../lib/tracks'
 import { computeFlightReadiness, parseEntryDate } from '../../lib/flightReadiness'
 
 // ── 날짜 유틸 ────────────────────────────────────────────────────────────
@@ -55,11 +58,11 @@ interface CurrencyDashboardProps {
   certificates?: Certificate[]
   /** 승인된 교관 계정일 때만 "조종교육 비행경험(교관 커런시)" 섹션을 노출합니다. */
   isApprovedInstructor?: boolean
-  /** v1.1 — 운항형태(계정정보에서 설정). 최근 비행경험 기간을 가른다. */
-  operationType?: 'general' | 'commercial'
 }
 
-export function CurrencyDashboard({ entries, account, certificates = [], isApprovedInstructor = false, operationType = 'general' }: CurrencyDashboardProps) {
+export function CurrencyDashboard({ entries, account, certificates = [], isApprovedInstructor = false }: CurrencyDashboardProps) {
+  // v1.1 — 운항형태는 계정정보와 같은 값을 공유한다. 여기서 바꾸면 계정정보에도 반영된다.
+  const { operationType, setOperationType } = usePilotTracks(account)
   const {
     instrumentCheckDate,
     setInstrumentCheckDate,
@@ -233,6 +236,28 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             <h3 data-mbaas-oid="wz7y9h3" className="font-display text-lg font-extrabold text-ink">
               최근 비행경험(일반 및 야간 비행)
             </h3>
+            <div data-mbaas-oid="optoggle" role="radiogroup" aria-label="운항형태 선택" className="mt-3 flex flex-wrap gap-2">
+              {(['general', 'commercial'] as OperationType[]).map((o) => {
+                const active = operationType === o
+                return (
+                  <button
+                    data-mbaas-oid="optogbtn"
+                    key={o}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setOperationType(o)}
+                    className={`flex min-h-[40px] flex-col items-start rounded-control border px-3 py-1.5 text-left transition-colors ${
+                      active ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/30'
+                    }`}
+                  >
+                    <span className="text-xs font-semibold">{OPERATION_TYPE_LABEL[o]}</span>
+                    <span className="text-[10px] text-slate-500">{OPERATION_TYPE_DESCRIPTION[o]}</span>
+                  </button>
+                )
+              })}
+              <p data-mbaas-oid="optognote" className="self-center text-[11px] text-slate-500">계정정보와 같은 값이에요. 여기서 바꿔도 저장됩니다.</p>
+            </div>
             <div data-mbaas-oid="4f1ymr8" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
               최근 {recency.windowDays}일 이내 이·착륙 합계가 3회 이상이어야 하며, 그 중 야간 이·착륙이 1회 이상 포함되어야 야간비행이
               가능합니다. 모의비행장치를 이용한 이착륙 경험도 인정됩니다.

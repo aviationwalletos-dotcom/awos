@@ -313,7 +313,7 @@ export function EntryForm({
     <form data-mbaas-oid="lgbfrm1" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
       {/* v1.1 — 트랙·장치 종류. 여기서 고른 트랙의 집계에만 이 기록이 들어간다. */}
       <div data-mbaas-oid="trkblk" className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
-        <p className={labelClass}>이 기록의 트랙</p>
+        <p className={labelClass}>이 기록의 자격 구분</p>
         <div data-mbaas-oid="trkchips" className="mt-2 flex flex-wrap gap-2">
           {(['aircraft', 'lsa', 'ultralight'] as PilotTrack[]).map((t) => (
             <button
