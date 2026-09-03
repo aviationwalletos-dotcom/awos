@@ -16,7 +16,7 @@ export function Footer() {
         </div>
 
         <div data-mbaas-oid="qza71ni" className="flex flex-col gap-2 text-xs sm:items-end">
-          <p data-mbaas-oid="qo3f5eb">문의: contact@aviationwalletos.example</p>
+          <p data-mbaas-oid="qo3f5eb">문의: awos.help@gmail.com</p>
           <nav data-mbaas-oid="ehtb4fs" aria-label="푸터 링크" className="flex gap-4">
             <a data-mbaas-oid="qwgdrlh" href="#features" className="hover:text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded">
               기능 명세

@@ -63,7 +63,7 @@ import { getRoleContentByIndividualRole } from '../data/content'
 import { WORK_LOG_ROLE_COPY } from '../types/workLog'
 import type { WorkLogEntry, WorkLogRole } from '../types/workLog'
 import type { LogbookEntry, LogbookEntryInput, LogbookFilterKind } from '../types/logbook'
-import type { CertificateInput, Certificate } from '../types/certificate'
+import type { Certificate, CertificateInput } from '../types/certificate'
 
 type TabKey = 'myRecords' | 'certificates' | 'currency' | 'logbook' | 'signatureInbox' | 'workLog'
 

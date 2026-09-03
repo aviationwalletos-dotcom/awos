@@ -56,7 +56,23 @@ export default tseslint.config(
         {
           allowSeparatedGroups: true,
           ignoreCase: false,
-          ignoreDeclarationSort: false,
+          // 선언 순서 정렬은 끈다. 멤버 정렬(중괄호 안)만 검사한다.
+          // 이유: 이 프로젝트는 "react → 외부 → 내부" 순으로 import를 묶는 관례를 쓰는데,
+          // 알파벳 강제 정렬이 그 관례와 계속 충돌해 오류 173건이 상시 떠 있었다.
+          // 상시 실패하는 린트는 아무도 보지 않게 되므로 실제 버그를 놓치게 된다.
+          ignoreDeclarationSort: true,
+        },
+      ],
+      // '_' 로 시작하는 이름은 "의도적으로 쓰지 않는 값"이라는 관례 표기다.
+      // 구조분해로 특정 키만 제외할 때 쓰이므로 미사용 경고에서 제외한다.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
       '@typescript-eslint/consistent-type-imports': [

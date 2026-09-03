@@ -37,7 +37,7 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Inter', 'Pretendard Variable', 'Pretendard', 'sans-serif'],
+        display: ['Pretendard Variable', 'Pretendard', 'sans-serif'],
         body: ['Pretendard Variable', 'Pretendard', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },

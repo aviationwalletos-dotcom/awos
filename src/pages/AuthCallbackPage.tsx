@@ -15,7 +15,11 @@ export function AuthCallbackPage() {
     const errorDescription = params.get('error_description')
     if (access) {
       adoptAuthSession(access, refresh)
-      window.location.replace('/logbook')
+      const next = new URLSearchParams(window.location.search).get('next')
+      // [SEC] '//evil.com' 이나 '/\evil.com' 은 startsWith('/') 를 통과하지만
+      // 브라우저가 외부 주소로 해석한다(오픈 리다이렉트). 앱 내부 경로만 허용한다.
+      const isInternalPath = Boolean(next) && /^\/(?![/\\])/.test(next!)
+      window.location.replace(isInternalPath ? next! : '/account?setup=1')
     } else {
       setFailed(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : '로그인 정보가 전달되지 않았어요.')
     }

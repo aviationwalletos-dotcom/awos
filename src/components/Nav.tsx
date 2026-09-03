@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, UserCircle2 } from 'lucide-react'
 
-import { Button } from './Button'
 import { useAuth } from '../contexts/AuthContext'
 
 export function Nav() {

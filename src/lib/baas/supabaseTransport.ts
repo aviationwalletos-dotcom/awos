@@ -236,6 +236,27 @@ export function adoptAuthSession(accessToken: string, refreshToken: string | nul
   setStoredAccessToken(packToken(accessToken, refreshToken))
 }
 
+/** 내 프로필(profiles) 일부 필드를 저장하고 캐시를 비운다. 계정정보 페이지의 역할·소속 저장에 사용. */
+export async function updateMyProfileFields(fields: { individual_role?: string | null; institution?: string | null }): Promise<void> {
+  const client = getAuthedDataClient()
+  const userId = getAuthedUserId()
+  if (!client || !userId) throw new Error('로그인이 필요합니다.')
+  const { error } = await client.from('profiles').update(fields).eq('id', userId)
+  if (error) throw new Error(error.message)
+  profileCache.delete(userId)
+}
+
+/** 현재 로그인 액세스 토큰(원문). 인증 서버 직접 호출(계정 연결 등)에 사용. */
+export function getAuthedAccessToken(): string | null {
+  const packed = getStoredAccessToken()
+  if (!packed) return null
+  try {
+    return unpackToken(packed).access
+  } catch {
+    return null
+  }
+}
+
 /** 현재 로그인 사용자의 auth uid (JWT sub). 비로그인/파싱 실패 시 null. */
 export function getAuthedUserId(): string | null {
   const packed = getStoredAccessToken()

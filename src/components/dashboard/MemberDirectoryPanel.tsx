@@ -51,6 +51,7 @@ export function MemberDirectoryPanel() {
   const [memberCerts, setMemberCerts] = useState<Record<string, Certificate[]>>({})
   const [emails, setEmails] = useState<Record<string, string>>({})
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [reasonFor, setReasonFor] = useState<MemberRow | null>(null)
   const [statsNote, setStatsNote] = useState<string | null>(null)
   const [emptyReason, setEmptyReason] = useState<EmptyReason>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -91,8 +92,8 @@ export function MemberDirectoryPanel() {
       // 회원별 기록·자격증 집계 (게시판 원본을 직접 읽음 — 실패해도 목록은 유지)
       try {
         const [logbookRes, certRes, tableLogRes, tableCertRes] = await Promise.all([
-          client.from('board_posts').select('author_id,content').eq('board_id', LOGBOOK_BOARD_ID).eq('is_hidden', false).limit(1000),
-          client.from('board_posts').select('author_id,content').eq('board_id', CERTIFICATE_BOARD_ID).eq('is_hidden', false).limit(1000),
+          client.from('board_posts').select('author_id,content').eq('board_id', LOGBOOK_BOARD_ID).not('is_hidden', 'is', true).limit(1000),
+          client.from('board_posts').select('author_id,content').eq('board_id', CERTIFICATE_BOARD_ID).not('is_hidden', 'is', true).limit(1000),
           client.from('user_logbook_entries').select('user_id,data').limit(5000),
           client.from('user_certificates').select('user_id,data').limit(5000),
         ])
@@ -294,12 +295,13 @@ export function MemberDirectoryPanel() {
                     ) : st.medicalValid && st.recencyMet ? (
                       <span data-mbaas-oid="mdircb1" className="rounded bg-go/15 px-2 py-0.5 text-[11px] font-semibold text-go">GO</span>
                     ) : (
-                      <span
-                        data-mbaas-oid="mdircb2" className="rounded bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300"
-                        title={[!st.medicalValid ? '항공신체검사 미유효' : null, !st.recencyMet ? '최근비행 기준 미달' : null].filter(Boolean).join(' · ')}
+                      <button
+                        data-mbaas-oid="mdircb2" type="button"
+                        onClick={(e) => { e.stopPropagation(); setReasonFor(m) }}
+                        className="rounded bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300 underline decoration-dotted underline-offset-2 hover:bg-amber-400/25"
                       >
                         확인 필요
-                      </span>
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -313,7 +315,7 @@ export function MemberDirectoryPanel() {
                         </p>
                         <p data-mbaas-oid="mdirdet4" className="text-slate-300">
                           <span data-mbaas-oid="mdirdet4a" className="text-xs uppercase tracking-wide text-slate-500">가입일 </span><br data-mbaas-oid="mdirdetbr2" />
-                          <span data-mbaas-oid="mdirdet4b" className="font-mono-data text-ink">{new Date(m.created_at).toLocaleDateString('ko-KR')}</span>
+                          <span data-mbaas-oid="mdirdet4b" className="font-mono-data text-ink">{String(m.created_at).slice(0, 10)}</span>
                         </p>
                       </div>
                       <div data-mbaas-oid="mdirdet5" className="mt-4">
@@ -352,9 +354,33 @@ export function MemberDirectoryPanel() {
           </tbody>
         </table>
       </div>
-      <p data-mbaas-oid="mdirfoot" className="mt-3 text-xs text-slate-500">
-        커런시는 항공신체검사 유효 + 최근비행 기준(간이 판정)입니다. 세부 사유는 배지에 마우스를 올리면 표시돼요.
-      </p>
+      {reasonFor && (() => {
+        const st = stats[reasonFor.id]
+        const reasons = [
+          !st?.medicalValid ? { title: '항공신체검사 미유효', detail: '유효한 항공신체검사증명이 등록되어 있지 않거나 만료되었습니다. 신체검사 갱신 후 자격증 탭에 등록해야 합니다.' } : null,
+          !st?.recencyMet ? { title: '최근비행 기준 미달', detail: '최근 90일 내 이착륙 3회 이상 등 최근비행 요건을 충족하지 못했습니다. 기록이 누락됐다면 로그북에 추가하세요.' } : null,
+        ].filter((r): r is { title: string; detail: string } => r !== null)
+        return (
+          <div data-mbaas-oid="mdirmodal" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6" onClick={() => setReasonFor(null)}>
+            <div data-mbaas-oid="mdirmodal1" className="w-full max-w-md rounded-card border border-white/10 bg-navy p-6" onClick={(e) => e.stopPropagation()}>
+              <p data-mbaas-oid="mdirmodal2" className="text-xs font-semibold uppercase tracking-wide text-amber-300">확인 필요 사유</p>
+              <h3 data-mbaas-oid="mdirmodal3" className="mt-1 font-display text-lg font-extrabold text-ink">{reasonFor.name}</h3>
+              <ul data-mbaas-oid="mdirmodal4" className="mt-4 space-y-3">
+                {reasons.map((r) => (
+                  <li data-mbaas-oid="mdirmodal5" key={r.title} className="rounded-control border border-amber-400/25 bg-amber-400/5 p-3">
+                    <p data-mbaas-oid="mdirmodal6" className="text-sm font-semibold text-amber-200">{r.title}</p>
+                    <p data-mbaas-oid="mdirmodal7" className="mt-1 text-xs leading-relaxed text-slate-300">{r.detail}</p>
+                  </li>
+                ))}
+              </ul>
+              <p data-mbaas-oid="mdirmodal8" className="mt-4 text-[11px] text-slate-500">참고 판정(v0.9)이며 법령 기준 확정 후 갱신됩니다.</p>
+              <div data-mbaas-oid="mdirmodal9" className="mt-4 text-right">
+                <Button data-mbaas-oid="mdirmodalA" type="button" size="sm" variant="outline" tone="neutral" onClick={() => setReasonFor(null)}>닫기</Button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 // 게시글 삭제 Hook (작성자 본인 또는 프로젝트 소유자만 가능)
 // 참고: baas-integration skill의 references/dynamic-board.md #5. 게시글 삭제 API
-import { parsePrivatePostId, deletePrivateRecord } from '../../lib/baas/privateTables'
+import { deletePrivateRecord, parsePrivatePostId } from '../../lib/baas/privateTables'
 
 import { useCallback, useState } from 'react'
 

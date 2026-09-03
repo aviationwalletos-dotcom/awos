@@ -7,7 +7,9 @@ import { InstitutionSelect } from '../components/InstitutionSelect'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
 import { useAuth } from '../contexts/AuthContext'
-import { getAuthedDataClient } from '../lib/baas/supabaseTransport'
+import { getAuthedDataClient, updateMyProfileFields } from '../lib/baas/supabaseTransport'
+import { fetchLinkedProviders, startLinkProvider } from '../lib/supabase/oauth'
+import type { OAuthProvider } from '../lib/supabase/oauth'
 import { useChangePassword } from '../hooks/baas/useChangePassword'
 import { useIndividualRoleOverride } from '../hooks/useIndividualRoleOverride'
 import { useInstructorApprovalStatus } from '../hooks/baas/useInstructorApprovalStatus'
@@ -15,7 +17,7 @@ import { useOrganizationAffiliationOverride } from '../hooks/useOrganizationAffi
 
 import type { IndividualRole } from '../lib/baas/types'
 
-const INDIVIDUAL_ROLE_OPTIONS: IndividualRole[] = ['pilot', 'atc', 'mechanic', 'dispatcher', 'drone_pilot']
+const INDIVIDUAL_ROLE_OPTIONS: IndividualRole[] = ['pilot', 'drone_pilot'] // 우선 조종사·드론 조종사만 오픈
 
 function formatDateTime(value: string | null): string {
   if (!value) return '-'
@@ -48,8 +50,28 @@ function PageHeader() {
 
 export function AccountPage() {
   const navigate = useNavigate()
-  const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut } = useAuth()
+  const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut, refetchAccount } = useAuth()
   const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'working'>('idle')
+  const isSetupMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('setup') === '1'
+  const justLinked = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('linked') === '1'
+  const [linkedProviders, setLinkedProviders] = useState<string[] | null>(null)
+  const [linkTarget, setLinkTarget] = useState<OAuthProvider | null>(null)
+  const [linkError, setLinkError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    void fetchLinkedProviders().then(setLinkedProviders).catch(() => setLinkedProviders([]))
+  }, [isAuthenticated])
+
+  async function handleConfirmLink() {
+    if (!linkTarget) return
+    setLinkError(null)
+    try {
+      await startLinkProvider(linkTarget)
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : '계정 연결에 실패했습니다.')
+    }
+  }
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function handleDeleteAccount() {
@@ -118,6 +140,7 @@ export function AccountPage() {
     if (!selectedRole) return
     setRoleOverride(selectedRole)
     setRoleSaved(true)
+    void updateMyProfileFields({ individual_role: selectedRole }).then(() => refetchAccount()).catch(() => undefined)
   }
 
   function handleSaveAffiliation(event: React.FormEvent<HTMLFormElement>) {
@@ -125,6 +148,7 @@ export function AccountPage() {
     if (!affiliationInput.trim()) return
     setAffiliationOverride(affiliationInput.trim())
     setAffiliationSaved(true)
+    void updateMyProfileFields({ institution: affiliationInput.trim() }).then(() => refetchAccount()).catch(() => undefined)
   }
 
   async function handleLogout() {
@@ -209,9 +233,26 @@ export function AccountPage() {
             <UserCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
             계정정보
           </span>
-          <h1 data-mbaas-oid="c04m324" className="mt-6 font-display font-extrabold" style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.03em' }}>
-            내 계정
-          </h1>
+          <div data-mbaas-oid="acchdr" className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <h1 data-mbaas-oid="c04m324" className="font-display font-extrabold" style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.03em' }}>
+              내 계정
+            </h1>
+            <Link
+              data-mbaas-oid="accstart" to="/logbook"
+              className="inline-flex items-center gap-2 rounded-control bg-sky px-5 py-2.5 text-sm font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              AWOS 시작하기 →
+            </Link>
+          </div>
+          {isSetupMode && (
+            <div data-mbaas-oid="accwelc" className="mt-5 rounded-card border border-sky/30 bg-sky/10 p-4 text-sm leading-relaxed text-slate-200">
+              👋 환영해요! 소셜 계정으로 가입이 완료됐어요. 아래에서 <span data-mbaas-oid="accwelc2" className="font-semibold text-sky">역할</span>과{' '}
+              <span data-mbaas-oid="accwelc3" className="font-semibold text-sky">소속 기관</span>을 설정하면 로그북 준비 끝 — 설정 후 위의 "AWOS 시작하기"를 눌러주세요.
+              <p data-mbaas-oid="accwelc4" className="mt-2 text-xs text-slate-400">
+                이미 이메일로 가입한 적이 있다면? 이 계정 대신 <span data-mbaas-oid="accwelc5" className="font-semibold text-slate-200">기존 계정으로 로그인한 뒤</span> 아래 "로그인 방법 연결"에서 소셜 계정을 붙이면 기록이 한 계정에 모여요. (이 계정은 회원 탈퇴로 정리)
+              </p>
+            </div>
+          )}
 
           <div data-mbaas-oid="5703erz" className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
             <div data-mbaas-oid="qqupcvj" className="flex items-center gap-3">
@@ -457,6 +498,61 @@ export function AccountPage() {
             </form>
           </div>
         </div>
+
+        <section data-mbaas-oid="lnk00" className="mx-auto mt-12 max-w-3xl px-6">
+          <div data-mbaas-oid="lnk01" className="rounded-card border border-white/10 bg-white/5 p-6">
+            <h2 data-mbaas-oid="lnk02" className="font-display text-lg font-extrabold text-ink">로그인 방법 연결</h2>
+            <p data-mbaas-oid="lnk03" className="mt-2 text-sm leading-relaxed text-slate-400">
+              이 계정에 구글·카카오 로그인을 연결해두면, 어떤 방법으로 로그인해도 <span data-mbaas-oid="lnk04" className="font-semibold text-slate-200">같은 계정·같은 기록</span>으로 들어옵니다.
+            </p>
+            {justLinked && (
+              <p data-mbaas-oid="lnk05" className="mt-3 rounded-control border border-go/30 bg-go/10 px-3 py-2 text-sm font-semibold text-go">연결이 완료됐어요!</p>
+            )}
+            <div data-mbaas-oid="lnk06" className="mt-4 flex flex-wrap gap-2">
+              {(['email', 'google', 'kakao'] as const).map((prov) => {
+                const label = prov === 'email' ? '이메일' : prov === 'google' ? '구글' : '카카오'
+                const linked = linkedProviders?.includes(prov) ?? false
+                return (
+                  <span
+                    data-mbaas-oid="lnk07" key={prov}
+                    className={`rounded-control border px-3 py-1.5 text-xs font-semibold ${linked ? 'border-go/40 bg-go/10 text-go' : 'border-white/10 bg-navy text-slate-500'}`}
+                  >
+                    {label} {linked ? '연결됨' : '미연결'}
+                  </span>
+                )
+              })}
+            </div>
+            <div data-mbaas-oid="lnk08" className="mt-4 flex flex-wrap gap-2">
+              {!(linkedProviders?.includes('google')) && (
+                <Button data-mbaas-oid="lnk09" type="button" size="sm" variant="outline" tone="neutral" onClick={() => setLinkTarget('google')}>구글 연결하기</Button>
+              )}
+              {!(linkedProviders?.includes('kakao')) && (
+                <Button data-mbaas-oid="lnk10" type="button" size="sm" variant="outline" tone="neutral" onClick={() => setLinkTarget('kakao')}>카카오 연결하기</Button>
+              )}
+            </div>
+            {linkError && <p data-mbaas-oid="lnk11" className="mt-3 text-xs text-rose-300">{linkError}</p>}
+          </div>
+        </section>
+
+        {linkTarget && (
+          <div data-mbaas-oid="lnkmodal" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6" onClick={() => setLinkTarget(null)}>
+            <div data-mbaas-oid="lnkmodal1" className="w-full max-w-md rounded-card border border-white/10 bg-navy p-6" onClick={(e) => e.stopPropagation()}>
+              <h3 data-mbaas-oid="lnkmodal2" className="font-display text-lg font-extrabold text-ink">
+                {linkTarget === 'google' ? '구글' : '카카오'} 계정을 연결할까요?
+              </h3>
+              <ul data-mbaas-oid="lnkmodal3" className="mt-3 space-y-1.5 text-sm text-slate-300">
+                <li data-mbaas-oid="lnkmodal4">· 연결 후 {linkTarget === 'google' ? '구글' : '카카오'}로 로그인하면 <span data-mbaas-oid="lnkmodal5" className="font-semibold text-ink">지금 이 계정</span>으로 들어옵니다.</li>
+                <li data-mbaas-oid="lnkmodal6">· 기록·자격증은 이 계정의 것이 그대로 유지돼요.</li>
+                <li data-mbaas-oid="lnkmodal7">· 그 소셜 계정으로 이미 따로 가입돼 있었다면 연결이 거부될 수 있어요 — 그 경우 그쪽 계정을 먼저 탈퇴해 주세요.</li>
+              </ul>
+              {linkError && <p data-mbaas-oid="lnkmodal8" className="mt-3 text-xs text-rose-300">{linkError}</p>}
+              <div data-mbaas-oid="lnkmodal9" className="mt-5 flex justify-end gap-2">
+                <Button data-mbaas-oid="lnkmodalA" type="button" size="sm" variant="outline" tone="neutral" onClick={() => setLinkTarget(null)}>취소</Button>
+                <Button data-mbaas-oid="lnkmodalB" type="button" size="sm" onClick={() => void handleConfirmLink()}>연결 진행</Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section data-mbaas-oid="delacc0" className="mx-auto mt-12 max-w-3xl px-6 pb-16">
           <div data-mbaas-oid="delacc1" className="rounded-card border border-rose-500/25 bg-rose-500/5 p-6">

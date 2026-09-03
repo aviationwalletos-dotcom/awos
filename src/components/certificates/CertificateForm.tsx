@@ -4,7 +4,6 @@ import { Button } from '../Button'
 import { CERTIFICATE_CATEGORIES } from '../../types/certificate'
 import type { Certificate, CertificateCategory, CertificateInput } from '../../types/certificate'
 import {
-  FLIGHT_INSTRUCTOR_CERTIFICATE_LABEL,
   LICENCE_TYPES,
   MEDICAL_CERTIFICATE_TYPES,
   RATING_TYPES,

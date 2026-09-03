@@ -85,7 +85,7 @@ export function LoginPage() {
               자격 상태를 확인하세요
             </h1>
             <p data-mbaas-oid="lgnpg14" className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
-              가입 시 등록한 사용자 유형에 따라 개인 사용자는 디지털 로그북으로, 기관 사용자는 관제 대시보드로 이동합니다.
+              비행기록·자격증·커런시를 한곳에서. 로그인하면 이어서 바로 기록할 수 있어요.
             </p>
           </div>
 

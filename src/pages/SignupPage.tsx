@@ -25,7 +25,7 @@ export function SignupPage() {
   const { signup, isLoading, error: submitError } = useSignup()
 
   const userType: UserType = 'individual' // 조종사 전용 단순화 — 기관 가입은 별도 채널로 이관
-  const individualRole: IndividualRole = 'pilot' // 조종사 고정(타 직군 가입은 다음 단계에 오픈)
+  const [individualRole, setIndividualRole] = useState<IndividualRole>('pilot') // 우선 조종사·드론 조종사만 오픈
   const [organizationAffiliation, setOrganizationAffiliation] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -250,6 +250,24 @@ export function SignupPage() {
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
               {fieldErrors.phone && <p data-mbaas-oid="sgnf04e" className="text-xs text-rose-400">{fieldErrors.phone}</p>}
+            </div>
+
+            <div data-mbaas-oid="sgnrole" className="flex flex-col gap-1.5">
+              <span data-mbaas-oid="sgnrole1" className="text-xs font-semibold text-slate-300">역할</span>
+              <div data-mbaas-oid="sgnrole2" className="grid grid-cols-2 gap-2">
+                {([['pilot', '조종사'], ['drone_pilot', '드론 조종사']] as const).map(([value, label]) => (
+                  <button
+                    data-mbaas-oid="sgnrole3" key={value}
+                    type="button"
+                    onClick={() => setIndividualRole(value)}
+                    className={`rounded-control border px-4 py-3 text-sm font-semibold transition-colors ${
+                      individualRole === value ? 'border-sky bg-sky/10 text-sky' : 'border-white/15 bg-navy text-slate-300 hover:border-white/30'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div data-mbaas-oid="sgnf05" className="flex flex-col gap-1.5">

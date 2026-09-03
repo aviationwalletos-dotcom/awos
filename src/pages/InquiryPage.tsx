@@ -137,11 +137,11 @@ export function InquiryPage() {
                 아직 회원이 아니거나 로그인이 어렵다면 이메일로 보내주세요.
               </p>
               <a
-                data-mbaas-oid="inqpg12" href="mailto:aviationwalletos@gmail.com?subject=[AWOS 문의]"
+                data-mbaas-oid="inqpg12" href="mailto:awos.help@gmail.com?subject=[AWOS 문의]"
                 className="mt-4 inline-flex items-center gap-2 rounded-control border border-sky/40 bg-sky/10 px-4 py-2.5 text-sm font-semibold text-sky transition hover:bg-sky/20"
               >
                 <Mail className="h-4 w-4" aria-hidden="true" />
-                aviationwalletos@gmail.com 으로 메일 보내기
+                awos.help@gmail.com 으로 메일 보내기
               </a>
             </div>
           ) : (

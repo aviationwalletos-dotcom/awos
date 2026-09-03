@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { getEntryPresets, mergePresetChips } from '../../data/entryPresets'
 
 import { Button } from '../Button'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
@@ -57,7 +58,7 @@ type EntryRole = '' | 'student' | 'pic' | 'cfi'
 function Chips({ items, onPick }: { items?: string[]; onPick: (value: string) => void }) {
   if (!items || items.length === 0) return null
   return (
-    <div className="mt-1.5 flex flex-wrap gap-1.5" aria-label="자주 사용한 값">
+    <div className="mt-1.5 flex flex-wrap gap-1.5" aria-label="빠른 입력">
       {items.map((item) => (
         <button
           key={item}
@@ -177,8 +178,14 @@ export function EntryForm({
   }
 
   const isSimKind = entryKind === 'sim'
-  const aircraftTypeChips = suggestions?.aircraftTypes?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
-  const registrationChips = suggestions?.registrations?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
+  const presets = getEntryPresets(entryKind)
+  const historyTypes = suggestions?.aircraftTypes?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
+  const historyRegs = suggestions?.registrations?.filter((v) => (isSimKind ? /ftd|multi|mento|frasca/i.test(v) : !/ftd|multi|mento|frasca/i.test(v)))
+  const aircraftTypeChips = mergePresetChips(presets.aircraftTypes, historyTypes)
+  const registrationChips = mergePresetChips(presets.registrations, historyRegs)
+  const departureChips = mergePresetChips(presets.departures, suggestions?.airports)
+  const arrivalChips = mergePresetChips(presets.arrivals, suggestions?.airports)
+  const viaChips = mergePresetChips(presets.via, suggestions?.airports)
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(
     initialValues?.pilotCertification?.signatureDataUrl ?? null,
   )
@@ -408,7 +415,7 @@ export function EntryForm({
               aria-invalid={Boolean(errors.departure)}
               aria-describedby={errors.departure ? 'departure-error' : undefined}
             />
-            <Chips items={suggestions?.airports} onPick={(v) => setField('departure', v)} />
+            <Chips items={departureChips} onPick={(v) => setField('departure', v)} />
             {errors.departure && (
               <p data-mbaas-oid="cdhrbb8" id="departure-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.departure}
@@ -430,7 +437,7 @@ export function EntryForm({
               aria-invalid={Boolean(errors.arrival)}
               aria-describedby={errors.arrival ? 'arrival-error' : undefined}
             />
-            <Chips items={suggestions?.airports} onPick={(v) => setField('arrival', v)} />
+            <Chips items={arrivalChips} onPick={(v) => setField('arrival', v)} />
             {errors.arrival && (
               <p data-mbaas-oid="7pw8fvp" id="arrival-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.arrival}
@@ -450,6 +457,7 @@ export function EntryForm({
               placeholder="예: RKTN, RKNY"
               className={`${inputClass} font-mono-data`}
             />
+            <Chips items={viaChips} onPick={(v) => setField('viaAirports', v)} />
             <p data-mbaas-oid="6uzo4cg" className={sectionHintClass}>여러 곳이면 쉼표로 구분해 입력해 주세요.</p>
           </div>
         </div>

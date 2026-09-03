@@ -62,7 +62,10 @@ p {
 }
 
 .font-mono-data {
-  font-family: '"JetBrains Mono"', monospace;
+  /* 한글(Pretendard)과 같은 계열을 쓰되 숫자는 자릿수 정렬(tabular)로 데이터 느낌을 유지 */
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 @keyframes pulse-dot {

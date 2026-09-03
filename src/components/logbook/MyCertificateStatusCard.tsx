@@ -122,11 +122,11 @@ export function MyCertificateStatusCard({ certificates, roleContent, compact = f
                   {held.length > 0 ? `보유 ${held.length}` : '미등록'}
                 </span>
               </div>
-              <p data-mbaas-oid="mcsc4" className="relative mt-5 font-mono-data text-[10px] font-semibold tracking-[0.22em] text-white/70">{def.en}</p>
+              <p data-mbaas-oid="mcsc4" className="relative mt-5 font-mono-data text-[10px] font-semibold tracking-[0.12em] text-white/70">{def.en}</p>
               <h3 data-mbaas-oid="mcsc5" className={`relative mt-1 font-display font-extrabold tracking-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>
                 {def.category}
               </h3>
-              <p data-mbaas-oid="mcsc6" className="relative mt-4 font-mono-data text-[10px] font-bold tracking-[0.18em] text-white/75">NAME / IDENTIFIER</p>
+              <p data-mbaas-oid="mcsc6" className="relative mt-4 font-mono-data text-[10px] font-bold tracking-[0.1em] text-white/75">NAME / IDENTIFIER</p>
               <p data-mbaas-oid="mcsc7" className={`relative truncate font-display font-extrabold text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{holderName ?? '이름 미설정'}</p>
               <div data-mbaas-oid="mcsc9" className="relative mt-4 flex flex-wrap items-center gap-1.5">
                 {heldCodes.map((code) => (
