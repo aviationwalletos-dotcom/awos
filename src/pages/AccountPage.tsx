@@ -61,6 +61,15 @@ export function AccountPage() {
   const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut, refetchAccount } = useAuth()
   const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'working'>('idle')
   const isSetupMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('setup') === '1'
+  // 한 번이라도 계정정보를 본 계정은 다음 소셜 로그인부터 환영 화면을 건너뛴다(AuthCallbackPage 참조)
+  useEffect(() => {
+    if (!account?.id) return
+    try {
+      window.localStorage.setItem(`awos_onboarded:${account.id}`, '1')
+    } catch {
+      // 무시
+    }
+  }, [account?.id])
   const justLinked = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('linked') === '1'
   const [linkedProviders, setLinkedProviders] = useState<string[] | null>(null)
   const [linkTarget, setLinkTarget] = useState<OAuthProvider | null>(null)

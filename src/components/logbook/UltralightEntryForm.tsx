@@ -7,6 +7,7 @@
 import React, { useMemo, useState } from 'react'
 
 import { Button } from '../Button'
+import { scrollToFirstError } from '../../lib/ui/scrollToFirstError'
 import { isUnmannedKind, vehicleKindLabel } from '../../lib/tracks'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
@@ -94,6 +95,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
     if (!place) next.place = '비행장소를 입력해 주세요.'
     if (Object.keys(next).length > 0) {
       setErrors(next)
+      scrollToFirstError(e.currentTarget)
       return
     }
     setErrors({})

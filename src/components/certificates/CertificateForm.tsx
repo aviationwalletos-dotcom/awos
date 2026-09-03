@@ -1,6 +1,7 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button } from '../Button'
+import { scrollToFirstError } from '../../lib/ui/scrollToFirstError'
 import { CERTIFICATE_CATEGORIES_BY_TRACK } from '../../types/certificate'
 import type { Certificate, CertificateCategory, CertificateInput } from '../../types/certificate'
 import {
@@ -74,6 +75,24 @@ const SUBTYPES_BY_CATEGORY: Partial<Record<CertificateCategory, CertificateSubTy
   '운전면허': DRIVER_LICENCE_TYPES,
 }
 
+/**
+ * v1.1 — 구분별 기본 발급기관. 조종사·경량·초경량 자격증명과 EPTA는 한국교통안전공단(TS)이 발급한다.
+ * 항공신체검사는 항공전문의(병원)마다 달라 비워 두고, 무선통신사는 한국방송통신전파진흥원.
+ */
+const DEFAULT_ISSUER_BY_CATEGORY: Partial<Record<CertificateCategory, string>> = {
+  '조종사 자격증명': '한국교통안전공단',
+  '한정': '한국교통안전공단',
+  '계기비행증명': '한국교통안전공단',
+  '조종교육증명': '한국교통안전공단',
+  '항공영어구술능력증명': '한국교통안전공단',
+  '경량항공기 조종사 자격증명': '한국교통안전공단',
+  '경량항공기 조종교육증명': '한국교통안전공단',
+  '초경량비행장치 조종자증명': '한국교통안전공단',
+  '지도조종자': '한국교통안전공단',
+  '무선통신사': '한국방송통신전파진흥원',
+  '운전면허': '경찰청(도로교통공단)',
+}
+
 /** 세부 종류 + 보조 텍스트로 자격 명칭을 만든다(한정은 기존 buildRatingName 규칙 유지) */
 function buildName(category: CertificateCategory, sub: CertificateSubType | undefined, detail: string): string {
   if (!sub) return ''
@@ -87,7 +106,7 @@ export function CertificateForm({
   initialValues,
   onSubmit,
   onCancel,
-  roleTemplate,
+  roleTemplate: _roleTemplate,
   track = 'aircraft',
   birthDate,
   commercialSinglePilot,
@@ -95,6 +114,10 @@ export function CertificateForm({
   const categories = CERTIFICATE_CATEGORIES_BY_TRACK[track]
   const [errors, setErrors] = useState<FieldErrors>({})
   const [nameValue, setNameValue] = useState(initialValues?.name ?? '')
+  // 사용자가 명칭을 직접 고치기 전까지는 세부 종류에서 자동으로 채운다(모바일 select는 onChange 타이밍이 달라 effect로 처리).
+  const [nameTouched, setNameTouched] = useState(Boolean(initialValues))
+  const [issuerValue, setIssuerValue] = useState(initialValues?.issuer ?? '')
+  const [issuerTouched, setIssuerTouched] = useState(Boolean(initialValues))
   const [category, setCategory] = useState<CertificateCategory>(
     initialValues?.category && categories.includes(initialValues.category) ? initialValues.category : categories[0],
   )
@@ -105,6 +128,18 @@ export function CertificateForm({
   const formRef = useRef<HTMLFormElement>(null)
   const currentSub = subTypes.find((t) => t.key === subKey) ?? subTypes[0]
   const isFreeText = subTypes.length === 0
+
+  // 5) 세부 종류·보조 표기가 바뀌면 명칭 자동 연동
+  useEffect(() => {
+    if (nameTouched || isFreeText) return
+    setNameValue(buildName(category, currentSub, subDetail))
+  }, [category, currentSub, subDetail, nameTouched, isFreeText])
+
+  // 6) 구분별 기본 발급기관
+  useEffect(() => {
+    if (issuerTouched) return
+    setIssuerValue(DEFAULT_ISSUER_BY_CATEGORY[category] ?? '')
+  }, [category, issuerTouched])
 
   /** 항공신체검사·EPTA: 발급일·종별이 바뀌면 만료일을 자동 계산해 채운다(수정 가능). */
   function autofillExpiry(nextIssued?: string, nextKey?: string) {
@@ -133,6 +168,8 @@ export function CertificateForm({
   }, [category, subKey, birthDate, commercialSinglePilot])
 
   function handleCategoryChange(next: CertificateCategory) {
+    setNameTouched(false)
+    setIssuerTouched(false)
     setCategory(next)
     const first = SUBTYPES_BY_CATEGORY[next]?.[0]
     setSubKey(first?.key ?? '')
@@ -172,6 +209,8 @@ export function CertificateForm({
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
+
+      scrollToFirstError(formRef.current)
       return
     }
 
@@ -193,33 +232,12 @@ export function CertificateForm({
       e.currentTarget.reset()
       setNameValue('')
       handleCategoryChange(categories[0])
+      setIssuerValue(DEFAULT_ISSUER_BY_CATEGORY[categories[0]] ?? '')
     }
   }
 
   return (
     <form data-mbaas-oid="bqneq6d" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
-      {roleTemplate && roleTemplate.credentials.length > 0 && (
-        <div data-mbaas-oid="vt7bbs2" className={`rounded-control border p-4 ${roleTemplate.borderClass} ${roleTemplate.bgClass}`}>
-          <p data-mbaas-oid="zi57mny" className={`text-xs font-semibold ${roleTemplate.colorClass}`}>
-            {roleTemplate.name} 추천 자격 빠른 추가
-          </p>
-          <p data-mbaas-oid="6c6tnlb" className="mt-1 text-xs text-slate-400">클릭하면 아래 명칭 입력란에 채워집니다. 직접 입력도 가능합니다.</p>
-          <div data-mbaas-oid="1gp3qm6" className="mt-2.5 flex flex-wrap gap-2">
-            {roleTemplate.credentials.map((c) => (
-              <button
-                data-mbaas-oid="tbmqc2l" key={c.label}
-                type="button"
-                onClick={() => setNameValue(c.label)}
-                className={`inline-flex min-h-[36px] items-center rounded-control border bg-panel px-3 py-1.5 text-xs font-medium transition-colors active:scale-[0.98]
-                  ${roleTemplate.borderClass} ${roleTemplate.colorClass} ${roleTemplate.hoverBgClass}
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div data-mbaas-oid="80lnxep" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div data-mbaas-oid="mssw6s8">
@@ -297,7 +315,7 @@ export function CertificateForm({
               name="name"
               type="text"
               value={nameValue}
-              onChange={(e) => setNameValue(e.target.value)}
+              onChange={(e) => { setNameTouched(true); setNameValue(e.target.value) }}
               placeholder="예: 사업용 조종사(CPL)"
               className={inputClass}
               aria-invalid={Boolean(errors.name)}
@@ -328,8 +346,9 @@ export function CertificateForm({
           data-mbaas-oid="hn4kd4n" id="issuer"
           name="issuer"
           type="text"
-          defaultValue={initialValues?.issuer}
-          placeholder="예: 국토교통부, 항공안전기술원"
+          value={issuerValue}
+          onChange={(e) => { setIssuerTouched(true); setIssuerValue(e.target.value) }}
+          placeholder="예: 한국교통안전공단, 항공전문의(병원명)"
           className={inputClass}
           aria-invalid={Boolean(errors.issuer)}
           aria-describedby={errors.issuer ? 'issuer-error' : undefined}

@@ -8,13 +8,15 @@ interface DutyTimeLimitCardProps {
   entries: LogbookEntry[]
   /** true면 히어로 등 좁은 영역에 맞춘 축약형으로 렌더링합니다. */
   compact?: boolean
+  /** v1.1 — 운항형태. commercial이면 승무원 편성별 한도 미반영 경고를 띄운다 */
+  operationType?: 'general' | 'commercial'
 }
 
 /**
  * 항공안전법상 조종사 누적 승무시간 법정 한도(하루 8h / 7일 35h / 30일 100h / 365일 1,000h)를
  * 계산해 "지금 비행해도 괜찮은지"와 "오늘 몇 시간 더 비행 가능한지"만 간단히 보여주는 카드.
  */
-export function DutyTimeLimitCard({ entries, compact = false }: DutyTimeLimitCardProps) {
+export function DutyTimeLimitCard({ entries, compact = false, operationType = 'general' }: DutyTimeLimitCardProps) {
   const limits = useMemo(() => computeDutyTimeLimits(entries), [entries])
   const hasData = entries.length > 0
 
@@ -44,6 +46,14 @@ export function DutyTimeLimitCard({ entries, compact = false }: DutyTimeLimitCar
           승무시간 한도
         </p>
       </div>
+
+      <p data-mbaas-oid="dtlbasis" className={`mt-2 rounded-control border px-2.5 py-1.5 text-[11px] leading-relaxed ${
+        operationType === 'commercial' ? 'border-amber-400/30 bg-amber-400/10 text-amber-200' : 'border-white/10 bg-white/[0.03] text-slate-400'
+      }`}>
+        {operationType === 'commercial'
+          ? '여객·2인조종·운송사업은 승무원 편성(1인/2인/3인 이상)과 편조에 따라 한도가 달라요(규칙 별표 18). 아래는 1인 조종 기준 참고치라 정확하지 않을 수 있습니다. 회사 운항규정을 우선하세요.'
+          : '아래 한도(8h/35h/100h/1,000h)는 항공운송·항공기사용사업 종사자 기준(규칙 별표 18)이에요. 자가용·훈련비행에는 법정 한도가 아닌 참고치입니다.'}
+      </p>
 
       {!hasData ? (
         <p data-mbaas-oid="7does0q" className="mt-3 text-xs text-slate-400">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -62,10 +62,11 @@ import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import type { IndividualRole } from '../lib/baas/types'
 import { usePilotTracks } from '../hooks/usePilotTracks'
 import { useVehicles } from '../hooks/useVehicles'
+import { useToast } from '../components/Toast'
 import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
 import { VehicleCards } from '../components/logbook/VehicleCards'
 import { printFlightExperienceCertificate } from '../lib/flightExperienceCertificatePrint'
-import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countEntriesByTrack, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
+import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
 import { getRoleContentByIndividualRole } from '../data/content'
 import { WORK_LOG_ROLE_COPY } from '../types/workLog'
@@ -136,6 +137,20 @@ export function LogbookPage() {
   // v1.1 — 보유 트랙(복수) + 지금 보고 있는 트랙. 모든 집계·커런시·덱은 activeTrack 기준으로만 계산한다.
   const { tracks: pilotTracks, activeTrack, setActiveTrack, birthDate, operationType } = usePilotTracks(account)
   const { vehicles, addVehicle, deleteVehicle } = useVehicles(account)
+  const { toast, showToast } = useToast()
+
+  // 탭바는 상단 헤더 바로 아래에 붙는다. 헤더 높이를 실측해 반영(고정값 121px이 중간에 떠 보이던 문제).
+  const headerRef = useRef<HTMLElement>(null)
+  const [headerHeight, setHeaderHeight] = useState(57)
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const update = () => setHeaderHeight(el.offsetHeight)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // 비조종 직군(관제사·정비사·운항관리사)은 트랙과 무관하게 업무기록 화면을 쓴다.
   const workLogRole = isWorkLogRole(individualRole) ? individualRole : undefined
@@ -185,9 +200,9 @@ export function LogbookPage() {
 
   // v1.1 — 현재 트랙의 기록만. 이것이 버그 수정의 핵심이다: 드론 트랙에서 C172·DA42 시간이 섞이지 않는다.
   const trackEntries = useMemo(() => filterEntriesByTrack(entries, activeTrack), [entries, activeTrack])
-  const entryCountByTrack = useMemo(() => countEntriesByTrack(entries), [entries])
   const untaggedCount = useMemo(() => countUntaggedEntries(entries), [entries])
   const entrySuggestions = useMemo(() => buildEntrySuggestions(trackEntries), [trackEntries])
+
   // 덱 상단 표기용 총 비행시간(LogbookTotalsSummary와 같은 기준: 미인증 비행경력증명서 기록 제외)
   const trackTotalHours = useMemo(
     () => trackEntries
@@ -303,6 +318,14 @@ export function LogbookPage() {
     resyncFromServer: resyncCertificates,
     retryPendingSync: retryCertificatesPendingSync,
   } = useCertificates(account)
+
+    // "이 비행에서 나의 역할" 기본값 — 승인 교관이면 교관, 조종사 자격증명이 있으면 기장, 없으면 학생
+  // 규칙: 승인 교관 → 교관 / 그 외 → 학생(자격 보유 여부는 hasLicence로 자동채움 규칙만 가른다). 일반 비행은 직접 "기장"을 고른다.
+  const hasPilotLicence = useMemo(
+    () => certificates.some((c) => c.category === '조종사 자격증명' || c.category === '경량항공기 조종사 자격증명'),
+    [certificates],
+  )
+  const defaultEntryRole = useMemo<'student' | 'pic' | 'cfi'>(() => (isApprovedInstructor ? 'cfi' : 'student'), [isApprovedInstructor])
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
 
   const {
@@ -419,7 +442,7 @@ export function LogbookPage() {
 
   return (
     <div data-mbaas-oid="7kkgjdu" className="min-h-screen bg-surface font-body text-ink">
-      <header data-mbaas-oid="7fiidhl" className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur">
+      <header ref={headerRef} data-mbaas-oid="7fiidhl" className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur">
         <div data-mbaas-oid="7j766ty" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
             data-mbaas-oid="qu45ix4" to="/"
@@ -467,9 +490,6 @@ export function LogbookPage() {
                               ${isActive ? 'border-sky bg-sky/15 text-[#00D4FF]' : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/30'}`}
                           >
                             {PILOT_TRACK_SHORT[t]}
-                            <span data-mbaas-oid="trkswcnt" className={`rounded px-1 font-mono-data text-[10px] ${isActive ? 'bg-sky/20' : 'bg-white/10'}`}>
-                              {entryCountByTrack[t]}
-                            </span>
                           </button>
                         )
                       })}
@@ -500,7 +520,7 @@ export function LogbookPage() {
                 <FlightReadinessPanel entries={trackEntries} certificates={certificates} account={account} compact />
                 <div data-mbaas-oid="6w3w4t6" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={activeTrack} totalHours={trackTotalHours} />
-                  <DutyTimeLimitCard entries={trackEntries} compact />
+                  <DutyTimeLimitCard entries={trackEntries} compact operationType={operationType} />
                 </div>
               </div>
             ) : (
@@ -515,9 +535,9 @@ export function LogbookPage() {
           </div>
         </section>
 
-        <section data-mbaas-oid="tabnav1" className="sticky top-[121px] z-30 border-b border-white/10 bg-navy/95 backdrop-blur">
+        <section data-mbaas-oid="tabnav1" style={{ top: headerHeight }} className="sticky z-30 border-b border-white/10 bg-navy/95 backdrop-blur">
           <div data-mbaas-oid="tabnav2" className="mx-auto max-w-4xl px-6">
-            <div data-mbaas-oid="tabnav3" role="tablist" aria-label="AWOS 기능 선택" className="flex flex-wrap gap-2 py-4">
+            <div data-mbaas-oid="tabnav3" role="tablist" aria-label="AWOS 기능 선택" className="flex flex-wrap gap-2 py-2">
               {TABS.map(({ key, label, icon: Icon }) => {
                 const isActive = activeTab === key
                 return (
@@ -666,6 +686,7 @@ export function LogbookPage() {
                         else deleteEntries(ids)
                       }}
                       onExportCsv={() => downloadLogbookCsv(trackEntries)}
+                      printLabel={isDrone ? '비행경력증명서 PDF' : '인쇄/PDF'}
                       onPrint={() =>
                         isDrone
                           ? printFlightExperienceCertificate(trackEntries, vehicles, { name: account?.name, birthDate })
@@ -753,7 +774,7 @@ export function LogbookPage() {
                   <div data-mbaas-oid="0ol2vj9" className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
                     <CertificateForm
                       mode="create"
-                      onSubmit={(input, options) => void handleCreateCertificate({ ...input, track: input.track ?? activeTrack }, options?.approvalFile)}
+                      onSubmit={(input, options) => { void handleCreateCertificate({ ...input, track: input.track ?? activeTrack }, options?.approvalFile); showToast('자격증이 추가되었습니다.') }}
                       roleTemplate={roleContent}
                       track={activeTrack}
                       birthDate={birthDate}
@@ -811,14 +832,16 @@ export function LogbookPage() {
                         mode="create"
                         vehicles={vehicles}
                         holderName={account?.name}
-                        onSubmit={(input) => addEntry(input)}
+                        onSubmit={(input) => { addEntry(input); showToast('비행기록이 추가되었습니다.') }}
                       />
                     ) : (
                     <EntryForm
                       mode="create"
-                      onSubmit={(input) => addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack })}
+                      onSubmit={(input) => { addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack }); showToast('비행기록이 추가되었습니다.') }}
                       suggestions={entrySuggestions}
                       track={activeTrack}
+                      defaultRole={defaultEntryRole}
+                      hasLicence={hasPilotLicence}
                       {...aircraftLabelProps}
                     />
                     )}
@@ -906,6 +929,7 @@ export function LogbookPage() {
 
       {/* 다이얼로그 열림 여부와 무관하게, 대기중인 비행경력증명서 인증/교관 서명 요청을
           백그라운드에서 자동으로 확인해 반영한다(BUG-015). */}
+      {toast}
       <AutoSyncEntryDecisions entries={entries} onUpdate={handleUpdateEntry} />
 
       <EntryDetailDialog

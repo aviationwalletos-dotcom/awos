@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { getEntryPresets, mergePresetChips } from '../../data/entryPresets'
-import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, entryTrack, isUnmannedKind, vehicleKindsForTrack } from '../../lib/tracks'
+import { scrollToFirstError } from '../../lib/ui/scrollToFirstError'
+import { PILOT_TRACK_LABEL, entryTrack, isUnmannedKind, vehicleKindsForTrack } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
 import { FLIGHT_CATEGORIES, SIM_DEVICE_LABEL } from '../../types/logbook'
 import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types/logbook'
@@ -30,8 +31,16 @@ interface EntryFormProps {
   aircraftIdPlaceholder?: string
   /** 자주 쓰는 공항·기종 칩 (LogbookPage가 기존 기록에서 계산해 전달) */
   suggestions?: EntrySuggestions
-  /** v1.1 — 이 기록이 속할 트랙. 신규 입력의 기본값이며, 사용자가 폼에서 바꿀 수 있다. */
+  /** v1.1 — 이 기록의 자격 구분. 상단 전환기 값이 그대로 들어오며 폼에서는 바꾸지 않는다. */
   track?: PilotTrack
+  /** 신규 입력 시 "이 비행에서 나의 역할" 기본값. 보유 자격에서 LogbookPage가 계산해 전달 */
+  defaultRole?: 'student' | 'pic' | 'cfi'
+  /**
+   * 조종사 자격증명(PPL 이상) 보유 여부. "학생" 역할의 자동채움 규칙을 가른다.
+   *   - 없음(조종연습허가서): 교관 동승 → Dual만 / 단독 → PIC+단독
+   *   - 있음(계기·사업용 연습): PIC + Dual
+   */
+  hasLicence?: boolean
 }
 
 export interface EntrySuggestions {
@@ -50,8 +59,16 @@ export function buildEntrySuggestions(entries: LogbookEntry[]): EntrySuggestions
     })
     return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k]) => k)
   }
+  // 예전 기록에는 "RKPU-RKTL" 처럼 경로 전체가 한 칸에 들어간 것과 시뮬 표기(SIM/FTD)가 섞여 있다.
+  // 칩은 공항 코드 하나 단위로만 보여준다.
+  const SIM_TOKENS = new Set(['SIM', 'FTD', 'FFS', 'BATD', '시뮬', '시뮬레이터'])
+  const airportTokens = entries
+    .flatMap((e) => [e.departure, e.arrival, e.viaAirports])
+    .flatMap((v) => (v ?? '').split(/[-–/,\s]+/))
+    .map((v) => v.trim().toUpperCase())
+    .filter((v) => v && !SIM_TOKENS.has(v))
   return {
-    airports: top(entries.flatMap((e) => [e.departure, e.arrival]).filter((v) => v !== 'SIM')),
+    airports: top(airportTokens),
     aircraftTypes: top(entries.map((e) => e.aircraftType)),
     registrations: top(entries.map((e) => e.aircraftIdentification)),
   }
@@ -121,9 +138,11 @@ export function EntryForm({
   aircraftIdLabel = '항공기 등록번호 / 테일넘버 (선택)',
   aircraftIdPlaceholder = '예: HL1234',
   track,
+  defaultRole,
+  hasLicence = false,
 }: EntryFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
-  const [entryRole, setEntryRole] = useState<EntryRole>('')
+  const [entryRole, setEntryRole] = useState<EntryRole>(initialValues ? '' : (defaultRole ?? ''))
   const [entryKind, setEntryKind] = useState<'flight' | 'sim'>(
     initialValues && (initialValues.departure === 'SIM' || (initialValues.groundTrainerTime ?? 0) > 0) ? 'sim' : 'flight',
   )
@@ -146,12 +165,30 @@ export function EntryForm({
   const fmt = (n: number) => String(Math.round(n * 10) / 10)
 
   /** 역할별 자동채움: 학생=dual+PIC, 기장=PIC, 교관=교관시간+PIC (비어 있거나 자동값인 칸만) */
-  const applyRoleAutofill = (role: EntryRole, total: number) => {
+  // 학생(조종연습생) 단독 비행 여부 — 교관 동승이면 교육시간(Dual)만, 단독이면 PIC+단독 시간으로 잡힌다(별표 4 단독 비행경력).
+  const [studentSolo, setStudentSolo] = useState<boolean>(Boolean(initialValues?.pilotingTime?.solo))
+  const applyRoleAutofill = (role: EntryRole, total: number, solo = studentSolo) => {
     if (!role || !(total > 0)) return
-    const targets = role === 'student' ? ['dualReceived', 'picTime'] : role === 'pic' ? ['picTime'] : ['flightInstructorTime', 'picTime']
+    const targets =
+      role === 'student'
+        ? hasLicence
+          ? ['dualReceived', 'picTime'] // 자가용 보유 + 계기·사업용 연습: PIC와 Dual 둘 다
+          : solo
+            ? ['picTime', 'soloTime'] // 조종연습생 단독
+            : ['dualReceived'] // 조종연습생 교관 동승: Dual만
+        : role === 'pic'
+          ? ['picTime']
+          : ['flightInstructorTime', 'picTime']
     targets.forEach((name) => {
       if (canAutofill(name)) setField(name, fmt(total), true)
     })
+  }
+  const handleStudentSoloChange = (solo: boolean) => {
+    setStudentSolo(solo)
+    ;['dualReceived', 'picTime', 'soloTime'].forEach((name) => {
+      if (autofilledRef.current.has(name)) setField(name, '')
+    })
+    applyRoleAutofill('student', Number(getField('blockTime')?.value), solo)
   }
   const handleTotalInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value)
@@ -176,16 +213,14 @@ export function EntryForm({
     const role = e.target.value as EntryRole
     setEntryRole(role)
     // 역할을 바꾸면 이전 자동값은 비우고 새 역할 기준으로 다시 채움
-    ;['dualReceived', 'picTime', 'flightInstructorTime'].forEach((name) => {
+    ;['dualReceived', 'picTime', 'flightInstructorTime', 'soloTime'].forEach((name) => {
       if (autofilledRef.current.has(name)) setField(name, '')
     })
     applyRoleAutofill(role, Number(getField('blockTime')?.value))
   }
 
   // v1.1 — 트랙·장치 종류·시뮬 장치 구분
-  const [vehicleClass, setVehicleClass] = useState<PilotTrack>(
-    initialValues ? entryTrack(initialValues) : (track ?? 'aircraft'),
-  )
+  const vehicleClass: PilotTrack = initialValues ? entryTrack(initialValues) : (track ?? 'aircraft')
   const [vehicleKind, setVehicleKind] = useState<string>(initialValues?.vehicleKind ?? '')
   const [simDevice, setSimDevice] = useState<SimDeviceKind>(initialValues?.simDevice ?? 'FTD')
   const kindOptions = vehicleKindsForTrack(vehicleClass)
@@ -212,8 +247,31 @@ export function EntryForm({
     const nextErrors: FieldErrors = {}
 
     const date = String(form.get('date') || '').trim()
-    const departure = String(form.get('departure') || '').trim()
-    const arrival = String(form.get('arrival') || '').trim()
+    // "RKTL-RKPU-RKJY" 처럼 출발지 칸에 경로 전체를 넣어도 출발·경유·도착으로 자동 분해한다(실물 로그북 표기 습관).
+
+    let departure = String(form.get('departure') || '').trim().toUpperCase()
+
+    let arrival = String(form.get('arrival') || '').trim().toUpperCase()
+
+    let viaAirportsRaw = String(form.get('viaAirports') || '').trim().toUpperCase()
+
+    {
+
+      const tokens = departure.split(/[-–/]/).map((t) => t.trim()).filter(Boolean)
+
+      if (tokens.length >= 2) {
+
+        departure = tokens[0]
+
+        if (!arrival) arrival = tokens[tokens.length - 1]
+
+        const middle = tokens.slice(1, -1)
+
+        if (middle.length > 0 && !viaAirportsRaw) viaAirportsRaw = middle.join(', ')
+
+      }
+
+    }
     const aircraftType = String(form.get('aircraftType') || '').trim()
     const blockTimeRaw = String(form.get('blockTime') || '').trim()
     const blockTime = Number(blockTimeRaw)
@@ -240,6 +298,8 @@ export function EntryForm({
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
+
+      scrollToFirstError(formRef.current)
       return
     }
 
@@ -253,7 +313,7 @@ export function EntryForm({
       date,
       departure: isSim ? 'SIM' : departure,
       arrival: isSim ? 'SIM' : arrival,
-      viaAirports: String(form.get('viaAirports') || '').trim() || undefined,
+      viaAirports: viaAirportsRaw || undefined,
       aircraftType,
       aircraftIdentification: String(form.get('aircraftIdentification') || '').trim() || undefined,
       blockTime: isSim ? 0 : blockTime,
@@ -311,57 +371,32 @@ export function EntryForm({
 
   return (
     <form data-mbaas-oid="lgbfrm1" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
-      {/* v1.1 — 트랙·장치 종류. 여기서 고른 트랙의 집계에만 이 기록이 들어간다. */}
-      <div data-mbaas-oid="trkblk" className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
-        <p className={labelClass}>이 기록의 자격 구분</p>
-        <div data-mbaas-oid="trkchips" className="mt-2 flex flex-wrap gap-2">
-          {(['aircraft', 'lsa', 'ultralight'] as PilotTrack[]).map((t) => (
-            <button
-              data-mbaas-oid="trkchip"
-              key={t}
-              type="button"
-              onClick={() => {
-                setVehicleClass(t)
-                setVehicleKind('')
-              }}
-              className={`rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                vehicleClass === t ? 'border-sky bg-sky/15 text-[#00D4FF]' : 'border-white/15 text-slate-300 hover:border-white/30'
-              }`}
-              aria-pressed={vehicleClass === t}
-            >
-              {PILOT_TRACK_SHORT[t]}
-            </button>
-          ))}
-          <span data-mbaas-oid="trkname" className="self-center text-[11px] text-slate-500">{PILOT_TRACK_LABEL[vehicleClass]}</span>
-        </div>
-        {kindOptions.length > 0 && (
-          <div data-mbaas-oid="kindblk" className="mt-3">
-            <label htmlFor="vehicleKind" className={labelClass}>장치 종류</label>
-            <select
-              id="vehicleKind"
-              name="vehicleKind"
-              value={vehicleKind}
-              onChange={(e) => setVehicleKind(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">선택 (자격 한정 단위라 남겨두면 응시경력 계산에 쓰여요)</option>
-              {kindOptions.map((k) => (
-                <option key={k.key} value={k.key}>{k.label}</option>
-              ))}
-            </select>
-            {isUnmanned && (
-              <p data-mbaas-oid="uasntc" className="mt-2 text-[11px] leading-relaxed text-slate-400">
-                무인비행장치 기록은 참고·보조 자료예요. 응시·등록용 비행경력은 지도조종자 확인과 교육기관 증명(비행경력증명서)으로만 인정됩니다.
-              </p>
-            )}
-          </div>
-        )}
-        {vehicleClass !== 'aircraft' && (
-          <p data-mbaas-oid="nonightntc" className="mt-2 text-[11px] text-slate-500">
-            경량·초경량은 야간비행이 금지되어 야간 시간·야간 이착륙은 저장되지 않습니다.
+      {/* v1.1 — 자격 구분은 상단 전환기 값을 그대로 쓴다(중복 선택 제거). 경량·초경량만 종류를 고른다. */}
+      {kindOptions.length > 0 && (
+        <div data-mbaas-oid="kindblk" className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+          <label htmlFor="vehicleKind" className={labelClass}>종류</label>
+          <select
+            id="vehicleKind"
+            name="vehicleKind"
+            value={vehicleKind}
+            onChange={(e) => setVehicleKind(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">선택</option>
+            {kindOptions.map((k) => (
+              <option key={k.key} value={k.key}>{k.label}</option>
+            ))}
+          </select>
+          <p data-mbaas-oid="kindhint" className="mt-1.5 text-[11px] text-slate-500">
+            {PILOT_TRACK_LABEL[vehicleClass]} 기록 · 종류는 자격 한정 단위라 응시경력 계산에 쓰여요. 경량·초경량은 야간 시간이 저장되지 않습니다.
           </p>
-        )}
-      </div>
+          {isUnmanned && (
+            <p data-mbaas-oid="uasntc" className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              무인비행장치 기록은 참고·보조 자료예요. 응시·등록용 비행경력은 지도조종자 확인과 교육기관 증명으로만 인정됩니다.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="rounded-lg border border-sky/30 bg-sky/5 p-4">
         <label htmlFor="entryRole" className={labelClass}>
@@ -375,13 +410,40 @@ export function EntryForm({
           className={inputClass}
         >
           <option value="">선택 안 함</option>
-          <option value="student">학생 (교육 비행)</option>
+          <option value="student">{hasLicence ? '학생 (교육 비행 · 자격 보유, PIC+Dual)' : '학생 (교육 비행 · 조종연습생, Dual)'}</option>
           <option value="pic">기장 (PIC)</option>
           <option value="cfi">교관 (CFI)</option>
         </select>
         <p className="mt-1.5 text-xs text-slate-400">
           역할을 고르고 비행시간을 넣으면 교육·PIC·교관 시간과 야간 시간이 자동으로 채워져요. 직접 고친 값은 덮어쓰지 않아요.
         </p>
+        {entryRole === 'student' && hasLicence && (
+          <p data-mbaas-oid="stulic" className="mt-2 text-[11px] text-slate-400">
+            자가용 조종사 자격이 있어 교육 비행도 PIC와 교육 받은 시간에 함께 기록돼요(계기비행증명·사업용 연습).
+          </p>
+        )}
+        {entryRole === 'student' && !hasLicence && (
+          <div data-mbaas-oid="stusolo" className="mt-3 rounded-control border border-white/10 bg-white/[0.03] px-3 py-2.5">
+            <label className="flex items-start gap-2 text-xs text-slate-200">
+              <input
+                type="checkbox"
+                name="studentSolo"
+                checked={studentSolo}
+                onChange={(e) => handleStudentSoloChange(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-sky"
+              />
+              <span>
+                <span className="font-semibold">단독 비행(Solo)이었어요</span>
+                <span className="mt-0.5 block text-[11px] text-slate-400">
+                  {studentSolo
+                    ? '단독 비행은 PIC 시간과 단독 시간으로 기록돼요(자가용 응시경력의 "단독 10시간"에 합산).'
+                    : '교관 동승 교육 비행은 교육 받은 시간(Dual received)에만 기록되고 PIC는 0이에요.'}
+                </span>
+              </span>
+            </label>
+            <input type="hidden" name="soloTime" defaultValue={initialValues?.pilotingTime?.solo ?? ''} />
+          </div>
+        )}
       </div>
 
       <div data-mbaas-oid="kindwrap" className="space-y-3">

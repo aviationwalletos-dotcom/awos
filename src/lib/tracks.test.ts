@@ -82,3 +82,16 @@ describe('경량항공기 응시경력', () => {
     expect(items.find((i) => i.key === 'lsa_xc')?.status).toBe('met') // 5.5
   })
 })
+
+describe('제안 칩 — 경로 분해·시뮬 제외', () => {
+  it('"RKPU-RKTL" 은 두 코드로 나뉘고 FTD/SIM 은 빠진다', async () => {
+    const { buildEntrySuggestions } = await import('../components/logbook/EntryForm')
+    const e = (departure: string, arrival: string, aircraftType = 'C172') =>
+      ({ id: departure + arrival, date: '2026-08-01', departure, arrival, aircraftType, blockTime: 1, flightCategory: '주간', createdAt: 0, updatedAt: 0 }) as LogbookEntry
+    const s = buildEntrySuggestions([e('RKPU-RKTL', 'RKTL'), e('SIM', 'SIM', 'FTD'), e('FTD', 'FTD')])
+    expect(s.airports).toEqual(expect.arrayContaining(['RKPU', 'RKTL']))
+    expect(s.airports).not.toContain('RKPU-RKTL')
+    expect(s.airports).not.toContain('SIM')
+    expect(s.airports).not.toContain('FTD')
+  })
+})

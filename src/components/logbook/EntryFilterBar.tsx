@@ -11,14 +11,14 @@ interface EntryFilterBarProps {
   onValueChange: (value: string | null) => void
 }
 
-const KIND_ORDER: LogbookFilterKind[] = ['all', 'aircraftType', 'flightCategory', 'month']
+const KIND_ORDER: LogbookFilterKind[] = ['all', 'date', 'aircraftType', 'flightCategory', 'month']
 
 function monthOf(entry: LogbookEntry): string {
   return entry.date.slice(0, 7) || '미상'
 }
 
 function valuesForKind(entries: LogbookEntry[], kind: LogbookFilterKind): string[] {
-  if (kind === 'all') return []
+  if (kind === 'all' || kind === 'date') return []
   const getter =
     kind === 'aircraftType'
       ? (e: LogbookEntry) => e.aircraftType
@@ -58,7 +58,23 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
         })}
       </div>
 
-      {kind !== 'all' && values.length > 0 && (
+      {kind === 'date' && (
+        <div data-mbaas-oid="lgbfltdate" className="mt-3 flex flex-wrap items-center gap-2">
+          <label htmlFor="entry-date-filter" className="text-xs font-medium text-slate-400">날짜 선택</label>
+          <input
+            id="entry-date-filter"
+            type="date"
+            value={value ?? ''}
+            onChange={(e) => onValueChange(e.target.value || null)}
+            className="rounded-control border border-white/10 bg-panel px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+          />
+          {value && (
+            <button type="button" onClick={() => onValueChange(null)} className="text-xs text-slate-400 underline hover:text-sky">지우기</button>
+          )}
+        </div>
+      )}
+
+      {kind !== 'all' && kind !== 'date' && values.length > 0 && (
         <div data-mbaas-oid="lgbflt4" className="mt-3 flex flex-wrap gap-2" role="group" aria-label={`${FILTER_KIND_LABEL[kind]} 세부 값 선택`}>
           <button
             data-mbaas-oid="lgbflt5" type="button"
@@ -94,6 +110,7 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
 
 export function matchesFilter(entry: LogbookEntry, kind: LogbookFilterKind, value: string | null): boolean {
   if (kind === 'all' || value === null) return true
+  if (kind === 'date') return entry.date === value
   if (kind === 'aircraftType') return entry.aircraftType === value
   if (kind === 'flightCategory') return entry.flightCategory === value
   if (kind === 'month') return monthOf(entry) === value

@@ -138,10 +138,11 @@ export type LogbookEntryInput = Omit<LogbookEntry, 'id' | 'createdAt' | 'updated
 
 export const FLIGHT_CATEGORIES: FlightCategory[] = ['주간', '야간', '계기']
 
-export type LogbookFilterKind = 'all' | 'aircraftType' | 'flightCategory' | 'month'
+export type LogbookFilterKind = 'all' | 'date' | 'aircraftType' | 'flightCategory' | 'month'
 
 export const FILTER_KIND_LABEL: Record<LogbookFilterKind, string> = {
   all: '전체',
+  date: '날짜',
   aircraftType: '기종별',
   flightCategory: '비행종류별',
   month: '월별',

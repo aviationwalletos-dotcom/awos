@@ -56,6 +56,7 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
     otherCategoryHours: sumHours(officialEntries.map((e) => e.categoryHours?.otherHours)),
     dualReceived: sumHours(officialEntries.map((e) => e.pilotingTime?.dualReceived)),
     pic: sumHours(officialEntries.map((e) => e.pilotingTime?.pic)),
+    solo: sumHours(officialEntries.map((e) => e.pilotingTime?.solo)),
     sic: sumHours(officialEntries.map((e) => e.pilotingTime?.sic)),
     flightInstructor: sumHours(officialEntries.map((e) => e.pilotingTime?.flightInstructor)),
     groundTrainerTime: sumHours(officialEntries.map((e) => e.groundTrainerTime)),
@@ -109,6 +110,7 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
         <dl data-mbaas-oid="hs3pigc" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <StatCell label="DUAL RECEIVED" value={totals.dualReceived} />
           <StatCell label="PILOT-IN-COMMAND (PIC)" value={totals.pic} />
+          <StatCell label="SOLO (단독)" value={totals.solo} />
           <StatCell label="SECOND-IN-COMMAND (SIC)" value={totals.sic} />
           <StatCell label="AS FLIGHT INSTRUCTOR" value={totals.flightInstructor} />
         </dl>
