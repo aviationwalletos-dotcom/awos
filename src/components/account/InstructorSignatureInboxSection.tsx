@@ -184,22 +184,50 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
   )
   const hiddenByTargetingCount = allItems.length - items.length
 
-  // v1.1 — 요청마다 댓글을 따로 조회하던 구조(N+1, 그리고 화면에 안 보이는 페이지의 상태는 아예 모름)를
-  // 배치 1회 조회로 바꿨다. 요청이 수백 건이어도 요청 2번(목록 + 댓글 배치)으로 끝난다.
-  const postIds = useMemo(() => items.map((i) => i.id), [items])
-  const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(postIds)
+  // v1.1 — 서명 완료는 되돌아가지 않으므로 "완료됨"으로 확인된 요청 id를 이 브라우저에 기억한다.
+  //  · 열자마자 기억된 것은 바로 완료됨에 두고(대기중 → 완료됨으로 튀는 현상 제거)
+  //  · 댓글 배치 조회는 아직 완료로 기억되지 않은 요청만 대상으로 한다(요청 수가 쌓여도 조회 크기는 대기 건수만큼)
+  const doneKey = `awos_signed_done:${account.id}`
+  const [knownDone, setKnownDone] = useState<Set<string>>(() => {
+    try {
+      const raw = window.localStorage.getItem(doneKey)
+      return new Set(raw ? (JSON.parse(raw) as string[]) : [])
+    } catch {
+      return new Set()
+    }
+  })
+  const rememberDone = (ids: string[]) => {
+    if (ids.length === 0) return
+    setKnownDone((prev) => {
+      const next = new Set(prev)
+      ids.forEach((id) => next.add(id))
+      try {
+        window.localStorage.setItem(doneKey, JSON.stringify([...next]))
+      } catch {
+        // 무시
+      }
+      return next
+    })
+  }
+  const pendingIds = useMemo(() => items.filter((i) => !knownDone.has(i.id)).map((i) => i.id), [items, knownDone])
+  const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(pendingIds)
   const { instructorIds } = useApprovedInstructorIdSet()
-  // 서명 직후에는 서버 재조회를 기다리지 않고 바로 "완료됨"으로 옮긴다(낙관적 반영). 재조회가 끝나면 서버 값이 덮는다.
-  const [justSigned, setJustSigned] = useState<Set<string>>(() => new Set())
+  const hasResolvedOnce = !isLoadingComments && instructorIds !== null
   const statusMap = useMemo(() => {
     const map: Record<string, boolean> = {}
     for (const item of items) {
-      map[item.id] = justSigned.has(item.id) || Boolean(findSignedComment(byPost[item.id] ?? [], instructorIds ?? EMPTY_ID_SET))
+      map[item.id] = knownDone.has(item.id) || Boolean(findSignedComment(byPost[item.id] ?? [], instructorIds ?? EMPTY_ID_SET))
     }
     return map
-  }, [items, byPost, instructorIds, justSigned])
+  }, [items, byPost, instructorIds, knownDone])
+  // 배치 결과로 완료 확인된 것은 기억해 둔다 → 다음 로드부터 조회 대상에서 빠진다
+  useEffect(() => {
+    if (!hasResolvedOnce) return
+    const newlyDone = items.filter((i) => !knownDone.has(i.id) && statusMap[i.id]).map((i) => i.id)
+    rememberDone(newlyDone)
+  }, [hasResolvedOnce, statusMap])
   const handleSigned = async (postId: string) => {
-    setJustSigned((prev) => new Set(prev).add(postId))
+    rememberDone([postId])
     await refetchBatch()
   }
 
@@ -260,7 +288,7 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
               className={`rounded-control px-3 py-1.5 text-xs font-semibold transition-colors
                 ${activeTab === option.value ? 'bg-sky text-navy' : 'border border-white/15 text-slate-300 hover:border-white/30'}`}
             >
-              {option.label} ({option.value === 'pending' ? pendingItems.length : completedItems.length})
+              {option.label} ({hasResolvedOnce || pendingIds.length === 0 ? (option.value === 'pending' ? pendingItems.length : completedItems.length) : '…'})
             </button>
           ))}
           <input
@@ -299,6 +327,8 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
               : '본인이 지정된 서명 요청이 없어 지금 표시할 항목이 없습니다.'
           }
         />
+      ) : !hasResolvedOnce && pendingIds.length > 0 && activeTab === 'pending' ? (
+        <p data-mbaas-oid="sgchk" className="mt-5 text-sm text-slate-400">서명 상태 확인 중…</p>
       ) : filteredItems.length === 0 ? (
         <p data-mbaas-oid="2cdqidj" className="mt-5 text-sm text-slate-400">
           {activeTab === 'pending'
