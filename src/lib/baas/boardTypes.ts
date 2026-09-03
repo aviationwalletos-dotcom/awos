@@ -17,6 +17,8 @@ export interface BoardPostListItem {
   content: string | null
   views: number
   author_name: string
+  /** 작성자 auth uuid. 댓글의 author_id와 같은 체계라 권한 대조에 쓴다(v1.1) */
+  author_id?: string
   is_hidden: boolean
   created_at: string
   categories: Record<string, string[]> | null

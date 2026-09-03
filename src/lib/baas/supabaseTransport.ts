@@ -184,6 +184,7 @@ function toListItem(row: PostRow) {
     title: row.title,
     content: row.content,
     views: row.views ?? 0,
+    author_id: row.author_id,
     author_name: row.author_name,
     is_hidden: row.is_hidden,
     created_at: row.created_at,

@@ -114,16 +114,20 @@ async function fetchApprovedInstructorIdsOnce(): Promise<ReadonlySet<string>> {
   const items: BoardPostListItem[] = list?.items ?? []
   if (items.length === 0) return EMPTY_ID_SET
 
+  // [BUGFIX] 승인 교관 집합에는 신청서 제목의 userId(이메일)만 들어 있었는데, 서명 댓글의 author_id는
+  // auth uuid 라서 findSignedComment()가 한 번도 일치한 적이 없었다(= 교관 서명이 영원히 "대기중").
+  // 이메일(기존 소비자 호환)과 신청 게시글 작성자 uuid를 둘 다 넣는다.
   const ids = await Promise.all(
     items.map(async (item) => {
       const parsed = parseInstructorApplicationTitle(item.title)
-      if (!parsed) return null
+      if (!parsed) return []
       const comments = await fetchJson<CommentListResponse>(`${BAAS_BASE_URL}/public/boards/posts/${item.id}/comments`)
       const decision = resolveApprovalDecision(comments?.items ?? [], orgIds)
-      return decision.status === 'approved' ? parsed.userId : null
+      if (decision.status !== 'approved') return []
+      return [parsed.userId, ...(item.author_id ? [item.author_id] : [])]
     }),
   )
-  return new Set(ids.filter((id): id is string => Boolean(id)))
+  return new Set(ids.flat().filter((id): id is string => Boolean(id)))
 }
 
 /** "승인 완료된 교관" 계정 id 집합을 반환한다(2분 캐시). */
