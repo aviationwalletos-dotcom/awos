@@ -10,7 +10,8 @@ import { Reveal } from '../Reveal'
 // (가입) 하나만 남긴다. LogTen/ForeFlight식 단일 목적 랜딩의 마무리 방식.
 
 export function FinalCta() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, userType } = useAuth()
+  const isOrg = isAuthenticated && userType === 'organization'
   const navigate = useNavigate()
 
   return (
@@ -28,8 +29,8 @@ export function FinalCta() {
             가입 후 30초면 첫 기록이 저장됩니다. 기존 엑셀 로그북이 있다면 그대로 가져올 수 있습니다.
           </p>
           <div className="mt-8">
-            <Button size="lg" onClick={() => navigate(isAuthenticated ? '/logbook' : '/signup')}>
-              {isAuthenticated ? '내 로그북 열기' : '시작하기'}
+            <Button size="lg" onClick={() => navigate(isAuthenticated ? (isOrg ? '/dashboard' : '/logbook') : '/signup')}>
+              {isAuthenticated ? (isOrg ? '대시보드 열기' : '내 로그북 열기') : '시작하기'}
             </Button>
           </div>
           <p className="mt-4 text-xs text-slate-500">개인 사용자 무료 · 데이터는 언제든 CSV로 내보낼 수 있습니다</p>

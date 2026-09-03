@@ -100,7 +100,7 @@ export function DashboardPage() {
         </section>
 
         {activeTab === 'personnel' && (
-          <section data-mbaas-oid="msovsec" className="bg-panel py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="msovsec" className="bg-panel py-[clamp(16px,2.5vw,32px)]">
             <div data-mbaas-oid="msovwrp" className="mx-auto max-w-7xl px-6">
               <Reveal>
                 <h2 data-mbaas-oid="msovsc3" className="font-display text-2xl font-extrabold text-ink">구성원 현황</h2>
@@ -108,7 +108,7 @@ export function DashboardPage() {
                   가입한 전체 회원이 상태 공유 절차 없이 바로 표시됩니다.
                 </p>
               </Reveal>
-              <div data-mbaas-oid="msovsc5" className="mt-8 rounded-card border border-white/10 bg-navy p-6">
+              <div data-mbaas-oid="msovsc5" className="mt-4 rounded-card border border-white/10 bg-navy p-6">
                 <MemberDirectoryPanel />
               </div>
             </div>
@@ -116,7 +116,7 @@ export function DashboardPage() {
         )}
 
         {activeTab === 'instructorApproval' && (
-          <section data-mbaas-oid="ee1cmtd" className="bg-panel py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="ee1cmtd" className="bg-panel py-[clamp(16px,2.5vw,32px)]">
             <div data-mbaas-oid="5lfshoa" className="mx-auto max-w-7xl px-6">
               <Reveal>
                 <h2 data-mbaas-oid="wo222xw" className="font-display text-2xl font-extrabold text-ink">
@@ -135,7 +135,7 @@ export function DashboardPage() {
         )}
 
         {activeTab === 'certificateApproval' && (
-          <section data-mbaas-oid="fvq8yj5" className="bg-panel py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="fvq8yj5" className="bg-panel py-[clamp(16px,2.5vw,32px)]">
             <div data-mbaas-oid="5iqjyz8" className="mx-auto max-w-7xl px-6">
               <Reveal>
                 <h2 data-mbaas-oid="5ckg1cn" className="font-display text-2xl font-extrabold text-ink">
@@ -154,7 +154,7 @@ export function DashboardPage() {
         )}
 
         {activeTab === 'certApprovals' && (
-          <section data-mbaas-oid="crtapsec" className="bg-panel py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="crtapsec" className="bg-panel py-[clamp(16px,2.5vw,32px)]">
             <div data-mbaas-oid="crtapwrp" className="mx-auto max-w-7xl px-6">
               <Reveal>
                 <h2 data-mbaas-oid="crtaph2" className="font-display text-2xl font-extrabold text-ink">자격증 · 항공신체검사 요청함</h2>
@@ -184,7 +184,7 @@ export function DashboardPage() {
         )}
 
         {activeTab === 'inquiries' && (
-          <section data-mbaas-oid="inqsec0" className="bg-panel py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="inqsec0" className="bg-panel py-[clamp(16px,2.5vw,32px)]">
             <div data-mbaas-oid="inqsec1" className="mx-auto max-w-4xl px-6">
               <Reveal>
                 <h2 data-mbaas-oid="inqsec2" className="font-display text-2xl font-extrabold text-ink">문의함</h2>

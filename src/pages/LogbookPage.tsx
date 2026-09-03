@@ -576,7 +576,7 @@ export function LogbookPage() {
         {activeTab === 'myRecords' && (
           <>
             {trackEntries.length === 0 && (
-              <section className="bg-surface pt-[clamp(48px,6vw,80px)]">
+              <section className="bg-surface pt-[clamp(24px,4vw,48px)]">
                 <div className="mx-auto max-w-4xl px-6">
                   <Reveal>
                     <LogbookOnboarding
@@ -598,22 +598,9 @@ export function LogbookPage() {
               </section>
             )}
 
-            {isDrone && (
-              <section data-mbaas-oid="cpldrn1" className="bg-panel py-[clamp(64px,8vw,120px)]">
-                <div data-mbaas-oid="cpldrn2" className="mx-auto max-w-4xl px-6">
-                  <Reveal>
-                    <ComplianceSection
-                      title="초경량비행장치 조종자 법정 요건 안내/현황"
-                      description="아래 항목은 초경량 구분의 비행기록만으로 자동 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
-                      items={droneComplianceItems}
-                    />
-                  </Reveal>
-                </div>
-              </section>
-            )}
 
             {isLsa && (
-              <section data-mbaas-oid="cpllsa1" className="bg-panel py-[clamp(64px,8vw,120px)]">
+              <section data-mbaas-oid="cpllsa1" className="bg-panel py-[clamp(24px,4vw,48px)]">
                 <div data-mbaas-oid="cpllsa2" className="mx-auto max-w-4xl px-6">
                   <Reveal>
                     <ComplianceSection
@@ -626,7 +613,7 @@ export function LogbookPage() {
               </section>
             )}
 
-            <section data-mbaas-oid="lgbpg30" className="bg-navy py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="lgbpg30" className="bg-navy py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="lgbpg31" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="y1wgruj" className="font-display text-2xl font-extrabold text-white">
@@ -642,7 +629,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="lgbpg20" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="lgbpg20" className="bg-panel py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="lgbpg21" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <div data-mbaas-oid="kyatjlq" className="flex flex-wrap items-center justify-between gap-3">
@@ -714,7 +701,7 @@ export function LogbookPage() {
 
         {activeTab === 'certificates' && (
           <>
-            <section data-mbaas-oid="7r4ryck" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="7r4ryck" className="bg-panel py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="5nfdg3d" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="x782ba2" className="font-display text-2xl font-extrabold text-ink">
@@ -747,7 +734,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="xaqul3f" className="bg-surface py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="xaqul3f" className="bg-surface py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="wuso7uw" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <div
@@ -800,11 +787,24 @@ export function LogbookPage() {
             </section>
 
             
+            {isDrone && (
+              <section data-mbaas-oid="cpldrn1" className="bg-panel py-[clamp(24px,4vw,48px)]">
+                <div data-mbaas-oid="cpldrn2" className="mx-auto max-w-4xl px-6">
+                  <Reveal>
+                    <ComplianceSection
+                      title="초경량비행장치 조종자 법정 요건 안내/현황"
+                      description="아래 항목은 초경량 구분의 비행기록만으로 자동 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
+                      items={droneComplianceItems}
+                    />
+                  </Reveal>
+                </div>
+              </section>
+            )}
           </>
         )}
 
         {activeTab === 'currency' && isPilotLike && (
-          <section data-mbaas-oid="cursec1" className="bg-surface py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="cursec1" className="bg-surface py-[clamp(24px,4vw,48px)]">
             <div data-mbaas-oid="cursec2" className="mx-auto max-w-4xl px-6">
               <Reveal>
                 <h2 data-mbaas-oid="cursec3" className="font-display text-2xl font-extrabold text-ink">
@@ -829,7 +829,7 @@ export function LogbookPage() {
 
         {activeTab === 'logbook' && (
           <>
-            <section id="new-entry" data-mbaas-oid="lgbpg16" className="bg-surface py-[clamp(64px,8vw,120px)]">
+            <section id="new-entry" data-mbaas-oid="lgbpg16" className="bg-surface py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="lgbpg17" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="lgbpg18" className="font-display text-2xl font-extrabold text-ink">
@@ -851,7 +851,7 @@ export function LogbookPage() {
                     ) : (
                     <EntryForm
                       mode="create"
-                      onSubmit={(input) => { addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack }); showToast('비행기록이 추가되었습니다.') }}
+                      onSubmit={(input) => { addEntry({ ...input, vehicleClass: input.vehicleClass ?? activeTrack }); showToast(input.pilotCertification ? '본인 서명과 함께 비행기록이 저장되었습니다.' : '비행기록이 추가되었습니다.') }}
                       suggestions={entrySuggestions}
                       track={activeTrack}
                       defaultRole={defaultEntryRole}
@@ -864,7 +864,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="lgbpg26" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="lgbpg26" className="bg-panel py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="lgbpg27" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="lgbpg28" className="font-display text-2xl font-extrabold text-ink">
@@ -887,7 +887,7 @@ export function LogbookPage() {
 
         {activeTab === 'workLog' && workLogCopy && (
           <>
-            <section data-mbaas-oid="cplwrk1" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="cplwrk1" className="bg-panel py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="cplwrk2" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <ComplianceSection
@@ -899,7 +899,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="345u0xk" className="bg-surface py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="345u0xk" className="bg-surface py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="c8jey75" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="dj8ehec" className="font-display text-2xl font-extrabold text-ink">
@@ -915,7 +915,7 @@ export function LogbookPage() {
               </div>
             </section>
 
-            <section data-mbaas-oid="5wmlu2d" className="bg-panel py-[clamp(64px,8vw,120px)]">
+            <section data-mbaas-oid="5wmlu2d" className="bg-panel py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="djxyqfk" className="mx-auto max-w-4xl px-6">
                 <Reveal>
                   <h2 data-mbaas-oid="7muuj7p" className="font-display text-2xl font-extrabold text-ink">
@@ -931,7 +931,7 @@ export function LogbookPage() {
         )}
 
         {activeTab === 'signatureInbox' && (
-          <section data-mbaas-oid="sywdazj" className="bg-navy-dark py-[clamp(64px,8vw,120px)]">
+          <section data-mbaas-oid="sywdazj" className="bg-navy-dark py-[clamp(24px,4vw,48px)]">
             <div data-mbaas-oid="yc4n810" className="mx-auto max-w-4xl px-6">
               <Reveal>{account && <InstructorSignatureInboxSection account={account} />}</Reveal>
             </div>

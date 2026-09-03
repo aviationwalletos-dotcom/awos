@@ -87,10 +87,23 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
   return (
     <div data-mbaas-oid="gro88ly">
       {/* 0. 항공신체검사 커런시 — 가장 상단에 배치 */}
-      <section data-mbaas-oid="bt88ygo">
-        <h3 data-mbaas-oid="12xh8u5" className="font-display text-lg font-extrabold text-ink">
-          항공신체검사 커런시
-        </h3>
+      <Collapsible
+        id="cur-medical"
+        className="mt-4"
+        title="항공신체검사 커런시"
+        summary={
+          <StatusBadge
+            tone={['valid', 'warning', 'urgent'].includes(medical.class1Status ?? '') || ['valid', 'warning', 'urgent'].includes(medical.class2Status ?? '') ? 'met' : 'unmet'}
+            label={
+              ['valid', 'warning', 'urgent'].includes(medical.class1Status ?? '')
+                ? '1종 유효'
+                : ['valid', 'warning', 'urgent'].includes(medical.class2Status ?? '')
+                  ? '2종 유효'
+                  : '미등록/만료'
+            }
+          />
+        }
+      >
 
         <div data-mbaas-oid="567p0dz" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
           <p data-mbaas-oid="kmaccqq">
@@ -213,7 +226,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
         <p data-mbaas-oid="xa7w2bw" className="mt-4 text-xs text-slate-400">
           항공신체검사증명은 "자격증 관리" 탭에서 등록/수정할 수 있습니다.
         </p>
-      </section>
+      </Collapsible>
 
       <div data-mbaas-oid="8xitjoy" className="mt-10 flex items-start gap-2 rounded-control border border-white/10 bg-white/[0.05] p-4 text-sm text-slate-400">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />

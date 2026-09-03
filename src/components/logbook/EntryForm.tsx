@@ -248,8 +248,9 @@ export function EntryForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
-    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
-    const isCertifyAction = submitter?.name === 'formAction' && submitter?.value === 'certify'
+    // v1.1 — "기록 확정" 별도 버튼 제거. 서명 패드에 새로 서명했으면 저장 시 함께 확정된다(선택).
+    // 편집 모드에서 기존 서명을 그대로 두고 저장하면 확정 시각을 갱신하지 않는다.
+    const isCertifyAction = Boolean(signatureDataUrl) && signatureDataUrl !== (initialValues?.pilotCertification?.signatureDataUrl ?? null)
     const nextErrors: FieldErrors = {}
 
     const date = String(form.get('date') || '').trim()
@@ -298,10 +299,6 @@ export function EntryForm({
     if (isSim && (!groundTrainerRaw || Number(groundTrainerRaw) <= 0)) {
       nextErrors.groundTrainerTime = '시뮬레이터(지상훈련장비) 시간을 0보다 큰 숫자로 입력해 주세요.'
     }
-    if (isCertifyAction && !signatureDataUrl) {
-      nextErrors.certification = '서명 후 확정해 주세요.'
-    }
-
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
 
@@ -369,7 +366,7 @@ export function EntryForm({
       legacySourceNote: initialValues?.legacySourceNote,
     })
 
-    if (mode === 'create' && !isCertifyAction) {
+    if (mode === 'create') {
       e.currentTarget.reset()
       setSignatureDataUrl(null)
     }
@@ -1025,7 +1022,7 @@ export function EntryForm({
       <fieldset data-mbaas-oid="rcl7tn3">
         <legend data-mbaas-oid="po864wo" className={sectionTitleClass}>9. 조종사 서명 (자기 인증)</legend>
         <p data-mbaas-oid="4h206k1" className={sectionHintClass}>
-          "I certify that the statements made by me on this form are true." 이 기록에 기재된 내용이 사실임을 본인이 직접 서명해 확정합니다.
+          "I certify that the statements made by me on this form are true." 서명하면 아래 "비행 기록 추가하기"로 저장할 때 본인 확정 서명이 함께 기록됩니다(선택).
         </p>
 
         {initialValues?.pilotCertification?.certifiedAt && (
@@ -1036,13 +1033,6 @@ export function EntryForm({
 
         <div data-mbaas-oid="3j7gjsc" className="mt-3 max-w-sm">
           <SignaturePad onChange={setSignatureDataUrl} />
-        </div>
-        {errors.certification && <p data-mbaas-oid="to5ua9s" className="mt-1.5 text-xs text-rose-600">{errors.certification}</p>}
-
-        <div data-mbaas-oid="xpa33ex" className="mt-3">
-          <Button data-mbaas-oid="ozt4m42" type="submit" name="formAction" value="certify" variant="outline" tone="brand" size="sm">
-            기록 확정 (서명)
-          </Button>
         </div>
       </fieldset>
 

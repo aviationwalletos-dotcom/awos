@@ -7,7 +7,11 @@ import { useAuth } from '../contexts/AuthContext'
 export function Nav() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { account, isAuthenticated, isLoading, logout, isLoggingOut } = useAuth()
+  const { account, isAuthenticated, isLoading, logout, isLoggingOut, userType } = useAuth()
+  // 기관(관리자) 계정은 로그북 대신 대시보드가 홈이다
+  const isOrg = isAuthenticated && userType === 'organization'
+  const homePath = isOrg ? '/dashboard' : '/logbook'
+  const homeLabel = isOrg ? 'DASHBOARD' : 'AWOS'
 
   async function handleLogout() {
     try {
@@ -29,10 +33,10 @@ export function Nav() {
         <ul data-mbaas-oid="ov7zpl6" className="hidden items-center gap-8 md:flex">
           <li data-mbaas-oid="lgbnav1">
             <Link
-              data-mbaas-oid="lgbnav2" to="/logbook"
+              data-mbaas-oid="lgbnav2" to={homePath}
               className="text-sm font-medium text-slate-300 transition-colors hover:text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
             >
-              AWOS
+              {homeLabel}
             </Link>
           </li>
           <li data-mbaas-oid="orgnav1">
@@ -136,11 +140,11 @@ export function Nav() {
           )}
           <li data-mbaas-oid="lgbnav4">
             <Link
-              data-mbaas-oid="lgbnav5" to="/logbook"
+              data-mbaas-oid="lgbnav5" to={homePath}
               onClick={() => setOpen(false)}
               className="block rounded-control px-2 py-3 text-sm font-medium text-slate-200 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
             >
-              개인 사용자 · AWOS
+              {isOrg ? '관리자 · DASHBOARD' : '개인 사용자 · AWOS'}
             </Link>
           </li>
           <li data-mbaas-oid="orgnav4">

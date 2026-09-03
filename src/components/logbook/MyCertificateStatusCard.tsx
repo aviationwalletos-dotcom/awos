@@ -228,7 +228,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                   const rect = e.currentTarget.getBoundingClientRect()
                   goTo(active + (e.clientX - rect.left < rect.width / 2 ? -1 : 1))
                 }}
-                className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'min-h-[220px] p-4' : 'min-h-[260px] p-5'}`}
+                className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'p-4' : 'p-5'}`}
                 aria-label={`${def.category} 카드`}
               >
                 <div data-mbaas-oid="mcsm0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" aria-hidden="true" />
@@ -239,7 +239,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                   </span>
                 </div>
 
-                <div data-mbaas-oid="mcsm4" className="relative mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
+                <div data-mbaas-oid="mcsm4" className="relative mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
                   <div className="min-w-0">
                     <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">I. 자격명 (TITLE OF LICENSE)</p>
                     <p className={`truncate font-display font-extrabold text-white ${compact ? 'text-lg' : 'text-xl'}`}>
@@ -259,7 +259,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                   </div>
                 </div>
 
-                <div data-mbaas-oid="mcsm5" className="relative mt-3 border-t border-white/15 pt-2">
+                <div data-mbaas-oid="mcsm5" className="relative mt-2 border-t border-white/15 pt-2">
                   <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">IV. 한정사항 (RATINGS)</p>
                   {ratings.length > 0 ? (
                     <p className="mt-0.5 text-[12px] leading-relaxed text-white/90">{ratings.join(', ')}</p>
@@ -270,15 +270,11 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
 
                 <div data-mbaas-oid="mcsm6" className="relative mt-2 grid grid-cols-[1fr_auto] gap-3 border-t border-white/15 pt-2">
                   <div className="min-w-0">
-                    {primary?.limitations ? (
-                      <>
-                        <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">V. 제한사항 (LIMITATIONS)</p>
-                        <p className="mt-0.5 truncate text-[11px] text-white/85">{primary.limitations}</p>
-                      </>
-                    ) : null}
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">V. 제한사항 (LIMITATIONS)</p>
+                    <p className={`mt-0.5 truncate text-[11px] ${primary?.limitations ? 'text-white/85' : 'text-white/55'}`}>{primary?.limitations || '없음 (NIL)'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">{primary?.limitations ? 'VI' : 'V'}. 발급일</p>
+                    <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">VI. 발급일</p>
                     <p className="font-mono-data text-[11px] font-bold text-white">{fmtDate(primary?.issuedDate) || '—'}</p>
                     <p className="truncate text-[10px] text-white/60">{primary?.issuer ?? ''}</p>
                   </div>

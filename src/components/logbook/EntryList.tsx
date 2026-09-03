@@ -359,7 +359,9 @@ export function EntryList({
                   </div>
 
                   <p data-mbaas-oid="dk1wam7" className="mt-2 font-mono-data tabular-nums text-sm text-slate-400">
-                    블록타임 {entry.blockTime.toFixed(1)}시간
+                    {(entry.groundTrainerTime ?? 0) > 0 && entry.blockTime === 0
+                      ? `시뮬레이터 ${(entry.groundTrainerTime ?? 0).toFixed(1)}시간${entry.simDevice ? ` · ${entry.simDevice}` : ''}`
+                      : `블록타임 ${entry.blockTime.toFixed(1)}시간`}
                   </p>
 
                   <div data-mbaas-oid="97d5akg" className="mt-3 flex flex-wrap items-center gap-2">
