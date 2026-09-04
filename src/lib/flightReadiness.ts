@@ -4,6 +4,8 @@
 // UI(배지 문구, 색상 등)는 각 컴포넌트에 남기고, 이 파일은 순수 계산만 담당합니다.
 
 import type { LogbookEntry } from '../types/logbook'
+import { inferAircraftClass } from './aircraftClass'
+import type { AircraftClass } from './aircraftClass'
 import type { Certificate, CertificateStatus } from '../types/certificate'
 import { getCertificateStatus } from '../types/certificate'
 
@@ -67,14 +69,26 @@ export interface MedicalReadiness {
   class1Missing: boolean
 }
 
+export interface RecencyByClass {
+  aircraftClass: AircraftClass
+  landingCount: number
+  nightLandingCount: number
+  baseMet: boolean
+  nightMet: boolean
+}
+
 export interface RecencyReadiness {
   recentCount: number
   landingCount: number
   nightLandingCount: number
   baseMet: boolean
   nightMet: boolean
-  /** v1.1 — 적용된 기간(일). 일반 180 / 여객·2인조종·운송사업 90 */
+  /** v1.1 — 적용된 기간(일). 일반 180 / 여객·2인조종·운송사업 90 (운항기술기준 8.2.2) */
   windowDays: number
+  /** 야간 1회 요건이 법정으로 붙는지(8.2.2 가항 = 여객·2인조종·운송사업만). 일반 운항은 참고치 */
+  nightRequired: boolean
+  /** 8.2.2 "동일 등급 항공기 형식" — 최근 비행에 나타난 등급별 판정 */
+  byClass: RecencyByClass[]
 }
 
 export interface IfrReadiness {
@@ -157,14 +171,29 @@ export function computeFlightReadiness(
     class1Missing,
   }
 
-  // 1) 최근 비행경험(일반/야간) — 일반 180일, 여객·2인조종·운송사업 90일 (v1.1 확정안)
+  // 1) 최근 비행경험 — 운항기술기준 8.2.2
+  //    가. 여객 운송 또는 2인 이상 조종 항공기의 기장: 90일 내 동일 등급 형식 3회 이착륙 + 야간 1회 (시행규칙 제121조도 90일)
+  //    나. 그 외 기장: 180일 내 동일 등급 형식 3회 이착륙 (야간 요건 없음 → 참고치로만 표시)
   const windowDays = operationType === 'commercial' ? 90 : 180
+  const nightRequired = operationType === 'commercial'
   const recencyStart = daysAgo(today, windowDays)
   const recencyRecent = entries.filter((e) => isWithinWindow(e.date, recencyStart, today))
   const landingCount = recencyRecent.reduce((sum, e) => sum + (e.dayLandings ?? 0) + (e.nightLandings ?? 0), 0)
   const nightLandingCount = recencyRecent.reduce((sum, e) => sum + (e.nightLandings ?? 0), 0)
   const baseMet = landingCount >= 3
-  const nightMet = baseMet && nightLandingCount >= 1
+  const nightMet = baseMet && (!nightRequired || nightLandingCount >= 1)
+  // 등급별(8.2.2 "동일 등급") — 최근 24개월 안에 비행한 등급마다 따로 센다. 등급 미기재 기록은 모든 등급에 합산(보수적)
+  const classWindow = daysAgo(today, 730)
+  const classesFlown = [...new Set(entries.filter((e) => isWithinWindow(e.date, classWindow, today)).map(inferAircraftClass))].filter((c): c is Exclude<AircraftClass, 'unknown'> => c !== 'unknown')
+  const byClass: RecencyByClass[] = classesFlown.map((cls) => {
+    const rows = recencyRecent.filter((e) => {
+      const c = inferAircraftClass(e)
+      return c === cls || c === 'unknown'
+    })
+    const l = rows.reduce((s, e) => s + (e.dayLandings ?? 0) + (e.nightLandings ?? 0), 0)
+    const n = rows.reduce((s, e) => s + (e.nightLandings ?? 0), 0)
+    return { aircraftClass: cls, landingCount: l, nightLandingCount: n, baseMet: l >= 3, nightMet: l >= 3 && (!nightRequired || n >= 1) }
+  })
   const recency: RecencyReadiness = {
     recentCount: recencyRecent.length,
     landingCount,
@@ -172,6 +201,8 @@ export function computeFlightReadiness(
     baseMet,
     nightMet,
     windowDays,
+    nightRequired,
+    byClass,
   }
 
   // 2) 계기비행 경험(IFR) — 6개월(월 단위 소급)
@@ -254,14 +285,14 @@ export function computeReadinessStates(
   const generalReasons: string[] = []
   if (!medicalValid) generalReasons.push('유효한 항공신체검사(제1종 또는 제2종)가 없습니다')
   if (!recency.baseMet) {
-    generalReasons.push(`최근 180일 이착륙 ${recency.landingCount}/3회로 기준 미달입니다`)
+    generalReasons.push(`최근 ${recency.windowDays}일 이착륙 ${recency.landingCount}/3회로 기준 미달입니다(운항기술기준 8.2.2)`)
   }
   const generalMet = medicalValid && recency.baseMet
 
   // 2) 야간 비행 가능
   const nightReasons = [...generalReasons]
   if (generalMet && !recency.nightMet) {
-    nightReasons.push('최근 180일 야간 이착륙이 1회 이상 없습니다')
+    nightReasons.push(recency.nightRequired ? `최근 ${recency.windowDays}일 야간 이착륙이 1회 이상 없습니다(8.2.2 가항)` : `최근 ${recency.windowDays}일 야간 이착륙이 없습니다(일반 운항은 법정 요건이 아닌 참고치)`)
   }
   const nightMetOverall = generalMet && recency.nightMet
 

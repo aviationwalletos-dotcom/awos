@@ -8,7 +8,7 @@
  *   앱 자체가 로컬우선 구조라, 셸만 열리면 격납고 앞 오프라인 상태에서도 기록 열람이 된다.
  * - 정적 자산(/assets/*, /icons/*, 매니페스트): 캐시 우선. 파일명에 해시가 붙어 있어 안전하다.
  */
-const CACHE = 'awos-shell-v3'
+const CACHE = 'awos-shell-v4'
 const MAX_STATIC_ENTRIES = 120 // 해시 파일명이 배포마다 바뀌므로 오래된 항목을 정리한다
 
 self.addEventListener('install', () => {

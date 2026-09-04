@@ -6,6 +6,7 @@ import type { Certificate, CertificateStatus } from '../../types/certificate'
 import { CERTIFICATE_STATUS_LABEL } from '../../types/certificate'
 import type { AccountResponse } from '../../lib/baas/types'
 import { Collapsible } from '../Collapsible'
+import { AIRCRAFT_CLASS_LABEL } from '../../lib/aircraftClass'
 import { useCurrencyOverrides } from '../../hooks/useCurrencyOverrides'
 import { usePilotTracks } from '../../hooks/usePilotTracks'
 import { OPERATION_TYPE_DESCRIPTION, OPERATION_TYPE_LABEL } from '../../lib/tracks'
@@ -276,9 +277,26 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
               })}
             </div>
             <div data-mbaas-oid="4f1ymr8" className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
-              최근 {recency.windowDays}일 이내 이·착륙 합계가 3회 이상이어야 하며, 그 중 야간 이·착륙이 1회 이상 포함되어야 야간비행이
-              가능합니다. 모의비행장치를 이용한 이착륙 경험도 인정됩니다.
+              {recency.nightRequired
+                ? '운항기술기준 8.2.2 가항(시행규칙 제121조): 여객 운송 또는 2인 이상 조종 항공기의 기장은 최근 90일 이내 동일 등급 형식으로 3회 이상 이·착륙, 야간비행은 그 중 야간 1회 포함. 지정 모의비행장치 경험 인정.'
+                : '운항기술기준 8.2.2 나항: 그 외 기장은 최근 180일 이내 동일 등급 항공기 형식(또는 모의비행장치)으로 3회 이상 이·착륙. 야간 1회는 법정 요건이 아니라 참고치로만 표시합니다.'}
             </div>
+            {recency.byClass.length > 0 && (
+              <div data-mbaas-oid="rcbycls" className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {recency.byClass.map((r) => (
+                  <div key={r.aircraftClass} className="flex items-center justify-between rounded-control border border-white/10 bg-navy px-3 py-2">
+                    <div>
+                      <p className="text-sm font-semibold text-ink">{AIRCRAFT_CLASS_LABEL[r.aircraftClass]}</p>
+                      <p className="text-[11px] text-slate-400">이·착륙 {r.landingCount}회 · 야간 {r.nightLandingCount}회</p>
+                    </div>
+                    <StatusBadge tone={r.baseMet ? 'met' : 'unmet'} label={r.baseMet ? '유지' : '미달'} />
+                  </div>
+                ))}
+                <p className="text-[11px] text-slate-500 sm:col-span-2">
+                  등급은 기록의 범주별 시간(단발/다발/회전익) 또는 기종명으로 판정해요. 등급 미기재 기록은 모든 등급에 합산됩니다.
+                </p>
+              </div>
+            )}
             <p data-mbaas-oid="xpxybbu" className="mt-4 text-sm text-slate-400">
               최근 {recency.windowDays}일 이내 비행 기록 <span data-mbaas-oid="vto2od8" className="font-mono-data tabular-nums font-semibold text-ink">{recency.recentCount}</span>건 기준
             </p>
@@ -301,9 +319,12 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 <div data-mbaas-oid="tr47mbn" className="flex items-center justify-between gap-2">
                   <div data-mbaas-oid="hafjs54" className="flex items-center gap-2">
                     <Moon className="h-5 w-5 text-indigo-500" aria-hidden="true" />
-                    <h4 data-mbaas-oid="tlxrv1j" className="font-display text-base font-bold text-ink">야간 비행 요건</h4>
+                    <h4 data-mbaas-oid="tlxrv1j" className="font-display text-base font-bold text-ink">야간 비행 요건{!recency.nightRequired && <span className="ml-1 text-xs font-normal text-slate-500">(참고)</span>}</h4>
                   </div>
-                  <StatusBadge tone={recency.nightMet ? 'met' : 'unmet'} label={recency.nightMet ? '기준 충족' : '기준 미달'} />
+                  <StatusBadge
+                    tone={recency.nightRequired ? (recency.nightMet ? 'met' : 'unmet') : recency.nightLandingCount >= 1 ? 'met' : 'unmet'}
+                    label={recency.nightRequired ? (recency.nightMet ? '기준 충족' : '기준 미달') : recency.nightLandingCount >= 1 ? '야간 경험 있음' : '야간 경험 없음'}
+                  />
                 </div>
                 <p data-mbaas-oid="ze46nhh" className="mt-4 font-mono-data text-3xl font-extrabold tabular-nums text-ink">
                   {recency.nightLandingCount}<span data-mbaas-oid="a8hmh97" className="ml-1 text-base font-medium text-slate-400">/ 1회 이상</span>

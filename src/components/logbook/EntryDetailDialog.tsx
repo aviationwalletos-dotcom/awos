@@ -517,30 +517,27 @@ export function EntryDetailDialog({
                 </div>
               )}
 
-              <div data-mbaas-oid="c9z828i" className="rounded-control border border-white/10 bg-surface p-4">
-                <h4 data-mbaas-oid="lpmhmvm" className="flex items-center gap-1.5 text-sm font-bold text-ink">
-                  <ShieldCheck className="h-4 w-4 text-sky" aria-hidden="true" />
-                  조종사 본인 서명(자기 인증)
-                </h4>
-                {entry.pilotCertification?.certifiedAt ? (
+              {entry.pilotCertification?.signatureDataUrl && (
+                <div data-mbaas-oid="c9z828i" className="rounded-control border border-white/10 bg-surface p-4">
+                  <h4 data-mbaas-oid="lpmhmvm" className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                    <ShieldCheck className="h-4 w-4 text-sky" aria-hidden="true" />
+                    조종사 본인 확인(참고 · 예전 기록)
+                  </h4>
                   <div data-mbaas-oid="yc3t6bs" className="mt-3 space-y-2">
-                    {entry.pilotCertification.signatureDataUrl && (
-                      <img
-                        data-mbaas-oid="yhkzgbo" src={entry.pilotCertification.signatureDataUrl}
-                        alt="조종사 본인 서명 이미지"
-                        className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
-                      />
+                    <img
+                      data-mbaas-oid="yhkzgbo" src={entry.pilotCertification.signatureDataUrl}
+                      alt="조종사 본인 서명 이미지"
+                      className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
+                    />
+                    {entry.pilotCertification.certifiedAt && (
+                      <p data-mbaas-oid="j3utrf5" className="font-mono-data text-xs tabular-nums text-slate-400">
+                        확정 일시: {formatCertifiedAt(entry.pilotCertification.certifiedAt)}
+                      </p>
                     )}
-                    <p data-mbaas-oid="j3utrf5" className="font-mono-data text-xs tabular-nums text-slate-400">
-                      확정 일시: {formatCertifiedAt(entry.pilotCertification.certifiedAt)}
-                    </p>
+                    <p className="text-[11px] text-slate-500">본인 서명은 시행규칙 제77조의 경력 증명이 아니라 v45부터 입력을 받지 않아요. 예전에 붙은 서명만 표시합니다.</p>
                   </div>
-                ) : (
-                  <p data-mbaas-oid="zqu0984" className="mt-2 text-xs text-slate-400">
-                    아직 본인 서명으로 확정되지 않았습니다. "수정하기"에서 서명 후 "기록 확정(서명)" 버튼을 눌러 확정할 수 있습니다.
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
 
               <div data-mbaas-oid="i4yxlcq" className="rounded-control border border-white/10 bg-surface p-4">
                 <h4 data-mbaas-oid="hwsa94l" className="flex items-center gap-1.5 text-sm font-bold text-ink">

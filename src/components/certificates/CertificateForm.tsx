@@ -6,6 +6,7 @@ import { CERTIFICATE_CATEGORIES_BY_TRACK } from '../../types/certificate'
 import type { Certificate, CertificateCategory, CertificateInput } from '../../types/certificate'
 import {
   DRIVER_LICENCE_TYPES,
+  ENDORSEMENT_TYPES,
   EPTA_LEVELS,
   FLIGHT_INSTRUCTOR_TYPES,
   INSTRUMENT_RATING_TYPES,
@@ -13,6 +14,7 @@ import {
   LSA_INSTRUCTOR_TYPES,
   LSA_LICENCE_TYPES,
   MEDICAL_CERTIFICATE_TYPES,
+  TRAINING_PERMIT_TYPES,
   ULTRALIGHT_CERT_TYPES,
   ULTRALIGHT_EDUCATION_TYPES,
   ULTRALIGHT_INSTRUCTOR_TYPES,
@@ -62,6 +64,8 @@ const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
  * 새 자격을 추가할 때는 이 표와 data/deckDefs.ts 두 곳만 손대면 된다.
  */
 const SUBTYPES_BY_CATEGORY: Partial<Record<CertificateCategory, CertificateSubType[]>> = {
+  '교관 확인': ENDORSEMENT_TYPES,
+  '조종연습허가서': TRAINING_PERMIT_TYPES,
   '조종사 자격증명': LICENCE_TYPES,
   '계기비행증명': INSTRUMENT_RATING_TYPES,
   '조종교육증명': FLIGHT_INSTRUCTOR_TYPES,
@@ -91,6 +95,8 @@ const DEFAULT_ISSUER_BY_CATEGORY: Partial<Record<CertificateCategory, string>> =
   '지도조종자': '한국교통안전공단',
   '무선통신사': '한국방송통신전파진흥원',
   '운전면허': '경찰청(도로교통공단)',
+  '조종연습허가서': '지방항공청',
+  // '교관 확인' 은 발급기관 대신 확인 교관 이름을 적는다
 }
 
 const LICENCE_RANK: Record<string, number> = { ATPL: 4, CPL: 3, MPL: 2, PPL: 1 }

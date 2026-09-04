@@ -88,7 +88,8 @@ export async function buildPilotFlightExperienceCertificatePdf(entries: LogbookE
   const totals = sumPilotCertRows(rows)
   const x0 = ctx.margin
   const tableW = ctx.width - ctx.margin * 2
-  const cols = COL_PCT.map((p) => (tableW * p) / 100)
+  const pctSum = COL_PCT.reduce((a, b) => a + b, 0)
+  const cols = COL_PCT.map((p) => (tableW * p) / pctSum)
   const rowH = mm(4.6)
   const footerNeed = mm(38) // 증명문+서명란+주
   const bottomLimit = ctx.height - ctx.margin - mm(6)

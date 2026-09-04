@@ -14,7 +14,9 @@ export type OAuthProvider = 'google' | 'kakao'
 // 비즈 앱 전환 후 Netlify 환경변수 VITE_KAKAO_EMAIL_SCOPE=true 를 추가하면 이메일까지 요청한다.
 const KAKAO_EMAIL_SCOPE = import.meta.env?.VITE_KAKAO_EMAIL_SCOPE === 'true'
 const SCOPES: Partial<Record<OAuthProvider, string>> = {
-  kakao: KAKAO_EMAIL_SCOPE ? 'profile_nickname account_email' : 'profile_nickname',
+  // 카카오: 이메일 플래그가 꺼져 있으면 scopes 를 보내지 않는다 → 카카오 앱에 설정된 기본 동의항목으로 요청된다.
+  // (명시 scope 가 앱 동의항목과 조금이라도 어긋나면 KOE205 가 나므로, 비즈 앱 전환 전에는 기본값이 가장 안전하다)
+  ...(KAKAO_EMAIL_SCOPE ? { kakao: 'profile_nickname account_email' } : {}),
 }
 
 export function startOAuthLogin(provider: OAuthProvider): void {

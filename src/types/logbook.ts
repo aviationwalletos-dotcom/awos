@@ -111,6 +111,8 @@ export interface LogbookEntry {
   signatureRequestPostId?: string
   // 값이 없으면 'manual'(직접 입력)로 간주한다.
   origin?: LogbookEntryOrigin
+  /** 비행교범상 2인 이상 조종이 필요한 항공기 여부 — 시행규칙 제78조 제2호 나·다목(1인 조종 항공기의 부기장 시간은 1/2 인정) */
+  twoPilotAircraft?: boolean
   // 이관 출처 메모. 예: "엑셀 로그북 파일명"
   legacySourceNote?: string
   // 아래 3개 필드는 origin === 'flight_experience_certificate'일 때만 의미가 있다.

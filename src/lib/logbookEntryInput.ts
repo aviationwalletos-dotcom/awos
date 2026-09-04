@@ -34,6 +34,7 @@ export function toLogbookEntryInput(entry: LogbookEntry): LogbookEntryInput {
     signatureRequestPostId: entry.signatureRequestPostId,
     origin: entry.origin,
     legacySourceNote: entry.legacySourceNote,
+    twoPilotAircraft: entry.twoPilotAircraft,
     certificateImageDataUrl: entry.certificateImageDataUrl,
     certificateApprovalStatus: entry.certificateApprovalStatus,
     certificateIssuer: entry.certificateIssuer,

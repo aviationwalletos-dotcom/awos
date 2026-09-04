@@ -133,7 +133,10 @@ interface MyCertificateStatusCardProps {
 export function MyCertificateStatusCard({ certificates, roleContent: _roleContent, compact = false, holderName, track = 'aircraft', totalHours }: MyCertificateStatusCardProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
-  const DECK = DECK_BY_TRACK[track]
+  const DECK = useMemo(
+    () => DECK_BY_TRACK[track].filter((def) => !def.hideWhenEmpty || certificates.some((c) => c.category === def.category)),
+    [track, certificates],
+  )
 
   // 트랙이 바뀌면 첫 카드로
   useEffect(() => {

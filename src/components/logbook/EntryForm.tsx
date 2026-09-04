@@ -7,7 +7,6 @@ import { FLIGHT_CATEGORIES, SIM_DEVICE_LABEL } from '../../types/logbook'
 import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types/logbook'
 
 import { Button } from '../Button'
-import { SignaturePad } from './SignaturePad'
 
 interface FieldErrors {
   date?: string
@@ -113,19 +112,6 @@ export function numOrUndef(value: FormDataEntryValue | null): number | undefined
   return Number.isFinite(n) ? n : undefined
 }
 
-function formatSignedAt(ts: number): string {
-  try {
-    return new Date(ts).toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return ''
-  }
-}
 
 export function EntryForm({
   mode,
@@ -241,16 +227,10 @@ export function EntryForm({
   const departureChips = mergePresetChips(presets.departures, suggestions?.airports)
   const arrivalChips = mergePresetChips(presets.arrivals, suggestions?.airports)
   const viaChips = mergePresetChips(presets.via, suggestions?.airports)
-  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(
-    initialValues?.pilotCertification?.signatureDataUrl ?? null,
-  )
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
-    // v1.1 — "기록 확정" 별도 버튼 제거. 서명 패드에 새로 서명했으면 저장 시 함께 확정된다(선택).
-    // 편집 모드에서 기존 서명을 그대로 두고 저장하면 확정 시각을 갱신하지 않는다.
-    const isCertifyAction = Boolean(signatureDataUrl) && signatureDataUrl !== (initialValues?.pilotCertification?.signatureDataUrl ?? null)
     const nextErrors: FieldErrors = {}
 
     const date = String(form.get('date') || '').trim()
@@ -357,9 +337,9 @@ export function EntryForm({
       nightLandings: vehicleClass === 'aircraft' && Number.isFinite(nightLandings) && nightLandings > 0 ? nightLandings : 0,
       nightTakeoffs: vehicleClass === 'aircraft' ? numOrUndef(form.get('nightTakeoffs')) : undefined,
       notes: String(form.get('notes') || '').trim() || undefined,
-      pilotCertification: isCertifyAction
-        ? { signatureDataUrl: signatureDataUrl ?? undefined, certifiedAt: Date.now() }
-        : initialValues?.pilotCertification,
+      twoPilotAircraft: form.get('twoPilotAircraft') === 'on' ? true : undefined,
+      // 본인 서명은 제77조 증명이 아니라 v45에서 제거. 예전 기록에 붙은 값만 유지.
+      pilotCertification: initialValues?.pilotCertification,
       instructorSignature: initialValues?.instructorSignature,
       signatureRequestPostId: initialValues?.signatureRequestPostId,
       origin: initialValues?.origin ?? 'manual',
@@ -368,7 +348,6 @@ export function EntryForm({
 
     if (mode === 'create') {
       e.currentTarget.reset()
-      setSignatureDataUrl(null)
     }
   }
 
@@ -755,6 +734,10 @@ export function EntryForm({
               defaultValue={initialValues?.pilotingTime?.sic}
               className={numberInputClass}
             />
+            <label className="mt-1.5 flex items-start gap-1.5 text-[11px] text-slate-400">
+              <input type="checkbox" name="twoPilotAircraft" defaultChecked={initialValues?.twoPilotAircraft ?? false} className="mt-0.5 h-3.5 w-3.5 accent-sky" />
+              <span>비행교범상 2인 조종 항공기 — 체크 안 하면 응시경력 산정 시 SIC 시간은 1/2만 인정돼요(시행규칙 제78조)</span>
+            </label>
           </div>
           <div data-mbaas-oid="cv2aa5o">
             <label data-mbaas-oid="k0jccao" htmlFor="flightInstructorTime" className={labelClass}>
@@ -863,6 +846,9 @@ export function EntryForm({
             <label data-mbaas-oid="c02y50b" htmlFor="crossCountry" className={labelClass}>
               크로스컨트리(시간)
             </label>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+              출발지 외 1개 지점 착륙을 포함한 비행시간(운항기술기준 정의 43). 자가용·사업용·계기비행증명 응시경력용은 출발지에서 직선 50NM 이상 떨어진 공항 착륙을 포함해야 해요.
+            </p>
             <input
               data-mbaas-oid="0bxpjci" id="crossCountry"
               name="crossCountry"
@@ -1018,23 +1004,7 @@ export function EntryForm({
 
       <hr data-mbaas-oid="obc1elg" className="border-white/[0.08]" />
 
-      {/* 9. 조종사 서명(자기 인증) */}
-      <fieldset data-mbaas-oid="rcl7tn3">
-        <legend data-mbaas-oid="po864wo" className={sectionTitleClass}>9. 조종사 서명 (자기 인증)</legend>
-        <p data-mbaas-oid="4h206k1" className={sectionHintClass}>
-          "I certify that the statements made by me on this form are true." 서명하면 아래 "비행 기록 추가하기"로 저장할 때 본인 확정 서명이 함께 기록됩니다(선택).
-        </p>
 
-        {initialValues?.pilotCertification?.certifiedAt && (
-          <p data-mbaas-oid="3ui8vr9" className="mt-2 text-xs font-medium text-go">
-            최근 확정 서명: {formatSignedAt(initialValues.pilotCertification.certifiedAt)}
-          </p>
-        )}
-
-        <div data-mbaas-oid="3j7gjsc" className="mt-3 max-w-sm">
-          <SignaturePad onChange={setSignatureDataUrl} />
-        </div>
-      </fieldset>
 
       <div
         data-mbaas-oid="rdre8ib"

@@ -166,9 +166,11 @@ const TAB_OPTIONS: Array<{ value: TabFilter; label: string }> = [
 
 interface InstructorSignatureInboxSectionProps {
   account: AccountResponse
+  /** 서명 교관 본인의 제125조 조종교육 비행경험 충족 여부(미충족이면 제77조②나목 증명 자격 경고) */
+  instructorCurrencyMet?: boolean
 }
 
-export function InstructorSignatureInboxSection({ account }: InstructorSignatureInboxSectionProps) {
+export function InstructorSignatureInboxSection({ account, instructorCurrencyMet = true }: InstructorSignatureInboxSectionProps) {
   const { data, isLoading, error, refetch } = useSignatureRequests()
   const allItems = data?.items ?? []
 
@@ -267,6 +269,11 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
 
   return (
     <div data-mbaas-oid="n0q7rjx" className="rounded-card border border-white/10 bg-white/5 p-cardpad">
+      {!instructorCurrencyMet && (
+        <p data-mbaas-oid="sgncurwarn" className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+          내 조종교육 비행경험(시행규칙 제125조: 최근 1년 10시간)이 미달이에요. 시행규칙 제77조②나목은 "제125조 경험이 있는 조종교관"의 증명을 인정하므로, 지금 서명한 경력은 응시용 증명으로 인정되지 않을 수 있어요. 커런시 탭에서 확인하세요.
+        </p>
+      )}
       <div data-mbaas-oid="ziti7d0" className="flex flex-wrap items-start justify-between gap-3">
         <div data-mbaas-oid="fzifob2">
           <h2 data-mbaas-oid="p2leuhg" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
@@ -291,6 +298,7 @@ export function InstructorSignatureInboxSection({ account }: InstructorSignature
               {option.label} ({hasResolvedOnce || pendingIds.length === 0 ? (option.value === 'pending' ? pendingItems.length : completedItems.length) : '…'})
             </button>
           ))}
+          <span className="self-center text-xs text-slate-400">비행 일자</span>
           <input
             data-mbaas-oid="sgdate"
             type="date"

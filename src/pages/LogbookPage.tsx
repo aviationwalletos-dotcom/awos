@@ -63,9 +63,13 @@ import type { IndividualRole } from '../lib/baas/types'
 import { usePilotTracks } from '../hooks/usePilotTracks'
 import { useVehicles } from '../hooks/useVehicles'
 import { useToast } from '../components/Toast'
+import { computeFlightReadiness } from '../lib/flightReadiness'
+import { useCurrencyOverrides } from '../hooks/useCurrencyOverrides'
 import { useConfirm } from '../components/ConfirmDialog'
 import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
 import { VehicleCards } from '../components/logbook/VehicleCards'
+import { VehicleSummaryCard } from '../components/logbook/VehicleSummaryCard'
+import { RecentFlightsCard } from '../components/logbook/RecentFlightsCard'
 import { savePilotFlightExperienceCertificatePdf, saveUltralightCertificatePdf } from '../lib/pdf'
 import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
@@ -139,6 +143,7 @@ export function LogbookPage() {
   const { tracks: pilotTracks, activeTrack, setActiveTrack, birthDate, operationType } = usePilotTracks(account)
   const { vehicles, addVehicle, deleteVehicle } = useVehicles(account)
   const { toast, showToast } = useToast()
+
   // 로컬 저장(오프라인 사본) 실패 알림 — 서버에는 저장되지만 이 브라우저 용량이 찼을 때
   useEffect(() => {
     const onFail = () => showToast('브라우저 저장 공간이 부족해 오프라인 사본을 갱신하지 못했어요. 서버에는 저장됩니다.')
@@ -339,6 +344,15 @@ export function LogbookPage() {
     [certificates],
   )
   const defaultEntryRole = useMemo<'student' | 'pic' | 'cfi'>(() => (isApprovedInstructor ? 'cfi' : 'student'), [isApprovedInstructor])
+
+  // 시행규칙 제77조②나목: 비행경력을 증명하는 조종교관은 제125조 경험(1년 10시간 또는 신임 1년 유예)이 있어야 한다.
+  // 서명 교관 본인의 커런시를 계산해 서명함에 경고로 띄운다.
+  const { instructorRecoveryChecked } = useCurrencyOverrides(account)
+  const signerInstructorCurrencyMet = useMemo(() => {
+    if (!isApprovedInstructor) return true
+    const r = computeFlightReadiness(entries.filter((e) => entryTrack(e) === 'aircraft'), certificates, { instructorRecoveryChecked, operationType })
+    return r.instructor.met || r.instructor.isNewInstructorGrace
+  }, [isApprovedInstructor, entries, certificates, instructorRecoveryChecked, operationType])
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
 
   const {
@@ -541,8 +555,10 @@ export function LogbookPage() {
                 </div>
               </div>
             ) : (
-              <div data-mbaas-oid="rdnscmp" className="mt-4">
+              <div data-mbaas-oid="rdnscmp" className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={workLogRole ? 'aircraft' : activeTrack} totalHours={workLogRole ? undefined : trackTotalHours} />
+                {isDrone && <VehicleSummaryCard vehicles={vehicles} onManage={() => setActiveTab('logbook')} />}
+                {isLsa && <RecentFlightsCard entries={trackEntries} />}
               </div>
             )}
 
@@ -938,7 +954,7 @@ export function LogbookPage() {
         {activeTab === 'signatureInbox' && (
           <section data-mbaas-oid="sywdazj" className="bg-navy-dark py-[clamp(24px,4vw,48px)]">
             <div data-mbaas-oid="yc4n810" className="mx-auto max-w-4xl px-6">
-              <Reveal>{account && <InstructorSignatureInboxSection account={account} />}</Reveal>
+              <Reveal>{account && <InstructorSignatureInboxSection account={account} instructorCurrencyMet={signerInstructorCurrencyMet} />}</Reveal>
             </div>
           </section>
         )}

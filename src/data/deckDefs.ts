@@ -21,6 +21,8 @@ export interface DeckCardDef {
   extraCategories?: CertificateCategory[]
   /** 실물 자격증(자격명·자격번호·한정사항·특기사항·발급일) 형태로 크게 그리는 마스터 카드 */
   master?: boolean
+  /** 등록된 것이 없으면 카드를 아예 숨긴다(교관 확인처럼 학생 단계에만 의미 있는 카드) */
+  hideWhenEmpty?: boolean
 }
 
 const G = {
@@ -47,7 +49,7 @@ export const AIRCRAFT_DECK: DeckCardDef[] = [
     refText: '항공안전법 제34조 · 제35조 · 제37조 · 제44조',
     gradient: G.navy,
     standards: ['PPL', 'CPL', 'ATPL', 'MPL'],
-    extraCategories: ['한정', '계기비행증명', '조종교육증명'],
+    extraCategories: ['한정', '계기비행증명', '조종교육증명', '조종연습허가서'],
     master: true,
   },
   {
@@ -65,6 +67,15 @@ export const AIRCRAFT_DECK: DeckCardDef[] = [
     gradient: G.rose,
     standards: ['4등급', '5등급', '6등급'],
     hint: '4등급 3년 · 5등급 6년 · 6등급 영구',
+  },
+  {
+    category: '교관 확인',
+    en: 'ENDORSEMENTS',
+    refText: '운항기술기준 2.2.2.5 · 2.2.2.6 · 2.2.3.5',
+    gradient: G.amber,
+    standards: ['단독', '야간 단독', '단독 야외', '응시 전'],
+    hint: '학생 단독비행 시 교관 확인이 포함된 기록부 소지(8.1.7.6 다)',
+    hideWhenEmpty: true,
   },
   {
     category: '무선통신사',

@@ -30,7 +30,8 @@ export async function buildUltralightCertificatePdf(entries: LogbookEntry[], veh
   const pct = anyManned
     ? [5.5, 3.8, 7, 9, 7, 5.5, 4.2, 4.2, 6, 6, 4.5, 4.2, 4.2, 4.2, 4.2, 6.3, 6, 6, 6]
     : [5.5, 3.8, 7, 9, 7, 5.5, 4.2, 4.2, 10, 4.5, 4.2, 4.2, 4.2, 4.2, 8.3, 6, 6, 6]
-  const cols = pct.map((p) => (tableW * p) / 100)
+  const pctSum = pct.reduce((a, b) => a + b, 0)
+  const cols = pct.map((p) => (tableW * p) / pctSum)
   const cx = (i: number) => x0 + cols.slice(0, i).reduce((a, b) => a + b, 0)
   const cw = (i: number, n = 1) => cols.slice(i, i + n).reduce((a, b) => a + b, 0)
   const rowH = mm(5)

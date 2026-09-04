@@ -23,6 +23,29 @@ export const LICENCE_TYPES: CertificateSubType[] = [
  * 한정(Rating) 세부 선택 — v1.1: 항공안전법 제37조 구조를 따른다.
  * 계기비행증명은 법상 "한정"이 아니라 별도 증명(제44조)이므로 분리했다(INSTRUMENT_RATING_TYPES).
  */
+/**
+ * 교관 확인(Endorsement) — 운항기술기준 2.2.2.5·2.2.2.6(조종연습생 단독·야간 단독·단독 야외비행 확인),
+ * 2.2.3.5 나(자가용 야간비행 훈련 이수), 2.2.1.3~2.2.1.5(종류·등급·형식 한정 응시 전 자격유지기록부 확인),
+ * 2.2.3.2(자가용 응시 전 확인). 비행 1건의 서명("이 비행이 사실")과 달리 "이 학생은 ~를 해도 된다"는 교관의 확인이다.
+ */
+/** 조종연습허가서 — 법 제46조·시행규칙 제101조(항공기), 법 제115조·시행규칙 제293조(경량). 유효기간은 신체검사 유효기간 내 */
+export const TRAINING_PERMIT_TYPES: CertificateSubType[] = [
+  { key: 'PERMIT_AIRCRAFT', label: '항공기 조종연습허가서', requiresDetail: true, detailPlaceholder: '허가번호 · 지방항공청' },
+  { key: 'PERMIT_LSA', label: '경량항공기 조종연습허가서', requiresDetail: true, detailPlaceholder: '허가번호 · 지방항공청' },
+]
+
+export const ENDORSEMENT_TYPES: CertificateSubType[] = [
+  { key: 'SOLO', label: '단독비행 확인', requiresDetail: true, detailPlaceholder: '기종/비행장, 예: C172S / RKTL' },
+  { key: 'SOLO_NIGHT', label: '야간 단독비행 확인', requiresDetail: true, detailPlaceholder: '비행장, 예: RKTL' },
+  { key: 'SOLO_XC', label: '단독 야외비행 확인', requiresDetail: true, detailPlaceholder: '노선, 예: RKTL-RKPU-RKTL' },
+  { key: 'NIGHT_TRAINING', label: '야간비행 훈련 이수(자가용, 2시간·이착륙 3회 동승)' },
+  { key: 'EXAM_PPL', label: '자가용 조종사 응시 전 확인' },
+  { key: 'EXAM_CPL', label: '사업용 조종사 응시 전 확인' },
+  { key: 'EXAM_IR', label: '계기비행증명 응시 전 확인' },
+  { key: 'EXAM_RATING', label: '종류·등급·형식 한정 응시 전 확인', requiresDetail: true, detailPlaceholder: '예: 육상다발(MEL)' },
+  { key: 'LIMITATION', label: '자격유지기록부 제한사항 부과', requiresDetail: true, detailPlaceholder: '예: 측풍 10kt 이하, 주간만' },
+]
+
 export const RATING_TYPES: CertificateSubType[] = [
   // 종류 한정(비행기/헬리콥터)은 자격증명 등록 시 함께 받는다. 여기서는 추가 등급·형식만.
   { key: 'CAT_AIRPLANE', label: '종류한정 추가 - 비행기' },
