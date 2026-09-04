@@ -32,7 +32,13 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   const instructorCtx = await browser.newContext()
   const instructor = await instructorCtx.newPage()
   await login(instructor, 'instructor')
-  await openTab(instructor, /서명 요청함/)
+  // "서명 요청함" 탭은 승인된 교관에게만 보인다(isApprovedInstructor).
+  // 승인 전 계정이면 탭이 아예 없어 클릭이 90초 타임아웃만 남기므로, 이유를 분명히 알린다.
+  const inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
+  if (!(await inboxTab.isVisible({ timeout: 10_000 }).catch(() => false))) {
+    throw new Error('교관 계정에 "서명 요청함" 탭이 없습니다 — 관리자 페이지에서 교관 승인을 먼저 완료해 주세요.')
+  }
+  await inboxTab.click()
   const card = instructor.locator('article, div').filter({ hasText: MARKER }).filter({ has: instructor.getByTestId('signature-pad') }).first()
   await expect(card).toBeVisible({ timeout: 30_000 })
   const pad = card.getByTestId('signature-pad')

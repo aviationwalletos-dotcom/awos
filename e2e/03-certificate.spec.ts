@@ -34,8 +34,9 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
   await item.click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: /삭제/ }).first().click()
-  const confirm = page.getByRole('alertdialog')
-  if (await confirm.isVisible({ timeout: 2_000 }).catch(() => false)) await confirm.getByRole('button', { name: /삭제|확인/ }).click()
+  // 삭제는 2단계다: "삭제하기" → 다이얼로그 안 확인 영역(role="alert")의 "삭제 확인".
+  // 예전 스펙은 role="alertdialog" 를 찾아서(존재하지 않음) 확인 단계를 건너뛰었고, 결국 지워지지 않았다.
+  await dialog.getByRole('button', { name: /삭제하기/ }).click()
+  await dialog.getByRole('button', { name: /삭제 확인/ }).click()
   await expect(item).toHaveCount(0)
 })
