@@ -43,3 +43,11 @@ export async function deleteEntriesByMarker(page: Page, marker: string) {
 }
 
 export const today = () => new Date().toISOString().slice(0, 10)
+
+/** 첨부 필수 필드 테스트용 1x1 PNG (외부 파일 없이 setInputFiles 로 넘긴다) */
+export function tinyPng(): Buffer {
+  return Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  )
+}

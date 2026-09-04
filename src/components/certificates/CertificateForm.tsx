@@ -616,6 +616,7 @@ export function CertificateForm({
         <div>
           <span className={labelClass}>자격증 사진 (이미지 또는 PDF)</span>
           <input type="file"
+            data-testid="cert-photo"
             accept="image/*,application/pdf,.pdf"
             onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
             className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
