@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Pencil, Trash2, X } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { useCreateCertificateApprovalPost } from '../../hooks/baas/useCreateCertificateApprovalPost'
 import { useUploadBoardFile } from '../../hooks/baas/useUploadBoardFile'
+import { submitCertificateApprovalRequest } from '../../lib/approvals/certificateRequests'
 import { commEducationDueDate, isCommEducationDue } from '../../data/certificateOptions'
-import { buildCertificateApprovalContent, buildCertificateApprovalTitle } from '../../lib/certificateApproval'
 
 import { Button } from '../Button'
 import { CertificateForm } from './CertificateForm'
@@ -32,39 +31,29 @@ const STATUS_TEXT: Record<CertificateStatus, string> = {
 export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDelete, roleTemplate }: CertificateDetailDialogProps) {
   const { account } = useAuth()
   const { uploadFile } = useUploadBoardFile()
-  const { createCertificateApprovalPost, isLoading: isRequestingApproval } = useCreateCertificateApprovalPost()
+  const [isRequestingApproval, setIsRequestingApproval] = useState(false)
   const [approvalFile, setApprovalFile] = useState<File | null>(null)
   const [approvalDone, setApprovalDone] = useState(false)
   const [approvalError, setApprovalError] = useState<string | null>(null)
 
   async function handleRequestApproval() {
-    if (!certificate) return
+    if (!certificate || !account) return
     setApprovalError(null)
+    setIsRequestingApproval(true)
     try {
-      let fileIds: number[] | undefined
-      if (approvalFile) {
-        const uploaded = await uploadFile(approvalFile, {
-          filename: approvalFile.name,
-          contentType: approvalFile.type || 'image/jpeg',
-        })
-        fileIds = [uploaded.fileId]
-      }
-      const post = await createCertificateApprovalPost({
-        title: buildCertificateApprovalTitle({
-          category: certificate.category,
-          certId: certificate.id,
-          userName: account?.name || account?.user_id || '사용자',
-          userId: account?.user_id || '',
-          affiliation: account?.data?.organization_affiliation || undefined,
-        }),
-        content: buildCertificateApprovalContent(certificate),
-        ...(fileIds ? { file_ids: fileIds } : {}),
+      const request = await submitCertificateApprovalRequest({
+        certificate,
+        account,
+        file: approvalFile,
+        uploadFile,
       })
       const { id: _cid, createdAt: _cc, updatedAt: _cu, syncPostId: _cs, ...rest } = certificate
-      onUpdate(certificate.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: post.id, approvalRevokedAt: undefined })
+      onUpdate(certificate.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: request.id, approvalRevokedAt: undefined })
       setApprovalDone(true)
     } catch (err) {
       setApprovalError(err instanceof Error ? err.message : '인증 요청에 실패했습니다. 다시 시도해 주세요.')
+    } finally {
+      setIsRequestingApproval(false)
     }
   }
 

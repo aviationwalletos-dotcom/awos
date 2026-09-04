@@ -12,16 +12,15 @@ const FALLBACK_BAAS_PROJECT_ID = '3ecd1885-15e0-408a-8a9c-560a3476b7ed'
 
 // "교관 승인" 동적 게시판(FREE) ID — 관리자가 BaaS 콘솔에서 사전 생성한 고정 게시판.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-export const INSTRUCTOR_APPROVAL_BOARD_ID = 'c5e1b13b-30bb-4aac-b243-8ab1883d666e'
 
 // "서명 요청" 동적 게시판(FREE) ID — 학생이 비행 기록 서명을 "요청"하고, 승인된 교관이
 // 나중에 자신의 서명 요청함에서 확인 후 본인 명의 댓글([SIGNED] ...)로 서명 완료를 표시한다.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-export const SIGNATURE_REQUEST_BOARD_ID = '595930cb-8219-423f-afd1-a0a2365a4a6b'
 
 // "공유 게시판" 동적 게시판(FREE) ID — 개인 회원이 본인의 GO/NO-GO 비행 적합성 상태를
 // 소속 기관에 공유하는 용도(status share)로 재사용한다.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
+// [3단계] 교관 승인·서명 요청·자격증 인증·비행경력증명서 게시판 ID는 제거됨 — approval_requests 테이블(schema12)로 대체.
 export const STATUS_SHARE_BOARD_ID = 'b7c87a0e-cfc3-4c80-97cd-6ef7934c58e2'
 
 // "자격증관리" 동적 게시판(FREE) ID — 계정별 localStorage에만 저장되던 자격증(자격/면허) 데이터를
@@ -66,13 +65,11 @@ export const PROFILE_SETTINGS_BOARD_ID = 'bf6c2b9a-b210-4c3f-a1ad-9bcd06805270'
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
 // 주의: 이 게시판도 프로젝트에 로그인한 모든 회원이 목록/상세를 조회할 수 있는 구조라, 다른 회원도
 // API를 직접 호출하면 타인의 인증 요청 게시글을 볼 수 있는 구조적 한계가 있다(진짜 비공개가 아님).
-export const FLIGHT_EXPERIENCE_CERTIFICATE_BOARD_ID = 'df0315ce-3c41-4a96-8a34-7bd9c3c591ec'
 
 // "자격증 인증" 게시판 — 관리자 페이지의 자격증·항공신체검사 요청함.
 // 회원이 자격증 상세에서 사진과 함께 인증을 요청하면 이 게시판에 게시글 1건이 생성되고,
 // 관리자(authorized_orgs 등록 계정)의 [APPROVED]/[REJECTED] 댓글로 승인 상태가 결정된다.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-export const CERTIFICATE_APPROVAL_BOARD_ID = '3e8f6a91-2c47-4d5b-9a13-6f0b8d24c7e5'
 
 // "문의" 게시판 — 사이트 문의하기(/inquiry)에서 작성, 관리자 페이지 문의함에서 확인·답변.
 // schema9 정책으로 본인 + 관리자만 조회 가능(문의 내용의 개인정보 보호).

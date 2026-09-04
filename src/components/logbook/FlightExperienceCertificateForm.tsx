@@ -11,13 +11,10 @@ import {
   sectionTitleClass,
 } from './EntryForm'
 import { useAuth } from '../../contexts/AuthContext'
-import { useCreateFlightExperienceCertificatePost } from '../../hooks/baas/useCreateFlightExperienceCertificatePost'
+import { createApprovalRequest } from '../../lib/approvals/api'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
 import { useUploadBoardFile } from '../../hooks/baas/useUploadBoardFile'
-import {
-  buildFlightExperienceCertificateContent,
-  buildFlightExperienceCertificateTitle,
-} from '../../lib/flightExperienceCertificateSync'
+import { buildFlightExperienceCertificateContent } from '../../lib/flightExperienceCertificateSync'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import type { LogbookEntryInput } from '../../types/logbook'
 
@@ -48,7 +45,6 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   const myAffiliation = affiliationOverride ?? (account?.data?.organization_affiliation as string | undefined)
 
   const { uploadFile } = useUploadBoardFile()
-  const { createCertificateRequestPost } = useCreateFlightExperienceCertificatePost()
 
   const [errors, setErrors] = useState<FieldErrors>({})
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
@@ -140,27 +136,31 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     setSyncNotice(null)
     try {
 
-    // 1. 사진이 있으면 먼저 presigned 업로드로 file_id를 확보한다(게시글 첨부용).
-    let fileId: number | undefined
+    // 1. 사진이 있으면 저장소에 올려 첨부 경로를 확보한다.
+    let attachmentPath: string | undefined
     if (imageFile) {
       try {
         const uploaded = await uploadFile(imageFile, {
           filename: imageFile.name,
           contentType: imageFile.type || 'image/jpeg',
         })
-        fileId = uploaded.fileId
+        attachmentPath = uploaded.cdnUrl
       } catch (err) {
         console.warn('[비행경력증명서 사진 업로드 실패]', err)
       }
     }
 
-    // 2. "비행경력증명서" 게시판에 인증 요청 게시글을 생성한다(제목에 소속 포함, file_ids 포함).
+    // 2. approval_requests(schema12)에 인증 요청 1건을 만든다. 관리자 판정은 AutoSyncEntryDecisions 가 반영한다.
     let certificateRequestPostId: string | undefined
     if (account?.user_id) {
       try {
-        const post = await createCertificateRequestPost({
-          title: buildFlightExperienceCertificateTitle(account.name || account.user_id, account.user_id, myAffiliation),
-          content: buildFlightExperienceCertificateContent({
+        const request = await createApprovalRequest({
+          kind: 'flight_experience',
+          requesterName: account.name || account.user_id,
+          requesterEmail: account.user_id,
+          affiliation: myAffiliation?.trim() || null,
+          title: `비행경력증명서 — ${account.name || account.user_id} (${date})`,
+          summary: buildFlightExperienceCertificateContent({
             date,
             issuer,
             blockTime,
@@ -172,11 +172,12 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             dayLandings: normalizedDayLandings,
             nightLandings: normalizedNightLandings,
           }),
-          file_ids: fileId ? [fileId] : undefined,
+          payload: { date, issuer, blockTime },
+          attachmentPath: attachmentPath ?? null,
         })
-        certificateRequestPostId = post.id
+        certificateRequestPostId = request.id
       } catch (err) {
-        console.warn('[비행경력증명서 인증 요청 게시글 생성 실패]', err)
+        console.warn('[비행경력증명서 인증 요청 생성 실패]', err)
       }
     }
 

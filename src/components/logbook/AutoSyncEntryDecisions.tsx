@@ -1,15 +1,13 @@
 // 다이얼로그를 열지 않아도 서명 완료 / 비행경력증명서 승인 결과가 기록에 반영되도록 하는 백그라운드 동기화 (BUG-015).
 //
-// v1.1 — 기록마다 워처 컴포넌트를 하나씩 띄워 댓글을 각각 조회하던 구조(대기 기록 N건 = 요청 N번)를
-// 배치 1회 조회로 바꿨다. 대기 기록이 수백 건이어도 요청은 1번.
+// 부채 3단계: 댓글 배치 조회 + 권한 집합 대조 → approval_requests 에서 "내가 요청자이고 판정이 끝난 행"만
+// 1회 조회(60초 폴링). 대기 기록이 수백 건이어도 요청은 1번이고, 판정자·시각·서명 이미지는 행에 그대로 있다.
 
 import { useEffect, useMemo } from 'react'
 
-import { useCommentsBatch } from '../../hooks/baas/useCommentsBatch'
-import { EMPTY_ID_SET, useApprovedInstructorIdSet, useAuthorizedOrgIds } from '../../lib/baas/authorization'
-import { resolveApprovalDecision } from '../../lib/baas/instructorApproval'
-import { findSignedComment, parseSignatureImageUrlFromComment, parseSignedAtFromComment } from '../../lib/baas/signatureRequest'
+import { useApprovalRequests } from '../../lib/approvals/hooks'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
+
 import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
 
 interface AutoSyncEntryDecisionsProps {
@@ -33,50 +31,44 @@ export function AutoSyncEntryDecisions({ entries, onUpdate }: AutoSyncEntryDecis
     () => entries.filter((entry) => !entry.instructorSignature && Boolean(entry.signatureRequestPostId)),
     [entries],
   )
+  const hasPending = pendingCertificateEntries.length > 0 || pendingSignatureEntries.length > 0
 
-  const postIds = useMemo(
-    () => [
-      ...pendingCertificateEntries.map((e) => e.certificateRequestPostId as string),
-      ...pendingSignatureEntries.map((e) => e.signatureRequestPostId as string),
-    ],
-    [pendingCertificateEntries, pendingSignatureEntries],
+  const { data } = useApprovalRequests(
+    { scope: 'mine', kind: ['signature', 'flight_experience'], status: ['approved', 'rejected', 'cancelled'], limit: 300 },
+    { enabled: hasPending, pollMs: 60_000 },
   )
-  const { byPost, isLoading } = useCommentsBatch(postIds)
-  const { orgIds } = useAuthorizedOrgIds()
-  const { instructorIds } = useApprovedInstructorIdSet()
 
   useEffect(() => {
-    if (isLoading || postIds.length === 0) return
-    // [SEC-001] 권한 집합이 로드되기 전에는 판정하지 않는다(fail-closed)
-    if (orgIds) {
-      for (const entry of pendingCertificateEntries) {
-        const comments = byPost[entry.certificateRequestPostId as string]
-        if (!comments) continue
-        const decision = resolveApprovalDecision(comments, orgIds)
-        if (decision.status === 'pending') continue
-        const nextStatus = decision.status === 'approved' ? 'confirmed' : 'rejected'
-        if (entry.certificateApprovalStatus === nextStatus) continue
-        onUpdate(entry.id, { ...toLogbookEntryInput(entry), certificateApprovalStatus: nextStatus })
-      }
+    if (!data || !hasPending) return
+    const byId = new Map(data.map((r) => [r.id, r]))
+
+    for (const entry of pendingCertificateEntries) {
+      const req = byId.get(entry.certificateRequestPostId as string)
+      if (!req || req.status === 'cancelled') continue
+      const nextStatus = req.status === 'approved' ? 'confirmed' : 'rejected'
+      if (entry.certificateApprovalStatus === nextStatus) continue
+      onUpdate(entry.id, { ...toLogbookEntryInput(entry), certificateApprovalStatus: nextStatus })
     }
-    if (instructorIds) {
-      for (const entry of pendingSignatureEntries) {
-        const comments = byPost[entry.signatureRequestPostId as string]
-        if (!comments) continue
-        const signed = findSignedComment(comments, instructorIds ?? EMPTY_ID_SET)
-        if (!signed) continue
+
+    for (const entry of pendingSignatureEntries) {
+      const req = byId.get(entry.signatureRequestPostId as string)
+      if (!req) continue
+      if (req.status === 'approved' && req.decided_by) {
         onUpdate(entry.id, {
           ...toLogbookEntryInput(entry),
           instructorSignature: {
-            instructorName: signed.author_name,
-            instructorUserId: signed.author_id,
-            signatureDataUrl: parseSignatureImageUrlFromComment(signed),
-            signedAt: parseSignedAtFromComment(signed),
+            instructorName: req.decided_by_name || '교관',
+            instructorUserId: req.decided_by,
+            signatureDataUrl: req.signature_path ?? undefined,
+            signedAt: req.decided_at ? new Date(req.decided_at).getTime() : Date.now(),
           },
         })
+      } else if (req.status === 'rejected' || req.status === 'cancelled') {
+        // 반려·취소된 요청은 연결을 끊어 다시 요청할 수 있게 한다(사유는 상세 다이얼로그에서 표시)
+        onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: undefined })
       }
     }
-  }, [isLoading, postIds.length, byPost, orgIds, instructorIds, pendingCertificateEntries, pendingSignatureEntries, onUpdate])
+  }, [data, hasPending, pendingCertificateEntries, pendingSignatureEntries, onUpdate])
 
   return null
 }

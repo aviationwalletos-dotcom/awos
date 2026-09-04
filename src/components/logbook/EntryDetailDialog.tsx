@@ -1,18 +1,9 @@
 import { Camera, CheckCircle2, Clock3, Pencil, RefreshCw, Send, ShieldCheck, Trash2, X } from 'lucide-react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import { EMPTY_ID_SET, useApprovedInstructorIdSet, useAuthorizedOrgIds } from '../../lib/baas/authorization'
-import {
-  parseDecidedAtFromComment,
-  resolveApprovalDecision,
-} from '../../lib/baas/instructorApproval'
-import {
-  buildSignatureRequestContent,
-  buildSignatureRequestTitle,
-  findSignedComment,
-  parseSignatureImageUrlFromComment,
-  parseSignedAtFromComment,
-} from '../../lib/baas/signatureRequest'
+import { createApprovalRequest } from '../../lib/approvals/api'
+import { useApprovalRequestById } from '../../lib/approvals/hooks'
+import { buildSignatureRequestContent, buildSignatureRequestTitle } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { Button } from '../Button'
@@ -23,8 +14,6 @@ import { entryTrack } from '../../lib/tracks'
 import type { Vehicle } from '../../types/vehicle'
 import { useApprovedInstructors } from '../../hooks/baas/useApprovedInstructors'
 import { useAuth } from '../../contexts/AuthContext'
-import { useComments } from '../../hooks/baas/useComments'
-import { useCreateSignatureRequest } from '../../hooks/baas/useCreateSignatureRequest'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
 
 import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
@@ -89,7 +78,9 @@ export function EntryDetailDialog({
   const [signatureInvalidatedNotice, setSignatureInvalidatedNotice] = useState(false)
 
   const { account } = useAuth()
-  const { createRequest, isLoading: isSendingRequest, error: sendRequestError, reset: resetSendRequest } = useCreateSignatureRequest()
+  const [isSendingRequest, setIsSendingRequest] = useState(false)
+  const [sendRequestError, setSendRequestError] = useState<string | null>(null)
+  const resetSendRequest = React.useCallback(() => setSendRequestError(null), [])
   const { instructors: approvedInstructors, isLoading: isLoadingInstructors, error: instructorsError } = useApprovedInstructors()
   const { override: affiliationOverride } = useOrganizationAffiliationOverride(account)
   const myAffiliation = affiliationOverride ?? (account?.data?.organization_affiliation as string | undefined)
@@ -119,36 +110,28 @@ export function EntryDetailDialog({
     }
   }, [visibleInstructors, selectedInstructorUserId])
 
-  // 아직 서명이 완료되지 않았고, 서명 요청 게시글이 있는 기록만 댓글([SIGNED] 여부)을 확인한다.
+  // [3단계] 서명 요청·증명서 인증은 approval_requests 행 1건을 그대로 읽는다(댓글 파싱 없음).
+  // 아직 서명이 완료되지 않았고 요청 id 가 있는 기록만 상태를 확인한다(다이얼로그가 열린 동안 15초 폴링).
   const pendingRequestPostId = entry && !entry.instructorSignature ? entry.signatureRequestPostId : undefined
   const {
-    data: commentsData,
+    request: signatureRequest,
     isLoading: isCheckingSignature,
     error: commentsCheckError,
     refetch: refetchComments,
-  } = useComments(pendingRequestPostId, { enabled: Boolean(pendingRequestPostId) })
+  } = useApprovalRequestById(pendingRequestPostId, { enabled: Boolean(pendingRequestPostId), pollMs: 15_000 })
 
-  // 비행경력증명서 인증 요청이 제출되어 있고 아직 확정(confirmed)되지 않은 기록만 승인/반려 댓글을
-  // 확인한다(반려된 기록도 반려 사유 표시를 위해 계속 조회한다).
+  // 비행경력증명서 인증 요청이 제출되어 있고 아직 확정(confirmed)되지 않은 기록만 판정을 확인한다.
   const certificateRequestPostId = entry?.origin === 'flight_experience_certificate' ? entry.certificateRequestPostId : undefined
   const shouldTrackCertificateDecision = Boolean(certificateRequestPostId) && entry?.certificateApprovalStatus !== 'confirmed'
   const {
-    data: certificateCommentsData,
+    request: certificateRequest,
     isLoading: isCheckingCertificateDecision,
     error: certificateCommentsError,
     refetch: refetchCertificateComments,
-  } = useComments(certificateRequestPostId, { enabled: shouldTrackCertificateDecision })
+  } = useApprovalRequestById(certificateRequestPostId, { enabled: shouldTrackCertificateDecision, pollMs: 30_000 })
 
-  // [SEC-001] 판정에 쓰는 권한 집합(기관/승인 교관). 로드 전에는 판정을 보류한다.
-  const { orgIds } = useAuthorizedOrgIds()
-  const { instructorIds } = useApprovedInstructorIdSet()
   // [SEC-003] 비공개 버킷 전환 후에도 교관 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
   const resolvedInstructorSignatureUrl = useSignedFileUrl(entry?.instructorSignature?.signatureDataUrl)
-
-  const certificateDecision = useMemo(
-    () => resolveApprovalDecision(certificateCommentsData?.items ?? [], orgIds ?? EMPTY_ID_SET),
-    [certificateCommentsData, orgIds],
-  )
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -171,36 +154,37 @@ export function EntryDetailDialog({
     resetSendRequest()
   }, [entry?.id, resetSendRequest])
 
-  // 서명 요청 대기중인 게시글에 교관이 [SIGNED] 댓글을 남겼는지 확인해, 발견되면 자동으로
-  // 이 기록의 서명 완료 상태로 전환한다(댓글 작성자 = 인증된 교관 계정이므로 그 자체가 전자서명).
+  // 서명 요청이 승인(=교관 서명 완료)되면 이 기록에 서명을 붙인다. 판정자·시각·이미지는 행에서 그대로 온다.
+  // 교관이 반려하면 요청 id 를 지워 다시 요청할 수 있게 한다(사유는 아래 화면에 표시).
+  const [signatureRejectedNote, setSignatureRejectedNote] = useState<string | null>(null)
   useEffect(() => {
-    if (!entry || entry.instructorSignature || !pendingRequestPostId || !commentsData || !instructorIds) return
+    if (!entry || entry.instructorSignature || !pendingRequestPostId || !signatureRequest) return
+    if (signatureRequest.status === 'approved' && signatureRequest.decided_by) {
+      onUpdate(entry.id, {
+        ...toLogbookEntryInput(entry),
+        instructorSignature: {
+          instructorName: signatureRequest.decided_by_name || '교관',
+          instructorUserId: signatureRequest.decided_by,
+          signatureDataUrl: signatureRequest.signature_path ?? undefined,
+          signedAt: signatureRequest.decided_at ? new Date(signatureRequest.decided_at).getTime() : Date.now(),
+        },
+      })
+      return
+    }
+    if (signatureRequest.status === 'rejected' || signatureRequest.status === 'cancelled') {
+      setSignatureRejectedNote(signatureRequest.status === 'rejected' ? signatureRequest.decision_note || '교관이 서명 요청을 반려했어요.' : null)
+      onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: undefined })
+    }
+  }, [entry, pendingRequestPostId, signatureRequest, onUpdate])
 
-    const signedComment = findSignedComment(commentsData.items, instructorIds)
-    if (!signedComment) return
-
-    onUpdate(entry.id, {
-      ...toLogbookEntryInput(entry),
-      instructorSignature: {
-        instructorName: signedComment.author_name,
-        instructorUserId: signedComment.author_id,
-        signatureDataUrl: parseSignatureImageUrlFromComment(signedComment),
-        signedAt: parseSignedAtFromComment(signedComment),
-      },
-    })
-  }, [entry, pendingRequestPostId, commentsData, instructorIds, onUpdate])
-
-  // 비행경력증명서 인증 요청 게시글에 기관 담당자가 [APPROVED]/[REJECTED] 댓글을 남겼는지 확인해,
-  // 발견되면 자동으로 이 기록의 인증 상태를 갱신한다(승인 → confirmed, 반려 → rejected).
+  // 비행경력증명서 인증 요청이 판정되면 기록 상태를 갱신한다(승인 → confirmed, 반려 → rejected).
   useEffect(() => {
-    if (!entry || !shouldTrackCertificateDecision || !certificateCommentsData) return
-    if (certificateDecision.status === 'pending') return
-
-    const nextStatus = certificateDecision.status === 'approved' ? 'confirmed' : 'rejected'
+    if (!entry || !shouldTrackCertificateDecision || !certificateRequest) return
+    if (certificateRequest.status === 'pending') return
+    const nextStatus = certificateRequest.status === 'approved' ? 'confirmed' : 'rejected'
     if (entry.certificateApprovalStatus === nextStatus) return
-
     onUpdate(entry.id, { ...toLogbookEntryInput(entry), certificateApprovalStatus: nextStatus })
-  }, [entry, shouldTrackCertificateDecision, certificateCommentsData, certificateDecision, onUpdate])
+  }, [entry, shouldTrackCertificateDecision, certificateRequest, onUpdate])
 
   function handleNativeClose() {
     setMode('view')
@@ -214,14 +198,33 @@ export function EntryDetailDialog({
     const target = approvedInstructors.find((instructor) => instructor.userId === selectedInstructorUserId)
     if (!target) return
     resetSendRequest()
+    setSignatureRejectedNote(null)
+    setIsSendingRequest(true)
     try {
-      const created = await createRequest({
+      const created = await createApprovalRequest({
+        kind: 'signature',
+        requesterName: account.name,
+        requesterEmail: account.user_id,
+        targetId: target.userId,
+        track: entryTrackKey,
+        subjectId: entry.id,
+        affiliation: myAffiliation?.trim() || null,
         title: buildSignatureRequestTitle(entry),
-        content: buildSignatureRequestContent(entry, account, { name: target.name, userId: target.userId }),
+        summary: buildSignatureRequestContent(entry, account, { name: target.name, userId: target.email ?? target.userId }),
+        payload: {
+          date: entry.date,
+          aircraftType: entry.aircraftType,
+          departure: entry.departure,
+          arrival: entry.arrival,
+          blockTime: entry.blockTime,
+          flightCategory: entry.flightCategory,
+        },
       })
       onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: created.id })
-    } catch {
-      // sendRequestError 상태로 화면에 안내됨
+    } catch (err) {
+      setSendRequestError(err instanceof Error ? err.message : '서명 요청을 보내지 못했습니다.')
+    } finally {
+      setIsSendingRequest(false)
     }
   }
 
@@ -347,10 +350,11 @@ export function EntryDetailDialog({
                         관리자가 이 인증 요청을 반려했습니다. 공식 총 비행시간 합계에서 제외되고 "반려된
                         비행경력증명서"로 별도 표시됩니다.
                       </p>
-                      {certificateDecision.comment && (
+                      {certificateRequest?.status === 'rejected' && certificateRequest.decided_at && (
                         <p className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-                          반려 처리: {certificateDecision.comment.author_name} ·{' '}
-                          {formatSignedAt(parseDecidedAtFromComment(certificateDecision.comment))}
+                          반려 처리: {certificateRequest.decided_by_name || '관리자'} ·{' '}
+                          {formatSignedAt(new Date(certificateRequest.decided_at).getTime())}
+                          {certificateRequest.decision_note ? ` · 사유: ${certificateRequest.decision_note}` : ''}
                         </p>
                       )}
                     </div>
@@ -634,6 +638,11 @@ export function EntryDetailDialog({
                   </div>
                 ) : (
                   <div className="mt-3 space-y-3">
+                    {signatureRejectedNote && (
+                      <p role="alert" className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                        교관이 서명 요청을 반려했어요. 사유: {signatureRejectedNote}
+                      </p>
+                    )}
                     <p className="text-xs text-slate-400">
                       교관에게 서명을 요청하면, 승인된 교관이 서명 요청함에서 확인 후 서명을 완료할 수 있습니다. 교관 로그인을 기다릴 필요가 없습니다.
                     </p>
@@ -704,6 +713,7 @@ export function EntryDetailDialog({
                       loading={isSendingRequest}
                       disabled={!account || isSendingRequest || !selectedInstructorUserId}
                       onClick={handleSendSignatureRequest}
+                      data-testid="signature-request-send"
                     >
                       <Send className="h-4 w-4" aria-hidden="true" />
                       교관에게 서명 요청 보내기

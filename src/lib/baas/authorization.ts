@@ -17,18 +17,8 @@
 
 import { useEffect, useState } from 'react'
 
-import {
-  type ApiEnvelope,
-  BAAS_BASE_URL,
-  INSTRUCTOR_APPROVAL_BOARD_ID,
-  getAuthHeaders,
-  getBaasProjectId,
-  parseJsonResponse,
-} from './config'
-import { parseInstructorApplicationTitle, resolveApprovalDecision } from './instructorApproval'
 import { supabase } from '../supabase/client'
-
-import type { BoardPostListItem, BoardPostListResponse, CommentItem, CommentListResponse } from './boardTypes'
+import { fetchApprovedInstructorIdSet, invalidateApprovalCaches } from '../approvals/api'
 
 /** 로딩 중이거나 실패했을 때 쓰는 빈 집합(어떤 작성자도 통과 못 함 = fail-closed). */
 export const EMPTY_ID_SET: ReadonlySet<string> = new Set<string>()
@@ -81,70 +71,14 @@ export function useAuthorizedOrgIds(): { orgIds: ReadonlySet<string> | null } {
 }
 
 // ---------------------------------------------------------------------------
-// 2) 승인 완료된 교관 계정 목록
-//    ("교관 승인" 게시판의 신청서 중, 기관 계정의 [APPROVED] 댓글이 유효하게 달린 것)
+// 2) 승인 교관 집합 — approval_requests(schema12) 기준
 // ---------------------------------------------------------------------------
+// 부채 3단계: 게시판 신청서 전체 조회 + 댓글 배치 파싱 → 테이블 1회 조회(lib/approvals/api).
+// 집합의 원소는 auth 사용자 uuid 다(서명 판정의 decided_by / target_id 와 같은 키).
 
-let instructorIdsCache: { at: number; promise: Promise<ReadonlySet<string>> } | null = null
-
-async function fetchJson<T>(url: string): Promise<T | null> {
-  try {
-    // supabaseTransport의 baasFetch를 순환 참조 없이 쓰기 위해 지연 import 한다.
-    const { baasFetch } = await import('./supabaseTransport')
-    const response = await baasFetch(url, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      credentials: 'include',
-    })
-    const result = await parseJsonResponse<ApiEnvelope<T>>(response)
-    if (result.result !== 'SUCCESS') return null
-    return result.data ?? null
-  } catch {
-    return null
-  }
-}
-
-async function fetchApprovedInstructorIdsOnce(): Promise<ReadonlySet<string>> {
-  const orgIds = await fetchAuthorizedOrgIds()
-  if (orgIds.size === 0) return EMPTY_ID_SET
-
-  const list = await fetchJson<BoardPostListResponse>(
-    `${BAAS_BASE_URL}/public/boards/${getBaasProjectId()}/${INSTRUCTOR_APPROVAL_BOARD_ID}/posts?page=1&limit=100`,
-  )
-  const items: BoardPostListItem[] = list?.items ?? []
-  if (items.length === 0) return EMPTY_ID_SET
-
-  // [BUGFIX] 승인 교관 집합에는 신청서 제목의 userId(이메일)만 들어 있었는데, 서명 댓글의 author_id는
-  // auth uuid 라서 findSignedComment()가 한 번도 일치한 적이 없었다(= 교관 서명이 영원히 "대기중").
-  // 이메일(기존 소비자 호환)과 신청 게시글 작성자 uuid를 둘 다 넣는다.
-  // 댓글은 배치 1회로 (신청서 수만큼 요청하던 N+1 제거)
-  const applications = items
-    .map((item) => ({ item, parsed: parseInstructorApplicationTitle(item.title) }))
-    .filter((x): x is { item: BoardPostListItem; parsed: { name: string; userId: string } } => Boolean(x.parsed))
-  const batch = await fetchJson<CommentListResponse>(
-    `${BAAS_BASE_URL}/public/boards/comments/batch?post_ids=${encodeURIComponent(applications.map((a) => a.item.id).join(','))}`,
-  )
-  const byPost = new Map<string, CommentItem[]>()
-  for (const c of batch?.items ?? []) {
-    const list = byPost.get(c.post_id) ?? []
-    list.push(c)
-    byPost.set(c.post_id, list)
-  }
-  const ids = applications.map(({ item, parsed }) => {
-    const decision = resolveApprovalDecision(byPost.get(item.id) ?? [], orgIds)
-    if (decision.status !== 'approved') return []
-    return [parsed.userId, ...(item.author_id ? [item.author_id] : [])]
-  })
-  return new Set(ids.flat().filter((id): id is string => Boolean(id)))
-}
-
-/** "승인 완료된 교관" 계정 id 집합을 반환한다(2분 캐시). */
+/** "승인 완료된 교관" uuid 집합을 반환한다(2분 캐시). */
 export function fetchApprovedInstructorIds(): Promise<ReadonlySet<string>> {
-  const now = Date.now()
-  if (instructorIdsCache && now - instructorIdsCache.at < CACHE_TTL_MS) return instructorIdsCache.promise
-  const promise = fetchApprovedInstructorIdsOnce()
-  instructorIdsCache = { at: now, promise }
-  return promise
+  return fetchApprovedInstructorIdSet()
 }
 
 /** 컴포넌트에서 승인 교관 집합을 쓰기 위한 훅. 로딩 중이면 null. */
@@ -162,8 +96,8 @@ export function useApprovedInstructorIdSet(): { instructorIds: ReadonlySet<strin
   return { instructorIds }
 }
 
-/** 승인/서명 처리 직후 최신 상태를 바로 반영하고 싶을 때 캐시를 비운다. */
+/** 승인/서명 직후 캐시를 비워 다음 판정에 즉시 반영되게 한다. */
 export function invalidateAuthorizationCaches(): void {
   orgIdsCache = null
-  instructorIdsCache = null
+  invalidateApprovalCaches()
 }

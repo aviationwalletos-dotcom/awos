@@ -100,13 +100,13 @@ export interface LogbookEntry {
   }
   instructorSignature?: {
     instructorName: string
-    instructorUserId: string // 서명(댓글 작성) 당시 로그인되어 있던 교관 계정의 로그인 ID(이메일)
+    instructorUserId: string // [3단계] 서명한 교관의 auth 사용자 uuid(approval_requests.decided_by). 구 데이터는 이메일일 수 있다.
     // "서명 요청" 흐름에서는 손그림 서명 이미지가 없다 — 로그인된 교관 계정 자체를 전자서명으로
     // 간주하므로, 서명 이미지가 있을 때만 값이 채워진다(과거 캔버스 서명 방식과의 호환용).
     signatureDataUrl?: string // canvas.toDataURL() 결과
     signedAt: number // Date.now() 또는 서명 댓글의 작성 시각
   }
-  // "서명 요청" 게시판(동적 게시판)에 이 기록에 대해 생성한 요청 게시글의 id.
+  // [3단계] 이 기록에 대해 만든 서명 요청(approval_requests.id, schema12). 필드 이름은 호환을 위해 유지.
   // 값이 있고 instructorSignature가 없으면 "서명 요청 대기중" 상태로 간주한다.
   signatureRequestPostId?: string
   // 값이 없으면 'manual'(직접 입력)로 간주한다.
@@ -118,8 +118,8 @@ export interface LogbookEntry {
   // 아래 3개 필드는 origin === 'flight_experience_certificate'일 때만 의미가 있다.
   // 비행경력증명서 사진(FileReader로 만든 data URL). 로컬에만 저장되며 서버 업로드는 하지 않는다.
   certificateImageDataUrl?: string
-  // "비행경력증명서" 게시판(동적 게시판)에 실제 기관 인증을 요청하며 제출한 게시글의 id.
-  // 값이 있으면 그 게시글의 댓글([APPROVED]/[REJECTED])로 승인/반려 판정을 자동 감지한다.
+  // [3단계] 비행경력증명서 인증 요청(approval_requests.id, schema12). 필드 이름은 호환을 위해 유지.
+  // 값이 있으면 그 행의 status 로 승인/반려 판정을 자동 감지한다(AutoSyncEntryDecisions).
   // 업로드/게시글 생성이 실패해 값이 없는 경우(로컬 폴백)에는 본인이 직접 "확인받았습니다"
   // 버튼으로만 'confirmed'로 전환할 수 있다.
   certificateRequestPostId?: string

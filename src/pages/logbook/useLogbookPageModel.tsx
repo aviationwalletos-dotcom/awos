@@ -27,12 +27,8 @@ import {
   computeMechanicCompliance,
   computeUltralightCompliance,
 } from "../../lib/roleCompliance";
-import { useCreateCertificateApprovalPost } from "../../hooks/baas/useCreateCertificateApprovalPost";
 import { useUploadBoardFile } from "../../hooks/baas/useUploadBoardFile";
-import {
-  buildCertificateApprovalContent,
-  buildCertificateApprovalTitle,
-} from "../../lib/certificateApproval";
+import { submitCertificateApprovalRequest } from "../../lib/approvals/certificateRequests";
 import { useLogbookEntries } from "../../hooks/useLogbookEntries";
 import { useCertificates } from "../../hooks/useCertificates";
 import { useWorkLogEntries } from "../../hooks/useWorkLogEntries";
@@ -206,15 +202,10 @@ export function useLogbookPageModel() {
         { key: "certificates", label: "자격증", icon: ShieldCheck },
       ];
     }
-    if (isDrone) {
-      return DRONE_TABS;
-    }
-    if (isLsa) {
-      return LSA_TABS;
-    }
-    return isApprovedInstructor
-      ? [...PILOT_TABS, SIGNATURE_INBOX_TAB]
-      : PILOT_TABS;
+    // [3단계] 서명 요청함은 어느 구분이든 승인된 교관이면 모든 트랙에서 보인다.
+    // 예전에는 항공기 트랙에만 붙어 있어서 경량·초경량 교관은 승인을 받아도 들어갈 수 없었다.
+    const base = isDrone ? DRONE_TABS : isLsa ? LSA_TABS : PILOT_TABS;
+    return isApprovedInstructor ? [...base, SIGNATURE_INBOX_TAB] : base;
   }, [workLogRole, workLogCopy, isDrone, isLsa, isApprovedInstructor]);
 
   // 역할/승인 상태가 바뀌어 현재 선택된 탭이 더 이상 목록에 없으면, 목록의 첫 번째 탭으로 되돌린다.
@@ -261,34 +252,20 @@ export function useLogbookPageModel() {
     [trackEntries],
   );
   const { uploadFile } = useUploadBoardFile();
-  const { createCertificateApprovalPost } = useCreateCertificateApprovalPost();
 
-  /** 자격증 등록 → 사진 업로드 → 관리자 인증 요청 게시글 생성 → 요청 id를 카드에 기록 */
+  /** 자격증 등록 → 사진 업로드 → 관리자 인증 요청(approval_requests) 생성 → 요청 id를 카드에 기록 */
   async function handleCreateCertificate(
     input: CertificateInput,
     approvalFile?: File,
   ) {
     const created = addCertificate({ ...input, approvalStatus: "pending" });
-    if (!created) return;
+    if (!created || !account) return;
     try {
-      let fileIds: number[] | undefined;
-      if (approvalFile) {
-        const uploaded = await uploadFile(approvalFile, {
-          filename: approvalFile.name,
-          contentType: approvalFile.type || "image/jpeg",
-        });
-        fileIds = [uploaded.fileId];
-      }
-      const post = await createCertificateApprovalPost({
-        title: buildCertificateApprovalTitle({
-          category: created.category,
-          certId: created.id,
-          userName: account?.name || account?.user_id || "사용자",
-          userId: account?.user_id || "",
-          affiliation: account?.data?.organization_affiliation || undefined,
-        }),
-        content: buildCertificateApprovalContent(created),
-        ...(fileIds ? { file_ids: fileIds } : {}),
+      const request = await submitCertificateApprovalRequest({
+        certificate: created,
+        account,
+        file: approvalFile ?? null,
+        uploadFile,
       });
       const {
         id: _id,
@@ -300,7 +277,7 @@ export function useLogbookPageModel() {
       updateCertificate(created.id, {
         ...rest,
         approvalStatus: "pending",
-        approvalRequestPostId: post.id,
+        approvalRequestPostId: request.id,
       });
     } catch (err) {
       console.warn("[자격증 인증 요청 실패]", err);
@@ -586,7 +563,6 @@ export function useLogbookPageModel() {
     clearAll,
     confirm,
     confirmInferredEntries,
-    createCertificateApprovalPost,
     defaultEntryRole,
     deleteCertificate,
     deleteEntries,

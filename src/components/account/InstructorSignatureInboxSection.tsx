@@ -1,27 +1,23 @@
-import { ChevronLeft, ChevronRight, Clock3, Inbox, ShieldCheck } from 'lucide-react'
+// 교관 서명 요청함 — approval_requests(schema12) 기준.
+// 부채 3단계: "서명 요청 게시판 전체 + 댓글 배치 + 승인 교관 집합 대조" → target_id=나 인 행만 서버에서 받는다.
+// 서명 = 손그림 이미지를 업로드한 뒤 decide_approval_request('approved', signature_path). 되돌릴 수 없다.
+
+import { AlertTriangle, ChevronLeft, ChevronRight, Clock3, Inbox, ShieldCheck, XCircle } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
 
-import { EMPTY_ID_SET, useApprovedInstructorIdSet } from '../../lib/baas/authorization'
-import {
-  buildSignedCommentContent,
-  findSignedComment,
-  parseSignatureImageUrlFromComment,
-  parseTargetInstructorUserIdFromContent,
-} from '../../lib/baas/signatureRequest'
 import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
 import { SignaturePad } from '../logbook/SignaturePad'
-import { useCommentsBatch } from '../../hooks/baas/useCommentsBatch'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
-import { useCreateComment } from '../../hooks/baas/useCreateComment'
-import { useSignatureRequests } from '../../hooks/baas/useSignatureRequests'
 import { useUploadSignatureImage } from '../../hooks/baas/useUploadSignatureImage'
-
+import { decideApprovalRequest } from '../../lib/approvals/api'
+import { useApprovalRequests } from '../../lib/approvals/hooks'
+import { type ApprovalRequest, TRACK_LABEL } from '../../lib/approvals/types'
 import type { AccountResponse } from '../../lib/baas/types'
-import type { BoardPostListItem, CommentItem } from '../../lib/baas/boardTypes'
 
-function formatDateTime(value: string): string {
+function formatDateTime(value: string | null | undefined): string {
+  if (!value) return ''
   try {
     return new Date(value).toLocaleString('ko-KR')
   } catch {
@@ -30,46 +26,32 @@ function formatDateTime(value: string): string {
 }
 
 interface SignatureRequestCardProps {
-  post: BoardPostListItem
+  request: ApprovalRequest
   account: AccountResponse
-  /** 상위에서 배치로 받아온 이 게시글의 댓글 */
-  comments: CommentItem[]
-  /** 승인 교관 id 집합(상위에서 1회 조회) */
-  instructorIds: ReadonlySet<string> | null
-  /** 서명 등록 후 상위 배치 재조회 */
-  onSigned: () => Promise<void> | void
+  /** 서명/반려 후 상위 목록 재조회 */
+  onDecided: () => Promise<unknown> | void
 }
 
-function SignatureRequestCard({ post, account, comments, instructorIds, onSigned }: SignatureRequestCardProps) {
-  const { createComment, isLoading: isSigning, error: signError, reset: resetSign } = useCreateComment(post.id)
-  const { uploadSignatureImage, isLoading: isUploading, error: uploadError, reset: resetUpload } = useUploadSignatureImage()
-
+function SignatureRequestCard({ request, account, onDecided }: SignatureRequestCardProps) {
+  const { uploadSignatureImage, isLoading: isUploading, reset: resetUpload } = useUploadSignatureImage()
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
+  const [isDeciding, setIsDeciding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [rejectOpen, setRejectOpen] = useState(false)
+  const [rejectNote, setRejectNote] = useState('')
 
-  // [SEC-001] 승인 교관 계정이 남긴 [SIGNED] 댓글만 유효 서명으로 인정한다.
-  const [signedLocally, setSignedLocally] = useState(false)
-  const signedComment = useMemo(() => findSignedComment(comments, instructorIds ?? EMPTY_ID_SET), [comments, instructorIds])
-  const isSigned = Boolean(signedComment) || signedLocally
-  const signedImageRawUrl = useMemo(
-    () => (signedComment ? parseSignatureImageUrlFromComment(signedComment) : undefined),
-    [signedComment],
-  )
+  const isSigned = request.status === 'approved'
+  const isRejected = request.status === 'rejected'
   // [SEC-003] 비공개 버킷 전환 후에도 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
-  const signedImageUrl = useSignedFileUrl(signedImageRawUrl)
-
-
-  const isProcessing = isUploading || isSigning
-  const [localError, setLocalError] = useState<string | null>(null)
-  const error = localError || signError
-  void uploadError
+  const signedImageUrl = useSignedFileUrl(request.signature_path ?? undefined)
+  const isProcessing = isUploading || isDeciding
 
   async function handleSign() {
     if (!signatureDataUrl) return
     resetUpload()
-    resetSign()
-    setLocalError(null)
-    // 핵심 기능이므로 저장소 업로드가 실패하거나 15초 안에 끝나지 않으면 서명 이미지를 댓글에 직접(data URL) 담아 진행한다.
-    // 학생 화면은 data: URL을 그대로 표시하므로 두 경로 모두 정상 동작한다.
+    setError(null)
+    setIsDeciding(true)
+    // 저장소 업로드가 실패하거나 15초 안에 끝나지 않으면 data URL 을 그대로 서명 경로로 쓴다(핵심 기능 보호).
     let imageUrl: string = signatureDataUrl
     try {
       const uploaded = await Promise.race<string>([
@@ -82,39 +64,57 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
       resetUpload()
     }
     try {
-      await Promise.race([
-        createComment(buildSignedCommentContent(account.name, new Date(), imageUrl)),
-        new Promise((_, reject) => window.setTimeout(() => reject(new Error('서버 응답 시간 초과(20초)')), 20000)),
-      ])
-      setSignedLocally(true)
+      await decideApprovalRequest(request.id, 'approved', { signaturePath: imageUrl })
       setSignatureDataUrl(null)
-      await onSigned()
+      await onDecided()
     } catch (err) {
       const message = err instanceof Error ? err.message : '서명 등록에 실패했습니다.'
-      setLocalError(`서명 등록 실패: ${message}. 네트워크를 확인한 뒤 다시 눌러 주세요.`)
-      console.error('[서명] 댓글 등록 실패', err)
+      setError(`서명 등록 실패: ${message}`)
+    } finally {
+      setIsDeciding(false)
+    }
+  }
+
+  async function handleReject() {
+    setError(null)
+    setIsDeciding(true)
+    try {
+      await decideApprovalRequest(request.id, 'rejected', { note: rejectNote.trim() || undefined })
+      setRejectOpen(false)
+      await onDecided()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '반려에 실패했습니다.')
+    } finally {
+      setIsDeciding(false)
     }
   }
 
   return (
-    <div className="rounded-control border border-white/10 bg-navy px-4 py-4">
+    <div className="rounded-control border border-white/10 bg-navy px-4 py-4" data-testid="signature-request-card">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-white">{post.title}</p>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">{request.title}</p>
           <p className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-400">
-            요청일: {formatDateTime(post.created_at)} · 요청자: {post.author_name}
+            요청일: {formatDateTime(request.created_at)} · 요청자: {request.requester_name}
           </p>
+          {request.track && (
+            <span className="mt-1.5 inline-flex items-center rounded-control border border-white/15 px-2 py-0.5 text-[11px] font-semibold text-slate-300">
+              {TRACK_LABEL[request.track]}
+            </span>
+          )}
         </div>
         {isSigned ? (
           <StatusBadge tone="success" surface="dark" icon={ShieldCheck} label="완료됨" />
+        ) : isRejected ? (
+          <StatusBadge tone="danger" surface="dark" icon={XCircle} label="반려됨" />
         ) : (
           <StatusBadge tone="pending" surface="dark" icon={Clock3} label="대기중" />
         )}
       </div>
 
-      {post.content && (
+      {request.summary && (
         <p className="mt-3 whitespace-pre-wrap rounded-control border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-300">
-          {post.content}
+          {request.summary}
         </p>
       )}
 
@@ -122,30 +122,53 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
         {isSigned ? (
           <div className="space-y-2">
             {signedImageUrl && (
-              <img src={signedImageUrl}
-                alt="교관 서명 이미지"
-                className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
-              />
+              <img src={signedImageUrl} alt="교관 서명 이미지" className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1" />
             )}
             <p className="font-mono-data text-xs tabular-nums text-slate-400">
-              {signedComment ? `서명자: ${signedComment.author_name} · ${formatDateTime(signedComment.created_at)}` : `서명자: ${account.name} · 방금 등록됨`}
+              서명자: {request.decided_by_name || account.name} · {formatDateTime(request.decided_at)}
             </p>
+          </div>
+        ) : isRejected ? (
+          <p className="font-mono-data text-xs tabular-nums text-slate-400">
+            반려: {formatDateTime(request.decided_at)}
+            {request.decision_note ? ` · 사유: ${request.decision_note}` : ''}
+          </p>
+        ) : rejectOpen ? (
+          <div className="rounded-control border border-rose-400/30 bg-rose-500/5 p-3">
+            <label htmlFor={`sig-reject-${request.id}`} className="text-xs font-semibold text-slate-300">반려 사유(학생에게 표시돼요)</label>
+            <input id={`sig-reject-${request.id}`}
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="예: 블록타임이 실제와 달라요"
+              className="mt-1.5 w-full rounded-control border border-white/15 bg-panel px-3 py-2 text-sm text-white placeholder:text-slate-500"
+            />
+            {error && <p className="mt-2 text-xs font-medium text-rose-300">{error}</p>}
+            <div className="mt-3 flex gap-2">
+              <Button type="button" size="sm" tone="danger" loading={isDeciding} disabled={isDeciding} onClick={() => void handleReject()}>반려 확정</Button>
+              <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => setRejectOpen(false)}>취소</Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-slate-400">
-              아래 영역에 직접 서명한 뒤 "서명 완료"를 누르면 본인 명의로 서명이 등록됩니다.
+              아래 영역에 직접 서명한 뒤 "서명 완료"를 누르면 본인 명의로 서명이 등록됩니다. 등록 후에는 되돌릴 수 없어요.
             </p>
             <SignaturePad onChange={setSignatureDataUrl} disabled={isProcessing} />
             {error && <p className="text-xs font-medium text-rose-300">{error}</p>}
-            <Button type="button" size="sm" tone="brand"
-              loading={isProcessing}
-              disabled={!signatureDataUrl || isProcessing}
-              onClick={handleSign}
-            >
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-              {isUploading ? '서명 이미지 업로드 중...' : isSigning ? '서명 등록 중...' : '서명 완료'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" tone="brand"
+                loading={isProcessing}
+                disabled={!signatureDataUrl || isProcessing}
+                onClick={() => void handleSign()}
+                data-testid="signature-complete"
+              >
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                {isUploading ? '서명 이미지 업로드 중...' : isDeciding ? '서명 등록 중...' : '서명 완료'}
+              </Button>
+              <Button type="button" size="sm" variant="outline" tone="danger" className="border-rose-400/50 text-rose-300" disabled={isProcessing} onClick={() => setRejectOpen(true)}>
+                반려
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -169,211 +192,95 @@ interface InstructorSignatureInboxSectionProps {
 }
 
 export function InstructorSignatureInboxSection({ account, instructorCurrencyMet = true }: InstructorSignatureInboxSectionProps) {
-  const { data, isLoading, error, refetch } = useSignatureRequests()
-  const allItems = data?.items ?? []
+  const [tab, setTab] = useState<TabFilter>('pending')
+  const [page, setPage] = useState(1)
 
-  // 서명 요청 시 특정 교관 지정이 필수이므로, 정확히 본인이 지정된 요청만 보여준다.
-  // 대상 지정이 없는 요청(과거 방식으로 생성된 요청 포함)은 더 이상 표시하지 않는다.
-  const items = useMemo(
-    () =>
-      allItems.filter((post) => {
-        const targetUserId = parseTargetInstructorUserIdFromContent(post.content)
-        return targetUserId === account.user_id
-      }),
-    [allItems, account.user_id],
+  // 대기중은 pending 만, 완료됨은 approved+rejected 만 서버에서 받는다.
+  const { data, isLoading, error, refetch } = useApprovalRequests(
+    { scope: 'inbox', kind: 'signature', status: tab === 'pending' ? 'pending' : ['approved', 'rejected'], limit: 200 },
+    { pollMs: tab === 'pending' ? 30_000 : undefined },
   )
-  const hiddenByTargetingCount = allItems.length - items.length
+  const items = useMemo(() => data ?? [], [data])
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
 
-  // v1.1 — 서명 완료는 되돌아가지 않으므로 "완료됨"으로 확인된 요청 id를 이 브라우저에 기억한다.
-  //  · 열자마자 기억된 것은 바로 완료됨에 두고(대기중 → 완료됨으로 튀는 현상 제거)
-  //  · 댓글 배치 조회는 아직 완료로 기억되지 않은 요청만 대상으로 한다(요청 수가 쌓여도 조회 크기는 대기 건수만큼)
-  const doneKey = `awos_signed_done:${account.id}`
-  const [knownDone, setKnownDone] = useState<Set<string>>(() => {
-    try {
-      const raw = window.localStorage.getItem(doneKey)
-      return new Set(raw ? (JSON.parse(raw) as string[]) : [])
-    } catch {
-      return new Set()
-    }
-  })
-  const rememberDone = (ids: string[]) => {
-    if (ids.length === 0) return
-    setKnownDone((prev) => {
-      const next = new Set(prev)
-      ids.forEach((id) => next.add(id))
-      try {
-        window.localStorage.setItem(doneKey, JSON.stringify([...next]))
-      } catch {
-        // 무시
-      }
-      return next
-    })
-  }
-  const pendingIds = useMemo(() => items.filter((i) => !knownDone.has(i.id)).map((i) => i.id), [items, knownDone])
-  const { byPost, isLoading: isLoadingComments, refetch: refetchBatch } = useCommentsBatch(pendingIds)
-  const { instructorIds } = useApprovedInstructorIdSet()
-  const hasResolvedOnce = !isLoadingComments && instructorIds !== null
-  const statusMap = useMemo(() => {
-    const map: Record<string, boolean> = {}
-    for (const item of items) {
-      map[item.id] = knownDone.has(item.id) || Boolean(findSignedComment(byPost[item.id] ?? [], instructorIds ?? EMPTY_ID_SET))
-    }
-    return map
-  }, [items, byPost, instructorIds, knownDone])
-  // 배치 결과로 완료 확인된 것은 기억해 둔다 → 다음 로드부터 조회 대상에서 빠진다
   useEffect(() => {
-    if (!hasResolvedOnce) return
-    const newlyDone = items.filter((i) => !knownDone.has(i.id) && statusMap[i.id]).map((i) => i.id)
-    rememberDone(newlyDone)
-  }, [hasResolvedOnce, statusMap])
-  const handleSigned = async (postId: string) => {
-    rememberDone([postId])
-    await refetchBatch()
-  }
-
-  const [activeTab, setActiveTab] = useState<TabFilter>('pending')
-  // 날짜 필터 — 제목의 비행 일자([서명요청] 2026-09-03 …) 기준
-  const [dateFilter, setDateFilter] = useState('')
-  const flightDateOf = (post: BoardPostListItem) => /(\d{4}-\d{2}-\d{2})/.exec(post.title)?.[1] ?? post.created_at.slice(0, 10)
-
-  const pendingItems = useMemo(() => items.filter((item) => statusMap[item.id] !== true), [items, statusMap])
-  const completedItems = useMemo(() => items.filter((item) => statusMap[item.id] === true), [items, statusMap])
-
-  const filteredItems = useMemo(() => {
-    const base = activeTab === 'pending' ? pendingItems : completedItems
-    return dateFilter ? base.filter((p) => flightDateOf(p) === dateFilter) : base
-  }, [activeTab, pendingItems, completedItems, dateFilter])
-
-  // 클라이언트 사이드 페이지네이션 — 탭 필터링된 목록을 5개 단위로만 잘라 화면에 보여준다.
-  const [currentPage, setCurrentPage] = useState(0)
-  const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE))
-
-  // 탭을 전환하면 항상 1페이지부터 다시 보여준다.
+    setPage(1)
+  }, [tab])
   useEffect(() => {
-    setCurrentPage(0)
-  }, [activeTab])
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
 
-  // 필터링된 목록이 바뀌어(예: 서명 완료 처리 후 다른 탭으로 이동) 현재 페이지가 범위를 벗어나면 보정한다.
-  useEffect(() => {
-    if (currentPage > totalPages - 1) {
-      setCurrentPage(Math.max(0, totalPages - 1))
-    }
-  }, [currentPage, totalPages])
-
-  const pagedItems = useMemo(
-    () => filteredItems.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE),
-    [filteredItems, currentPage],
-  )
+  const paged = useMemo(() => items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [items, page])
 
   return (
-    <div className="rounded-card border border-white/10 bg-white/5 p-cardpad">
+    <div className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
       {!instructorCurrencyMet && (
-        <p className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-          내 조종교육 비행경험(시행규칙 제125조: 최근 1년 10시간)이 미달이에요. 시행규칙 제77조②나목은 "제125조 경험이 있는 조종교관"의 증명을 인정하므로, 지금 서명한 경력은 응시용 증명으로 인정되지 않을 수 있어요. 커런시 탭에서 확인하세요.
-        </p>
+        <div role="alert" className="mb-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-xs text-amber-200">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>
+            내 조종교육 비행경험(시행규칙 제125조: 최근 1년 10시간)이 미달이에요. 시행규칙 제77조②나목은 "제125조 경험이 있는 조종교관"의 증명을 인정하므로, 지금 서명한 경력은 응시용 증명으로 인정되지 않을 수 있어요. 커런시 탭에서 확인하세요.
+          </span>
+        </div>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
             <Inbox className="h-4 w-4 text-sky" aria-hidden="true" />
             서명 요청함
           </h2>
           <p className="mt-1 text-xs text-slate-400">
-            학생이 보낸 비행 기록 서명 요청 목록입니다. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록됩니다.
-            실시간 알림은 제공되지 않으므로 새로운 요청이 있는지 이 화면에서 직접 확인해주세요.
-            {hiddenByTargetingCount > 0 && ` (본인이 지정되지 않은 요청 ${hiddenByTargetingCount}건은 표시하지 않습니다.)`}
+            학생이 나에게 보낸 비행 기록 서명 요청입니다. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록됩니다.
           </p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex gap-1.5" role="tablist" aria-label="서명 요청 상태">
           {TAB_OPTIONS.map((option) => (
             <button key={option.value}
               type="button"
-              onClick={() => setActiveTab(option.value)}
+              role="tab"
+              aria-selected={tab === option.value}
+              onClick={() => setTab(option.value)}
               className={`rounded-control px-3 py-1.5 text-xs font-semibold transition-colors
-                ${activeTab === option.value ? 'bg-sky text-navy' : 'border border-white/15 text-slate-300 hover:border-white/30'}`}
+                ${tab === option.value ? 'bg-sky text-navy' : 'border border-white/15 text-slate-300 hover:border-white/30'}`}
             >
-              {option.label} ({hasResolvedOnce || pendingIds.length === 0 ? (option.value === 'pending' ? pendingItems.length : completedItems.length) : '…'})
+              {option.label}
             </button>
           ))}
-          <span className="self-center text-xs text-slate-400">비행 일자</span>
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(0) }}
-            aria-label="비행 일자로 필터"
-            className="rounded-control border border-white/15 bg-panel px-2.5 py-1.5 text-xs text-ink"
-          />
-          {dateFilter && (
-            <button type="button" onClick={() => setDateFilter('')} className="text-xs text-slate-400 underline hover:text-sky">전체</button>
-          )}
-          {isLoadingComments && <span className="self-center text-[11px] text-slate-500">확인 중…</span>}
         </div>
       </div>
 
-      {isLoading ? (
-        <p className="mt-5 text-sm text-slate-400">서명 요청 목록을 불러오는 중입니다...</p>
+      {isLoading && !data ? (
+        <p className="mt-5 text-sm text-slate-400">서명 요청을 불러오는 중입니다...</p>
       ) : error ? (
-        <div role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
+        <div role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
-          <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3" onClick={() => void refetch()}>
-            다시 시도
-          </Button>
+          <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3" onClick={() => void refetch()}>다시 시도</Button>
         </div>
       ) : items.length === 0 ? (
-        <EmptyState
-          className="mt-5"
-          surface="dark"
-          icon={Inbox}
-          title={allItems.length === 0 ? '아직 접수된 서명 요청이 없습니다' : '표시할 서명 요청이 없습니다'}
-          description={
-            allItems.length === 0
-              ? '학생이 서명을 요청하면 이 목록에 표시됩니다.'
-              : '본인이 지정된 서명 요청이 없어 지금 표시할 항목이 없습니다.'
-          }
+        <EmptyState className="mt-5" surface="dark" icon={Inbox}
+          title={tab === 'pending' ? '대기중인 서명 요청이 없습니다' : '완료된 서명 요청이 없습니다'}
+          description={tab === 'pending' ? '학생이 서명을 요청하면 여기에 표시됩니다.' : '서명하거나 반려한 요청이 여기에 남습니다.'}
         />
-      ) : !hasResolvedOnce && pendingIds.length > 0 && activeTab === 'pending' ? (
-        <p className="mt-5 text-sm text-slate-400">서명 상태 확인 중…</p>
-      ) : filteredItems.length === 0 ? (
-        <p className="mt-5 text-sm text-slate-400">
-          {activeTab === 'pending'
-            ? '대기중인 서명 요청이 없습니다. 모두 완료되었습니다.'
-            : '아직 완료된 서명 요청이 없습니다.'}
-        </p>
       ) : (
-        <div className="mt-5 space-y-3">
-          {pagedItems.map((post) => (
-            <SignatureRequestCard
-              key={post.id}
-              post={post}
-              account={account}
-              comments={byPost[post.id] ?? []}
-              instructorIds={instructorIds}
-              onSigned={() => handleSigned(post.id)}
-            />
-          ))}
-
+        <>
+          <ul className="mt-5 space-y-3">
+            {paged.map((request) => (
+              <li key={request.id}>
+                <SignatureRequestCard request={request} account={account} onDecided={refetch} />
+              </li>
+            ))}
+          </ul>
           {totalPages > 1 && (
-            <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-              <Button type="button" variant="outline" tone="neutral" size="sm"
-                disabled={currentPage === 0}
-                onClick={() => setCurrentPage((page) => Math.max(0, page - 1))}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                이전
+            <div className="mt-4 flex items-center justify-between">
+              <Button type="button" size="sm" variant="outline" tone="neutral" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" /> 이전
               </Button>
-              <p className="font-mono-data text-xs tabular-nums text-slate-400">
-                {currentPage + 1} / 총 {totalPages}페이지
-              </p>
-              <Button type="button" variant="outline" tone="neutral" size="sm"
-                disabled={currentPage >= totalPages - 1}
-                onClick={() => setCurrentPage((page) => Math.min(totalPages - 1, page + 1))}
-              >
-                다음
-                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="font-mono-data text-xs tabular-nums text-slate-400">{page} / {totalPages}</span>
+              <Button type="button" size="sm" variant="outline" tone="neutral" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                다음 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   )

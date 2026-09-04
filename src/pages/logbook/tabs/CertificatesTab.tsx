@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { Reveal } from "../../../components/Reveal";
 import { CertificateApprovalStatusWatcher } from "../../../components/certificates/CertificateApprovalStatusWatcher";
-import { CertificateApprovalLinkRepair } from "../../../components/certificates/CertificateApprovalLinkRepair";
 import { CertificateForm } from "../../../components/certificates/CertificateForm";
 import { TsIntegrationCard } from "../../../components/certificates/TsIntegrationCard";
 import { CertificateList } from "../../../components/certificates/CertificateList";
@@ -59,10 +58,6 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                   accentHoverBorderClass={roleContent?.hoverBorderClass}
                 />
               </div>
-              <CertificateApprovalLinkRepair
-                certificates={certificates}
-                onUpdate={updateCertificate}
-              />
               <CertificateApprovalStatusWatcher
                 certificates={certificates}
                 onUpdate={updateCertificate}

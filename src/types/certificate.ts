@@ -54,7 +54,7 @@ export interface Certificate {
   approvalStatus?: 'pending' | 'approved' | 'rejected'
   /** 인증 후 내용을 수정해 인증이 해제된 시각(재요청 안내용). 다시 승인되면 지운다 */
   approvalRevokedAt?: number
-  /** "자격증 인증" 게시판의 요청 게시글 id */
+  /** [3단계] 인증 요청 id(approval_requests.id, schema12). 필드 이름은 호환을 위해 유지 */
   approvalRequestPostId?: string
   createdAt: number
   updatedAt: number
