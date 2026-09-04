@@ -718,7 +718,13 @@ async function handleCreateComment(postId: string, body: Record<string, unknown>
 function handlePresign(body: Record<string, unknown> | null): Response {
   const filename = String(body?.filename ?? `file-${Date.now()}`)
   const contentType = String(body?.content_type ?? 'application/octet-stream')
-  const safeName = filename.replace(/[^\w.\-가-힣]/g, '_')
+  // [BUGFIX] 저장소 객체 키에는 한글·공백 등이 들어가면 거부된다("Invalid key").
+  // 예전에는 가-힣을 그대로 남겨서, 한글 이름 사진(예: 자격증사진.jpg)은 업로드가 항상 실패했다.
+  // 원본 파일명은 pendingUploads 에 따로 보관하므로 표시에는 영향이 없다.
+  const dot = filename.lastIndexOf('.')
+  const ext = dot > 0 ? filename.slice(dot + 1).replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : ''
+  const base = (dot > 0 ? filename.slice(0, dot) : filename).replace(/[^a-zA-Z0-9._-]/g, '')
+  const safeName = `${base.slice(0, 40) || 'file'}${ext ? `.${ext}` : ''}`
   const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`
   const fileId = uploadSeq++
   const cdnUrl = publicUrlFor(path)

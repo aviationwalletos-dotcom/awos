@@ -20,6 +20,7 @@ import {
 } from '../../lib/baas/instructorApproval'
 import type { ApprovalDecisionStatus } from '../../lib/baas/instructorApproval'
 import { createSignedBoardFileUrl } from '../../lib/baas/supabaseTransport'
+import { clearAttachmentCache, getCachedAttachmentUrl, setCachedAttachmentUrl } from '../../lib/baas/approvalAttachmentCache'
 import type { BoardPostListItem, CommentItem } from '../../lib/baas/boardTypes'
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
@@ -63,6 +64,9 @@ function RequestRow({ item, comments, isCheckingDecision, onDecided }: RequestRo
 
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
+  // [성능] 첨부는 카드가 보일 때가 아니라 "첨부 파일 보기"를 눌렀을 때만 불러온다.
+  const [photoOpen, setPhotoOpen] = useState(false)
+  const [photoLoaded, setPhotoLoaded] = useState(false)
 
   const { orgIds } = useAuthorizedOrgIds()
   const decision = useMemo(
@@ -73,6 +77,13 @@ function RequestRow({ item, comments, isCheckingDecision, onDecided }: RequestRo
 
 
   useEffect(() => {
+    if (!photoOpen) return
+    const cached = getCachedAttachmentUrl(item.id)
+    if (cached !== undefined) {
+      setAttachmentUrl(cached)
+      setPhotoLoaded(true)
+      return
+    }
     let cancelled = false
     setDetailError(null)
     void (async () => {
@@ -83,7 +94,9 @@ function RequestRow({ item, comments, isCheckingDecision, onDecided }: RequestRo
         // [SEC-003] 저장소가 비공개라 public URL은 열리지 않는다 — 만료형 서명 URL로 변환해 표시한다.
         const resolved = raw ? (await createSignedBoardFileUrl(raw)) ?? raw : null
         if (cancelled) return
+        setCachedAttachmentUrl(item.id, resolved)
         setAttachmentUrl(resolved)
+        setPhotoLoaded(true)
       } catch (err) {
         if (!cancelled) setDetailError(err instanceof Error ? err.message : '첨부 사진을 불러오지 못했습니다.')
       }
@@ -91,7 +104,7 @@ function RequestRow({ item, comments, isCheckingDecision, onDecided }: RequestRo
     return () => {
       cancelled = true
     }
-  }, [item.id, fetchDetail])
+  }, [item.id, fetchDetail, photoOpen])
 
   async function handleDecision(next: 'approved' | 'rejected') {
     resetSubmit()
@@ -140,11 +153,23 @@ function RequestRow({ item, comments, isCheckingDecision, onDecided }: RequestRo
         </p>
       )}
 
-      {isLoadingDetail && (
+      {!photoOpen && (
+        <button type="button"
+          onClick={() => setPhotoOpen(true)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-control border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
+        >
+          <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          첨부 파일 보기
+        </button>
+      )}
+      {photoOpen && isLoadingDetail && (
         <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
           <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
           첨부 사진을 불러오는 중입니다...
         </p>
+      )}
+      {photoOpen && photoLoaded && !detailError && attachmentUrl === null && (
+        <p className="mt-3 text-xs text-slate-500">첨부된 파일이 없어요.</p>
       )}
       {detailError && (
         <p role="alert" className="mt-3 text-xs font-medium text-rose-300">{detailError}</p>
@@ -309,7 +334,7 @@ export function FlightExperienceCertificateApprovalPanel() {
       ) : error ? (
         <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
-          <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void refetch()}>
+          <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => { clearAttachmentCache(); void refetch() }}>
             다시 시도
           </Button>
         </div>

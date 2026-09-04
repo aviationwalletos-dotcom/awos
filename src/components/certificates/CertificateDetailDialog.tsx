@@ -234,7 +234,18 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                         </p>
                         <input type="file"
                           accept="image/*,application/pdf,.pdf"
-                          onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
+                          onChange={(e) => {
+                            const picked = e.target.files?.[0] ?? null
+                            // 너무 큰 파일은 업로드 도중이 아니라 고른 즉시 알려준다
+                            if (picked && picked.size > 10 * 1024 * 1024) {
+                              setApprovalError('파일이 너무 커요(10MB 이하). 사진 크기를 줄여서 다시 골라 주세요.')
+                              setApprovalFile(null)
+                              e.target.value = ''
+                              return
+                            }
+                            setApprovalError(null)
+                            setApprovalFile(picked)
+                          }}
                           className="mt-3 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
                         />
                         {approvalError && (

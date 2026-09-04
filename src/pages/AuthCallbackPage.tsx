@@ -3,7 +3,27 @@ import { TriangleAlert } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { adoptAuthSession } from '../lib/baas/supabaseTransport'
+import { BAAS_BASE_URL, getAuthHeaders } from '../lib/baas/config'
+import { adoptAuthSession, baasFetch } from '../lib/baas/supabaseTransport'
+
+/**
+ * 로그인 직후 이 계정이 기관(관리자) 계정인지 확인한다.
+ * [BUGFIX] 예전에는 확인 없이 /logbook·/account?setup=1 로 보내서, 기관 계정으로 소셜 로그인하면
+ * 개인 전용 페이지 가드에 막혀 "접근 권한이 없습니다" 화면이 먼저 떴다.
+ */
+async function isOrganizationAccount(): Promise<boolean> {
+  try {
+    const res = await baasFetch(`${BAAS_BASE_URL}/account/info`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      credentials: 'include',
+    })
+    const body = (await res.json()) as { data?: { data?: { user_type?: string } } }
+    return body?.data?.data?.user_type === 'organization'
+  } catch {
+    return false
+  }
+}
 
 export function AuthCallbackPage() {
   const [failed, setFailed] = useState<string | null>(null)
@@ -27,7 +47,14 @@ export function AuthCallbackPage() {
       // [SEC] '//evil.com' 이나 '/\evil.com' 은 startsWith('/') 를 통과하지만
       // 브라우저가 외부 주소로 해석한다(오픈 리다이렉트). 앱 내부 경로만 허용한다.
       const isInternalPath = Boolean(next) && /^\/(?![/\\])/.test(next!)
-      window.location.replace(isInternalPath ? next! : onboarded ? '/logbook' : '/account?setup=1')
+      if (isInternalPath) {
+        window.location.replace(next!)
+        return
+      }
+      void isOrganizationAccount().then((isOrg) => {
+        // 기관(관리자) 계정은 개인 전용 페이지에 못 들어가므로 대시보드로 보낸다.
+        window.location.replace(isOrg ? '/dashboard' : onboarded ? '/logbook' : '/account?setup=1')
+      })
     } else {
       setFailed(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : '로그인 정보가 전달되지 않았어요.')
     }

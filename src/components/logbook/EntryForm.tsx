@@ -397,11 +397,27 @@ export function EntryForm({
           <option value="cfi">교관 (CFI)</option>
         </select>
         <p className="mt-1.5 text-xs text-slate-400">
-          역할을 고르고 비행시간을 넣으면 교육·PIC·교관 시간과 야간 시간이 자동으로 채워져요. 직접 고친 값은 덮어쓰지 않아요.
+          {(() => {
+            // 역할별로 "무엇이 채워지는지"를 그대로 적는다.
+            // (예전 문구는 "교육·PIC·교관 시간이 자동으로 채워져요"라 자격증 없는 학생도
+            //  PIC가 채워지는 것처럼 오해할 수 있었다)
+            if (entryRole === 'student' && !hasLicence) {
+              return studentSolo
+                ? '비행시간을 넣으면 PIC 시간 + 단독 시간에 채워져요. 교육 받은 시간(Dual)은 0이에요.'
+                : '비행시간을 넣으면 교육 받은 시간(Dual)에만 채워져요. PIC는 0이에요.'
+            }
+            if (entryRole === 'student' && hasLicence) {
+              return '비행시간을 넣으면 PIC 시간 + 교육 받은 시간(Dual)에 함께 채워져요.'
+            }
+            if (entryRole === 'pic') return '비행시간을 넣으면 PIC 시간에 채워져요.'
+            if (entryRole === 'cfi') return '비행시간을 넣으면 PIC 시간 + 교관 시간에 채워져요.'
+            return '역할을 고르면 그 역할에 맞는 시간이 자동으로 채워져요.'
+          })()}
+          {' '}직접 고친 값은 덮어쓰지 않아요.
         </p>
         {entryRole === 'student' && hasLicence && (
           <p className="mt-2 text-[11px] text-slate-400">
-            자가용 조종사 자격이 있어 교육 비행도 PIC와 교육 받은 시간에 함께 기록돼요(계기비행증명·사업용 연습).
+            자가용 조종사 자격을 이미 보유해서, 교육 비행이라도 기장 자격으로 탑승한 것으로 봐요. 그래서 PIC와 교육 받은 시간에 함께 기록돼요(계기비행증명·사업용 연습).
           </p>
         )}
         {entryRole === 'student' && !hasLicence && (

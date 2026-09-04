@@ -81,7 +81,20 @@ export function useUploadBoardFile(): UseUploadBoardFileReturn {
       })
 
       if (!putResponse.ok) {
-        throw new Error('파일 업로드에 실패했습니다. 다시 시도해주세요.')
+        // [BUGFIX] 예전에는 서버가 돌려준 진짜 이유(용량 초과, RLS 거부, 형식 불가 등)를 버리고
+        // "다시 시도해주세요"로 덮어써서, 사용자도 개발자도 원인을 알 수 없었다.
+        let detail = ''
+        try {
+          const body = (await putResponse.clone().json()) as { message?: string; error?: string }
+          detail = body.message || body.error || ''
+        } catch {
+          detail = (await putResponse.text().catch(() => '')).slice(0, 200)
+        }
+        throw new Error(
+          detail
+            ? `파일 업로드에 실패했습니다 (${putResponse.status}): ${detail}`
+            : `파일 업로드에 실패했습니다 (${putResponse.status}). 다시 시도해주세요.`,
+        )
       }
 
       return { fileId, cdnUrl }
