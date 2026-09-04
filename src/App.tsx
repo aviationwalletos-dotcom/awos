@@ -28,10 +28,10 @@ const queryClient = new QueryClient()
 
 function NotFoundPage() {
   return (
-    <div data-mbaas-oid="cf5qfe1" className="mx-auto max-w-2xl px-6 py-24 text-center">
-      <h1 data-mbaas-oid="3pkshcf" className="mb-4 text-6xl font-bold text-slate-300">404</h1>
-      <p data-mbaas-oid="l7fhm0t" className="mb-6 text-slate-400">페이지를 찾을 수 없습니다.</p>
-      <Link data-mbaas-oid="bu7fq3f" to="/" className="text-sky-600 hover:underline">
+    <div className="mx-auto max-w-2xl px-6 py-24 text-center">
+      <h1 className="mb-4 text-6xl font-bold text-slate-300">404</h1>
+      <p className="mb-6 text-slate-400">페이지를 찾을 수 없습니다.</p>
+      <Link to="/" className="text-sky-600 hover:underline">
         홈으로 돌아가기
       </Link>
     </div>
@@ -42,7 +42,7 @@ function LandingPage() {
   return (
     <>
       <Nav />
-      <main data-mbaas-oid="jtf29w6">
+      <main>
         <Hero />
         <Problem />
         <Features />
@@ -60,10 +60,10 @@ function App() {
         <AuthProvider>
         <ConfirmProvider>
         <ErrorBoundary>
-          <div data-mbaas-oid="nc8cen2" className="min-h-screen bg-surface font-body text-ink">
+          <div className="min-h-screen bg-surface font-body text-ink">
             <Suspense
               fallback={
-                <div data-mbaas-oid="lazyfb" className="flex min-h-[40vh] items-center justify-center text-sm text-slate-400" role="status">
+                <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-400" role="status">
                   불러오는 중…
                 </div>
               }

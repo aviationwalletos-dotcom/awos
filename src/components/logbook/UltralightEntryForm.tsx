@@ -160,7 +160,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
   }
 
   return (
-    <form data-mbaas-oid="ulfrm" noValidate onSubmit={handleSubmit} className="space-y-7">
+    <form noValidate onSubmit={handleSubmit} className="space-y-7">
       {/* 기체 */}
       <fieldset>
         <legend className={sectionTitleClass}>기체(機體) 정보</legend>

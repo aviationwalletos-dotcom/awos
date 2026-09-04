@@ -54,8 +54,7 @@ export function Button({
   const state = disabled ? 'disabled' : loading ? 'loading' : 'idle'
 
   return (
-    <button data-mbaas-dynamic="true"
-      data-mbaas-oid="whwrxdb" type="button"
+    <button type="button"
       data-state={state}
       disabled={disabled || loading}
       aria-label={iconOnly ? ariaLabel : undefined}
@@ -69,7 +68,7 @@ export function Button({
       {...rest}
     >
       {loading ? (
-        <span data-mbaas-oid="l0hut3g" className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
       ) : (
         children
       )}

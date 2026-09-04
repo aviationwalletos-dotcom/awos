@@ -193,15 +193,15 @@ export function MemberDirectoryPanel() {
   }, [fetchMembers])
 
   if (isLoading) {
-    return <p data-mbaas-oid="mdirld" className="text-sm text-slate-400">구성원 현황을 불러오는 중…</p>
+    return <p className="text-sm text-slate-400">구성원 현황을 불러오는 중…</p>
   }
 
   if (error) {
     return (
-      <div data-mbaas-oid="mdirer" className="rounded-card border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-300">
-        <p data-mbaas-oid="mdirer1">{error}</p>
-        <div data-mbaas-oid="mdirer4" className="mt-3">
-          <Button data-mbaas-oid="mdirer5" type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
+      <div className="rounded-card border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-300">
+        <p>{error}</p>
+        <div className="mt-3">
+          <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
             다시 시도
           </Button>
         </div>
@@ -213,9 +213,8 @@ export function MemberDirectoryPanel() {
 
   if (members.length === 0) {
     return (
-      <div data-mbaas-oid="mdirdx" className="space-y-4">
-        <EmptyState
-          data-mbaas-oid="mdirem" icon={Users}
+      <div className="space-y-4">
+        <EmptyState icon={Users}
           title="표시할 구성원이 없습니다"
           description={
             emptyReason === 'not_admin'
@@ -226,16 +225,16 @@ export function MemberDirectoryPanel() {
           }
         />
         {emptyReason === 'policy' && (
-          <div data-mbaas-oid="mdirsq" className="rounded-card border border-amber-400/30 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-200">
+          <div className="rounded-card border border-amber-400/30 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-200">
             Supabase → SQL Editor에서 아래를 실행한 뒤 이 화면의 새로고침을 누르세요:
-            <pre data-mbaas-oid="mdirsq2" className="mt-2 overflow-x-auto rounded bg-black/30 p-3 font-mono-data text-[11px] text-amber-100">{`create policy "profiles_select_authorized_admin" on public.profiles
+            <pre className="mt-2 overflow-x-auto rounded bg-black/30 p-3 font-mono-data text-[11px] text-amber-100">{`create policy "profiles_select_authorized_admin" on public.profiles
   for select to authenticated
   using (exists (select 1 from public.authorized_orgs a
                  where a.user_id = auth.uid()));`}</pre>
           </div>
         )}
-        <Button data-mbaas-oid="mdirrf0" type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
-          <RefreshCw data-mbaas-oid="mdirrfi0" className="mr-1.5 h-3.5 w-3.5" aria-hidden={true} />
+        <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
+          <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden={true} />
           새로고침
         </Button>
       </div>
@@ -243,60 +242,58 @@ export function MemberDirectoryPanel() {
   }
 
   return (
-    <div data-mbaas-oid="mdirwrap">
-      <div data-mbaas-oid="mdirhead" className="flex items-center justify-between">
-        <p data-mbaas-oid="mdircnt" className="text-sm text-slate-400">
-          총 <span data-mbaas-oid="mdircnt2" className="font-mono-data font-semibold text-ink">{members.length}</span>명
-          {statsNote && <span data-mbaas-oid="mdirnote" className="ml-2 text-xs text-amber-300">({statsNote})</span>}
+    <div>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-400">
+          총 <span className="font-mono-data font-semibold text-ink">{members.length}</span>명
+          {statsNote && <span className="ml-2 text-xs text-amber-300">({statsNote})</span>}
         </p>
-        <Button data-mbaas-oid="mdirrf" type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
-          <RefreshCw data-mbaas-oid="mdirrfi" className="mr-1.5 h-3.5 w-3.5" aria-hidden={true} />
+        <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => void fetchMembers()}>
+          <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden={true} />
           새로고침
         </Button>
       </div>
-      <div data-mbaas-oid="mdirtbl" className="mt-4 overflow-x-auto rounded-card border border-white/10">
-        <table data-mbaas-oid="mdirt" className="w-full min-w-[760px] text-left text-sm">
-          <thead data-mbaas-oid="mdirth" className="bg-white/[0.04] text-xs uppercase tracking-wide text-slate-400">
-            <tr data-mbaas-oid="mdirtr0">
-              <th data-mbaas-oid="mdirh1" className="px-4 py-3">이름</th>
-              <th data-mbaas-oid="mdirh2" className="px-4 py-3">역할</th>
-              <th data-mbaas-oid="mdirh3" className="px-4 py-3">소속</th>
-              <th data-mbaas-oid="mdirh5" className="px-4 py-3 text-right">총 비행시간</th>
-              <th data-mbaas-oid="mdirh6" className="px-4 py-3">최근 비행</th>
-              <th data-mbaas-oid="mdirh7" className="px-4 py-3">커런시</th>
+      <div className="mt-4 overflow-x-auto rounded-card border border-white/10">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="bg-white/[0.04] text-xs uppercase tracking-wide text-slate-400">
+            <tr>
+              <th className="px-4 py-3">이름</th>
+              <th className="px-4 py-3">역할</th>
+              <th className="px-4 py-3">소속</th>
+              <th className="px-4 py-3 text-right">총 비행시간</th>
+              <th className="px-4 py-3">최근 비행</th>
+              <th className="px-4 py-3">커런시</th>
             </tr>
           </thead>
-          <tbody data-mbaas-oid="mdirtb" className="divide-y divide-white/5">
+          <tbody className="divide-y divide-white/5">
             {members.map((m) => {
               const st = stats[m.id]
               return (
                 <React.Fragment key={m.id}>
-                <tr
-                  data-mbaas-oid="mdirtr" onClick={() => setExpandedId((prev) => (prev === m.id ? null : m.id))}
+                <tr onClick={() => setExpandedId((prev) => (prev === m.id ? null : m.id))}
                   className="cursor-pointer hover:bg-white/[0.03]"
                 >
-                  <td data-mbaas-oid="mdirc1" className="px-4 py-3 font-medium text-ink">
-                    <span data-mbaas-oid="mdirc1a" className="mr-1.5 inline-block text-[10px] text-slate-500">{expandedId === m.id ? '▼' : '▶'}</span>
+                  <td className="px-4 py-3 font-medium text-ink">
+                    <span className="mr-1.5 inline-block text-[10px] text-slate-500">{expandedId === m.id ? '▼' : '▶'}</span>
                     {m.name}
                   </td>
-                  <td data-mbaas-oid="mdirc2" className="px-4 py-3 text-slate-300">
+                  <td className="px-4 py-3 text-slate-300">
                     {m.individual_role ? ROLE_LABEL[m.individual_role] ?? m.individual_role : '-'}
                   </td>
-                  <td data-mbaas-oid="mdirc3" className="px-4 py-3 text-slate-300">{m.institution ?? '-'}</td>
-                  <td data-mbaas-oid="mdirc5" className="px-4 py-3 text-right font-mono-data tabular-nums text-ink">
+                  <td className="px-4 py-3 text-slate-300">{m.institution ?? '-'}</td>
+                  <td className="px-4 py-3 text-right font-mono-data tabular-nums text-ink">
                     {st ? `${st.totalHours.toFixed(1)}h` : '-'}
                   </td>
-                  <td data-mbaas-oid="mdirc6" className="px-4 py-3 font-mono-data text-xs text-slate-300">
+                  <td className="px-4 py-3 font-mono-data text-xs text-slate-300">
                     {st?.lastFlight ?? '-'}
                   </td>
-                  <td data-mbaas-oid="mdirc7" className="px-4 py-3">
+                  <td className="px-4 py-3">
                     {!st || !st.hasRecords ? (
-                      <span data-mbaas-oid="mdircb0" className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-slate-400">기록 없음</span>
+                      <span className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-slate-400">기록 없음</span>
                     ) : st.medicalValid && st.recencyMet ? (
-                      <span data-mbaas-oid="mdircb1" className="rounded bg-go/15 px-2 py-0.5 text-[11px] font-semibold text-go">GO</span>
+                      <span className="rounded bg-go/15 px-2 py-0.5 text-[11px] font-semibold text-go">GO</span>
                     ) : (
-                      <button
-                        data-mbaas-oid="mdircb2" type="button"
+                      <button type="button"
                         onClick={(e) => { e.stopPropagation(); setReasonFor(m) }}
                         className="rounded bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300 underline decoration-dotted underline-offset-2 hover:bg-amber-400/25"
                       >
@@ -306,34 +303,33 @@ export function MemberDirectoryPanel() {
                   </td>
                 </tr>
                 {expandedId === m.id && (
-                  <tr data-mbaas-oid="mdirdet" className="bg-white/[0.02]">
-                    <td data-mbaas-oid="mdirdet1" colSpan={6} className="px-4 py-4">
-                      <div data-mbaas-oid="mdirdet2" className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
-                        <p data-mbaas-oid="mdirdet3" className="text-slate-300">
-                          <span data-mbaas-oid="mdirdet3a" className="text-xs uppercase tracking-wide text-slate-500">계정 이메일 </span><br data-mbaas-oid="mdirdetbr1" />
-                          <span data-mbaas-oid="mdirdet3b" className="font-medium text-ink">{emails[m.id] ?? '(schema8 SQL 실행 시 표시)'}</span>
+                  <tr className="bg-white/[0.02]">
+                    <td colSpan={6} className="px-4 py-4">
+                      <div className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+                        <p className="text-slate-300">
+                          <span className="text-xs uppercase tracking-wide text-slate-500">계정 이메일 </span><br />
+                          <span className="font-medium text-ink">{emails[m.id] ?? '(schema8 SQL 실행 시 표시)'}</span>
                         </p>
-                        <p data-mbaas-oid="mdirdet4" className="text-slate-300">
-                          <span data-mbaas-oid="mdirdet4a" className="text-xs uppercase tracking-wide text-slate-500">가입일 </span><br data-mbaas-oid="mdirdetbr2" />
-                          <span data-mbaas-oid="mdirdet4b" className="font-mono-data text-ink">{String(m.created_at).slice(0, 10)}</span>
+                        <p className="text-slate-300">
+                          <span className="text-xs uppercase tracking-wide text-slate-500">가입일 </span><br />
+                          <span className="font-mono-data text-ink">{String(m.created_at).slice(0, 10)}</span>
                         </p>
                       </div>
-                      <div data-mbaas-oid="mdirdet5" className="mt-4">
-                        <p data-mbaas-oid="mdirdet6" className="text-xs uppercase tracking-wide text-slate-500">보유 자격증 ({(memberCerts[m.id] ?? []).length}건)</p>
+                      <div className="mt-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">보유 자격증 ({(memberCerts[m.id] ?? []).length}건)</p>
                         {(memberCerts[m.id] ?? []).length === 0 ? (
-                          <p data-mbaas-oid="mdirdet7" className="mt-1.5 text-sm text-slate-400">등록된 자격증이 없습니다.</p>
+                          <p className="mt-1.5 text-sm text-slate-400">등록된 자격증이 없습니다.</p>
                         ) : (
-                          <ul data-mbaas-oid="mdirdet8" className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                          <ul className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                             {(memberCerts[m.id] ?? []).map((cert) => {
                               const remain = cert.expiryDate ? daysUntil(cert.expiryDate) : null
                               return (
-                                <li data-mbaas-oid="mdirdet9" key={cert.id} className="flex items-center justify-between gap-2 rounded-control border border-white/10 bg-navy px-3 py-2 text-sm">
-                                  <span data-mbaas-oid="mdirdetA" className="min-w-0 truncate text-ink">
-                                    <span data-mbaas-oid="mdirdetB" className="mr-1.5 text-[10px] font-semibold text-slate-500">{cert.category}</span>
+                                <li key={cert.id} className="flex items-center justify-between gap-2 rounded-control border border-white/10 bg-navy px-3 py-2 text-sm">
+                                  <span className="min-w-0 truncate text-ink">
+                                    <span className="mr-1.5 text-[10px] font-semibold text-slate-500">{cert.category}</span>
                                     {cert.name}
                                   </span>
-                                  <span
-                                    data-mbaas-oid="mdirdetC" className={`shrink-0 font-mono-data text-xs font-bold ${
+                                  <span className={`shrink-0 font-mono-data text-xs font-bold ${
                                       remain === null ? 'text-slate-400' : remain < 0 ? 'text-rose-300' : remain <= 30 ? 'text-amber-300' : 'text-go'
                                     }`}
                                   >
@@ -361,21 +357,21 @@ export function MemberDirectoryPanel() {
           !st?.recencyMet ? { title: '최근비행 기준 미달', detail: '최근 90일 내 이착륙 3회 이상 등 최근비행 요건을 충족하지 못했습니다. 기록이 누락됐다면 로그북에 추가하세요.' } : null,
         ].filter((r): r is { title: string; detail: string } => r !== null)
         return (
-          <div data-mbaas-oid="mdirmodal" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6" onClick={() => setReasonFor(null)}>
-            <div data-mbaas-oid="mdirmodal1" className="w-full max-w-md rounded-card border border-white/10 bg-navy p-6" onClick={(e) => e.stopPropagation()}>
-              <p data-mbaas-oid="mdirmodal2" className="text-xs font-semibold uppercase tracking-wide text-amber-300">확인 필요 사유</p>
-              <h3 data-mbaas-oid="mdirmodal3" className="mt-1 font-display text-lg font-extrabold text-ink">{reasonFor.name}</h3>
-              <ul data-mbaas-oid="mdirmodal4" className="mt-4 space-y-3">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6" onClick={() => setReasonFor(null)}>
+            <div className="w-full max-w-md rounded-card border border-white/10 bg-navy p-6" onClick={(e) => e.stopPropagation()}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">확인 필요 사유</p>
+              <h3 className="mt-1 font-display text-lg font-extrabold text-ink">{reasonFor.name}</h3>
+              <ul className="mt-4 space-y-3">
                 {reasons.map((r) => (
-                  <li data-mbaas-oid="mdirmodal5" key={r.title} className="rounded-control border border-amber-400/25 bg-amber-400/5 p-3">
-                    <p data-mbaas-oid="mdirmodal6" className="text-sm font-semibold text-amber-200">{r.title}</p>
-                    <p data-mbaas-oid="mdirmodal7" className="mt-1 text-xs leading-relaxed text-slate-300">{r.detail}</p>
+                  <li key={r.title} className="rounded-control border border-amber-400/25 bg-amber-400/5 p-3">
+                    <p className="text-sm font-semibold text-amber-200">{r.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-300">{r.detail}</p>
                   </li>
                 ))}
               </ul>
-              <p data-mbaas-oid="mdirmodal8" className="mt-4 text-[11px] text-slate-500">참고 판정(v0.9)이며 법령 기준 확정 후 갱신됩니다.</p>
-              <div data-mbaas-oid="mdirmodal9" className="mt-4 text-right">
-                <Button data-mbaas-oid="mdirmodalA" type="button" size="sm" variant="outline" tone="neutral" onClick={() => setReasonFor(null)}>닫기</Button>
+              <p className="mt-4 text-[11px] text-slate-500">참고 판정(v0.9)이며 법령 기준 확정 후 갱신됩니다.</p>
+              <div className="mt-4 text-right">
+                <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => setReasonFor(null)}>닫기</Button>
               </div>
             </div>
           </div>

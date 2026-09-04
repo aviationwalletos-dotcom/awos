@@ -40,39 +40,38 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div data-mbaas-oid="rppg01" className="min-h-screen bg-surface font-body text-ink">
-      <main data-mbaas-oid="rppg02" className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
-        <div data-mbaas-oid="rppg03" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
-        <div data-mbaas-oid="rppg04" className="relative mx-auto max-w-md px-6">
-          <div data-mbaas-oid="rppg05" className="text-center">
-            <span data-mbaas-oid="rppg06" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
+    <div className="min-h-screen bg-surface font-body text-ink">
+      <main className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
+        <div className="relative mx-auto max-w-md px-6">
+          <div className="text-center">
+            <span className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
               <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
               새 비밀번호 설정
             </span>
           </div>
 
           {done ? (
-            <div data-mbaas-oid="rppg07" className="mt-10 rounded-card border border-go/30 bg-go/10 p-6 text-center">
-              <p data-mbaas-oid="rppg08" className="text-sm font-semibold text-go">비밀번호가 변경됐어요!</p>
-              <Link data-mbaas-oid="rppg09" to="/login" className="mt-3 inline-block text-sm font-semibold text-sky hover:underline">
+            <div className="mt-10 rounded-card border border-go/30 bg-go/10 p-6 text-center">
+              <p className="text-sm font-semibold text-go">비밀번호가 변경됐어요!</p>
+              <Link to="/login" className="mt-3 inline-block text-sm font-semibold text-sky hover:underline">
                 새 비밀번호로 로그인하기 →
               </Link>
             </div>
           ) : !token ? (
-            <div data-mbaas-oid="rppg10" className="mt-10 rounded-card border border-amber-400/30 bg-amber-400/10 p-6 text-center text-sm text-amber-200">
+            <div className="mt-10 rounded-card border border-amber-400/30 bg-amber-400/10 p-6 text-center text-sm text-amber-200">
               재설정 링크가 유효하지 않거나 만료됐어요.{' '}
-              <Link data-mbaas-oid="rppg11" to="/forgot-password" className="font-semibold text-sky hover:underline">
+              <Link to="/forgot-password" className="font-semibold text-sky hover:underline">
                 재설정 메일 다시 받기
               </Link>
             </div>
           ) : (
-            <form data-mbaas-oid="rppg12" onSubmit={(e) => void handleSubmit(e)} className="mt-10 flex flex-col gap-4">
-              <div data-mbaas-oid="rppg13" className="flex flex-col gap-1.5">
-                <label data-mbaas-oid="rppg14" htmlFor="reset-pw" className="text-xs font-semibold text-slate-300">
+            <form onSubmit={(e) => void handleSubmit(e)} className="mt-10 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="reset-pw" className="text-xs font-semibold text-slate-300">
                   새 비밀번호
                 </label>
-                <input
-                  data-mbaas-oid="rppg15" id="reset-pw"
+                <input id="reset-pw"
                   type="password"
                   autoComplete="new-password"
                   required
@@ -82,12 +81,11 @@ export function ResetPasswordPage() {
                   className={inputClass}
                 />
               </div>
-              <div data-mbaas-oid="rppg16" className="flex flex-col gap-1.5">
-                <label data-mbaas-oid="rppg17" htmlFor="reset-pw2" className="text-xs font-semibold text-slate-300">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="reset-pw2" className="text-xs font-semibold text-slate-300">
                   새 비밀번호 확인
                 </label>
-                <input
-                  data-mbaas-oid="rppg18" id="reset-pw2"
+                <input id="reset-pw2"
                   type="password"
                   autoComplete="new-password"
                   required
@@ -97,8 +95,8 @@ export function ResetPasswordPage() {
                   className={inputClass}
                 />
               </div>
-              {error && <p data-mbaas-oid="rppg19" className="text-xs text-rose-400">{error}</p>}
-              <Button data-mbaas-oid="rppg20" type="submit" size="lg" className="mt-2 w-full" disabled={isLoading} loading={isLoading}>
+              {error && <p className="text-xs text-rose-400">{error}</p>}
+              <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading} loading={isLoading}>
                 비밀번호 변경하기
               </Button>
             </form>

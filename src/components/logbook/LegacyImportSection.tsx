@@ -26,10 +26,10 @@ export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) 
   const [activeTab, setActiveTab] = useState<ImportTab>('excel')
 
   return (
-    <div data-mbaas-oid="w8i2xew">
-      <div data-mbaas-oid="ykf6lyp" className="mb-6 flex items-start gap-3 rounded-control border border-amber-400/40 bg-amber-400/10 p-4">
+    <div>
+      <div className="mb-6 flex items-start gap-3 rounded-control border border-amber-400/40 bg-amber-400/10 p-4">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
-        <p data-mbaas-oid="4o37c8l" className="text-xs text-amber-300">
+        <p className="text-xs text-amber-300">
           "엑셀로 가져오기"로 저장한 기록은 일반 비행기록과 동일하게 로컬과 서버에 동기화되지만, 기관(학교)의
           별도 검토·승인 절차는 거치지 않습니다. 기관의 확인이 필요한 경우 "비행경력증명서로 가져오기"를
           이용해 증명서 사진을 첨부해 주세요. 이 항목은 기관 계정 대시보드로 전달되어 담당자가 직접
@@ -37,12 +37,11 @@ export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) 
         </p>
       </div>
 
-      <div data-mbaas-oid="gvg7nio" role="tablist" aria-label="종이 로그북 가져오기 방법 선택" className="mb-6 flex flex-wrap gap-2">
+      <div role="tablist" aria-label="종이 로그북 가져오기 방법 선택" className="mb-6 flex flex-wrap gap-2">
         {TABS.map(({ key, label, icon: Icon }) => {
           const isActive = activeTab === key
           return (
-            <button
-              data-mbaas-oid="hc2zbac" key={key}
+            <button key={key}
               type="button"
               role="tab"
               aria-selected={isActive}
@@ -59,7 +58,7 @@ export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) 
         })}
       </div>
 
-      <div data-mbaas-oid="qx2vtm7" className="rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
+      <div className="rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
         {activeTab === 'excel' ? (
           <LegacyExcelImport onImportEntries={onAddEntries} />
         ) : (

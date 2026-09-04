@@ -22,9 +22,9 @@ function fmt(n: number): string {
 
 function StatCell({ label, value }: { label: string; value: number }) {
   return (
-    <div data-mbaas-oid="s8tzm14">
-      <dt data-mbaas-oid="cc52gy2" className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd data-mbaas-oid="eemr6uc" className="mt-0.5 font-mono-data tabular-nums text-base font-semibold text-ink">{fmt(value)}</dd>
+    <div>
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
+      <dd className="mt-0.5 font-mono-data tabular-nums text-base font-semibold text-ink">{fmt(value)}</dd>
     </div>
   )
 }
@@ -93,10 +93,10 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
   const isEmpty = entries.length === 0
 
   return (
-    <div data-mbaas-oid="gwljfg6" className="rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
-      <div data-mbaas-oid="nmvmas5" className="flex flex-wrap items-center gap-2 text-sky">
+    <div className="rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 text-sky">
         <Gauge className="h-5 w-5" aria-hidden="true" />
-        <span data-mbaas-oid="h5250ec" className="text-xs font-semibold uppercase tracking-wide">누적 총 비행시간 요약</span>
+        <span className="text-xs font-semibold uppercase tracking-wide">누적 총 비행시간 요약</span>
       </div>
 
       {isEmpty && (
@@ -108,10 +108,10 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         />
       )}
 
-      <div data-mbaas-oid="dr71nf2" className="mt-4">
-        <div data-mbaas-oid="nllid6s" className="rounded-control border border-sky/30 bg-sky/10 p-4">
-          <p data-mbaas-oid="bsd7lof" className="text-xs font-semibold uppercase tracking-wide text-[#00D4FF]">총 블록타임</p>
-          <p data-mbaas-oid="vhbboxv" className="mt-1 font-mono-data text-3xl font-extrabold tabular-nums text-ink">{fmt(totals.blockTime)}<span data-mbaas-oid="x6nq362" className="ml-1 text-base font-semibold text-slate-400">시간</span></p>
+      <div className="mt-4">
+        <div className="rounded-control border border-sky/30 bg-sky/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#00D4FF]">총 블록타임</p>
+          <p className="mt-1 font-mono-data text-3xl font-extrabold tabular-nums text-ink">{fmt(totals.blockTime)}<span className="ml-1 text-base font-semibold text-slate-400">시간</span></p>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         summary={<span className="text-slate-400">{track === 'ultralight' ? '임무별·기체별 누적' : '범주·임무·조건별 누적'}</span>}
       >
       {track === 'ultralight' ? (
-        <div data-mbaas-oid="ultot" className="mt-6">
+        <div className="mt-6">
           <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">임무별 누적 (로그기록지 ⑥)</h3>
           <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <StatCell label="기장" value={ul.pic} />
@@ -144,9 +144,9 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         </div>
       ) : (
         <>
-      <div data-mbaas-oid="v7u2bc0" className="mt-6">
-        <h3 data-mbaas-oid="98sf1q1" className="text-xs font-bold uppercase tracking-wide text-slate-400">항공기 범주별 누적</h3>
-        <dl data-mbaas-oid="lq0232k" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+      <div className="mt-6">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">항공기 범주별 누적</h3>
+        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <StatCell label="단발육상" value={totals.singleEngineLand} />
           <StatCell label="다발육상" value={totals.multiEngineLand} />
           <StatCell label="회전익" value={totals.rotorcraftHelicopter} />
@@ -154,9 +154,9 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         </dl>
       </div>
 
-      <div data-mbaas-oid="yeiauxr" className="mt-6">
-        <h3 data-mbaas-oid="br6lfge" className="text-xs font-bold uppercase tracking-wide text-slate-400">비행 자격 시간별 누적</h3>
-        <dl data-mbaas-oid="hs3pigc" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+      <div className="mt-6">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">비행 자격 시간별 누적</h3>
+        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <StatCell label="DUAL RECEIVED" value={totals.dualReceived} />
           <StatCell label="PILOT-IN-COMMAND (PIC)" value={totals.pic} />
           <StatCell label="SOLO (단독)" value={totals.solo} />
@@ -165,9 +165,9 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         </dl>
       </div>
 
-      <div data-mbaas-oid="i1trhz1" className="mt-6">
-        <h3 data-mbaas-oid="j8uun9n" className="text-xs font-bold uppercase tracking-wide text-slate-400">비행 조건별 누적</h3>
-        <dl data-mbaas-oid="jkro9eg" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-5">
+      <div className="mt-6">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">비행 조건별 누적</h3>
+        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-5">
           <StatCell label="주간" value={totals.day} />
           <StatCell label="야간" value={totals.night} />
           <StatCell label="크로스컨트리" value={totals.crossCountry} />
@@ -176,44 +176,44 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         </dl>
       </div>
 
-      <div data-mbaas-oid="1gc4g5x" className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div data-mbaas-oid="xzqk5ob">
-          <h3 data-mbaas-oid="flyd0mf" className="text-xs font-bold uppercase tracking-wide text-slate-400">지상훈련장비 누적</h3>
-          <p data-mbaas-oid="vl9vq3h" className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">{fmt(totals.groundTrainerTime)}시간</p>
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">지상훈련장비 누적</h3>
+          <p className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">{fmt(totals.groundTrainerTime)}시간</p>
         </div>
-        <div data-mbaas-oid="hjnsrx5">
-          <h3 data-mbaas-oid="phjyum1" className="text-xs font-bold uppercase tracking-wide text-slate-400">계기접근 / 주간·야간 이착륙 누적</h3>
-          <p data-mbaas-oid="xe9lezg" className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">계기접근 / 주간·야간 이착륙 누적</h3>
+          <p className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">
             {totals.instrumentApproaches}회 · {totals.dayLandings}회 / {totals.nightLandings}회
           </p>
         </div>
       </div>
 
       {pendingCertificateEntries.length > 0 && (
-        <div data-mbaas-oid="w2jbz4k" className="mt-6 rounded-control border border-amber-400/40 bg-amber-400/10 p-4">
-          <p data-mbaas-oid="bc8t0kp" className="text-xs font-semibold uppercase tracking-wide text-amber-300">미인증 비행경력증명서(참고용)</p>
-          <p data-mbaas-oid="42veb5k" className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">
+        <div className="mt-6 rounded-control border border-amber-400/40 bg-amber-400/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">미인증 비행경력증명서(참고용)</p>
+          <p className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">
             {fmt(pendingCertificateBlockTime)}시간
-            <span data-mbaas-oid="3f8zhuf" className="ml-2 text-xs font-normal text-amber-300">
+            <span className="ml-2 text-xs font-normal text-amber-300">
               ({pendingCertificateEntries.length}건, 위 공식 합계에는 포함되지 않음)
             </span>
           </p>
-          <p data-mbaas-oid="cdqymea" className="mt-1 text-xs text-amber-300">
+          <p className="mt-1 text-xs text-amber-300">
             관리자가 원본 증명서와 대조해 승인하면 공식 총 비행시간 합계에 자동으로 포함됩니다.
           </p>
         </div>
       )}
 
       {rejectedCertificateEntries.length > 0 && (
-        <div data-mbaas-oid="w2jbz4l" className="mt-6 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-          <p data-mbaas-oid="bc8t0kq" className="text-xs font-semibold uppercase tracking-wide text-rose-300">반려된 비행경력증명서</p>
-          <p data-mbaas-oid="42veb5l" className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">
+        <div className="mt-6 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-rose-300">반려된 비행경력증명서</p>
+          <p className="mt-1 font-mono-data text-lg font-semibold tabular-nums text-ink">
             {fmt(rejectedCertificateBlockTime)}시간
-            <span data-mbaas-oid="3f8zhug" className="ml-2 text-xs font-normal text-rose-300">
+            <span className="ml-2 text-xs font-normal text-rose-300">
               ({rejectedCertificateEntries.length}건, 공식 합계에서 제외됨)
             </span>
           </p>
-          <p data-mbaas-oid="cdqymeb" className="mt-1 text-xs text-rose-300">
+          <p className="mt-1 text-xs text-rose-300">
             관리자가 반려한 기록입니다. 상세 화면에서 반려 사유를 확인해 주세요.
           </p>
         </div>

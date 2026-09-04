@@ -35,19 +35,18 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
 
   return (
     <div
-      data-mbaas-oid="dtlwrap"
       className={`rounded-card border border-white/10 bg-white/[0.04] backdrop-blur ${
         compact ? 'p-4' : 'p-cardpad'
       }`}
     >
-      <div data-mbaas-oid="dtlhead" className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <TimerReset className="h-4 w-4 text-sky" aria-hidden="true" />
-        <p data-mbaas-oid="bkzxabl" className="text-xs font-semibold uppercase tracking-wide text-sky">
+        <p className="text-xs font-semibold uppercase tracking-wide text-sky">
           승무시간 한도
         </p>
       </div>
 
-      <p data-mbaas-oid="dtlbasis" className={`mt-2 rounded-control border px-2.5 py-1.5 text-[11px] leading-relaxed ${
+      <p className={`mt-2 rounded-control border px-2.5 py-1.5 text-[11px] leading-relaxed ${
         operationType === 'commercial' ? 'border-amber-400/30 bg-amber-400/10 text-amber-200' : 'border-white/10 bg-white/[0.03] text-slate-400'
       }`}>
         {operationType === 'commercial'
@@ -56,23 +55,21 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
       </p>
 
       {!hasData ? (
-        <p data-mbaas-oid="7does0q" className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400">
           비행 기록을 등록하면 오늘 비행 가능 여부와 남은 비행 가능 시간이 표시됩니다.
         </p>
       ) : (
-        <div data-mbaas-oid="dtlbody" className={compact ? 'mt-3' : 'mt-6'}>
-          <span
-
-            data-mbaas-oid="6089ypr" role="status"
+        <div className={compact ? 'mt-3' : 'mt-6'}>
+          <span role="status"
             className={`inline-flex items-center rounded-control px-2.5 py-1 text-xs font-bold ${
               isGo ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
             }`}
           >
             {isGo ? 'GO' : 'NO-GO'}
           </span>
-          <p data-mbaas-oid="oksqvds" className="mt-2 text-sm text-slate-200">
+          <p className="mt-2 text-sm text-slate-200">
             오늘 최대{' '}
-            <span data-mbaas-oid="39z1g32" className="font-mono-data font-bold text-white">
+            <span className="font-mono-data font-bold text-white">
               {remainingHours.toFixed(1)}시간
             </span>{' '}
             더 비행 가능합니다.
@@ -87,7 +84,7 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
 
 function DutyTimeDisclaimer({ compact = false }: { compact?: boolean }) {
   return (
-    <p data-mbaas-oid="dtlnote" className={`${compact ? 'mt-3' : 'mt-6'} flex items-start gap-1.5 text-[11px] text-slate-400`}>
+    <p className={`${compact ? 'mt-3' : 'mt-6'} flex items-start gap-1.5 text-[11px] text-slate-400`}>
       <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
       이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관/관련 규정을 통해
       확인해야 합니다.

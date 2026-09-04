@@ -33,13 +33,12 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
   const values = valuesForKind(entries, kind)
 
   return (
-    <div data-mbaas-oid="lgbflt1">
-      <div data-mbaas-oid="lgbflt2" role="tablist" aria-label="분류 기준 선택" className="flex flex-wrap gap-2">
+    <div>
+      <div role="tablist" aria-label="분류 기준 선택" className="flex flex-wrap gap-2">
         {KIND_ORDER.map((k) => {
           const isActive = k === kind
           return (
-            <button
-              data-mbaas-oid="lgbflt3" key={k}
+            <button key={k}
               type="button"
               role="tab"
               aria-selected={isActive}
@@ -59,7 +58,7 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
       </div>
 
       {kind === 'date' && (
-        <div data-mbaas-oid="lgbfltdate" className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <label htmlFor="entry-date-filter" className="text-xs font-medium text-slate-400">날짜 선택</label>
           <input
             id="entry-date-filter"
@@ -75,20 +74,19 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
       )}
 
       {kind === 'unsigned' && (
-        <p data-mbaas-oid="lgbfltuns" className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400">
           교관 서명이 아직 없는 기록(실비행·시뮬레이터 모두)만 보여줍니다. 이월 기록은 "이월 기록" 탭에서 따로 봐요.
         </p>
       )}
       {kind === 'imported' && (
-        <p data-mbaas-oid="lgbfltimp" className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400">
           엑셀 로그북에서 가져온 기록과 비행경력증명서로 이월한 기록만 보여줍니다.
         </p>
       )}
 
       {kind !== 'all' && kind !== 'date' && kind !== 'unsigned' && kind !== 'imported' && values.length > 0 && (
-        <div data-mbaas-oid="lgbflt4" className="mt-3 flex flex-wrap gap-2" role="group" aria-label={`${FILTER_KIND_LABEL[kind]} 세부 값 선택`}>
-          <button
-            data-mbaas-oid="lgbflt5" type="button"
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={`${FILTER_KIND_LABEL[kind]} 세부 값 선택`}>
+          <button type="button"
             data-state={value === null ? 'active' : 'idle'}
             onClick={() => onValueChange(null)}
             className={`inline-flex min-h-[36px] items-center rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors
@@ -100,8 +98,7 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
           {values.map((v) => {
             const isActive = value === v
             return (
-              <button
-                data-mbaas-oid="lgbflt6" key={v}
+              <button key={v}
                 type="button"
                 data-state={isActive ? 'active' : 'idle'}
                 onClick={() => onValueChange(v)}

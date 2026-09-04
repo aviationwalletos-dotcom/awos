@@ -157,12 +157,12 @@ export function EntryList({
   const allPageSelected = pagedEntries.length > 0 && pagedEntries.every((e) => selectedIds.has(e.id))
 
   return (
-    <div data-mbaas-oid="lgblst2">
-      <div data-mbaas-oid="h518hq7" className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div data-mbaas-oid="lgblstL" className="flex flex-wrap items-center gap-2.5">
-          <p data-mbaas-oid="lgblst3" className="text-sm text-slate-400">
-            총 <span data-mbaas-oid="lgblst4" className="font-mono-data tabular-nums font-semibold text-ink">{entries.length}</span>건 ·
-            누적 블록타임 <span data-mbaas-oid="lgblst5" className="font-mono-data tabular-nums font-semibold text-ink">{totalHours.toFixed(1)}</span>시간
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <p className="text-sm text-slate-400">
+            총 <span className="font-mono-data tabular-nums font-semibold text-ink">{entries.length}</span>건 ·
+            누적 블록타임 <span className="font-mono-data tabular-nums font-semibold text-ink">{totalHours.toFixed(1)}</span>시간
           </p>
           {pendingSyncCount > 0 && (
             <span
@@ -175,9 +175,8 @@ export function EntryList({
           )}
         </div>
 
-        <div data-mbaas-oid="6f17j5c" className="flex flex-wrap items-center gap-2">
-          <Button
- data-mbaas-oid="9zrokrv" type="button"
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button"
             variant={selectMode ? 'solid' : 'outline'}
             tone="neutral"
             size="sm"
@@ -210,8 +209,7 @@ export function EntryList({
             <Printer className="h-4 w-4" aria-hidden="true" />
             {printLabel}
           </Button>
-          <Button
- data-mbaas-oid="hmmvzx5" type="button"
+          <Button type="button"
             variant="outline"
             tone="danger"
             size="sm"
@@ -225,18 +223,17 @@ export function EntryList({
       </div>
 
       {confirmingDeleteAll && (
-        <div data-mbaas-oid="91qh6lh" role="alert" className="mb-4 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-          <p data-mbaas-oid="ubb5imv" className="text-sm font-medium text-rose-300">
+        <div role="alert" className="mb-4 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+          <p className="text-sm font-medium text-rose-300">
             등록된 모든 비행 기록({totalAccountEntryCount}건)을 삭제하시겠습니까? 되돌릴 수 없습니다.
-            <br data-mbaas-oid="ycfoig4" />
+            <br />
             이 작업은 현재 적용된 필터와 무관하게 이 계정의 모든 비행 기록을 삭제합니다. 필터링된 목록 중 일부만 지우려면 "선택 모드"의 선택 삭제 기능을 이용해 주세요.
           </p>
-          <div data-mbaas-oid="vp6qib0" className="mt-3 flex gap-2">
-            <Button data-mbaas-oid="0dhlju7" type="button" tone="danger" size="sm" onClick={handleConfirmDeleteAll}>
+          <div className="mt-3 flex gap-2">
+            <Button type="button" tone="danger" size="sm" onClick={handleConfirmDeleteAll}>
               삭제 확인
             </Button>
-            <Button
- data-mbaas-oid="p14nptm" type="button"
+            <Button type="button"
               variant="outline"
               tone="neutral"
               size="sm"
@@ -249,9 +246,8 @@ export function EntryList({
       )}
 
       {selectMode && entries.length > 0 && (
-        <div data-mbaas-oid="cx46624" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-control border border-white/10 bg-surface p-3">
-          <button
- data-mbaas-oid="zortjod" type="button"
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-control border border-white/10 bg-surface p-3">
+          <button type="button"
             onClick={toggleSelectAll}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-control px-3 py-2 text-sm font-medium text-ink
               hover:bg-white/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
@@ -261,15 +257,14 @@ export function EntryList({
           </button>
 
           {confirmingDeleteSelected ? (
-            <div data-mbaas-oid="0oyl8ld" role="alert" className="flex flex-wrap items-center gap-2">
-              <span data-mbaas-oid="536998z" className="text-sm font-medium text-rose-300">
+            <div role="alert" className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-rose-300">
                 선택한 {selectedIds.size}건을 삭제하시겠습니까? 되돌릴 수 없습니다.
               </span>
-              <Button data-mbaas-oid="nax9ms6" type="button" tone="danger" size="sm" onClick={handleConfirmDeleteSelected}>
+              <Button type="button" tone="danger" size="sm" onClick={handleConfirmDeleteSelected}>
                 삭제 확인
               </Button>
-              <Button
- data-mbaas-oid="r9c1ete" type="button"
+              <Button type="button"
                 variant="outline"
                 tone="neutral"
                 size="sm"
@@ -279,8 +274,7 @@ export function EntryList({
               </Button>
             </div>
           ) : (
-            <Button
- data-mbaas-oid="whhk6i3" type="button"
+            <Button type="button"
               variant="outline"
               tone="danger"
               size="sm"
@@ -302,22 +296,20 @@ export function EntryList({
         />
       ) : (
         <>
-        <ul data-mbaas-oid="lgblst6" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {pagedEntries.map((entry) => {
             const isSelected = selectedIds.has(entry.id)
             const badges = deriveBadges(entry)
             return (
-              <li data-mbaas-oid="lgblst7" key={entry.id} className="relative">
+              <li key={entry.id} className="relative" data-testid="entry-item" data-entry-date={entry.date}>
                 {selectMode && (
-                  <span
- data-mbaas-oid="w3ditq1" aria-hidden="true"
+                  <span aria-hidden="true"
                     className="pointer-events-none absolute left-4 top-4 z-10 flex h-6 w-6 items-center justify-center rounded border border-white/15 bg-panel"
                   >
                     {isSelected && <CheckSquare className="h-4 w-4 text-sky" aria-hidden="true" />}
                   </span>
                 )}
-                <button
-                  data-mbaas-oid="lgblst8" type="button"
+                <button type="button"
                   role={selectMode ? 'checkbox' : undefined}
                   aria-checked={selectMode ? isSelected : undefined}
                   onClick={() => (selectMode ? toggleEntrySelected(entry.id) : onSelect(entry))}
@@ -326,13 +318,12 @@ export function EntryList({
                     ${selectMode ? 'pl-12' : ''}
                     ${isSelected ? 'border-sky ring-1 ring-sky' : 'border-white/10 hover:border-sky'}`}
                 >
-                  <div data-mbaas-oid="lgblst9" className="flex items-center justify-between gap-2">
-                    <span data-mbaas-oid="a9r2icw" className="font-mono-data tabular-nums text-sm font-semibold text-ink">{entry.date}</span>
-                    <span data-mbaas-oid="qrvj1hd" className="flex items-center gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono-data tabular-nums text-sm font-semibold text-ink">{entry.date}</span>
+                    <span className="flex items-center gap-1.5">
                       {badges.map((badge) => (
                         <span
                           key={badge}
-                          data-mbaas-oid="630c1cu"
                           className={`rounded-control px-2.5 py-1 text-xs font-bold ${CATEGORY_BADGE[badge]}`}
                         >
                           {badge}
@@ -341,33 +332,32 @@ export function EntryList({
                     </span>
                   </div>
 
-                  <div data-mbaas-oid="0uwrum6" className="mt-3 flex items-center gap-2 text-sm text-slate-400">
+                  <div className="mt-3 flex items-center gap-2 text-sm text-slate-400">
                     <PlaneTakeoff className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                    <span data-mbaas-oid="9ldnzh0" className="font-mono-data">{entry.departure}</span>
-                    <span data-mbaas-oid="dvdm2t4" aria-hidden="true">→</span>
+                    <span className="font-mono-data">{entry.departure}</span>
+                    <span aria-hidden="true">→</span>
                     <PlaneLanding className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                    <span data-mbaas-oid="0o59f6m" className="font-mono-data">{entry.arrival}</span>
+                    <span className="font-mono-data">{entry.arrival}</span>
                   </div>
 
-                  <div data-mbaas-oid="jnsa4mi" className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <span data-mbaas-oid="7bk85y1" className="text-sm font-medium text-ink">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-ink">
                       {entry.aircraftType}
                       {entry.aircraftIdentification && (
-                        <span data-mbaas-oid="82py1p1" className="ml-1.5 font-mono-data text-xs font-normal text-slate-400">{entry.aircraftIdentification}</span>
+                        <span className="ml-1.5 font-mono-data text-xs font-normal text-slate-400">{entry.aircraftIdentification}</span>
                       )}
                     </span>
                   </div>
 
-                  <p data-mbaas-oid="dk1wam7" className="mt-2 font-mono-data tabular-nums text-sm text-slate-400">
+                  <p className="mt-2 font-mono-data tabular-nums text-sm text-slate-400">
                     {(entry.groundTrainerTime ?? 0) > 0 && entry.blockTime === 0
                       ? `시뮬레이터 ${(entry.groundTrainerTime ?? 0).toFixed(1)}시간${entry.simDevice ? ` · ${entry.simDevice}` : ''}`
                       : `블록타임 ${entry.blockTime.toFixed(1)}시간`}
                   </p>
 
-                  <div data-mbaas-oid="97d5akg" className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     {!entry.syncPostId && (
-                      <span
-                        data-mbaas-oid="synp3nd" className="inline-flex items-center gap-1 rounded-control bg-white/[0.07] px-2.5 py-1 text-xs font-bold text-slate-400"
+                      <span className="inline-flex items-center gap-1 rounded-control bg-white/[0.07] px-2.5 py-1 text-xs font-bold text-slate-400"
                         title="아직 서버에 저장되지 않아 다른 기기에서 보이지 않을 수 있습니다. 잠시 후 자동으로 다시 시도합니다."
                       >
                         <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
@@ -404,20 +394,18 @@ export function EntryList({
         </ul>
 
         {totalPages > 1 && (
-          <div data-mbaas-oid="lgbpgn1" className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-            <Button
-              data-mbaas-oid="lgbpgn2" type="button" variant="outline" tone="neutral" size="sm"
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+            <Button type="button" variant="outline" tone="neutral" size="sm"
               disabled={currentPage === 0}
               onClick={() => setCurrentPage((page) => Math.max(0, page - 1))}
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               이전
             </Button>
-            <p data-mbaas-oid="lgbpgn3" className="font-mono-data text-xs tabular-nums text-slate-400">
+            <p className="font-mono-data text-xs tabular-nums text-slate-400">
               {currentPage + 1} / 총 {totalPages}페이지
             </p>
-            <Button
-              data-mbaas-oid="lgbpgn4" type="button" variant="outline" tone="neutral" size="sm"
+            <Button type="button" variant="outline" tone="neutral" size="sm"
               disabled={currentPage >= totalPages - 1}
               onClick={() => setCurrentPage((page) => Math.min(totalPages - 1, page + 1))}
             >

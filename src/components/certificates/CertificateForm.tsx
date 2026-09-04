@@ -325,42 +325,40 @@ export function CertificateForm({
   }
 
   return (
-    <form data-mbaas-oid="bqneq6d" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
+    <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
 
-      <div data-mbaas-oid="80lnxep" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div data-mbaas-oid="mssw6s8">
-          <label data-mbaas-oid="sr99yaw" htmlFor="category" className={labelClass}>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="category" className={labelClass}>
             구분
           </label>
-          <select
-            data-mbaas-oid="aedln6o" id="category"
+          <select id="category"
             name="category"
             value={category}
             onChange={(e) => handleCategoryChange(e.target.value as CertificateCategory)}
             className={inputClass}
           >
             {categories.map((c) => (
-              <option data-mbaas-oid="xm36egu" key={c} value={c}>
+              <option key={c} value={c}>
                 {CATEGORY_OPTION_LABEL[c] ?? c}
               </option>
             ))}
           </select>
-          <p data-mbaas-oid="trkhint" className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 자격으로 등록됩니다.</p>
+          <p className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 자격으로 등록됩니다.</p>
         </div>
 
         {subTypes.length > 0 && (
-          <div data-mbaas-oid="tkpsfji">
-            <label data-mbaas-oid="dumjtel" htmlFor="sub-type" className={labelClass}>
+          <div>
+            <label htmlFor="sub-type" className={labelClass}>
               세부 종류
             </label>
-            <select
-              data-mbaas-oid="5evy6af" id="sub-type"
+            <select id="sub-type"
               value={subKey}
               onChange={(e) => handleSubChange(e.target.value)}
               className={inputClass}
             >
               {subTypes.map((t) => (
-                <option data-mbaas-oid="7s40zvb" key={t.key} value={t.key}>
+                <option key={t.key} value={t.key}>
                   {t.label}
                 </option>
               ))}
@@ -369,7 +367,7 @@ export function CertificateForm({
         )}
 
         {hasLicenceNumber && (
-          <div data-mbaas-oid="licno">
+          <div>
             <label htmlFor="licenceNumber" className={labelClass}>자격번호 <span className="text-slate-500">(III. SERIAL NO.)</span></label>
             <input
               id="licenceNumber"
@@ -387,7 +385,7 @@ export function CertificateForm({
 
         {isRatingCategory && (
           <>
-            <div data-mbaas-oid="rtlink" className="sm:col-span-2">
+            <div className="sm:col-span-2">
               <label htmlFor="rt-link" className={labelClass}>어느 자격증명에 추가하나요?</label>
               {licenceOptions.length > 0 ? (
                 <select id="rt-link" value={linkedId} onChange={(e) => setLinkedId(e.target.value)} className={inputClass}>
@@ -401,7 +399,7 @@ export function CertificateForm({
                 </p>
               )}
             </div>
-            <div data-mbaas-oid="rtcat">
+            <div>
               <label htmlFor="rt-cat" className={labelClass}>종류</label>
               <select id="rt-cat" value={aircraftCategory} onChange={(e) => setAircraftCategory(e.target.value as 'AIRPLANE' | 'HELICOPTER')} className={inputClass}>
                 <option value="AIRPLANE">비행기</option>
@@ -409,7 +407,7 @@ export function CertificateForm({
               </select>
             </div>
             {aircraftCategory === 'AIRPLANE' && (
-              <div data-mbaas-oid="rtcls">
+              <div>
                 <label htmlFor="rt-cls" className={labelClass}>등급</label>
                 <select id="rt-cls" value={classRating} onChange={(e) => setClassRating(e.target.value as 'SEL' | 'MEL' | 'SES' | 'MES')} className={inputClass}>
                   <option value="SEL">육상단발(SEL)</option>
@@ -419,7 +417,7 @@ export function CertificateForm({
                 </select>
               </div>
             )}
-            <div data-mbaas-oid="rttype" className={aircraftCategory === 'AIRPLANE' ? '' : 'sm:col-span-1'}>
+            <div className={aircraftCategory === 'AIRPLANE' ? '' : 'sm:col-span-1'}>
               <label htmlFor="rt-type" className={labelClass}>형식 <span className="text-slate-500">(있으면, 예: B737)</span></label>
               <input id="rt-type" type="text" value={typeRating} onChange={(e) => setTypeRating(e.target.value)} placeholder="없으면 비워 두세요" className={`${inputClass} font-mono-data`} />
             </div>
@@ -428,11 +426,11 @@ export function CertificateForm({
 
         {isLicenceCategory && (
           <>
-            <div data-mbaas-oid="liclim" className="sm:col-span-2">
+            <div className="sm:col-span-2">
               <label htmlFor="limitations" className={labelClass}>제한사항 <span className="text-slate-500">(XIII. LIMITATIONS, 없으면 비워 두세요)</span></label>
               <input id="limitations" name="limitations" type="text" defaultValue={initialValues?.limitations} className={inputClass} />
             </div>
-            <div data-mbaas-oid="liccat">
+            <div>
               <label htmlFor="lic-cat" className={labelClass}>종류 한정</label>
               <select id="lic-cat" value={aircraftCategory} onChange={(e) => setAircraftCategory(e.target.value as 'AIRPLANE' | 'HELICOPTER')} className={inputClass}>
                 <option value="AIRPLANE">비행기</option>
@@ -440,7 +438,7 @@ export function CertificateForm({
               </select>
             </div>
             {aircraftCategory === 'AIRPLANE' && (
-              <div data-mbaas-oid="liccls">
+              <div>
                 <label htmlFor="lic-cls" className={labelClass}>등급 한정</label>
                 <select id="lic-cls" value={classRating} onChange={(e) => setClassRating(e.target.value as 'SEL' | 'MEL' | 'SES' | 'MES')} className={inputClass}>
                   <option value="SEL">육상단발(SEL)</option>
@@ -457,20 +455,19 @@ export function CertificateForm({
         )}
 
         {category === '무선통신사' && (
-          <p data-mbaas-oid="commntc" className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
-            무선통신사는 <span data-mbaas-oid="commntc2" className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며, 발급 5년이 지나면
+          <p className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
+            무선통신사는 <span className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며, 발급 5년이 지나면
             교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리됩니다.
           </p>
         )}
       </div>
 
       {currentSub?.requiresDetail && (
-        <div data-mbaas-oid="gkbgsj8">
-          <label data-mbaas-oid="rb5s77p" htmlFor="rating-detail" className={labelClass}>
+        <div>
+          <label htmlFor="rating-detail" className={labelClass}>
             {category === '한정' ? '기종명' : '세부 표기'}
           </label>
-          <input
-            data-mbaas-oid="frpv77y" id="rating-detail"
+          <input id="rating-detail"
             type="text"
             value={subDetail}
             onChange={(e) => handleDetailChange(e.target.value)}
@@ -480,14 +477,13 @@ export function CertificateForm({
         </div>
       )}
 
-      <div data-mbaas-oid="uls9jyx">
-        <label data-mbaas-oid="6f3kux3" htmlFor="name" className={labelClass}>
+      <div>
+        <label htmlFor="name" className={labelClass}>
           자격/면허 명칭
         </label>
         {isFreeText ? (
           <>
-            <input
-              data-mbaas-oid="q0shiuh" id="name"
+            <input id="name"
               name="name"
               type="text"
               value={nameValue}
@@ -497,29 +493,28 @@ export function CertificateForm({
               aria-invalid={Boolean(errors.name)}
               aria-describedby={errors.name ? 'cert-name-error' : undefined}
             />
-            <p data-mbaas-oid="ar45ett" className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류를 선택하면 자동으로 채워지며, 필요하면 직접 수정할 수 있습니다.</p>
+            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류를 선택하면 자동으로 채워지며, 필요하면 직접 수정할 수 있습니다.</p>
           </>
         ) : (
           <>
-            <p data-mbaas-oid="q0shiuh" className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
+            <p className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               {nameValue}
             </p>
-            <p data-mbaas-oid="ar45ett" className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류 선택에 따라 자동으로 결정되며, 정확한 인식을 위해 직접 수정할 수 없습니다.</p>
+            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류 선택에 따라 자동으로 결정되며, 정확한 인식을 위해 직접 수정할 수 없습니다.</p>
           </>
         )}
         {errors.name && (
-          <p data-mbaas-oid="nwe9swx" id="cert-name-error" className="mt-1.5 text-xs text-rose-600">
+          <p id="cert-name-error" className="mt-1.5 text-xs text-rose-600">
             {errors.name}
           </p>
         )}
       </div>
 
-      <div data-mbaas-oid="nqb9cou">
-        <label data-mbaas-oid="5ekeo7m" htmlFor="issuer" className={labelClass}>
+      <div>
+        <label htmlFor="issuer" className={labelClass}>
           발급기관
         </label>
-        <input
-          data-mbaas-oid="hn4kd4n" id="issuer"
+        <input id="issuer"
           name="issuer"
           type="text"
           value={issuerValue}
@@ -530,19 +525,18 @@ export function CertificateForm({
           aria-describedby={errors.issuer ? 'issuer-error' : undefined}
         />
         {errors.issuer && (
-          <p data-mbaas-oid="zsvx3v8" id="issuer-error" className="mt-1.5 text-xs text-rose-600">
+          <p id="issuer-error" className="mt-1.5 text-xs text-rose-600">
             {errors.issuer}
           </p>
         )}
       </div>
 
-      <div data-mbaas-oid="rsjqdii" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div data-mbaas-oid="6l5uvpj">
-          <label data-mbaas-oid="ou60l4c" htmlFor="issuedDate" className={labelClass}>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="issuedDate" className={labelClass}>
             발급일
           </label>
-          <input
-            data-mbaas-oid="66xlepx" id="issuedDate"
+          <input id="issuedDate"
             name="issuedDate"
             type="date"
             defaultValue={initialValues?.issuedDate}
@@ -553,19 +547,18 @@ export function CertificateForm({
               onChange={(e) => autofillExpiry(e.target.value)}
             />
           {errors.issuedDate && (
-            <p data-mbaas-oid="nuy6rc8" id="issuedDate-error" className="mt-1.5 text-xs text-rose-600">
+            <p id="issuedDate-error" className="mt-1.5 text-xs text-rose-600">
               {errors.issuedDate}
             </p>
           )}
         </div>
 
         {showExpiryField ? (
-          <div data-mbaas-oid="r62epkp">
-            <label data-mbaas-oid="j0cwgi7" htmlFor="expiryDate" className={labelClass}>
+          <div>
+            <label htmlFor="expiryDate" className={labelClass}>
               만료일{expiryRequirement === 'optional' ? ' (선택)' : ''}
             </label>
-            <input
-              data-mbaas-oid="nrqw1n0" id="expiryDate"
+            <input id="expiryDate"
               name="expiryDate"
               type="date"
               defaultValue={initialValues?.expiryDate}
@@ -574,45 +567,44 @@ export function CertificateForm({
               aria-describedby={errors.expiryDate ? 'expiryDate-error' : undefined}
             />
             {category === '항공신체검사' && medicalNote && (
-              <p data-mbaas-oid="medauto1" className="mt-1.5 text-xs text-slate-400">
-                발급일을 넣으면 <span data-mbaas-oid="medauto2" className="font-semibold text-slate-300">별표 8 기준 {medicalNote.months}개월</span>, 월말 만료 원칙으로 자동 계산돼요(수정 가능).
+              <p className="mt-1.5 text-xs text-slate-400">
+                발급일을 넣으면 <span className="font-semibold text-slate-300">별표 8 기준 {medicalNote.months}개월</span>, 월말 만료 원칙으로 자동 계산돼요(수정 가능).
                 {medicalNote.assumedAge && (
-                  <span data-mbaas-oid="medauto3" className="text-amber-300"> 생년월일이 없어 가장 짧은 기간으로 잡았어요. 계정정보에 생년월일을 넣으면 정확해집니다.</span>
+                  <span className="text-amber-300"> 생년월일이 없어 가장 짧은 기간으로 잡았어요. 계정정보에 생년월일을 넣으면 정확해집니다.</span>
                 )}
               </p>
             )}
             {category === '항공영어구술능력증명' && (
-              <p data-mbaas-oid="eptaauto1" className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 text-xs text-slate-400">
                 4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③). 6등급은 만료일을 비워 두세요.
               </p>
             )}
             {errors.expiryDate && (
-              <p data-mbaas-oid="9ll421d" id="expiryDate-error" className="mt-1.5 text-xs text-rose-600">
+              <p id="expiryDate-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.expiryDate}
               </p>
             )}
             {category === '항공신체검사' && (
-              <p data-mbaas-oid="w0ombtm" className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 text-xs text-slate-400">
                 월말 만료 원칙: 계산된 만료일이 그 달의 말일이 아니면 그 달 말일까지 유효합니다.
               </p>
             )}
           </div>
         ) : (
-          <div data-mbaas-oid="opahh8c">
-            <span data-mbaas-oid="af0b0s7" className={labelClass}>만료일</span>
-            <p data-mbaas-oid="q4jbu0j" className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
+          <div>
+            <span className={labelClass}>만료일</span>
+            <p className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               이 자격은 만료 개념이 없습니다.
             </p>
           </div>
         )}
       </div>
 
-      <div data-mbaas-oid="id8isqe">
-        <label data-mbaas-oid="ctzumuc" htmlFor="cert-notes" className={labelClass}>
+      <div>
+        <label htmlFor="cert-notes" className={labelClass}>
           메모 (선택)
         </label>
-        <textarea
-          data-mbaas-oid="gorpfwu" id="cert-notes"
+        <textarea id="cert-notes"
           name="notes"
           rows={3}
           defaultValue={initialValues?.notes}
@@ -621,30 +613,29 @@ export function CertificateForm({
         />
       </div>
 
-        <div data-mbaas-oid="crtfile0">
-          <span data-mbaas-oid="crtfile1" className={labelClass}>자격증 사진 (이미지 또는 PDF)</span>
-          <input
-            data-mbaas-oid="crtfile2" type="file"
+        <div>
+          <span className={labelClass}>자격증 사진 (이미지 또는 PDF)</span>
+          <input type="file"
             accept="image/*,application/pdf,.pdf"
             onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
             className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
           />
-          <p data-mbaas-oid="crtfile3" className="mt-1.5 text-xs text-slate-400">
+          <p className="mt-1.5 text-xs text-slate-400">
             {mode === 'create'
               ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'
               : '수정 시에는 첨부하지 않아도 됩니다. 재인증은 상세 화면에서 요청하세요.'}
           </p>
           {errors.approvalFile && (
-            <p data-mbaas-oid="crtfile4" className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
+            <p className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
           )}
         </div>
 
-      <div data-mbaas-oid="jn9x7gq" className="flex flex-wrap gap-3">
-        <Button data-mbaas-oid="zq3xs96" type="submit" size="md">
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit" size="md" data-testid="cert-submit">
           {mode === 'create' ? '자격증 등록하기' : '수정 내용 저장하기'}
         </Button>
         {onCancel && (
-          <Button data-mbaas-oid="6hffssj" type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
+          <Button type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
             취소
           </Button>
         )}

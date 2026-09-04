@@ -498,7 +498,10 @@ async function handleSignup(body: Record<string, unknown> | null): Promise<Respo
   const session = data.session
   if (!session) {
     // 이메일 인증(Confirm email) 사용 중 — 인증 메일이 발송되었고, 인증 완료 시 프로필이 자동 생성된다.
-    return ok({ pending_verification: true, user_id: email })
+    // [주의] 이미 가입된(미인증 포함) 이메일이면 Supabase는 오류 없이 identities 가 빈 사용자를 돌려주고 메일은 보내지 않는다.
+    //        이 경우를 "보냈어요"로 안내하면 사용자는 메일을 기다리기만 하게 된다.
+    const alreadyRegistered = Array.isArray(data.user?.identities) && data.user.identities.length === 0
+    return ok({ pending_verification: true, user_id: email, already_registered: alreadyRegistered })
   }
 
   const client = dataClientFor(session.access_token)

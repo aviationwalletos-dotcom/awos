@@ -39,8 +39,27 @@ export async function fetchLinkedProviders(): Promise<string[]> {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
   })
   if (!res.ok) return []
-  const body = (await res.json()) as { identities?: Array<{ provider: string }> }
-  return [...new Set((body.identities ?? []).map((i) => i.provider))]
+  const body = (await res.json()) as { identities?: Array<{ provider: string }>; app_metadata?: { providers?: string[] } }
+  // 소셜 계정에 비밀번호를 설정하면 identities 에는 안 나오고 app_metadata.providers 에 'email' 이 추가된다
+  return [...new Set([...(body.identities ?? []).map((i) => i.provider), ...(body.app_metadata?.providers ?? [])])]
+}
+
+/**
+ * 소셜 로그인 계정에 비밀번호를 설정해 이메일 로그인도 가능하게 한다(이메일 로그인 연결).
+ * 계정 이메일(auth.users.email)이 있어야 한다 — 카카오로만 가입해 이메일이 없는 계정은 먼저 계정 이메일 등록 필요.
+ */
+export async function linkEmailLoginWithPassword(password: string): Promise<void> {
+  const token = getAuthedAccessToken()
+  if (!token) throw new Error('로그인이 필요합니다.')
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: 'PUT',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { msg?: string; error_description?: string; message?: string }
+    throw new Error(body.msg || body.error_description || body.message || `설정 실패 (${res.status})`)
+  }
 }
 
 /** auth.users.email 과 소셜 identity 이메일을 함께 돌려준다 */

@@ -16,15 +16,15 @@ interface ComplianceSectionProps {
  */
 export function ComplianceSection({ title, description, items }: ComplianceSectionProps) {
   return (
-    <div data-mbaas-oid="cplsec1">
-      <div data-mbaas-oid="cplsec2" className="flex items-start gap-2">
+    <div>
+      <div className="flex items-start gap-2">
         <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-        <div data-mbaas-oid="cplsec3">
-          <h3 data-mbaas-oid="cplsec4" className="font-display text-lg font-extrabold text-ink">
+        <div>
+          <h3 className="font-display text-lg font-extrabold text-ink">
             {title}
           </h3>
           {description && (
-            <p data-mbaas-oid="cplsec5" className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-slate-400">
               {description}
             </p>
           )}
@@ -32,7 +32,6 @@ export function ComplianceSection({ title, description, items }: ComplianceSecti
       </div>
 
       <div
-        data-mbaas-oid="cplsec6"
         className="mt-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 p-4 text-xs text-amber-300"
       >
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -40,7 +39,7 @@ export function ComplianceSection({ title, description, items }: ComplianceSecti
         재확인해야 합니다.
       </div>
 
-      <div data-mbaas-oid="cplsec7" className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {items.map((item) => (
           <RequirementCard key={item.key} item={item} />
         ))}

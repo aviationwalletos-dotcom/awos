@@ -68,14 +68,13 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
   }
 
   return (
-    <form data-mbaas-oid="wlgfrm1" noValidate onSubmit={handleSubmit} className="space-y-5">
-      <div data-mbaas-oid="wlgfrm2" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div data-mbaas-oid="wlgfrm3">
-          <label data-mbaas-oid="wlgfrm4" htmlFor="wl-date" className={labelClass}>
+    <form noValidate onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="wl-date" className={labelClass}>
             {copy.dateLabel}
           </label>
-          <input
-            data-mbaas-oid="wlgfrm5" id="wl-date"
+          <input id="wl-date"
             name="date"
             type="date"
             defaultValue={initialValues?.date}
@@ -84,18 +83,17 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
             aria-describedby={errors.date ? 'wl-date-error' : undefined}
           />
           {errors.date && (
-            <p data-mbaas-oid="wlgfrm6" id="wl-date-error" className="mt-1.5 text-xs text-rose-600">
+            <p id="wl-date-error" className="mt-1.5 text-xs text-rose-600">
               {errors.date}
             </p>
           )}
         </div>
 
-        <div data-mbaas-oid="wlgfrm7">
-          <label data-mbaas-oid="wlgfrm8" htmlFor="wl-hours" className={labelClass}>
+        <div>
+          <label htmlFor="wl-hours" className={labelClass}>
             {copy.hoursLabel}
           </label>
-          <input
-            data-mbaas-oid="wlgfrm9" id="wl-hours"
+          <input id="wl-hours"
             name="hours"
             type="number"
             step="0.1"
@@ -106,12 +104,11 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
         </div>
       </div>
 
-      <div data-mbaas-oid="wlgfrma">
-        <label data-mbaas-oid="wlgfrmb" htmlFor="wl-target" className={labelClass}>
+      <div>
+        <label htmlFor="wl-target" className={labelClass}>
           {copy.targetLabel}
         </label>
-        <input
-          data-mbaas-oid="wlgfrmc" id="wl-target"
+        <input id="wl-target"
           name="targetLabel"
           type="text"
           defaultValue={initialValues?.targetLabel}
@@ -121,18 +118,17 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
           aria-describedby={errors.targetLabel ? 'wl-target-error' : undefined}
         />
         {errors.targetLabel && (
-          <p data-mbaas-oid="wlgfrmd" id="wl-target-error" className="mt-1.5 text-xs text-rose-600">
+          <p id="wl-target-error" className="mt-1.5 text-xs text-rose-600">
             {errors.targetLabel}
           </p>
         )}
       </div>
 
-      <div data-mbaas-oid="wlgfrme">
-        <label data-mbaas-oid="wlgfrmf" htmlFor="wl-detail" className={labelClass}>
+      <div>
+        <label htmlFor="wl-detail" className={labelClass}>
           {copy.detailLabel}
         </label>
-        <textarea
-          data-mbaas-oid="wlgfrmg" id="wl-detail"
+        <textarea id="wl-detail"
           name="taskDetail"
           rows={3}
           defaultValue={initialValues?.taskDetail}
@@ -142,30 +138,28 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
           aria-describedby={errors.taskDetail ? 'wl-detail-error' : undefined}
         />
         {errors.taskDetail && (
-          <p data-mbaas-oid="wlgfrmh" id="wl-detail-error" className="mt-1.5 text-xs text-rose-600">
+          <p id="wl-detail-error" className="mt-1.5 text-xs text-rose-600">
             {errors.taskDetail}
           </p>
         )}
       </div>
 
       {copy.showVerified && (
-        <label data-mbaas-oid="wlgfrmi" className="flex min-h-[44px] items-start gap-2 text-sm text-slate-400">
-          <input
- data-mbaas-oid="wlgfrmj" type="checkbox"
+        <label className="flex min-h-[44px] items-start gap-2 text-sm text-slate-400">
+          <input type="checkbox"
             checked={verified}
             onChange={(e) => setVerified(e.target.checked)}
             className="mt-0.5 h-4 w-4 rounded border-white/15 text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
           />
-          <span data-mbaas-oid="wlgfrmk">{copy.verifiedLabel}</span>
+          <span>{copy.verifiedLabel}</span>
         </label>
       )}
 
-      <div data-mbaas-oid="wlgfrml">
-        <label data-mbaas-oid="wlgfrmm" htmlFor="wl-notes" className={labelClass}>
+      <div>
+        <label htmlFor="wl-notes" className={labelClass}>
           비고 (선택)
         </label>
-        <textarea
-          data-mbaas-oid="wlgfrmn" id="wl-notes"
+        <textarea id="wl-notes"
           name="notes"
           rows={2}
           defaultValue={initialValues?.notes}
@@ -174,12 +168,12 @@ export function WorkLogForm({ mode, copy, initialValues, onSubmit, onCancel }: W
         />
       </div>
 
-      <div data-mbaas-oid="wlgfrmo" className="flex flex-wrap gap-3">
-        <Button data-mbaas-oid="wlgfrmp" type="submit" size="md">
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit" size="md">
           {mode === 'create' ? '기록 추가하기' : '수정 내용 저장하기'}
         </Button>
         {onCancel && (
-          <Button data-mbaas-oid="wlgfrmq" type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
+          <Button type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
             취소
           </Button>
         )}

@@ -64,35 +64,33 @@ export function InstitutionSelect({
   const customId = `${idPrefix}-custom`
 
   return (
-    <div data-mbaas-oid="insts01" className="flex flex-col gap-1.5">
-      <label data-mbaas-oid="insts02" htmlFor={selectId} className="text-xs font-semibold text-slate-300">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={selectId} className="text-xs font-semibold text-slate-300">
         {label}
         {!required && ' (선택)'}
       </label>
-      <select
-        data-mbaas-oid="insts03" id={selectId}
+      <select id={selectId}
         value={selected}
         onChange={(e) => handleSelectChange(e.target.value)}
         className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white
           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
       >
-        <option data-mbaas-oid="insts04" value="" disabled>
+        <option value="" disabled>
           소속 기관을 선택해주세요
         </option>
         {INSTITUTION_OPTIONS.map((option) => (
-          <option data-mbaas-oid="insts05" key={option} value={option}>
+          <option key={option} value={option}>
             {option}
           </option>
         ))}
       </select>
 
       {selected === INSTITUTION_OTHER_VALUE && (
-        <div data-mbaas-oid="insts06" className="flex flex-col gap-1.5">
-          <label data-mbaas-oid="insts07" htmlFor={customId} className="text-xs font-semibold text-slate-300">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={customId} className="text-xs font-semibold text-slate-300">
             기관명 직접 입력
           </label>
-          <input
-            data-mbaas-oid="insts08" id={customId}
+          <input id={customId}
             type="text"
             value={customValue}
             onChange={(e) => handleCustomChange(e.target.value)}
@@ -104,7 +102,7 @@ export function InstitutionSelect({
       )}
 
       {helperText && (
-        <p data-mbaas-oid="insts09" className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400">
           {helperText}
         </p>
       )}

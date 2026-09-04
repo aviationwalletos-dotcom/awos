@@ -26,14 +26,13 @@ export function Roles() {
   const Icon = ROLE_ICONS[active]
 
   return (
-    <section data-mbaas-oid="4xikbic" id="roles" className="bg-surface py-[clamp(80px,10vw,160px)]">
-      <div data-mbaas-oid="i3xwj5r" className="mx-auto max-w-7xl px-6">
+    <section id="roles" className="bg-surface py-[clamp(80px,10vw,160px)]">
+      <div className="mx-auto max-w-7xl px-6">
         <Reveal>
-          <p data-mbaas-oid="y7aqpud" className="text-sm font-semibold uppercase tracking-wide text-[#00D4FF]">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#00D4FF]">
             역할별 기능 쇼케이스
           </p>
-          <h2
-            data-mbaas-oid="7w74j0c" className="mt-3 max-w-2xl font-display font-extrabold text-ink"
+          <h2 className="mt-3 max-w-2xl font-display font-extrabold text-ink"
             style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.02em' }}
           >
             역할마다 다른 자격, 하나의 검증 화면
@@ -41,13 +40,12 @@ export function Roles() {
         </Reveal>
 
         <Reveal className="mt-10">
-          <div data-mbaas-oid="vfmha10" role="tablist" aria-label="역할 선택" className="flex flex-wrap gap-2">
+          <div role="tablist" aria-label="역할 선택" className="flex flex-wrap gap-2">
             {ROLES.map((r) => {
               const RIcon = ROLE_ICONS[r.key]
               const isActive = r.key === active
               return (
-                <button
-                  data-mbaas-oid="vydaug1" key={r.key}
+                <button key={r.key}
                   role="tab"
                   type="button"
                   aria-selected={isActive}
@@ -66,26 +64,24 @@ export function Roles() {
         </Reveal>
 
         <Reveal className="mt-6">
-          <div
-            data-mbaas-oid="v4eu73u" role="tabpanel"
+          <div role="tabpanel"
             className={`rounded-card border-2 bg-panel p-cardpad transition-colors duration-300 ${ACTIVE_BORDER[active]}`}
           >
-            <div data-mbaas-oid="wxi6zl0" className="flex flex-col gap-6 sm:flex-row sm:items-start">
-              <span data-mbaas-oid="uqjze19" className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-card ${role.bgClass} ${role.colorClass}`}>
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-card ${role.bgClass} ${role.colorClass}`}>
                 <Icon className="h-8 w-8" aria-hidden="true" />
               </span>
-              <div data-mbaas-oid="w6nthmm" className="flex-1">
-                <h3 data-mbaas-oid="d5spkbe" className={`text-xl font-bold ${role.colorClass}`}>{role.name}</h3>
-                <p data-mbaas-oid="d0ng4b7" className="mt-2 text-sm text-slate-400">{role.summary}</p>
+              <div className="flex-1">
+                <h3 className={`text-xl font-bold ${role.colorClass}`}>{role.name}</h3>
+                <p className="mt-2 text-sm text-slate-400">{role.summary}</p>
 
-                <ul data-mbaas-oid="os43tfx" className="mt-6 divide-y divide-white/10">
+                <ul className="mt-6 divide-y divide-white/10">
                   {role.credentials.map((c) => (
-                    <li data-mbaas-oid="4rzakh7" key={c.label} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                      <span data-mbaas-oid="vby5m27" className="text-sm font-medium text-ink">{c.label}</span>
-                      <div data-mbaas-oid="w1cb5oh" className="flex items-center gap-3">
-                        <span data-mbaas-oid="mnd1ebo" className="font-mono-data tabular-nums text-sm text-slate-400">{c.expiry}</span>
-                        <span
-                          data-mbaas-oid="epe5mfc" className={`rounded-control px-2.5 py-1 text-xs font-bold ${
+                    <li key={c.label} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <span className="text-sm font-medium text-ink">{c.label}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono-data tabular-nums text-sm text-slate-400">{c.expiry}</span>
+                        <span className={`rounded-control px-2.5 py-1 text-xs font-bold ${
                             c.status === 'GO' ? 'bg-go/10 text-go' : 'bg-amber-400/15 text-amber-300'
                           }`}
                         >

@@ -64,10 +64,9 @@ export function StatusBadge({ tone, label, icon: Icon, dot = false, surface = 'l
   const toneClass = (bordered ? BORDER_CLASSES : FILL_CLASSES)[surface][tone]
   return (
     <span
-      data-mbaas-oid="stbdg01"
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-control px-2.5 py-1 text-xs font-bold ${toneClass} ${className}`}
     >
-      {dot && <span data-mbaas-oid="mr3nxnc" className={`h-1.5 w-1.5 rounded-full ${DOT_TONE_CLASS[tone]}`} aria-hidden="true" />}
+      {dot && <span className={`h-1.5 w-1.5 rounded-full ${DOT_TONE_CLASS[tone]}`} aria-hidden="true" />}
       {Icon && <Icon className="h-3.5 w-3.5" aria-hidden={true} />}
       {label}
     </span>

@@ -115,9 +115,9 @@ export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) 
   }
 
   return (
-    <div data-mbaas-oid="sigpad1">
+    <div>
       <canvas
-        data-mbaas-oid="sigpad2"
+        data-testid="signature-pad"
         ref={canvasRef}
         role="img"
         aria-label="교관 서명 입력 영역. 마우스 또는 손가락으로 이 영역에 서명해 주세요."
@@ -130,12 +130,11 @@ export function SignaturePad({ onChange, disabled = false }: SignaturePadProps) 
           disabled ? 'opacity-50' : ''
         }`}
       />
-      <div data-mbaas-oid="sigpad3" className="mt-2 flex items-center justify-between gap-3">
-        <p data-mbaas-oid="sigpad4" className="text-xs text-slate-400">
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-400">
           마우스 또는 손가락으로 서명해 주세요.
         </p>
         <Button
-          data-mbaas-oid="sigpad5"
           type="button"
           variant="outline"
           tone="neutral"

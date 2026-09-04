@@ -352,10 +352,10 @@ export function EntryForm({
   }
 
   return (
-    <form data-mbaas-oid="lgbfrm1" ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
+    <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
       {/* v1.1 — 자격 구분은 상단 전환기 값을 그대로 쓴다(중복 선택 제거). 경량·초경량만 종류를 고른다. */}
       {kindOptions.length > 0 && (
-        <div data-mbaas-oid="kindblk" className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
           <label htmlFor="vehicleKind" className={labelClass}>종류</label>
           <select
             id="vehicleKind"
@@ -369,11 +369,11 @@ export function EntryForm({
               <option key={k.key} value={k.key}>{k.label}</option>
             ))}
           </select>
-          <p data-mbaas-oid="kindhint" className="mt-1.5 text-[11px] text-slate-500">
+          <p className="mt-1.5 text-[11px] text-slate-500">
             {PILOT_TRACK_LABEL[vehicleClass]} 기록 · 종류는 자격 한정 단위라 응시경력 계산에 쓰여요. 경량·초경량은 야간 시간이 저장되지 않습니다.
           </p>
           {isUnmanned && (
-            <p data-mbaas-oid="uasntc" className="mt-1 text-[11px] leading-relaxed text-slate-400">
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
               무인비행장치 기록은 참고·보조 자료예요. 응시·등록용 비행경력은 지도조종자 확인과 교육기관 증명으로만 인정됩니다.
             </p>
           )}
@@ -400,12 +400,12 @@ export function EntryForm({
           역할을 고르고 비행시간을 넣으면 교육·PIC·교관 시간과 야간 시간이 자동으로 채워져요. 직접 고친 값은 덮어쓰지 않아요.
         </p>
         {entryRole === 'student' && hasLicence && (
-          <p data-mbaas-oid="stulic" className="mt-2 text-[11px] text-slate-400">
+          <p className="mt-2 text-[11px] text-slate-400">
             자가용 조종사 자격이 있어 교육 비행도 PIC와 교육 받은 시간에 함께 기록돼요(계기비행증명·사업용 연습).
           </p>
         )}
         {entryRole === 'student' && !hasLicence && (
-          <div data-mbaas-oid="stusolo" className="mt-3 rounded-control border border-white/10 bg-white/[0.03] px-3 py-2.5">
+          <div className="mt-3 rounded-control border border-white/10 bg-white/[0.03] px-3 py-2.5">
             <label className="flex items-start gap-2 text-xs text-slate-200">
               <input
                 type="checkbox"
@@ -428,11 +428,10 @@ export function EntryForm({
         )}
       </div>
 
-      <div data-mbaas-oid="kindwrap" className="space-y-3">
-        <div data-mbaas-oid="kindtgl" className="inline-flex rounded-control border border-white/15 p-1">
+      <div className="space-y-3">
+        <div className="inline-flex rounded-control border border-white/15 p-1">
           {(['flight', 'sim'] as const).map((kind) => (
-            <button
-              data-mbaas-oid="kindbtn" key={kind}
+            <button key={kind}
               type="button"
               onClick={() => setEntryKind(kind)}
               className={`rounded-[7px] px-4 py-1.5 text-sm font-semibold transition-colors ${
@@ -445,17 +444,17 @@ export function EntryForm({
         </div>
         {entryKind === 'sim' && (
           <>
-            <p data-mbaas-oid="simntc" className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
-              시뮬레이터 기록 모드: <span data-mbaas-oid="simntc2" className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리됩니다.
+            <p className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
+              시뮬레이터 기록 모드: <span className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리됩니다.
             </p>
-            <div data-mbaas-oid="simdev" className="mt-3">
+            <div className="mt-3">
               <label htmlFor="simDevice" className={labelClass}>모의비행훈련장치 구분</label>
               <select id="simDevice" name="simDevice" value={simDevice} onChange={(e) => setSimDevice(e.target.value as SimDeviceKind)} className={inputClass}>
                 {(['FFS', 'FTD', 'BATD'] as SimDeviceKind[]).map((d) => (
                   <option key={d} value={d}>{SIM_DEVICE_LABEL[d]}</option>
                 ))}
               </select>
-              <p data-mbaas-oid="simdevntc" className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-slate-500">
                 별표 4 인정 상한이 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치입니다.
               </p>
             </div>
@@ -463,15 +462,14 @@ export function EntryForm({
         )}
       </div>
       {/* 1. 기본 비행 정보 */}
-      <fieldset data-mbaas-oid="upndrix">
-        <legend data-mbaas-oid="2hufkaa" className={sectionTitleClass}>1. 기본 비행 정보</legend>
-        <div data-mbaas-oid="v7hl9id" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div data-mbaas-oid="griq25e">
-            <label data-mbaas-oid="kupuhfh" htmlFor="date" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>1. 기본 비행 정보</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="date" className={labelClass}>
               비행 날짜
             </label>
-            <input
-              data-mbaas-oid="xsva53y" id="date"
+            <input id="date"
               name="date"
               type="date"
               defaultValue={initialValues?.date ?? (mode === 'create' ? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) : undefined)}
@@ -480,18 +478,17 @@ export function EntryForm({
               aria-describedby={errors.date ? 'date-error' : undefined}
             />
             {errors.date && (
-              <p data-mbaas-oid="m4gespv" id="date-error" className="mt-1.5 text-xs text-rose-600">
+              <p id="date-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.date}
               </p>
             )}
           </div>
 
-          <div data-mbaas-oid="ixip8uu">
-            <label data-mbaas-oid="8vsw9v3" htmlFor="aircraftType" className={labelClass}>
+          <div>
+            <label htmlFor="aircraftType" className={labelClass}>
               {aircraftTypeLabel}
             </label>
-            <input
-              data-mbaas-oid="i45irse" id="aircraftType"
+            <input id="aircraftType"
               name="aircraftType"
               type="text"
               defaultValue={initialValues?.aircraftType}
@@ -502,18 +499,17 @@ export function EntryForm({
             />
             <Chips items={aircraftTypeChips} onPick={(v) => setField('aircraftType', v)} />
             {errors.aircraftType && (
-              <p data-mbaas-oid="obspykq" id="aircraftType-error" className="mt-1.5 text-xs text-rose-600">
+              <p id="aircraftType-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.aircraftType}
               </p>
             )}
           </div>
 
-          <div data-mbaas-oid="uu2wexc">
-            <label data-mbaas-oid="ziiht3t" htmlFor="aircraftIdentification" className={labelClass}>
+          <div>
+            <label htmlFor="aircraftIdentification" className={labelClass}>
               {aircraftIdLabel}
             </label>
-            <input
-              data-mbaas-oid="4oqcuzn" id="aircraftIdentification"
+            <input id="aircraftIdentification"
               name="aircraftIdentification"
               type="text"
               defaultValue={initialValues?.aircraftIdentification}
@@ -525,20 +521,19 @@ export function EntryForm({
         </div>
       </fieldset>
 
-      <hr data-mbaas-oid="kc5iv2c" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 2. 출발/도착지 */}
       {entryKind === 'flight' && (<>
 
-      <fieldset data-mbaas-oid="ud2btp7">
-        <legend data-mbaas-oid="bqc9cm6" className={sectionTitleClass}>2. 출발/도착지</legend>
-        <div data-mbaas-oid="ks18sv8" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <div data-mbaas-oid="vxwacz6">
-            <label data-mbaas-oid="xmsexzz" htmlFor="departure" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>2. 출발/도착지</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div>
+            <label htmlFor="departure" className={labelClass}>
               출발지
             </label>
-            <input
-              data-mbaas-oid="ls169tq" id="departure"
+            <input id="departure"
               name="departure"
               type="text"
               defaultValue={initialValues?.departure}
@@ -549,18 +544,17 @@ export function EntryForm({
             />
             <Chips items={departureChips} onPick={(v) => setField('departure', v)} />
             {errors.departure && (
-              <p data-mbaas-oid="cdhrbb8" id="departure-error" className="mt-1.5 text-xs text-rose-600">
+              <p id="departure-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.departure}
               </p>
             )}
           </div>
 
-          <div data-mbaas-oid="ska526m">
-            <label data-mbaas-oid="idsvgjt" htmlFor="arrival" className={labelClass}>
+          <div>
+            <label htmlFor="arrival" className={labelClass}>
               도착지
             </label>
-            <input
-              data-mbaas-oid="opgw01k" id="arrival"
+            <input id="arrival"
               name="arrival"
               type="text"
               defaultValue={initialValues?.arrival}
@@ -571,18 +565,17 @@ export function EntryForm({
             />
             <Chips items={arrivalChips} onPick={(v) => setField('arrival', v)} />
             {errors.arrival && (
-              <p data-mbaas-oid="7pw8fvp" id="arrival-error" className="mt-1.5 text-xs text-rose-600">
+              <p id="arrival-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.arrival}
               </p>
             )}
           </div>
 
-          <div data-mbaas-oid="akojhu9">
-            <label data-mbaas-oid="rordo4b" htmlFor="viaAirports" className={labelClass}>
+          <div>
+            <label htmlFor="viaAirports" className={labelClass}>
               경유 공항 (선택)
             </label>
-            <input
-              data-mbaas-oid="wbmb7je" id="viaAirports"
+            <input id="viaAirports"
               name="viaAirports"
               type="text"
               defaultValue={initialValues?.viaAirports}
@@ -590,7 +583,7 @@ export function EntryForm({
               className={`${inputClass} font-mono-data`}
             />
             <Chips items={viaChips} onPick={(v) => setField('viaAirports', v)} />
-            <p data-mbaas-oid="6uzo4cg" className={sectionHintClass}>여러 곳이면 쉼표로 구분해 입력해 주세요.</p>
+            <p className={sectionHintClass}>여러 곳이면 쉼표로 구분해 입력해 주세요.</p>
           </div>
         </div>
       </fieldset>
@@ -598,20 +591,19 @@ export function EntryForm({
 
       
 
-      <hr data-mbaas-oid="ky79b2k" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 3. 항공기 범주/등급별 시간 */}
       {entryKind === 'flight' && (<>
 
-      <fieldset data-mbaas-oid="6j33a7s">
-        <legend data-mbaas-oid="ekb97da" className={sectionTitleClass}>3. 항공기 범주/등급별 시간 (선택)</legend>
-        <div data-mbaas-oid="qzkj8cz" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div data-mbaas-oid="l9y4wvw">
-            <label data-mbaas-oid="ypwxy5g" htmlFor="singleEngineLand" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>3. 항공기 범주/등급별 시간 (선택)</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label htmlFor="singleEngineLand" className={labelClass}>
               단발육상(시간)
             </label>
-            <input
-              data-mbaas-oid="cuozs2e" id="singleEngineLand"
+            <input id="singleEngineLand"
               name="singleEngineLand"
               onChange={handleTotalInput}
               type="number"
@@ -621,12 +613,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="gcopqp5">
-            <label data-mbaas-oid="od26cij" htmlFor="multiEngineLand" className={labelClass}>
+          <div>
+            <label htmlFor="multiEngineLand" className={labelClass}>
               다발육상(시간)
             </label>
-            <input
-              data-mbaas-oid="jw2zdea" id="multiEngineLand"
+            <input id="multiEngineLand"
               name="multiEngineLand"
               onChange={handleTotalInput}
               type="number"
@@ -636,12 +627,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="owg28b4">
-            <label data-mbaas-oid="vnngu2f" htmlFor="rotorcraftHelicopter" className={labelClass}>
+          <div>
+            <label htmlFor="rotorcraftHelicopter" className={labelClass}>
               회전익(헬리콥터, 시간)
             </label>
-            <input
-              data-mbaas-oid="ohvt2oc" id="rotorcraftHelicopter"
+            <input id="rotorcraftHelicopter"
               name="rotorcraftHelicopter"
               type="number"
               step="0.1"
@@ -650,13 +640,12 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="6qxc3ww" className="grid grid-cols-2 gap-2">
-            <div data-mbaas-oid="jeffjqw">
-              <label data-mbaas-oid="y4mtrj7" htmlFor="categoryOtherLabel" className={labelClass}>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label htmlFor="categoryOtherLabel" className={labelClass}>
                 기타 명칭
               </label>
-              <input
-                data-mbaas-oid="rlfyob9" id="categoryOtherLabel"
+              <input id="categoryOtherLabel"
                 name="categoryOtherLabel"
                 type="text"
                 defaultValue={initialValues?.categoryHours?.otherLabel}
@@ -664,12 +653,11 @@ export function EntryForm({
                 className={inputClass}
               />
             </div>
-            <div data-mbaas-oid="ks1df44">
-              <label data-mbaas-oid="4ojor5l" htmlFor="categoryOtherHours" className={labelClass}>
+            <div>
+              <label htmlFor="categoryOtherHours" className={labelClass}>
                 기타 시간
               </label>
-              <input
-                data-mbaas-oid="q8pj8en" id="categoryOtherHours"
+              <input id="categoryOtherHours"
                 name="categoryOtherHours"
                 type="number"
                 step="0.1"
@@ -685,20 +673,19 @@ export function EntryForm({
 
       
 
-      <hr data-mbaas-oid="7hct34q" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 4. 비행 자격 시간 종류 */}
       {entryKind === 'flight' && (<>
 
-      <fieldset data-mbaas-oid="lh27m71">
-        <legend data-mbaas-oid="946bltl" className={sectionTitleClass}>4. 비행 자격 시간 종류 (선택)</legend>
-        <div data-mbaas-oid="0ly6doh" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div data-mbaas-oid="x7g70vw">
-            <label data-mbaas-oid="ge1kezt" htmlFor="dualReceived" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>4. 비행 자격 시간 종류 (선택)</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label htmlFor="dualReceived" className={labelClass}>
               DUAL RECEIVED(시간)
             </label>
-            <input
-              data-mbaas-oid="o1tmt4a" id="dualReceived"
+            <input id="dualReceived"
               name="dualReceived"
               type="number"
               step="0.1"
@@ -707,12 +694,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="kpv04dy">
-            <label data-mbaas-oid="4byndak" htmlFor="picTime" className={labelClass}>
+          <div>
+            <label htmlFor="picTime" className={labelClass}>
               PILOT-IN-COMMAND(PIC, 시간)
             </label>
-            <input
-              data-mbaas-oid="yqfkcm6" id="picTime"
+            <input id="picTime"
               name="picTime"
               type="number"
               step="0.1"
@@ -721,12 +707,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="sq6xtpe">
-            <label data-mbaas-oid="1zf5lyl" htmlFor="sicTime" className={labelClass}>
+          <div>
+            <label htmlFor="sicTime" className={labelClass}>
               SECOND-IN-COMMAND(SIC, 시간)
             </label>
-            <input
-              data-mbaas-oid="bltt8tv" id="sicTime"
+            <input id="sicTime"
               name="sicTime"
               type="number"
               step="0.1"
@@ -739,12 +724,11 @@ export function EntryForm({
               <span>비행교범상 2인 조종 항공기 — 체크 안 하면 응시경력 산정 시 SIC 시간은 1/2만 인정돼요(시행규칙 제78조)</span>
             </label>
           </div>
-          <div data-mbaas-oid="cv2aa5o">
-            <label data-mbaas-oid="k0jccao" htmlFor="flightInstructorTime" className={labelClass}>
+          <div>
+            <label htmlFor="flightInstructorTime" className={labelClass}>
               AS FLIGHT INSTRUCTOR(시간)
             </label>
-            <input
-              data-mbaas-oid="vj6bjl3" id="flightInstructorTime"
+            <input id="flightInstructorTime"
               name="flightInstructorTime"
               type="number"
               step="0.1"
@@ -759,19 +743,18 @@ export function EntryForm({
 
       
 
-      <hr data-mbaas-oid="aa5e0u7" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 5. 지상훈련장비 */}
       {entryKind === 'sim' && (<>
 
-      <fieldset data-mbaas-oid="ktbegxv">
-        <legend data-mbaas-oid="87l6119" className={sectionTitleClass}>5. 지상훈련장비 — 시뮬레이터 시간 (필수)</legend>
-        <div data-mbaas-oid="sd8q38m" className="mt-3 max-w-xs">
-          <label data-mbaas-oid="g0ys0t0" htmlFor="groundTrainerTime" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>5. 지상훈련장비 — 시뮬레이터 시간 (필수)</legend>
+        <div className="mt-3 max-w-xs">
+          <label htmlFor="groundTrainerTime" className={labelClass}>
             시뮬레이터 시간
           </label>
-          <input
-            data-mbaas-oid="emnngbk" id="groundTrainerTime"
+          <input id="groundTrainerTime"
             name="groundTrainerTime"
             type="number"
             step="0.1"
@@ -782,42 +765,41 @@ export function EntryForm({
         </div>
       
           {errors.groundTrainerTime && (
-            <p data-mbaas-oid="simerr1" className="mt-1.5 text-xs text-rose-400">{errors.groundTrainerTime}</p>
+            <p className="mt-1.5 text-xs text-rose-400">{errors.groundTrainerTime}</p>
           )}
           {/* 시뮬레이터 전용 입력 — 실비행 섹션(6·7·8)이 숨겨져 있어 이름 충돌이 없다 */}
-          <div data-mbaas-oid="simx0" className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div data-mbaas-oid="simx1">
-              <label data-mbaas-oid="simx1l" htmlFor="sim-instrument" className={labelClass}>모의계기 시간 (선택)</label>
-              <input data-mbaas-oid="simx1i" id="sim-instrument" name="simulatedInstrument" type="number" step="0.1" min="0" className={numberInputClass} />
+          <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <label htmlFor="sim-instrument" className={labelClass}>모의계기 시간 (선택)</label>
+              <input id="sim-instrument" name="simulatedInstrument" type="number" step="0.1" min="0" className={numberInputClass} />
             </div>
-            <div data-mbaas-oid="simx2">
-              <label data-mbaas-oid="simx2l" htmlFor="sim-approaches" className={labelClass}>계기 접근 횟수 (선택)</label>
-              <input data-mbaas-oid="simx2i" id="sim-approaches" name="instrumentApproaches" type="number" step="1" min="0" placeholder="예: 2" className={numberInputClass} />
+            <div>
+              <label htmlFor="sim-approaches" className={labelClass}>계기 접근 횟수 (선택)</label>
+              <input id="sim-approaches" name="instrumentApproaches" type="number" step="1" min="0" placeholder="예: 2" className={numberInputClass} />
             </div>
           </div>
-          <div data-mbaas-oid="simx3" className="mt-4">
-            <label data-mbaas-oid="simx3l" htmlFor="sim-notes" className={labelClass}>비고 (선택)</label>
-            <textarea data-mbaas-oid="simx3t" id="sim-notes" name="notes" rows={2} defaultValue={initialValues?.notes} className={inputClass} />
+          <div className="mt-4">
+            <label htmlFor="sim-notes" className={labelClass}>비고 (선택)</label>
+            <textarea id="sim-notes" name="notes" rows={2} defaultValue={initialValues?.notes} className={inputClass} />
           </div>
         </fieldset>
       </>)}
 
       
 
-      <hr data-mbaas-oid="19wzhue" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 6. 비행 조건별 시간 */}
       {entryKind === 'flight' && (<>
 
-      <fieldset data-mbaas-oid="qq8v6t4">
-        <legend data-mbaas-oid="1n59dl8" className={sectionTitleClass}>6. 비행 조건별 시간 (선택)</legend>
-        <div data-mbaas-oid="i8ktosd" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <div data-mbaas-oid="4akbre4">
-            <label data-mbaas-oid="xogq4u2" htmlFor="conditionDay" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>6. 비행 조건별 시간 (선택)</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <label htmlFor="conditionDay" className={labelClass}>
               주간(시간)
             </label>
-            <input
-              data-mbaas-oid="wkof340" id="conditionDay"
+            <input id="conditionDay"
               name="conditionDay"
               onChange={handleDayNight}
               type="number"
@@ -827,12 +809,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="gy5vv2p">
-            <label data-mbaas-oid="o8640xn" htmlFor="conditionNight" className={labelClass}>
+          <div>
+            <label htmlFor="conditionNight" className={labelClass}>
               야간(시간)
             </label>
-            <input
-              data-mbaas-oid="h9nuzl6" id="conditionNight"
+            <input id="conditionNight"
               name="conditionNight"
               onChange={handleDayNight}
               type="number"
@@ -842,15 +823,14 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="bpt6isu">
-            <label data-mbaas-oid="c02y50b" htmlFor="crossCountry" className={labelClass}>
+          <div>
+            <label htmlFor="crossCountry" className={labelClass}>
               크로스컨트리(시간)
             </label>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
               출발지 외 1개 지점 착륙을 포함한 비행시간(운항기술기준 정의 43). 자가용·사업용·계기비행증명 응시경력용은 출발지에서 직선 50NM 이상 떨어진 공항 착륙을 포함해야 해요.
             </p>
-            <input
-              data-mbaas-oid="0bxpjci" id="crossCountry"
+            <input id="crossCountry"
               name="crossCountry"
               type="number"
               step="0.1"
@@ -859,12 +839,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="wuq65u4">
-            <label data-mbaas-oid="u7mk23b" htmlFor="actualInstrument" className={labelClass}>
+          <div>
+            <label htmlFor="actualInstrument" className={labelClass}>
               실제계기(시간)
             </label>
-            <input
-              data-mbaas-oid="7nugf96" id="actualInstrument"
+            <input id="actualInstrument"
               name="actualInstrument"
               type="number"
               step="0.1"
@@ -873,12 +852,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="yzazr21">
-            <label data-mbaas-oid="ql854k0" htmlFor="simulatedInstrument" className={labelClass}>
+          <div>
+            <label htmlFor="simulatedInstrument" className={labelClass}>
               모의계기(시간)
             </label>
-            <input
-              data-mbaas-oid="urhqju6" id="simulatedInstrument"
+            <input id="simulatedInstrument"
               name="simulatedInstrument"
               type="number"
               step="0.1"
@@ -893,20 +871,19 @@ export function EntryForm({
 
       
 
-      <hr data-mbaas-oid="1d2ng39" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 7. 접근/이착륙 횟수 */}
       {entryKind === 'flight' && (<>
 
-      <fieldset data-mbaas-oid="2teo0y3">
-        <legend data-mbaas-oid="2qd2300" className={sectionTitleClass}>7. 접근/이착륙 횟수 (선택)</legend>
-        <div data-mbaas-oid="1ro3o3q" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <div data-mbaas-oid="2cfdt0z">
-            <label data-mbaas-oid="p7qd6mw" htmlFor="instrumentApproaches" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>7. 접근/이착륙 횟수 (선택)</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div>
+            <label htmlFor="instrumentApproaches" className={labelClass}>
               계기 접근 횟수
             </label>
-            <input
-              data-mbaas-oid="pex20g9" id="instrumentApproaches"
+            <input id="instrumentApproaches"
               name="instrumentApproaches"
               type="number"
               step="1"
@@ -916,12 +893,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="bbwf7tg">
-            <label data-mbaas-oid="9okm7hp" htmlFor="dayLandings" className={labelClass}>
+          <div>
+            <label htmlFor="dayLandings" className={labelClass}>
               주간 이착륙 횟수
             </label>
-            <input
-              data-mbaas-oid="bkci7jm" id="dayLandings"
+            <input id="dayLandings"
               name="dayLandings"
               type="number"
               step="1"
@@ -931,12 +907,11 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
-          <div data-mbaas-oid="4kfxf1i">
-            <label data-mbaas-oid="ivdnn4u" htmlFor="nightLandings" className={labelClass}>
+          <div>
+            <label htmlFor="nightLandings" className={labelClass}>
               야간 이착륙 횟수
             </label>
-            <input
-              data-mbaas-oid="ops9fvh" id="nightLandings"
+            <input id="nightLandings"
               name="nightLandings"
               type="number"
               step="1"
@@ -952,20 +927,19 @@ export function EntryForm({
 
       
 
-      <hr data-mbaas-oid="480rj37" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
       {/* 8. 총 비행시간 및 비고 */}
       {entryKind === 'flight' && (<>
 
-      <fieldset data-mbaas-oid="ge236y0">
-        <legend data-mbaas-oid="73qnd0k" className={sectionTitleClass}>8. 총 비행시간 및 비고</legend>
-        <div data-mbaas-oid="ehklpel" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div data-mbaas-oid="5f1c259">
-            <label data-mbaas-oid="mbkyyx4" htmlFor="blockTime" className={labelClass}>
+      <fieldset>
+        <legend className={sectionTitleClass}>8. 총 비행시간 및 비고</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="blockTime" className={labelClass}>
               블록타임(시간)
             </label>
-            <input
-              data-mbaas-oid="l1zf2xs" id="blockTime"
+            <input id="blockTime"
               name="blockTime"
               onChange={handleTotalInput}
               type="number"
@@ -978,18 +952,17 @@ export function EntryForm({
               aria-describedby={errors.blockTime ? 'blockTime-error' : undefined}
             />
             {errors.blockTime && (
-              <p data-mbaas-oid="pvk2o4q" id="blockTime-error" className="mt-1.5 text-xs text-rose-600">
+              <p id="blockTime-error" className="mt-1.5 text-xs text-rose-600">
                 {errors.blockTime}
               </p>
             )}
           </div>
         </div>
-        <div data-mbaas-oid="069dg67" className="mt-5">
-          <label data-mbaas-oid="r3tw3sq" htmlFor="notes" className={labelClass}>
+        <div className="mt-5">
+          <label htmlFor="notes" className={labelClass}>
             비고 (선택)
           </label>
-          <textarea
-            data-mbaas-oid="isnf0e3" id="notes"
+          <textarea id="notes"
             name="notes"
             rows={3}
             defaultValue={initialValues?.notes}
@@ -1002,19 +975,18 @@ export function EntryForm({
 
       
 
-      <hr data-mbaas-oid="obc1elg" className="border-white/[0.08]" />
+      <hr className="border-white/[0.08]" />
 
 
 
       <div
-        data-mbaas-oid="rdre8ib"
         className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-8 flex flex-wrap gap-3 border-t border-white/10 bg-navy/95 px-cardpad py-4 backdrop-blur-sm"
       >
-        <Button data-mbaas-oid="ucr1gf5" type="submit" name="formAction" value="save" size="md">
+        <Button type="submit" name="formAction" value="save" size="md" data-testid="entry-submit">
           {mode === 'create' ? '비행 기록 추가하기' : '수정 내용 저장하기'}
         </Button>
         {onCancel && (
-          <Button data-mbaas-oid="n2992jg" type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
+          <Button type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
             취소
           </Button>
         )}

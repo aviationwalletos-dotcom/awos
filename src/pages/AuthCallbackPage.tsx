@@ -34,19 +34,19 @@ export function AuthCallbackPage() {
   }, [])
 
   return (
-    <div data-mbaas-oid="ocb01" className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
-      <div data-mbaas-oid="ocb02" className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
+    <div className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
+      <div className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
         {failed === null ? (
           <>
-            <span data-mbaas-oid="ocb03" className="mx-auto block h-8 w-8 animate-spin rounded-full border-2 border-sky border-t-transparent" aria-hidden="true" />
-            <p data-mbaas-oid="ocb04" className="mt-4 text-sm text-slate-400">로그인 처리 중…</p>
+            <span className="mx-auto block h-8 w-8 animate-spin rounded-full border-2 border-sky border-t-transparent" aria-hidden="true" />
+            <p className="mt-4 text-sm text-slate-400">로그인 처리 중…</p>
           </>
         ) : (
           <>
             <TriangleAlert className="mx-auto h-10 w-10 text-amber-300" aria-hidden="true" />
-            <h1 data-mbaas-oid="ocb05" className="mt-4 font-display text-lg font-extrabold">로그인에 실패했어요</h1>
-            <p data-mbaas-oid="ocb06" className="mt-2 break-all text-sm text-slate-400">{failed}</p>
-            <Link data-mbaas-oid="ocb07" to="/login" className="mt-5 inline-block text-sm font-semibold text-sky hover:underline">
+            <h1 className="mt-4 font-display text-lg font-extrabold">로그인에 실패했어요</h1>
+            <p className="mt-2 break-all text-sm text-slate-400">{failed}</p>
+            <Link to="/login" className="mt-5 inline-block text-sm font-semibold text-sky hover:underline">
               로그인 화면으로 돌아가기 →
             </Link>
           </>

@@ -12,6 +12,7 @@ import type { IndividualRole, UserType } from '../lib/baas/types'
 import { ALL_PILOT_TRACKS, PILOT_TRACK_LABEL, PILOT_TRACK_SHORT } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
 import { SIGNUP_TRACKS_KEY_PREFIX } from '../lib/profileSettingsSync'
+import { suggestEmailFix } from '../lib/emailTypo'
 
 interface FieldErrors {
   name?: string
@@ -45,6 +46,7 @@ export function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isDone, setIsDone] = useState(false)
   const [pendingEmail, setPendingEmail] = useState<string | null>(null)
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
 
   async function handleResend() {
@@ -108,8 +110,10 @@ export function SignupPage() {
           // 무시
         }
       }
-      if ((result as { pending_verification?: boolean } | null)?.pending_verification) {
+      const r = result as { pending_verification?: boolean; already_registered?: boolean } | null
+      if (r?.pending_verification) {
         setPendingEmail(email.trim())
+        setAlreadyRegistered(Boolean(r.already_registered))
         return
       }
       setIsDone(true)
@@ -120,23 +124,27 @@ export function SignupPage() {
 
   if (pendingEmail) {
     return (
-      <div data-mbaas-oid="pvw01" className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
-        <div data-mbaas-oid="pvw02" className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
-          <span data-mbaas-oid="pvw03" className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky/15 text-2xl">📮</span>
-          <h1 data-mbaas-oid="pvw04" className="mt-4 font-display text-xl font-extrabold">인증 메일을 보냈어요!</h1>
-          <p data-mbaas-oid="pvw05" className="mt-3 text-sm leading-relaxed text-slate-400">
-            <span data-mbaas-oid="pvw06" className="break-all font-semibold text-sky">{pendingEmail}</span> 의 받은편지함(또는 스팸함)에서
-            <span data-mbaas-oid="pvw07" className="font-semibold text-white"> [이메일 인증하기]</span> 버튼을 누르면 가입이 완료돼요.
+      <div className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
+        <div className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky/15 text-2xl">📮</span>
+          <h1 className="mt-4 font-display text-xl font-extrabold">{alreadyRegistered ? '이미 가입된 이메일이에요' : '인증 메일을 보냈어요!'}</h1>
+          {alreadyRegistered && (
+            <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+              이 이메일로 가입한 계정이 이미 있어서 새 인증 메일은 보내지 않았어요. 인증을 아직 안 했다면 아래 "인증 메일 다시 보내기"를, 이미 인증했다면 로그인하세요.
+            </p>
+          )}
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            <span className="break-all font-semibold text-sky">{pendingEmail}</span> 의 받은편지함(또는 스팸함)에서
+            <span className="font-semibold text-white"> [이메일 인증하기]</span> 버튼을 누르면 가입이 완료돼요.
           </p>
-          <div data-mbaas-oid="pvw08" className="mt-6 flex flex-col gap-2">
-            <Button
-              data-mbaas-oid="pvw09" type="button" variant="outline" tone="neutral"
+          <div className="mt-6 flex flex-col gap-2">
+            <Button type="button" variant="outline" tone="neutral"
               onClick={() => void handleResend()}
               disabled={resendState === 'sending'}
             >
               {resendState === 'sent' ? '재발송 완료 — 메일함을 확인하세요' : resendState === 'sending' ? '보내는 중…' : '인증 메일 다시 보내기'}
             </Button>
-            <Link data-mbaas-oid="pvw10" to="/login" className="text-sm font-semibold text-sky hover:underline">
+            <Link to="/login" className="text-sm font-semibold text-sky hover:underline">
               인증을 마쳤어요 — 로그인하러 가기
             </Link>
           </div>
@@ -147,16 +155,16 @@ export function SignupPage() {
 
   if (isDone) {
     return (
-      <div data-mbaas-oid="5xty0xe" className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
-        <div data-mbaas-oid="8u5mg48" className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
+      <div className="flex min-h-screen items-center justify-center bg-navy-dark px-6 font-body text-white">
+        <div className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-go" aria-hidden="true" />
-          <h1 data-mbaas-oid="cd771et" className="mt-4 font-display text-xl font-extrabold">
+          <h1 className="mt-4 font-display text-xl font-extrabold">
             회원가입이 완료되었습니다
           </h1>
-          <p data-mbaas-oid="z2v2hbp" className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-400">
             이제 로그인하여 디지털 로그북을 이용해보세요.
           </p>
-          <Button data-mbaas-oid="jny4ckb" size="lg" className="mt-6 w-full" onClick={() => navigate('/login')}>
+          <Button size="lg" className="mt-6 w-full" onClick={() => navigate('/login')}>
             로그인하러 가기
           </Button>
         </div>
@@ -165,63 +173,60 @@ export function SignupPage() {
   }
 
   return (
-    <div data-mbaas-oid="sgnpg01" className="min-h-screen bg-navy-dark font-body text-white">
-      <header data-mbaas-oid="sgnpg02" className="border-b border-white/10">
-        <div data-mbaas-oid="sgnpg03" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            data-mbaas-oid="sgnpg04" to="/"
+    <div className="min-h-screen bg-navy-dark font-body text-white">
+      <header className="border-b border-white/10">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link to="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-sky
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             홈으로
           </Link>
-          <p data-mbaas-oid="sgnpg05" className="font-display text-base font-extrabold tracking-tight text-white">
-            Aviation Wallet <span data-mbaas-oid="sgnpg06" className="text-sky">OS</span>
+          <p className="font-display text-base font-extrabold tracking-tight text-white">
+            Aviation Wallet <span className="text-sky">OS</span>
           </p>
         </div>
       </header>
 
-      <main data-mbaas-oid="sgnpg07" className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
-        <div data-mbaas-oid="sgnpg08" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
-        <div data-mbaas-oid="sgnpg09" className="relative mx-auto max-w-md px-6">
-          <div data-mbaas-oid="sgnpg10" className="text-center">
-            <span data-mbaas-oid="sgnpg11" className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
+      <main className="relative overflow-hidden py-[clamp(64px,10vw,120px)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
+        <div className="relative mx-auto max-w-md px-6">
+          <div className="text-center">
+            <span className="inline-flex items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-sky">
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
               회원가입
             </span>
-            <h1
-              data-mbaas-oid="sgnpg12" className="mt-6 font-display font-extrabold"
+            <h1 className="mt-6 font-display font-extrabold"
               style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.03em', lineHeight: 1.05, textWrap: 'balance' } as React.CSSProperties}
             >
               사용자 유형을 선택하고
-              <br data-mbaas-oid="sgnpg13" />
+              <br />
               가입하세요
             </h1>
-            <p data-mbaas-oid="sgnpg14" className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
+            <p className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
               가입 후 바로 비행기록을 시작할 수 있습니다.
             </p>
           </div>
 
           
 
-          <div data-mbaas-oid="sgnsoc" className="mt-8">
+          <div className="mt-8">
             <SocialLoginButtons />
           </div>
 
-          <form data-mbaas-oid="sgnpg19" onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">
+          <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-4 rounded-card border border-white/10 bg-white/5 p-cardpad">
             {submitError && (
-              <p data-mbaas-oid="jwfa8ld" role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
+              <p role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
                 {submitError}
               </p>
             )}
 
-            <div data-mbaas-oid="sgnf01" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf01l" htmlFor="signup-name" className="text-xs font-semibold text-slate-300">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="signup-name" className="text-xs font-semibold text-slate-300">
                 이름
               </label>
-              <input
-                data-mbaas-oid="sgnf01i" id="signup-name"
+              <input id="signup-name"
                 type="text"
                 autoComplete="name"
                 value={name}
@@ -230,15 +235,14 @@ export function SignupPage() {
                 className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
-              {fieldErrors.name && <p data-mbaas-oid="sgnf01e" className="text-xs text-rose-400">{fieldErrors.name}</p>}
+              {fieldErrors.name && <p className="text-xs text-rose-400">{fieldErrors.name}</p>}
             </div>
 
-            <div data-mbaas-oid="sgnf02" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf02l" htmlFor="signup-email" className="text-xs font-semibold text-slate-300">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="signup-email" className="text-xs font-semibold text-slate-300">
                 이메일
               </label>
-              <input
-                data-mbaas-oid="sgnf02i" id="signup-email"
+              <input id="signup-email"
                 type="email"
                 autoComplete="email"
                 value={email}
@@ -247,16 +251,20 @@ export function SignupPage() {
                 className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
-              {fieldErrors.email && <p data-mbaas-oid="sgnf02e" className="text-xs text-rose-400">{fieldErrors.email}</p>}
+              {suggestEmailFix(email) && (
+                <button type="button" onClick={() => setEmail(suggestEmailFix(email) as string)} className="text-left text-xs text-amber-300 underline">
+                  혹시 {suggestEmailFix(email)} 아닌가요? (눌러서 고치기)
+                </button>
+              )}
+              {fieldErrors.email && <p className="text-xs text-rose-400">{fieldErrors.email}</p>}
             </div>
 
 
-            <div data-mbaas-oid="sgnf04" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf04l" htmlFor="signup-phone" className="text-xs font-semibold text-slate-300">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="signup-phone" className="text-xs font-semibold text-slate-300">
                 전화번호
               </label>
-              <input
-                data-mbaas-oid="sgnf04i" id="signup-phone"
+              <input id="signup-phone"
                 type="tel"
                 autoComplete="tel"
                 value={phone}
@@ -266,17 +274,16 @@ export function SignupPage() {
                 className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
-              {fieldErrors.phone && <p data-mbaas-oid="sgnf04e" className="text-xs text-rose-400">{fieldErrors.phone}</p>}
+              {fieldErrors.phone && <p className="text-xs text-rose-400">{fieldErrors.phone}</p>}
             </div>
 
-            <div data-mbaas-oid="sgnrole" className="flex flex-col gap-1.5">
-              <span data-mbaas-oid="sgnrole1" className="text-xs font-semibold text-slate-300">자격 구분 <span className="font-normal text-slate-500">(여러 개 선택 가능)</span></span>
-              <div data-mbaas-oid="sgnrole2" role="group" aria-label="자격 구분 선택" className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-slate-300">자격 구분 <span className="font-normal text-slate-500">(여러 개 선택 가능)</span></span>
+              <div role="group" aria-label="자격 구분 선택" className="grid grid-cols-3 gap-2">
                 {ALL_PILOT_TRACKS.map((value) => {
                   const on = pilotTracks.includes(value)
                   return (
-                    <button
-                      data-mbaas-oid="sgnrole3" key={value}
+                    <button key={value}
                       type="button"
                       role="checkbox"
                       aria-checked={on}
@@ -290,23 +297,22 @@ export function SignupPage() {
                   )
                 })}
               </div>
-              <p data-mbaas-oid="sgnrole4" className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500">
                 {pilotTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')} — 나중에 계정정보에서 바꿀 수 있어요.
               </p>
             </div>
 
-            <div data-mbaas-oid="sgnf05" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf05l" className="text-xs font-semibold text-slate-300">소속 (선택)</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">소속 (선택)</label>
               <InstitutionSelect idPrefix="signup-affiliation" value={organizationAffiliation} onChange={setOrganizationAffiliation} />
-              <p data-mbaas-oid="sgnf05h" className="text-xs text-slate-500">비행교육원·대학 등 소속이 있으면 선택하세요. 관리자 인증·구성원 현황에 사용돼요.</p>
+              <p className="text-xs text-slate-500">비행교육원·대학 등 소속이 있으면 선택하세요. 관리자 인증·구성원 현황에 사용돼요.</p>
             </div>
 
-            <div data-mbaas-oid="sgnf06" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf06l" htmlFor="signup-password" className="text-xs font-semibold text-slate-300">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="signup-password" className="text-xs font-semibold text-slate-300">
                 비밀번호
               </label>
-              <input
-                data-mbaas-oid="sgnf06i" id="signup-password"
+              <input id="signup-password"
                 type="password"
                 autoComplete="new-password"
                 value={password}
@@ -315,15 +321,14 @@ export function SignupPage() {
                 className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
-              {fieldErrors.password && <p data-mbaas-oid="sgnf06e" className="text-xs text-rose-400">{fieldErrors.password}</p>}
+              {fieldErrors.password && <p className="text-xs text-rose-400">{fieldErrors.password}</p>}
             </div>
 
-            <div data-mbaas-oid="sgnf07" className="flex flex-col gap-1.5">
-              <label data-mbaas-oid="sgnf07l" htmlFor="signup-password2" className="text-xs font-semibold text-slate-300">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="signup-password2" className="text-xs font-semibold text-slate-300">
                 비밀번호 확인
               </label>
-              <input
-                data-mbaas-oid="sgnf07i" id="signup-password2"
+              <input id="signup-password2"
                 type="password"
                 autoComplete="new-password"
                 value={passwordConfirm}
@@ -332,52 +337,49 @@ export function SignupPage() {
                 className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
               />
-              {fieldErrors.passwordConfirm && <p data-mbaas-oid="sgnf07e" className="text-xs text-rose-400">{fieldErrors.passwordConfirm}</p>}
+              {fieldErrors.passwordConfirm && <p className="text-xs text-rose-400">{fieldErrors.passwordConfirm}</p>}
             </div>
 
-            <div data-mbaas-oid="agrwrap" className="flex flex-col gap-1.5">
-              <div data-mbaas-oid="agrbox" className="flex flex-col gap-2.5 rounded-control border border-white/10 bg-white/[0.03] p-4">
-                <label data-mbaas-oid="agr1" className="flex items-start gap-2.5 text-sm text-slate-300">
-                  <input
-                    data-mbaas-oid="agr1c" type="checkbox"
+            <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2.5 rounded-control border border-white/10 bg-white/[0.03] p-4">
+                <label className="flex items-start gap-2.5 text-sm text-slate-300">
+                  <input type="checkbox"
                     checked={agreedTerms}
                     onChange={(e) => setAgreedTerms(e.target.checked)}
                     className="mt-0.5 h-4 w-4 accent-sky"
                   />
-                  <span data-mbaas-oid="agr1t">
-                    <span data-mbaas-oid="agr1r" className="font-semibold text-sky">(필수)</span> 이용약관에 동의합니다{' '}
-                    <a data-mbaas-oid="agr1l" href="/terms.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
+                  <span>
+                    <span className="font-semibold text-sky">(필수)</span> 이용약관에 동의합니다{' '}
+                    <a href="/terms.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
                   </span>
                 </label>
-                <label data-mbaas-oid="agr2" className="flex items-start gap-2.5 text-sm text-slate-300">
-                  <input
-                    data-mbaas-oid="agr2c" type="checkbox"
+                <label className="flex items-start gap-2.5 text-sm text-slate-300">
+                  <input type="checkbox"
                     checked={agreedPrivacy}
                     onChange={(e) => setAgreedPrivacy(e.target.checked)}
                     className="mt-0.5 h-4 w-4 accent-sky"
                   />
-                  <span data-mbaas-oid="agr2t">
-                    <span data-mbaas-oid="agr2r" className="font-semibold text-sky">(필수)</span> 개인정보 수집·이용에 동의합니다{' '}
-                    <a data-mbaas-oid="agr2l" href="/privacy.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
+                  <span>
+                    <span className="font-semibold text-sky">(필수)</span> 개인정보 수집·이용에 동의합니다{' '}
+                    <a href="/privacy.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
                   </span>
                 </label>
               </div>
-              {fieldErrors.agreement && <p data-mbaas-oid="gkc0qoy" className="text-xs text-rose-400">{fieldErrors.agreement}</p>}
+              {fieldErrors.agreement && <p className="text-xs text-rose-400">{fieldErrors.agreement}</p>}
               {Object.keys(fieldErrors).length > 0 && (
-                <p data-mbaas-oid="sgnerrb" className="text-center text-xs font-semibold text-rose-400">
+                <p className="text-center text-xs font-semibold text-rose-400">
                   {Object.values(fieldErrors)[0] ?? '입력값을 확인해 주세요.'}
                 </p>
               )}
             </div>
 
-            <Button data-mbaas-oid="sgnpg39" type="submit" size="lg" className="mt-2 w-full" disabled={isLoading} loading={isLoading}>
+            <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading} loading={isLoading}>
               {userType === 'individual' ? '개인 사용자로 가입하기' : '기관 사용자로 가입하기'}
             </Button>
 
-            <p data-mbaas-oid="sgnpg40" className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-slate-400">
               이미 계정이 있으신가요?{' '}
-              <Link
-                data-mbaas-oid="sgnpg41" to="/login"
+              <Link to="/login"
                 className="font-semibold text-sky hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
               >
                 로그인하기

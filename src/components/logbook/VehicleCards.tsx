@@ -60,34 +60,34 @@ export function VehicleCards({ vehicles, onAdd, onDelete }: VehicleCardsProps) {
   }
 
   return (
-    <div data-mbaas-oid="vehwrap" className="rounded-card border border-white/10 bg-white/[0.04] p-4">
-      <div data-mbaas-oid="vehhead" className="flex items-center justify-between gap-3">
+    <div className="rounded-card border border-white/10 bg-white/[0.04] p-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p data-mbaas-oid="vehttl" className="text-xs font-semibold uppercase tracking-wide text-sky">내 기체</p>
-          <p data-mbaas-oid="vehsub" className="mt-0.5 text-sm text-slate-400">비행경력증명서에 들어가는 기체 정보. 한 번 등록하면 기록마다 자동으로 채워져요.</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky">내 기체</p>
+          <p className="mt-0.5 text-sm text-slate-400">비행경력증명서에 들어가는 기체 정보. 한 번 등록하면 기록마다 자동으로 채워져요.</p>
         </div>
-        <Button data-mbaas-oid="vehtog" type="button" size="sm" variant="outline" tone="neutral" onClick={() => setOpen((o) => !o)}>
+        <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => setOpen((o) => !o)}>
           {open ? '닫기' : '기체 추가'}
         </Button>
       </div>
 
       {vehicles.length > 0 && (
-        <ul data-mbaas-oid="vehlist" className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {vehicles.map((v) => {
             const d = v.inspectionValidUntil ? daysUntil(v.inspectionValidUntil) : null
             const tone = v.inspectionExempt ? 'text-slate-400' : d === null ? 'text-slate-500' : d < 0 ? 'text-rose-300' : d <= 30 ? 'text-amber-300' : 'text-go'
             return (
-              <li data-mbaas-oid="vehitem" key={v.id} className="flex items-start justify-between gap-2 rounded-control border border-white/10 bg-navy px-3 py-2">
+              <li key={v.id} className="flex items-start justify-between gap-2 rounded-control border border-white/10 bg-navy px-3 py-2">
                 <div className="min-w-0">
-                  <p data-mbaas-oid="vehname" className="flex items-center gap-1.5 truncate text-sm font-semibold text-ink">
+                  <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-ink">
                     <Plane className="h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
                     {vehicleDisplayName(v)}
                   </p>
-                  <p data-mbaas-oid="vehmeta" className="mt-0.5 text-[11px] text-slate-400">
+                  <p className="mt-0.5 text-[11px] text-slate-400">
                     {vehicleKindLabel(v.kindKey)}{v.classLabel ? ` · ${v.classLabel}` : ''}
                     {v.mtowKg != null ? ` · MTOW ${v.mtowKg}kg` : ''}
                   </p>
-                  <p data-mbaas-oid="vehinsp" className={`mt-0.5 text-[11px] font-semibold ${tone}`}>
+                  <p className={`mt-0.5 text-[11px] font-semibold ${tone}`}>
                     {v.inspectionExempt
                       ? '안전성인증 면제'
                       : v.inspectionValidUntil
@@ -96,7 +96,6 @@ export function VehicleCards({ vehicles, onAdd, onDelete }: VehicleCardsProps) {
                   </p>
                 </div>
                 <button
-                  data-mbaas-oid="vehdel"
                   type="button"
                   onClick={() => {
                     void confirm({ title: '기체 삭제', message: `${vehicleDisplayName(v)} 기체를 삭제할까요?\n기록은 남고 기체 연결만 끊깁니다.`, confirmLabel: '삭제', danger: true }).then((ok) => { if (ok) onDelete(v.id) })
@@ -113,7 +112,7 @@ export function VehicleCards({ vehicles, onAdd, onDelete }: VehicleCardsProps) {
       )}
 
       {open && (
-        <form data-mbaas-oid="vehform" onSubmit={handleSubmit} className="mt-4 grid grid-cols-1 gap-3 border-t border-white/10 pt-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-1 gap-3 border-t border-white/10 pt-4 sm:grid-cols-2">
           <div>
             <label htmlFor="veh-kind" className={labelClass}>종류</label>
             <select id="veh-kind" value={kindKey} onChange={(e) => setKindKey(e.target.value)} className={inputClass}>

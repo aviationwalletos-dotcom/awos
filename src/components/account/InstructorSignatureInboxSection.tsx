@@ -97,11 +97,11 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
   }
 
   return (
-    <div data-mbaas-dynamic="true" data-mbaas-oid="n9705t6" className="rounded-control border border-white/10 bg-navy px-4 py-4">
-      <div data-mbaas-dynamic="true" data-mbaas-oid="cfkc49j" className="flex items-start justify-between gap-3">
-        <div data-mbaas-oid="i6h2gb2">
-          <p data-mbaas-dynamic="true" data-mbaas-oid="osdk24p" className="text-sm font-semibold text-white">{post.title}</p>
-          <p data-mbaas-dynamic="true" data-mbaas-oid="44nrqpv" className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-400">
+    <div className="rounded-control border border-white/10 bg-navy px-4 py-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-white">{post.title}</p>
+          <p className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-400">
             요청일: {formatDateTime(post.created_at)} · 요청자: {post.author_name}
           </p>
         </div>
@@ -113,34 +113,32 @@ function SignatureRequestCard({ post, account, comments, instructorIds, onSigned
       </div>
 
       {post.content && (
-        <p data-mbaas-dynamic="true" data-mbaas-oid="8az3qfg" className="mt-3 whitespace-pre-wrap rounded-control border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-300">
+        <p className="mt-3 whitespace-pre-wrap rounded-control border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-300">
           {post.content}
         </p>
       )}
 
-      <div data-mbaas-oid="6316nwp" className="mt-3">
+      <div className="mt-3">
         {isSigned ? (
-          <div data-mbaas-oid="98n32ca" className="space-y-2">
+          <div className="space-y-2">
             {signedImageUrl && (
-              <img
-                data-mbaas-oid="98n32cb" src={signedImageUrl}
+              <img src={signedImageUrl}
                 alt="교관 서명 이미지"
                 className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
               />
             )}
-            <p data-mbaas-oid="98n32cv" className="font-mono-data text-xs tabular-nums text-slate-400">
+            <p className="font-mono-data text-xs tabular-nums text-slate-400">
               {signedComment ? `서명자: ${signedComment.author_name} · ${formatDateTime(signedComment.created_at)}` : `서명자: ${account.name} · 방금 등록됨`}
             </p>
           </div>
         ) : (
-          <div data-mbaas-oid="vnz7ywy" className="space-y-3">
-            <p data-mbaas-oid="hrn21bs" className="text-xs text-slate-400">
+          <div className="space-y-3">
+            <p className="text-xs text-slate-400">
               아래 영역에 직접 서명한 뒤 "서명 완료"를 누르면 본인 명의로 서명이 등록됩니다.
             </p>
             <SignaturePad onChange={setSignatureDataUrl} disabled={isProcessing} />
-            {error && <p data-mbaas-oid="rk1jzzb" className="text-xs font-medium text-rose-300">{error}</p>}
-            <Button
-              data-mbaas-oid="yujdw0z" type="button" size="sm" tone="brand"
+            {error && <p className="text-xs font-medium text-rose-300">{error}</p>}
+            <Button type="button" size="sm" tone="brand"
               loading={isProcessing}
               disabled={!signatureDataUrl || isProcessing}
               onClick={handleSign}
@@ -268,28 +266,27 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
   )
 
   return (
-    <div data-mbaas-oid="n0q7rjx" className="rounded-card border border-white/10 bg-white/5 p-cardpad">
+    <div className="rounded-card border border-white/10 bg-white/5 p-cardpad">
       {!instructorCurrencyMet && (
-        <p data-mbaas-oid="sgncurwarn" className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+        <p className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
           내 조종교육 비행경험(시행규칙 제125조: 최근 1년 10시간)이 미달이에요. 시행규칙 제77조②나목은 "제125조 경험이 있는 조종교관"의 증명을 인정하므로, 지금 서명한 경력은 응시용 증명으로 인정되지 않을 수 있어요. 커런시 탭에서 확인하세요.
         </p>
       )}
-      <div data-mbaas-oid="ziti7d0" className="flex flex-wrap items-start justify-between gap-3">
-        <div data-mbaas-oid="fzifob2">
-          <h2 data-mbaas-oid="p2leuhg" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
             <Inbox className="h-4 w-4 text-sky" aria-hidden="true" />
             서명 요청함
           </h2>
-          <p data-mbaas-oid="xz0gvgf" className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-400">
             학생이 보낸 비행 기록 서명 요청 목록입니다. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록됩니다.
             실시간 알림은 제공되지 않으므로 새로운 요청이 있는지 이 화면에서 직접 확인해주세요.
             {hiddenByTargetingCount > 0 && ` (본인이 지정되지 않은 요청 ${hiddenByTargetingCount}건은 표시하지 않습니다.)`}
           </p>
         </div>
-        <div data-mbaas-oid="os7q20r" className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {TAB_OPTIONS.map((option) => (
-            <button
-              data-mbaas-oid="18g8jgc" key={option.value}
+            <button key={option.value}
               type="button"
               onClick={() => setActiveTab(option.value)}
               className={`rounded-control px-3 py-1.5 text-xs font-semibold transition-colors
@@ -300,7 +297,6 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
           ))}
           <span className="self-center text-xs text-slate-400">비행 일자</span>
           <input
-            data-mbaas-oid="sgdate"
             type="date"
             value={dateFilter}
             onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(0) }}
@@ -315,11 +311,11 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
       </div>
 
       {isLoading ? (
-        <p data-mbaas-oid="yqwskw9" className="mt-5 text-sm text-slate-400">서명 요청 목록을 불러오는 중입니다...</p>
+        <p className="mt-5 text-sm text-slate-400">서명 요청 목록을 불러오는 중입니다...</p>
       ) : error ? (
-        <div data-mbaas-oid="k4ifgdz" role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
-          <p data-mbaas-oid="im2d4zk" className="text-xs font-medium text-rose-300">{error}</p>
-          <Button data-mbaas-oid="o4iaj7d" type="button" variant="outline" tone="neutral" size="sm" className="mt-3" onClick={() => void refetch()}>
+        <div role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
+          <p className="text-xs font-medium text-rose-300">{error}</p>
+          <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3" onClick={() => void refetch()}>
             다시 시도
           </Button>
         </div>
@@ -336,15 +332,15 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
           }
         />
       ) : !hasResolvedOnce && pendingIds.length > 0 && activeTab === 'pending' ? (
-        <p data-mbaas-oid="sgchk" className="mt-5 text-sm text-slate-400">서명 상태 확인 중…</p>
+        <p className="mt-5 text-sm text-slate-400">서명 상태 확인 중…</p>
       ) : filteredItems.length === 0 ? (
-        <p data-mbaas-oid="2cdqidj" className="mt-5 text-sm text-slate-400">
+        <p className="mt-5 text-sm text-slate-400">
           {activeTab === 'pending'
             ? '대기중인 서명 요청이 없습니다. 모두 완료되었습니다.'
             : '아직 완료된 서명 요청이 없습니다.'}
         </p>
       ) : (
-        <div data-mbaas-oid="n88j9go" className="mt-5 space-y-3">
+        <div className="mt-5 space-y-3">
           {pagedItems.map((post) => (
             <SignatureRequestCard
               key={post.id}
@@ -357,20 +353,18 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
           ))}
 
           {totalPages > 1 && (
-            <div data-mbaas-oid="pg1n2o3" className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-              <Button
-                data-mbaas-oid="pg1prev" type="button" variant="outline" tone="neutral" size="sm"
+            <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+              <Button type="button" variant="outline" tone="neutral" size="sm"
                 disabled={currentPage === 0}
                 onClick={() => setCurrentPage((page) => Math.max(0, page - 1))}
               >
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
                 이전
               </Button>
-              <p data-mbaas-oid="k5y3d5s" className="font-mono-data text-xs tabular-nums text-slate-400">
+              <p className="font-mono-data text-xs tabular-nums text-slate-400">
                 {currentPage + 1} / 총 {totalPages}페이지
               </p>
-              <Button
-                data-mbaas-oid="pg1next" type="button" variant="outline" tone="neutral" size="sm"
+              <Button type="button" variant="outline" tone="neutral" size="sm"
                 disabled={currentPage >= totalPages - 1}
                 onClick={() => setCurrentPage((page) => Math.min(totalPages - 1, page + 1))}
               >

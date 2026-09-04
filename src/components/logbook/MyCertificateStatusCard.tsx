@@ -171,26 +171,25 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
   }
 
   return (
-    <div data-mbaas-oid="ms8d0lv" className={`rounded-card border border-white/10 bg-white/[0.04] ${compact ? 'p-4' : 'p-cardpad'} backdrop-blur`}>
-      <div data-mbaas-oid="mcshead" className="flex items-baseline justify-between gap-3">
-        <div data-mbaas-oid="mcshead1" className="min-w-0">
-          <p data-mbaas-oid="xczv64y" className="text-xs font-semibold uppercase tracking-wide text-sky">내 자격 현황</p>
+    <div className={`rounded-card border border-white/10 bg-white/[0.04] ${compact ? 'p-4' : 'p-cardpad'} backdrop-blur`}>
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky">내 자격 현황</p>
 
         </div>
         {totalHours !== undefined ? (
-          <div data-mbaas-oid="mcstotal" className="shrink-0 text-right">
-            <p data-mbaas-oid="mcstotal1" className="font-mono-data text-[10px] font-semibold uppercase tracking-wider text-slate-500">총 비행시간</p>
-            <p data-mbaas-oid="mcstotal2" className="font-mono-data text-xl font-extrabold tabular-nums text-[#00D4FF]">
-              {totalHours.toFixed(1)}<span data-mbaas-oid="mcstotal3" className="ml-0.5 text-xs font-semibold text-slate-400">h</span>
+          <div className="shrink-0 text-right">
+            <p className="font-mono-data text-[10px] font-semibold uppercase tracking-wider text-slate-500">총 비행시간</p>
+            <p className="font-mono-data text-xl font-extrabold tabular-nums text-[#00D4FF]">
+              {totalHours.toFixed(1)}<span className="ml-0.5 text-xs font-semibold text-slate-400">h</span>
             </p>
           </div>
         ) : (
-          <p data-mbaas-oid="mcshint" className="hidden shrink-0 text-[11px] text-slate-500 sm:block">← 카드 좌·우를 눌러 넘겨보세요 →</p>
+          <p className="hidden shrink-0 text-[11px] text-slate-500 sm:block">← 카드 좌·우를 눌러 넘겨보세요 →</p>
         )}
       </div>
 
-      <div
-        data-mbaas-oid="mcsdeck" ref={scrollerRef}
+      <div ref={scrollerRef}
         onScroll={handleScroll}
         className="mt-4 flex snap-x snap-mandatory overflow-x-auto rounded-card [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
@@ -224,8 +223,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
 
           if (def.master) {
             return (
-              <button
-                data-mbaas-oid="mcsmaster" key={def.category}
+              <button key={def.category}
                 type="button"
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect()
@@ -234,15 +232,15 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                 className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'p-4' : 'p-5'}`}
                 aria-label={`${def.category} 카드`}
               >
-                <div data-mbaas-oid="mcsm0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" aria-hidden="true" />
-                <div data-mbaas-oid="mcsm1" className="relative flex items-center justify-between gap-2">
-                  <p data-mbaas-oid="mcsm2" className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
-                  <span data-mbaas-oid="mcsm3" className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${primary ? 'bg-white/20 text-white' : 'bg-black/30 text-white/60'}`}>
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" aria-hidden="true" />
+                <div className="relative flex items-center justify-between gap-2">
+                  <p className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
+                  <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${primary ? 'bg-white/20 text-white' : 'bg-black/30 text-white/60'}`}>
                     {primary ? '보유' : '미등록'}
                   </span>
                 </div>
 
-                <div data-mbaas-oid="mcsm4" className="relative mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
+                <div className="relative mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
                   <div className="min-w-0">
                     <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">I. 자격명 (TITLE OF LICENSE)</p>
                     <p className={`truncate font-display font-extrabold text-white ${compact ? 'text-lg' : 'text-xl'}`}>
@@ -262,7 +260,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                   </div>
                 </div>
 
-                <div data-mbaas-oid="mcsm5" className="relative mt-2 border-t border-white/15 pt-2">
+                <div className="relative mt-2 border-t border-white/15 pt-2">
                   <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">IV. 한정사항 (RATINGS)</p>
                   {ratings.length > 0 ? (
                     <p className="mt-0.5 text-[12px] leading-relaxed text-white/90">{ratings.join(', ')}</p>
@@ -271,7 +269,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
                   )}
                 </div>
 
-                <div data-mbaas-oid="mcsm6" className="relative mt-2 grid grid-cols-[1fr_auto] gap-3 border-t border-white/15 pt-2">
+                <div className="relative mt-2 grid grid-cols-[1fr_auto] gap-3 border-t border-white/15 pt-2">
                   <div className="min-w-0">
                     <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">V. 제한사항 (LIMITATIONS)</p>
                     <p className={`mt-0.5 truncate text-[11px] ${primary?.limitations ? 'text-white/85' : 'text-white/55'}`}>{primary?.limitations || '없음 (NIL)'}</p>
@@ -287,8 +285,7 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
           }
 
           return (
-            <button
-              data-mbaas-oid="mcscard" key={def.category}
+            <button key={def.category}
               type="button"
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
@@ -298,54 +295,53 @@ export function MyCertificateStatusCard({ certificates, roleContent: _roleConten
               className={`relative w-full shrink-0 snap-center overflow-hidden rounded-card bg-gradient-to-br text-left ${def.gradient} ${compact ? 'min-h-[210px] p-4' : 'min-h-[240px] p-6'}`}
               aria-label={`${def.category} 카드 — 왼쪽을 누르면 이전, 오른쪽을 누르면 다음 자격`}
             >
-              <div data-mbaas-oid="mcsc0" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" />
-              <div data-mbaas-oid="mcsc1" className="relative flex items-center justify-between gap-2">
-                <p data-mbaas-oid="mcsc2" className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
-                <span data-mbaas-oid="mcsc3" className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${held.length > 0 ? 'bg-white/20 text-white' : 'bg-black/25 text-white/50'}`}>
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.18),transparent_45%)]" />
+              <div className="relative flex items-center justify-between gap-2">
+                <p className="truncate font-mono-data text-[10px] tracking-wider text-white/60">[REF] {def.refText}</p>
+                <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono-data text-[10px] font-bold ${held.length > 0 ? 'bg-white/20 text-white' : 'bg-black/25 text-white/50'}`}>
                   {held.length > 0 ? '등록' : '미등록'}
                 </span>
               </div>
-              <p data-mbaas-oid="mcsc4" className="relative mt-5 font-mono-data text-[10px] font-semibold tracking-[0.12em] text-white/70">{def.en}</p>
-              <h3 data-mbaas-oid="mcsc5" className={`relative mt-1 font-display font-extrabold tracking-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>
+              <p className="relative mt-5 font-mono-data text-[10px] font-semibold tracking-[0.12em] text-white/70">{def.en}</p>
+              <h3 className={`relative mt-1 font-display font-extrabold tracking-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>
                 {def.category}
               </h3>
-              <p data-mbaas-oid="mcsc6" className="relative mt-4 font-mono-data text-[10px] font-bold tracking-[0.1em] text-white/75">NAME / IDENTIFIER</p>
-              <p data-mbaas-oid="mcsc7" className={`relative truncate font-display font-extrabold text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{holderName ?? '이름 미설정'}</p>
-              <div data-mbaas-oid="mcsc9" className="relative mt-4 flex flex-wrap items-center gap-1.5">
+              <p className="relative mt-4 font-mono-data text-[10px] font-bold tracking-[0.1em] text-white/75">NAME / IDENTIFIER</p>
+              <p className={`relative truncate font-display font-extrabold text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{holderName ?? '이름 미설정'}</p>
+              <div className="relative mt-4 flex flex-wrap items-center gap-1.5">
                 {heldCodes.map((code) => (
-                  <span data-mbaas-oid="mcscA" key={code} className="rounded-md border border-white/35 bg-white/15 px-2 py-1 font-mono-data text-[11px] font-bold text-white">
+                  <span key={code} className="rounded-md border border-white/35 bg-white/15 px-2 py-1 font-mono-data text-[11px] font-bold text-white">
                     {code}
                   </span>
                 ))}
                 {dimCodes.map((code) => (
-                  <span data-mbaas-oid="mcscB" key={code} className="rounded-md border border-white/10 bg-white/[0.06] px-2 py-1 font-mono-data text-[11px] font-semibold text-white/35">
+                  <span key={code} className="rounded-md border border-white/10 bg-white/[0.06] px-2 py-1 font-mono-data text-[11px] font-semibold text-white/35">
                     {code}
                   </span>
                 ))}
               </div>
               {soonest !== undefined && soonestDate && (
-                <div data-mbaas-oid="mcscexp" className="relative mt-3 flex items-end justify-between gap-2 border-t border-white/15 pt-2">
+                <div className="relative mt-3 flex items-end justify-between gap-2 border-t border-white/15 pt-2">
                   <div>
                     <p className="font-mono-data text-[9px] font-bold tracking-[0.12em] text-white/60">만료일 (VALID UNTIL)</p>
                     <p className="font-mono-data text-base font-extrabold tabular-nums text-white">{fmtDate(soonestDate)}</p>
                   </div>
-                  <span data-mbaas-oid="mcscC" className={`rounded px-2 py-1 font-mono-data text-sm font-extrabold ${soonest < 0 ? 'bg-rose-500/30 text-white' : soonest <= 30 ? 'bg-amber-400/30 text-white' : 'bg-white/15 text-white'}`}>
+                  <span className={`rounded px-2 py-1 font-mono-data text-sm font-extrabold ${soonest < 0 ? 'bg-rose-500/30 text-white' : soonest <= 30 ? 'bg-amber-400/30 text-white' : 'bg-white/15 text-white'}`}>
                     {soonest < 0 ? `만료 ${Math.abs(soonest)}일 경과` : `D-${soonest}`}
                   </span>
                 </div>
               )}
               {def.hint && (
-                <p data-mbaas-oid="mcschint" className="relative mt-3 truncate text-[11px] text-white/55">{def.hint}</p>
+                <p className="relative mt-3 truncate text-[11px] text-white/55">{def.hint}</p>
               )}
             </button>
           )
         })}
       </div>
 
-      <div data-mbaas-oid="mcsdots" className="mt-3 flex items-center justify-center gap-1.5">
+      <div className="mt-3 flex items-center justify-center gap-1.5">
         {DECK.map((def, index) => (
-          <button
-            data-mbaas-oid="mcsdot" key={def.category}
+          <button key={def.category}
             type="button"
             onClick={() => goTo(index)}
             aria-label={`${def.category} 카드로 이동`}

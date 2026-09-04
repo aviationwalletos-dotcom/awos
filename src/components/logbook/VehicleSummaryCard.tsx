@@ -13,7 +13,7 @@ interface Props {
 
 export function VehicleSummaryCard({ vehicles, onManage }: Props) {
   return (
-    <div data-mbaas-oid="vehsum" className="flex h-full flex-col rounded-card border border-white/10 bg-white/[0.04] p-4">
+    <div className="flex h-full flex-col rounded-card border border-white/10 bg-white/[0.04] p-4">
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-sky">내 기체</p>

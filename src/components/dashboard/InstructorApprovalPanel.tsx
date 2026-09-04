@@ -86,15 +86,14 @@ function ApplicationRow({ item, comments, isCheckingDecision, onDecided }: Appli
   }
 
   return (
-    <li data-mbaas-oid="iapan15" className="rounded-control border border-white/10 bg-white/[0.04] p-4">
-      <div data-mbaas-oid="iapan16" className="flex flex-wrap items-start justify-between gap-3">
-        <div data-mbaas-oid="iapan17" className="min-w-0">
-          <p data-mbaas-oid="iapan18" className="text-sm font-semibold text-white">{item.title}</p>
-          <p data-mbaas-oid="iapan19" className="mt-1 text-xs text-slate-400">
+    <li className="rounded-control border border-white/10 bg-white/[0.04] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">{item.title}</p>
+          <p className="mt-1 text-xs text-slate-400">
             {item.author_name} · {formatDateTime(item.created_at)}
           </p>
           <span
-            data-mbaas-oid="iapan39"
             className={`mt-2 inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold
               ${affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-400'}`}
           >
@@ -103,7 +102,7 @@ function ApplicationRow({ item, comments, isCheckingDecision, onDecided }: Appli
           </span>
         </div>
         {isCheckingDecision ? (
-          <span data-mbaas-oid="iapan33" className="inline-flex shrink-0 items-center gap-1 rounded-control border border-white/15 px-2.5 py-1 text-xs font-semibold text-slate-400">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-control border border-white/15 px-2.5 py-1 text-xs font-semibold text-slate-400">
             확인 중...
           </span>
         ) : decision.status === 'approved' ? (
@@ -116,29 +115,28 @@ function ApplicationRow({ item, comments, isCheckingDecision, onDecided }: Appli
       </div>
 
       {item.content && (
-        <p data-mbaas-oid="iapan22" className="mt-3 whitespace-pre-wrap text-sm text-slate-300">
+        <p className="mt-3 whitespace-pre-wrap text-sm text-slate-300">
           {item.content}
         </p>
       )}
 
       {commentsError && (
-        <div data-mbaas-oid="iapan35" className="mt-3 flex items-center gap-2">
-          <p data-mbaas-oid="iapan36" className="text-xs font-medium text-rose-300">{commentsError}</p>
-          <Button data-mbaas-oid="iapan37" type="button" variant="outline" tone="neutral" size="sm" onClick={() => void refetchComments()}>
+        <div className="mt-3 flex items-center gap-2">
+          <p className="text-xs font-medium text-rose-300">{commentsError}</p>
+          <Button type="button" variant="outline" tone="neutral" size="sm" onClick={() => void refetchComments()}>
             다시 시도
           </Button>
         </div>
       )}
 
       {submitError && (
-        <p data-mbaas-oid="iapan38" role="alert" className="mt-3 text-xs font-medium text-rose-300">{submitError}</p>
+        <p role="alert" className="mt-3 text-xs font-medium text-rose-300">{submitError}</p>
       )}
 
       {!isCheckingDecision && (
-        <div data-mbaas-oid="iapan23" className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {decision.status !== 'approved' && (
-            <Button
-              data-mbaas-oid="iapan24" type="button" size="sm" tone="brand"
+            <Button type="button" size="sm" tone="brand"
               loading={isSubmitting}
               disabled={isSubmitting}
               onClick={() => void handleDecision('approved')}
@@ -148,8 +146,7 @@ function ApplicationRow({ item, comments, isCheckingDecision, onDecided }: Appli
             </Button>
           )}
           {decision.status !== 'rejected' && (
-            <Button
-              data-mbaas-oid="iapan25" type="button" size="sm" variant="outline" tone="danger"
+            <Button type="button" size="sm" variant="outline" tone="danger"
               className="border-rose-400/50 text-rose-300 hover:bg-rose-500/100/10"
               loading={isSubmitting}
               disabled={isSubmitting}
@@ -211,22 +208,21 @@ export function InstructorApprovalPanel() {
   }, [scopedItems, filter, statusMap])
 
   return (
-    <div data-mbaas-oid="iapan01" className="rounded-card border border-white/10 bg-navy p-6">
-      <div data-mbaas-oid="iapan02" className="flex flex-wrap items-center justify-between gap-3">
-        <div data-mbaas-oid="iapan03">
-          <h3 data-mbaas-oid="iapan04" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
+    <div className="rounded-card border border-white/10 bg-navy p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
             <ShieldCheck className="h-4 w-4 text-sky" aria-hidden="true" />
             교관 승인 관리
           </h3>
-          <p data-mbaas-dynamic="true" data-mbaas-oid="iapan05" className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-400">
             {isScopedToMyAffiliation ? `내 소속(${myAffiliation}) ` : '전체 '}
             {scopedItems.length}건 · 대기중 {pendingCount}건 · 승인됨 {approvedCount}건 · 반려됨 {rejectedCount}건
           </p>
         </div>
-        <div data-mbaas-oid="iapan06" className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {FILTER_OPTIONS.map((option) => (
-            <button
-              data-mbaas-oid="iapan07" key={option.value}
+            <button key={option.value}
               type="button"
               onClick={() => setFilter(option.value)}
               className={`rounded-control px-3 py-1.5 text-xs font-semibold transition-colors
@@ -240,11 +236,9 @@ export function InstructorApprovalPanel() {
 
       {myAffiliation ? (
         <label
-          data-mbaas-oid="iapan40"
           className="mt-4 flex min-h-[44px] w-fit cursor-pointer items-center gap-2 rounded-control border border-white/15 px-3 py-2 text-xs font-semibold text-slate-300"
         >
-          <input
-            data-mbaas-oid="iapan41" type="checkbox"
+          <input type="checkbox"
             checked={showAllAffiliations}
             onChange={(e) => setShowAllAffiliations(e.target.checked)}
             className="h-4 w-4 accent-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
@@ -252,12 +246,11 @@ export function InstructorApprovalPanel() {
           전체 보기 (소속 무관)
         </label>
       ) : (
-        <div data-mbaas-oid="iapan42" className="mt-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-4 py-3">
+        <div className="mt-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-4 py-3">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" aria-hidden="true" />
-          <p data-mbaas-oid="iapan43" className="text-xs font-medium text-amber-300">
+          <p className="text-xs font-medium text-amber-300">
             소속 기관을 먼저 설정해주세요. 소속 기관이 없으면 전체 신청서가 표시됩니다.{' '}
-            <Link
-              data-mbaas-oid="iapan44" to="/account"
+            <Link to="/account"
               className="font-semibold underline underline-offset-2 hover:text-amber-200
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
             >
@@ -268,11 +261,11 @@ export function InstructorApprovalPanel() {
       )}
 
       {isLoading ? (
-        <p data-mbaas-oid="iapan09" className="mt-6 text-sm text-slate-400">신청 목록을 불러오는 중입니다...</p>
+        <p className="mt-6 text-sm text-slate-400">신청 목록을 불러오는 중입니다...</p>
       ) : error ? (
-        <div data-mbaas-oid="iapan10" role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
-          <p data-mbaas-oid="iapan11" className="text-xs font-medium text-rose-300">{error}</p>
-          <Button data-mbaas-oid="iapan12" type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void refetch()}>
+        <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
+          <p className="text-xs font-medium text-rose-300">{error}</p>
+          <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void refetch()}>
             다시 시도
           </Button>
         </div>
@@ -285,7 +278,7 @@ export function InstructorApprovalPanel() {
           description="필터를 변경해 다른 상태의 신청서를 확인해 보세요."
         />
       ) : (
-        <ul data-mbaas-oid="iapan14" className="mt-6 space-y-3">
+        <ul className="mt-6 space-y-3">
           {filtered.map((item) => (
             <ApplicationRow key={item.id} item={item} comments={byPost[item.id] ?? []} isCheckingDecision={isLoadingComments || !panelOrgIds} onDecided={refetchBatch} />
           ))}

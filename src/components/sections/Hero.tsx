@@ -78,13 +78,11 @@ export function Hero() {
   const navigate = useNavigate()
 
   return (
-    <section
-      data-mbaas-oid="si2d94s" id="hero"
+    <section id="hero"
       className="relative overflow-hidden bg-navy text-white"
       style={{ paddingTop: 'clamp(96px, 12vw, 160px)', paddingBottom: 'clamp(80px, 10vw, 160px)' }}
     >
       <div
-        data-mbaas-oid="wyjpu2x"
         className="bg-blueprint pointer-events-none absolute inset-0"
         style={{
           background:
@@ -94,14 +92,13 @@ export function Hero() {
         }}
       />
 
-      <div data-mbaas-oid="n5mur3s" className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <div data-mbaas-oid="89u7vw5">
-          <p data-mbaas-oid="ovvgxer" className="eyebrow-tech">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div>
+          <p className="eyebrow-tech">
             Digital Pilot Logbook — KR Format
           </p>
 
-          <h1
-            data-mbaas-oid="kiqsaol" className="mt-6 font-display text-white"
+          <h1 className="mt-6 font-display text-white"
             style={{ fontSize: 'clamp(2.25rem, 1.6rem + 3.2vw, 3.5rem)', letterSpacing: '-0.04em', lineHeight: 1.02 }}
           >
             <span className="block font-medium text-slate-300" style={{ fontSize: '0.62em', letterSpacing: '-0.02em' }}>
@@ -110,8 +107,7 @@ export function Hero() {
             <span className="block font-black">디지털 로그북</span>
           </h1>
 
-          <p
-            data-mbaas-oid="5ghgk0m" className="mt-6 max-w-xl text-slate-300"
+          <p className="mt-6 max-w-xl text-slate-300"
             style={{ fontSize: 'clamp(1rem, 0.94rem + 0.3vw, 1.125rem)', lineHeight: 1.7 }}
           >
             비행기록을 입력하면, 필요한 시간과 자격이 자동으로 정리됩니다.
@@ -119,21 +115,20 @@ export function Hero() {
           </p>
 
           <TechFrame className="mt-8 inline-block bg-white/[0.03] backdrop-blur-sm">
-            <div data-mbaas-oid="weuxcgg" className="flex items-start gap-3 px-5 py-4">
+            <div className="flex items-start gap-3 px-5 py-4">
               <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-sky" aria-hidden="true" />
               <div>
-                <p data-mbaas-oid="bcbyfm9" className="text-sm font-semibold text-ink">{HERO_STAT.value}</p>
-                <p data-mbaas-oid="djwb5z4" className="mt-1 text-sm text-slate-400">{HERO_STAT.label}</p>
+                <p className="text-sm font-semibold text-ink">{HERO_STAT.value}</p>
+                <p className="mt-1 text-sm text-slate-400">{HERO_STAT.label}</p>
               </div>
             </div>
           </TechFrame>
 
-          <div data-mbaas-oid="tk5xlsd" className="mt-10 flex flex-wrap gap-4">
-            <Button data-mbaas-oid="2722r3q" size="lg" onClick={() => navigate(isAuthenticated ? (isOrg ? '/dashboard' : '/logbook') : '/signup')}>
+          <div className="mt-10 flex flex-wrap gap-4">
+            <Button size="lg" onClick={() => navigate(isAuthenticated ? (isOrg ? '/dashboard' : '/logbook') : '/signup')}>
               {isAuthenticated ? (isOrg ? '대시보드 열기' : '내 로그북 열기') : '시작하기'}
             </Button>
-            <Button
-              data-mbaas-oid="frdm1ui" size="lg"
+            <Button size="lg"
               variant="outline"
               tone="neutral"
               className="border-white/30 text-white hover:bg-white/10"
@@ -154,7 +149,7 @@ export function Hero() {
           </p>
         </div>
 
-        <div data-mbaas-oid="i1n2uh0" className="relative mx-auto aspect-square w-full max-w-md lg:ml-auto lg:mr-0">
+        <div className="relative mx-auto aspect-square w-full max-w-md lg:ml-auto lg:mr-0">
           <LogbookPreview />
         </div>
       </div>

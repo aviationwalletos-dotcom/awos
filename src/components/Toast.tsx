@@ -16,7 +16,6 @@ export function useToast(): { toast: React.ReactNode; showToast: (message: strin
 
   const toast = message ? (
     <div
-      data-mbaas-oid="toast"
       role="status"
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 z-[70] flex justify-center px-4"

@@ -16,7 +16,7 @@ export function Collapsible({ title, summary, defaultOpen = false, children, cla
   const [open, setOpen] = useState(defaultOpen)
   const bodyId = id ? `${id}-body` : undefined
   return (
-    <section data-mbaas-oid="clps" className={className}>
+    <section className={className}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

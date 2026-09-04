@@ -34,16 +34,14 @@ const SURFACE_CLASSES: Record<EmptyStateSurface, { box: string; icon: string; ti
 export function EmptyState({ icon: Icon, title, description, surface = 'light', className = '' }: EmptyStateProps) {
   const classes = SURFACE_CLASSES[surface]
   return (
-    <div
-
-      data-mbaas-oid="whd6381" className={`flex flex-col items-center gap-3 rounded-card border ${classes.box} px-6 py-10 text-center ${className}`}
+    <div className={`flex flex-col items-center gap-3 rounded-card border ${classes.box} px-6 py-10 text-center ${className}`}
     >
       <Icon className={`h-8 w-8 ${classes.icon}`} aria-hidden={true} />
-      <p data-mbaas-oid="6u5dtrf" className={`text-sm font-semibold ${classes.title}`}>
+      <p className={`text-sm font-semibold ${classes.title}`}>
         {title}
       </p>
       {description && (
-        <p data-mbaas-oid="usxt1v4" className={`max-w-sm text-xs ${classes.description}`}>
+        <p className={`max-w-sm text-xs ${classes.description}`}>
           {description}
         </p>
       )}

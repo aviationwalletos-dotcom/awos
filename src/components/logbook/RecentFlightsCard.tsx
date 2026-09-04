@@ -6,7 +6,7 @@ export function RecentFlightsCard({ entries }: { entries: LogbookEntry[] }) {
   const last = recent[0]
   const days = last ? Math.floor((Date.now() - new Date(`${last.date}T00:00:00`).getTime()) / 86400000) : null
   return (
-    <div data-mbaas-oid="recentfl" className="flex h-full flex-col rounded-card border border-white/10 bg-white/[0.04] p-4">
+    <div className="flex h-full flex-col rounded-card border border-white/10 bg-white/[0.04] p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-sky">최근 비행</p>
       <p className="mt-0.5 text-sm text-slate-400">{days === null ? '기록이 없어요' : days === 0 ? '오늘 비행' : `마지막 비행 ${days}일 전`}</p>
       {recent.length > 0 && (

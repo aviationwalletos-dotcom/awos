@@ -33,7 +33,7 @@ function Bar({ current, required }: { current: number; required: number }) {
 function Card({ card }: { card: ProgressCard }) {
   const anyPathMet = card.paths.some((p) => p.items.length > 0 && p.items.every((i) => i.met))
   return (
-    <div data-mbaas-oid="eligcard" className="rounded-card border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-card border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h4 className="text-sm font-bold text-ink">{card.title}</h4>
@@ -101,7 +101,7 @@ export function EligibilityProgressPanel({ track, entries, certificates, vehicle
     return (
       <div>
         {hasUas && (
-          <p data-mbaas-oid="uasnotice" className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
+          <p className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
             무인비행장치 응시경력은 <span className="font-semibold">교육기관(전문·사설)의 지도조종자가 확인하고 대표가 증명한 비행경력증명서</span>만 인정돼요.
             지정 훈련용 기체 또는 사용사업 신고 기체로 비행하고, 출결관리시스템으로 확인된 시간이어야 합니다(운영세칙 제9조·제10조·별표 2 비고). 아래는 앱 기록으로 센 참고 진척도예요.
           </p>
@@ -122,7 +122,7 @@ export function EligibilityProgressPanel({ track, entries, certificates, vehicle
       summary={<span className="text-slate-400">{track === 'lsa' ? '별표 4 제2호' : '운영세칙 별표 1·2·3'}</span>}
     >
       {hasUas && (
-        <p data-mbaas-oid="uasnotice" className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
+        <p className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
           무인비행장치 응시경력은 <span className="font-semibold">교육기관(전문·사설)의 지도조종자가 확인하고 대표가 증명한 비행경력증명서</span>만 인정돼요.
           지정 훈련용 기체 또는 사용사업 신고 기체로 비행하고, 출결관리시스템으로 확인된 시간이어야 합니다(운영세칙 제9조·제10조·별표 2 비고).
           아래는 앱 기록으로 센 참고 진척도예요.

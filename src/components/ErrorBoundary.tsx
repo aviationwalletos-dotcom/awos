@@ -22,7 +22,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (!this.state.error) return this.props.children
     return (
-      <div data-mbaas-oid="errbnd" role="alert" className="mx-auto max-w-xl px-6 py-24 text-center">
+      <div role="alert" className="mx-auto max-w-xl px-6 py-24 text-center">
         <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">문제가 생겼어요</p>
         <h1 className="mt-2 font-display text-2xl font-extrabold text-white">화면을 그리는 중 오류가 발생했습니다</h1>
         <p className="mt-3 text-sm text-slate-400">

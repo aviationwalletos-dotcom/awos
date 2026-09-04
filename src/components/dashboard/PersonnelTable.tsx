@@ -81,55 +81,53 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
   }
 
   return (
-    <div data-mbaas-oid="fjt81wy" className="overflow-x-auto rounded-card border border-white/15 bg-white/[0.07] shadow-lg backdrop-blur-xl">
-      <table data-mbaas-oid="55jx5xl" className="w-full min-w-[720px] border-collapse text-left text-sm">
-        <thead data-mbaas-oid="z8gv5gu">
-          <tr data-mbaas-oid="lj7pmm2" className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
-            <th data-mbaas-oid="cfje8ws" scope="col" className="py-3 pl-6 pr-4 font-medium">인력</th>
-            <th data-mbaas-oid="15i301w" scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">역할</th>
-            <th data-mbaas-oid="jivjxk7" scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">소속</th>
-            <th data-mbaas-oid="ira7y1u" scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">누적 비행시간</th>
-            <th data-mbaas-oid="7fk40ye" scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">최근 자격 만료</th>
-            <th data-mbaas-oid="ofkg2mm" scope="col" className="py-3 pr-4 font-medium">상태</th>
+    <div className="overflow-x-auto rounded-card border border-white/15 bg-white/[0.07] shadow-lg backdrop-blur-xl">
+      <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+        <thead>
+          <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
+            <th scope="col" className="py-3 pl-6 pr-4 font-medium">인력</th>
+            <th scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">역할</th>
+            <th scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">소속</th>
+            <th scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">누적 비행시간</th>
+            <th scope="col" className="hidden py-3 pr-4 font-medium sm:table-cell">최근 자격 만료</th>
+            <th scope="col" className="py-3 pr-4 font-medium">상태</th>
             {(onDismiss || onRestore) && (
-              <th data-mbaas-oid="dpk9xac" scope="col" className="py-3 pr-6 font-medium text-right">관리</th>
+              <th scope="col" className="py-3 pr-6 font-medium text-right">관리</th>
             )}
           </tr>
         </thead>
-        <tbody data-mbaas-oid="bzahbtx">
+        <tbody>
           {personnel.map((p) => (
-            <tr
-              data-mbaas-oid="pbehfbc" key={p.id}
+            <tr key={p.id}
               className={`border-b border-white/5 last:border-b-0 ${p.isDismissed ? 'opacity-50' : ''}`}
             >
-              <td data-mbaas-oid="jdk1pqy" className="py-3 pl-6 pr-4">
-                <p data-mbaas-oid="vct9vx0" className="font-medium text-white">{p.name}</p>
-                <p data-mbaas-oid="kr9n3b5" className="font-mono-data text-xs text-slate-400">{p.userId || '이메일 미확인'}</p>
+              <td className="py-3 pl-6 pr-4">
+                <p className="font-medium text-white">{p.name}</p>
+                <p className="font-mono-data text-xs text-slate-400">{p.userId || '이메일 미확인'}</p>
               </td>
-              <td data-mbaas-oid="r59k35h" className="hidden py-3 pr-4 text-slate-300 sm:table-cell">{p.roleLabel}</td>
-              <td data-mbaas-oid="cebayhq" className="hidden py-3 pr-4 sm:table-cell">
-                <span
-                  data-mbaas-oid="vbgck8g" className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold
+              <td className="hidden py-3 pr-4 text-slate-300 sm:table-cell">{p.roleLabel}</td>
+              <td className="hidden py-3 pr-4 sm:table-cell">
+                <span className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold
                     ${p.affiliation ? 'border-sky/30 bg-sky/10 text-sky' : 'border-white/15 text-slate-400'}`}
                 >
                   <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
                   {p.affiliation || '소속 미기재'}
                 </span>
               </td>
-              <td data-mbaas-oid="qlvo9wy" className="hidden py-3 pr-4 font-mono-data tabular-nums text-slate-300 sm:table-cell">
+              <td className="hidden py-3 pr-4 font-mono-data tabular-nums text-slate-300 sm:table-cell">
                 {p.totalHours != null ? `${p.totalHours.toFixed(1)}h` : '-'}
               </td>
-              <td data-mbaas-oid="9kzpygu" className="hidden py-3 pr-4 text-slate-300 sm:table-cell">
+              <td className="hidden py-3 pr-4 text-slate-300 sm:table-cell">
                 {p.nearestExpiry ? (
                   <>
-                    <span data-mbaas-oid="vb8fevl" className="block text-xs text-slate-400">{p.nearestExpiry.name}</span>
-                    <span data-mbaas-oid="xii5k2z" className="font-mono-data tabular-nums">{p.nearestExpiry.expiryDate}</span>
+                    <span className="block text-xs text-slate-400">{p.nearestExpiry.name}</span>
+                    <span className="font-mono-data tabular-nums">{p.nearestExpiry.expiryDate}</span>
                   </>
                 ) : (
                   '-'
                 )}
               </td>
-              <td data-mbaas-oid="xl6hgsd" className="py-3 pr-4">
+              <td className="py-3 pr-4">
                 {p.overallGo === true ? (
                   <StatusBadge tone="success" surface="dark" dot label="GO" className="bg-go/15" />
                 ) : p.overallGo === false ? (
@@ -139,11 +137,10 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
                 )}
               </td>
               {(onDismiss || onRestore) && (
-                <td data-mbaas-oid="2cnz5kv" className="py-3 pr-6 text-right">
+                <td className="py-3 pr-6 text-right">
                   {p.isDismissed ? (
                     onRestore && (
-                      <button
-                        data-mbaas-oid="rstrbtn" type="button"
+                      <button type="button"
                         onClick={() => onRestore(p.id)}
                         title="이 목록에서 다시 표시합니다."
                         className="inline-flex items-center gap-1 rounded-control border border-white/15 px-2 py-1 text-xs font-semibold text-slate-300
@@ -155,8 +152,7 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
                     )
                   ) : (
                     onDismiss && (
-                      <button
-                        data-mbaas-oid="cnjk7jr" type="button"
+                      <button type="button"
                         onClick={() => onDismiss(p.id)}
                         title="탈퇴했거나 더 이상 유효하지 않은 회원을 이 목록에서만 숨깁니다(실제 데이터는 삭제되지 않음)."
                         className="inline-flex items-center gap-1 rounded-control border border-white/15 px-2 py-1 text-xs font-semibold text-slate-400

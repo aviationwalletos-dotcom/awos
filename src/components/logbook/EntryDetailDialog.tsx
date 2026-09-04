@@ -247,21 +247,19 @@ export function EntryDetailDialog({
   }
 
   return (
-    <dialog
-      data-mbaas-oid="lgbdlg1" ref={dialogRef}
+    <dialog ref={dialogRef}
       aria-labelledby="logbook-detail-title"
       onClose={handleNativeClose}
       onCancel={handleNativeClose}
       className="w-full max-w-lg rounded-card border border-white/10 bg-panel p-0 shadow-2xl backdrop:bg-ink/50"
     >
       {entry && (
-        <div data-mbaas-oid="lgbdlg2" className="p-cardpad">
-          <div data-mbaas-oid="lgbdlg3" className="flex items-start justify-between gap-4">
-            <h3 data-mbaas-oid="lgbdlg4" id="logbook-detail-title" className="font-display text-lg font-bold text-ink">
+        <div className="p-cardpad">
+          <div className="flex items-start justify-between gap-4">
+            <h3 id="logbook-detail-title" className="font-display text-lg font-bold text-ink">
               {mode === 'edit' ? '비행 기록 수정' : '비행 기록 상세'}
             </h3>
-            <button
-              data-mbaas-oid="lgbdlg5" type="button"
+            <button type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="닫기"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-slate-400 hover:bg-white/[0.08] hover:text-ink
@@ -272,9 +270,9 @@ export function EntryDetailDialog({
           </div>
 
           {mode === 'edit' ? (
-            <div data-mbaas-oid="lgbdlg6" className="mt-5">
+            <div className="mt-5">
               {entry.instructorSignature && (
-                <p data-mbaas-oid="r3okjt6" className="mb-4 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-xs font-medium text-amber-300">
+                <p className="mb-4 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-xs font-medium text-amber-300">
                   이 기록은 교관 서명이 완료된 상태입니다. 내용을 수정하고 저장하면 기존 서명이 취소됩니다.
                 </p>
               )}
@@ -300,17 +298,17 @@ export function EntryDetailDialog({
               )}
             </div>
           ) : (
-            <div data-mbaas-oid="lgbdlg8" className="mt-5 space-y-4">
+            <div className="mt-5 space-y-4">
               {(entry.origin === 'legacy_excel' || entry.origin === 'flight_experience_certificate') && entry.legacySourceNote && (
-                <div data-mbaas-oid="5qdk0ac" className="rounded-control border border-white/10 bg-surface p-4">
-                  <p data-mbaas-oid="7daab0v" className="text-xs text-slate-400">출처: {entry.legacySourceNote}</p>
+                <div className="rounded-control border border-white/10 bg-surface p-4">
+                  <p className="text-xs text-slate-400">출처: {entry.legacySourceNote}</p>
                 </div>
               )}
 
               {entry.origin === 'flight_experience_certificate' && (
-                <div data-mbaas-oid="qlzi0bi" className="rounded-control border border-white/10 bg-surface p-4">
-                  <div data-mbaas-oid="stp53e3" className="flex flex-wrap items-center justify-between gap-2">
-                    <h4 data-mbaas-oid="pfgkgua" className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <div className="rounded-control border border-white/10 bg-surface p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="flex items-center gap-1.5 text-sm font-bold text-ink">
                       <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
                       비행경력증명서
                     </h4>
@@ -333,45 +331,43 @@ export function EntryDetailDialog({
                   </div>
 
                   {entry.certificateImageDataUrl && (
-                    <img
-                      data-mbaas-oid="gg64mzu" src={entry.certificateImageDataUrl}
+                    <img src={entry.certificateImageDataUrl}
                       alt="첨부된 비행경력증명서 사진"
                       className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
                     />
                   )}
 
                   {entry.certificateApprovalStatus === 'confirmed' ? (
-                    <p data-mbaas-oid="5vd5pcx" className="mt-3 text-xs font-medium text-go">
+                    <p className="mt-3 text-xs font-medium text-go">
                       인증이 완료되어 공식 총 비행시간 합계에 포함됩니다.
                     </p>
                   ) : entry.certificateApprovalStatus === 'rejected' ? (
-                    <div data-mbaas-oid="ncj7z02" className="mt-3 space-y-2">
-                      <p data-mbaas-oid="73s406n" className="text-xs font-medium text-rose-300">
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs font-medium text-rose-300">
                         관리자가 이 인증 요청을 반려했습니다. 공식 총 비행시간 합계에서 제외되고 "반려된
                         비행경력증명서"로 별도 표시됩니다.
                       </p>
                       {certificateDecision.comment && (
-                        <p data-mbaas-oid="557m71t" className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                        <p className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
                           반려 처리: {certificateDecision.comment.author_name} ·{' '}
                           {formatSignedAt(parseDecidedAtFromComment(certificateDecision.comment))}
                         </p>
                       )}
                     </div>
                   ) : certificateRequestPostId ? (
-                    <div data-mbaas-oid="o4ksb06" className="mt-3 space-y-3">
-                      <div data-mbaas-oid="0vfvlcs" role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
+                    <div className="mt-3 space-y-3">
+                      <div role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
-                        <p data-mbaas-oid="u3tx8dx" className="text-sm font-medium text-amber-300">
+                        <p className="text-sm font-medium text-amber-300">
                           관리자에게 인증 요청을 제출했습니다. 관리자가 승인/반려하면 이 화면에 자동으로 반영됩니다.
                         </p>
                       </div>
                       {certificateCommentsError && (
-                        <p data-mbaas-oid="tmo8ikc" role="alert" className="text-xs font-medium text-rose-600">
+                        <p role="alert" className="text-xs font-medium text-rose-600">
                           {certificateCommentsError}
                         </p>
                       )}
-                      <Button
-                        data-mbaas-oid="js2nh4u" type="button" variant="outline" tone="brand" size="sm"
+                      <Button type="button" variant="outline" tone="brand" size="sm"
                         loading={isCheckingCertificateDecision}
                         disabled={isCheckingCertificateDecision}
                         onClick={() => void refetchCertificateComments()}
@@ -381,13 +377,13 @@ export function EntryDetailDialog({
                       </Button>
                     </div>
                   ) : (
-                    <div data-mbaas-oid="8rnm1fo" className="mt-3 space-y-2">
-                      <p data-mbaas-oid="njhfi7d" className="text-xs text-slate-400">
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs text-slate-400">
                         이 기록은 관리자에게 인증 요청이 제출되지 않았습니다(제출 당시 네트워크 오류 등). 아직 인증
                         대기중이라 공식 총 비행시간 합계에서 제외되고 "미인증 비행경력증명서(참고용)"에만
                         표시됩니다. 아래에서 본인이 직접 확인 완료로 표시할 수 있습니다(실제 기관 승인이 아닙니다).
                       </p>
-                      <Button data-mbaas-oid="74q0dc2" type="button" variant="outline" tone="brand" size="sm" onClick={handleConfirmCertificate}>
+                      <Button type="button" variant="outline" tone="brand" size="sm" onClick={handleConfirmCertificate}>
                         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                         학교/교관에게 확인받았습니다
                       </Button>
@@ -397,79 +393,79 @@ export function EntryDetailDialog({
               )}
 
               {signatureInvalidatedNotice && (
-                <div data-mbaas-oid="sro094q" role="status" className="rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
-                  <p data-mbaas-oid="cea59rs" className="text-xs font-medium text-amber-300">
+                <div role="status" className="rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
+                  <p className="text-xs font-medium text-amber-300">
                     기록 수정으로 기존 교관 서명이 취소되었습니다. 필요하다면 아래에서 다시 서명을 요청해 주세요.
                   </p>
                 </div>
               )}
-              <dl data-mbaas-oid="lgbdlg9" className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                <div data-mbaas-oid="e25jsrj">
-                  <dt data-mbaas-oid="oaihdr7" className="text-xs font-medium uppercase tracking-wide text-slate-400">날짜</dt>
-                  <dd data-mbaas-oid="nlmmjpr" className="mt-0.5 font-mono-data tabular-nums text-ink">{entry.date}</dd>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">날짜</dt>
+                  <dd className="mt-0.5 font-mono-data tabular-nums text-ink">{entry.date}</dd>
                 </div>
-                <div data-mbaas-oid="5jqk03g">
-                  <dt data-mbaas-oid="lgo47mj" className="text-xs font-medium uppercase tracking-wide text-slate-400">{aircraftTypeLabel}</dt>
-                  <dd data-mbaas-oid="2242joh" className="mt-0.5 text-ink">{entry.aircraftType}</dd>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{aircraftTypeLabel}</dt>
+                  <dd className="mt-0.5 text-ink">{entry.aircraftType}</dd>
                 </div>
                 {entry.aircraftIdentification && (
-                  <div data-mbaas-oid="5ys7sfd">
-                    <dt data-mbaas-oid="3vsfjrl" className="text-xs font-medium uppercase tracking-wide text-slate-400">{aircraftIdLabel}</dt>
-                    <dd data-mbaas-oid="ppq5cmg" className="mt-0.5 font-mono-data text-ink">{entry.aircraftIdentification}</dd>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{aircraftIdLabel}</dt>
+                    <dd className="mt-0.5 font-mono-data text-ink">{entry.aircraftIdentification}</dd>
                   </div>
                 )}
-                <div data-mbaas-oid="scr91b4">
-                  <dt data-mbaas-oid="hdzv6fg" className="text-xs font-medium uppercase tracking-wide text-slate-400">출발지 → 도착지</dt>
-                  <dd data-mbaas-oid="fwd7sqd" className="mt-0.5 font-mono-data text-ink">{entry.departure} → {entry.arrival}</dd>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">출발지 → 도착지</dt>
+                  <dd className="mt-0.5 font-mono-data text-ink">{entry.departure} → {entry.arrival}</dd>
                 </div>
                 {entry.viaAirports && (
-                  <div data-mbaas-oid="q4e5l8u">
-                    <dt data-mbaas-oid="4brwine" className="text-xs font-medium uppercase tracking-wide text-slate-400">경유 공항</dt>
-                    <dd data-mbaas-oid="0s8bfsp" className="mt-0.5 font-mono-data text-ink">{entry.viaAirports}</dd>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">경유 공항</dt>
+                    <dd className="mt-0.5 font-mono-data text-ink">{entry.viaAirports}</dd>
                   </div>
                 )}
-                <div data-mbaas-oid="wk049ff">
-                  <dt data-mbaas-oid="kkx11f6" className="text-xs font-medium uppercase tracking-wide text-slate-400">블록타임</dt>
-                  <dd data-mbaas-oid="1tb8fh5" className="mt-0.5 font-mono-data tabular-nums text-ink">{entry.blockTime.toFixed(1)}시간</dd>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">블록타임</dt>
+                  <dd className="mt-0.5 font-mono-data tabular-nums text-ink">{entry.blockTime.toFixed(1)}시간</dd>
                 </div>
-                <div data-mbaas-oid="gzpyuhw">
-                  <dt data-mbaas-oid="1pjrfm8" className="text-xs font-medium uppercase tracking-wide text-slate-400">비행 종류</dt>
-                  <dd data-mbaas-oid="radoise" className="mt-0.5 text-ink">{entry.flightCategory}</dd>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">비행 종류</dt>
+                  <dd className="mt-0.5 text-ink">{entry.flightCategory}</dd>
                 </div>
                 {entryTrack(entry) === 'ultralight' && (
                   <>
                     {(entry.takeoffTime || entry.landingTime) && (
-                      <div data-mbaas-oid="uldet1">
+                      <div>
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">이륙 → 착륙 시각</dt>
                         <dd className="mt-0.5 font-mono-data text-ink">{entry.takeoffTime ?? '–'} → {entry.landingTime ?? '–'}</dd>
                       </div>
                     )}
                     {(entry.hourMeterStart != null || entry.hourMeterEnd != null) && (
-                      <div data-mbaas-oid="uldet2">
+                      <div>
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">아워미터</dt>
                         <dd className="mt-0.5 font-mono-data text-ink">{entry.hourMeterStart ?? '–'} → {entry.hourMeterEnd ?? '–'}</dd>
                       </div>
                     )}
                     {entry.flightCount != null && (
-                      <div data-mbaas-oid="uldet3">
+                      <div>
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">비행 횟수</dt>
                         <dd className="mt-0.5 font-mono-data text-ink">{entry.flightCount}회</dd>
                       </div>
                     )}
-                    <div data-mbaas-oid="uldet4">
+                    <div>
                       <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">임무별 (기장/훈련/교관)</dt>
                       <dd className="mt-0.5 font-mono-data text-ink">
                         {(entry.pilotingTime?.pic ?? 0).toFixed(1)} / {(entry.pilotingTime?.training ?? 0).toFixed(1)} / {(entry.pilotingTime?.flightInstructor ?? 0).toFixed(1)}시간
                       </dd>
                     </div>
                     {entry.flightPurpose && (
-                      <div data-mbaas-oid="uldet5" className="col-span-2">
+                      <div className="col-span-2">
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">비행목적 / 훈련내용</dt>
                         <dd className="mt-0.5 text-ink">{entry.flightPurpose}</dd>
                       </div>
                     )}
                     {entry.instructorLicenceNo && (
-                      <div data-mbaas-oid="uldet6">
+                      <div>
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">지도조종자 자격번호</dt>
                         <dd className="mt-0.5 font-mono-data text-ink">{entry.instructorLicenceNo}</dd>
                       </div>
@@ -479,13 +475,13 @@ export function EntryDetailDialog({
                 {entryTrack(entry) === 'ultralight' ? (
                   <>
                     {(entry.traineeName || entry.instructorLicenceNo) && (
-                      <div data-mbaas-oid="uldet1">
+                      <div>
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">교육생 / 지도조종자 자격번호</dt>
                         <dd className="mt-0.5 text-ink">{entry.traineeName || '—'} / {entry.instructorLicenceNo || '—'}</dd>
                       </div>
                     )}
                     {(entry.hourMeterStart != null || entry.hourMeterEnd != null) && (
-                      <div data-mbaas-oid="uldet2">
+                      <div>
                         <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">아워미터 (이륙 → 착륙)</dt>
                         <dd className="mt-0.5 font-mono-data tabular-nums text-ink">{entry.hourMeterStart ?? '—'} → {entry.hourMeterEnd ?? '—'}</dd>
                       </div>
@@ -493,30 +489,30 @@ export function EntryDetailDialog({
                   </>
                 ) : (
                   <>
-                <div data-mbaas-oid="lnddet1">
-                      <dt data-mbaas-oid="lnddet2" className="text-xs font-medium uppercase tracking-wide text-slate-400">계기접근 / 주간 / 야간 이착륙</dt>
-                      <dd data-mbaas-oid="lnddet3" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">계기접근 / 주간 / 야간 이착륙</dt>
+                      <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
                         {entry.instrumentApproaches ?? 0}회 · {entry.dayLandings ?? 0}회 / {entry.nightLandings ?? 0}회
                       </dd>
                     </div>
-                    <div data-mbaas-oid="2pfqv5b">
-                      <dt data-mbaas-oid="8evi40u" className="text-xs font-medium uppercase tracking-wide text-slate-400">범주별 시간(단발/다발/회전익/기타)</dt>
-                      <dd data-mbaas-oid="sv75pvz" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">범주별 시간(단발/다발/회전익/기타)</dt>
+                      <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
                         {(entry.categoryHours?.singleEngineLand ?? 0).toFixed(1)} / {(entry.categoryHours?.multiEngineLand ?? 0).toFixed(1)} /{' '}
                         {(entry.categoryHours?.rotorcraftHelicopter ?? 0).toFixed(1)} / {(entry.categoryHours?.otherHours ?? 0).toFixed(1)}
                         {entry.categoryHours?.otherLabel ? ` (${entry.categoryHours.otherLabel})` : ''}
                       </dd>
                     </div>
-                    <div data-mbaas-oid="b5d9rtj">
-                      <dt data-mbaas-oid="4ceqp6z" className="text-xs font-medium uppercase tracking-wide text-slate-400">자격시간(DUAL RECEIVED/PIC/SIC/AS FLIGHT INSTRUCTOR)</dt>
-                      <dd data-mbaas-oid="xr8ol5j" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">자격시간(DUAL RECEIVED/PIC/SIC/AS FLIGHT INSTRUCTOR)</dt>
+                      <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
                         {(entry.pilotingTime?.dualReceived ?? 0).toFixed(1)} / {(entry.pilotingTime?.pic ?? 0).toFixed(1)} /{' '}
                         {(entry.pilotingTime?.sic ?? 0).toFixed(1)} / {(entry.pilotingTime?.flightInstructor ?? 0).toFixed(1)}
                       </dd>
                     </div>
-                    <div data-mbaas-oid="sopibil">
-                      <dt data-mbaas-oid="mfe7b6k" className="text-xs font-medium uppercase tracking-wide text-slate-400">조건별 시간(주/야/CC/실계기/모의계기)</dt>
-                      <dd data-mbaas-oid="m0itc6g" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">조건별 시간(주/야/CC/실계기/모의계기)</dt>
+                      <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
                         {(entry.conditions?.day ?? 0).toFixed(1)} / {(entry.conditions?.night ?? 0).toFixed(1)} /{' '}
                         {(entry.conditions?.crossCountry ?? 0).toFixed(1)} / {(entry.conditions?.actualInstrument ?? 0).toFixed(1)} /{' '}
                         {(entry.conditions?.simulatedInstrument ?? 0).toFixed(1)}
@@ -525,34 +521,33 @@ export function EntryDetailDialog({
                   </>
                 )}
                 {Boolean(entry.groundTrainerTime) && (
-                  <div data-mbaas-oid="a9mhhzz">
-                    <dt data-mbaas-oid="xkv5vkn" className="text-xs font-medium uppercase tracking-wide text-slate-400">지상훈련장비(시뮬레이터)</dt>
-                    <dd data-mbaas-oid="r6521v0" className="mt-0.5 font-mono-data tabular-nums text-ink">{(entry.groundTrainerTime ?? 0).toFixed(1)}시간</dd>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">지상훈련장비(시뮬레이터)</dt>
+                    <dd className="mt-0.5 font-mono-data tabular-nums text-ink">{(entry.groundTrainerTime ?? 0).toFixed(1)}시간</dd>
                   </div>
                 )}
               </dl>
 
               {entry.notes && (
-                <div data-mbaas-oid="3a7gyyh">
-                  <dt data-mbaas-oid="9zq5pdy" className="text-xs font-medium uppercase tracking-wide text-slate-400">메모</dt>
-                  <dd data-mbaas-oid="y6lsgmt" className="mt-1 whitespace-pre-wrap text-sm text-slate-400">{entry.notes}</dd>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">메모</dt>
+                  <dd className="mt-1 whitespace-pre-wrap text-sm text-slate-400">{entry.notes}</dd>
                 </div>
               )}
 
               {entry.pilotCertification?.signatureDataUrl && (
-                <div data-mbaas-oid="c9z828i" className="rounded-control border border-white/10 bg-surface p-4">
-                  <h4 data-mbaas-oid="lpmhmvm" className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <div className="rounded-control border border-white/10 bg-surface p-4">
+                  <h4 className="flex items-center gap-1.5 text-sm font-bold text-ink">
                     <ShieldCheck className="h-4 w-4 text-sky" aria-hidden="true" />
                     조종사 본인 확인(참고 · 예전 기록)
                   </h4>
-                  <div data-mbaas-oid="yc3t6bs" className="mt-3 space-y-2">
-                    <img
-                      data-mbaas-oid="yhkzgbo" src={entry.pilotCertification.signatureDataUrl}
+                  <div className="mt-3 space-y-2">
+                    <img src={entry.pilotCertification.signatureDataUrl}
                       alt="조종사 본인 서명 이미지"
                       className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-white object-contain p-1"
                     />
                     {entry.pilotCertification.certifiedAt && (
-                      <p data-mbaas-oid="j3utrf5" className="font-mono-data text-xs tabular-nums text-slate-400">
+                      <p className="font-mono-data text-xs tabular-nums text-slate-400">
                         확정 일시: {formatCertifiedAt(entry.pilotCertification.certifiedAt)}
                       </p>
                     )}
@@ -561,22 +556,21 @@ export function EntryDetailDialog({
                 </div>
               )}
 
-              <div data-mbaas-oid="i4yxlcq" className="rounded-control border border-white/10 bg-surface p-4">
-                <h4 data-mbaas-oid="hwsa94l" className="flex items-center gap-1.5 text-sm font-bold text-ink">
+              <div className="rounded-control border border-white/10 bg-surface p-4">
+                <h4 className="flex items-center gap-1.5 text-sm font-bold text-ink">
                   <ShieldCheck className="h-4 w-4 text-go" aria-hidden="true" />
                   교관 서명
                 </h4>
 
                 {entry.instructorSignature ? (
                   confirmingCancelSignature ? (
-                    <div data-mbaas-oid="wab7pca" role="alert" className="mt-3 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-                      <p data-mbaas-oid="rp0bmd4" className="text-sm font-medium text-rose-300">교관 서명을 취소하시겠습니까?</p>
-                      <div data-mbaas-oid="xi03z5c" className="mt-3 flex gap-2">
-                        <Button data-mbaas-oid="13h4ra3" type="button" tone="danger" size="sm" onClick={handleCancelSignature}>
+                    <div role="alert" className="mt-3 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+                      <p className="text-sm font-medium text-rose-300">교관 서명을 취소하시겠습니까?</p>
+                      <div className="mt-3 flex gap-2">
+                        <Button type="button" tone="danger" size="sm" onClick={handleCancelSignature}>
                           서명 취소 확인
                         </Button>
-                        <Button
-                          data-mbaas-oid="vbzsk3h" type="button"
+                        <Button type="button"
                           variant="outline"
                           tone="neutral"
                           size="sm"
@@ -587,25 +581,23 @@ export function EntryDetailDialog({
                       </div>
                     </div>
                   ) : (
-                    <div data-mbaas-oid="48yreht" className="mt-3 space-y-2">
+                    <div className="mt-3 space-y-2">
                       {resolvedInstructorSignatureUrl && (
-                        <img
-                          data-mbaas-oid="9pv77r0" src={resolvedInstructorSignatureUrl ?? undefined}
+                        <img src={resolvedInstructorSignatureUrl ?? undefined}
                           alt={`${entry.instructorSignature.instructorName} 교관 서명 이미지`}
                           className="h-20 w-full max-w-xs rounded-control border border-white/10 bg-panel object-contain"
                         />
                       )}
-                      <p data-mbaas-oid="v29d9fa" className="text-sm text-ink">
-                        <span data-mbaas-oid="6yyruta" className="font-semibold">{entry.instructorSignature.instructorName}</span> 교관
+                      <p className="text-sm text-ink">
+                        <span className="font-semibold">{entry.instructorSignature.instructorName}</span> 교관
                       </p>
-                      <p data-mbaas-oid="t7begqs" className="font-mono-data text-xs tabular-nums text-slate-400">
+                      <p className="font-mono-data text-xs tabular-nums text-slate-400">
                         서명 계정: {entry.instructorSignature.instructorUserId || '확인 불가(이전 방식으로 서명됨)'}
                       </p>
-                      <p data-mbaas-oid="58psn2i" className="font-mono-data text-xs tabular-nums text-slate-400">
+                      <p className="font-mono-data text-xs tabular-nums text-slate-400">
                         서명 일시: {formatSignedAt(entry.instructorSignature.signedAt)}
                       </p>
-                      <Button
-                        data-mbaas-oid="xws5v5q" type="button"
+                      <Button type="button"
                         variant="outline"
                         tone="danger"
                         size="sm"
@@ -616,20 +608,19 @@ export function EntryDetailDialog({
                     </div>
                   )
                 ) : entry.signatureRequestPostId ? (
-                  <div data-mbaas-oid="nz5vq3e" className="mt-3 space-y-3">
-                    <div data-mbaas-oid="pjqy8du" role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
+                  <div className="mt-3 space-y-3">
+                    <div role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                       <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
-                      <p data-mbaas-oid="4xo4o0x" className="text-sm font-medium text-amber-300">
+                      <p className="text-sm font-medium text-amber-300">
                         교관에게 서명 요청을 보냈습니다. 승인된 교관이 서명 요청함에서 확인 후 서명을 완료하면 이 화면에 자동으로 표시됩니다.
                       </p>
                     </div>
                     {commentsCheckError && (
-                      <p data-mbaas-oid="3bxc0jq" role="alert" className="text-xs font-medium text-rose-600">
+                      <p role="alert" className="text-xs font-medium text-rose-600">
                         {commentsCheckError}
                       </p>
                     )}
-                    <Button
-                      data-mbaas-oid="8a2o3m8" type="button"
+                    <Button type="button"
                       variant="outline"
                       tone="brand"
                       size="sm"
@@ -642,17 +633,17 @@ export function EntryDetailDialog({
                     </Button>
                   </div>
                 ) : (
-                  <div data-mbaas-oid="qbero0z" className="mt-3 space-y-3">
-                    <p data-mbaas-oid="phbdg1m" className="text-xs text-slate-400">
+                  <div className="mt-3 space-y-3">
+                    <p className="text-xs text-slate-400">
                       교관에게 서명을 요청하면, 승인된 교관이 서명 요청함에서 확인 후 서명을 완료할 수 있습니다. 교관 로그인을 기다릴 필요가 없습니다.
                     </p>
 
                     {isLoadingInstructors ? (
-                      <p data-mbaas-oid="nq52vb2" className="text-xs text-slate-400">승인된 교관 목록을 불러오는 중입니다...</p>
+                      <p className="text-xs text-slate-400">승인된 교관 목록을 불러오는 중입니다...</p>
                     ) : instructorsError ? (
-                      <p data-mbaas-oid="whlfhgk" role="alert" className="text-xs font-medium text-rose-600">{instructorsError}</p>
+                      <p role="alert" className="text-xs font-medium text-rose-600">{instructorsError}</p>
                     ) : trackInstructors.length === 0 ? (
-                      <p data-mbaas-oid="b04ttjx" className="rounded-control border border-white/10 bg-surface px-3 py-2 text-xs text-slate-400">
+                      <p className="rounded-control border border-white/10 bg-surface px-3 py-2 text-xs text-slate-400">
                         {entryTrackKey === 'ultralight'
                           ? '이 기록에 서명할 수 있는 승인된 지도조종자가 없어요. 초경량 기록은 항공기 교관이 아니라 지도조종자(공단 등록)의 확인이 필요합니다(운영세칙 제9조). 지도조종자가 계정정보에서 "초경량비행장치 지도조종자"로 교관 승인을 받으면 목록에 나타나요.'
                           : entryTrackKey === 'lsa'
@@ -660,14 +651,13 @@ export function EntryDetailDialog({
                             : '현재 승인된 교관이 없어 서명 요청을 보낼 수 없습니다. 교관이 승인되면 다시 시도해주세요.'}
                       </p>
                     ) : (
-                      <div data-mbaas-oid="wdbtg5s" className="space-y-2">
-                        <div data-mbaas-oid="kbnc8ua" className="flex items-center justify-between gap-2">
-                          <label data-mbaas-oid="pxmhi6g" htmlFor="target-instructor" className="text-xs font-semibold text-slate-400">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <label htmlFor="target-instructor" className="text-xs font-semibold text-slate-400">
                             서명 요청 대상 교관
                           </label>
                           {hasMyAffiliation && (
-                            <button
-                              data-mbaas-oid="1vvotxv" type="button"
+                            <button type="button"
                               onClick={() => setShowAllAffiliations((prev) => !prev)}
                               className="text-xs font-medium text-sky-700 underline-offset-2 hover:underline"
                             >
@@ -675,8 +665,7 @@ export function EntryDetailDialog({
                             </button>
                           )}
                         </div>
-                        <select
-                          data-mbaas-oid="iyl8h2r" id="target-instructor"
+                        <select id="target-instructor"
                           value={selectedInstructorUserId}
                           onChange={(e) => setSelectedInstructorUserId(e.target.value)}
                           disabled={visibleInstructors.length === 0}
@@ -685,18 +674,18 @@ export function EntryDetailDialog({
                             disabled:cursor-not-allowed disabled:bg-white/[0.07] disabled:text-slate-400"
                         >
                           {visibleInstructors.length === 0 && (
-                            <option data-mbaas-oid="wca7tg3" value="" disabled>
+                            <option value="" disabled>
                               교관을 선택해주세요
                             </option>
                           )}
                           {visibleInstructors.map((instructor) => (
-                            <option data-mbaas-oid="z9i9lkb" key={instructor.userId} value={instructor.userId}>
+                            <option key={instructor.userId} value={instructor.userId}>
                               {instructor.name} ({instructor.affiliation})
                             </option>
                           ))}
                         </select>
                         {visibleInstructors.length === 0 && (
-                          <p data-mbaas-oid="rwn5en2" className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-400">
                             선택한 소속에 해당하는 승인된 교관이 없습니다. "전체 보기"를 눌러 다른 소속 교관도 확인해보세요.
                           </p>
                         )}
@@ -704,12 +693,11 @@ export function EntryDetailDialog({
                     )}
 
                     {sendRequestError && (
-                      <p data-mbaas-oid="pxk5rli" role="alert" className="text-xs font-medium text-rose-600">
+                      <p role="alert" className="text-xs font-medium text-rose-600">
                         {sendRequestError}
                       </p>
                     )}
-                    <Button
-                      data-mbaas-oid="2g9vfhb" type="button"
+                    <Button type="button"
                       variant="solid"
                       tone="brand"
                       size="sm"
@@ -725,11 +713,10 @@ export function EntryDetailDialog({
               </div>
 
               {confirmingDelete ? (
-                <div data-mbaas-oid="5f14dk1" role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-                  <p data-mbaas-oid="1285gdt" className="text-sm font-medium text-rose-300">이 비행 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
-                  <div data-mbaas-oid="yq809rj" className="mt-3 flex gap-2">
-                    <Button
-                      data-mbaas-oid="2liwin7" type="button" tone="danger" size="sm"
+                <div role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
+                  <p className="text-sm font-medium text-rose-300">이 비행 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+                  <div className="mt-3 flex gap-2">
+                    <Button type="button" tone="danger" size="sm"
                       onClick={() => {
                         onDelete(entry.id)
                         dialogRef.current?.close()
@@ -737,24 +724,24 @@ export function EntryDetailDialog({
                     >
                       삭제 확인
                     </Button>
-                    <Button data-mbaas-oid="2hdugm0" type="button" variant="outline" tone="neutral" size="sm" onClick={() => setConfirmingDelete(false)}>
+                    <Button type="button" variant="outline" tone="neutral" size="sm" onClick={() => setConfirmingDelete(false)}>
                       취소
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div data-mbaas-oid="wvzhrk1" className="pt-2">
+                <div className="pt-2">
                   {entry.instructorSignature && (
-                    <p data-mbaas-oid="o85qokh" className="mb-2 text-xs text-slate-400">
+                    <p className="mb-2 text-xs text-slate-400">
                       서명된 기록을 수정하면 서명이 취소됩니다.
                     </p>
                   )}
-                  <div data-mbaas-oid="ktod293" className="flex flex-wrap gap-3">
-                    <Button data-mbaas-oid="8acd8a5" type="button" variant="outline" tone="brand" size="sm" onClick={() => setMode('edit')}>
+                  <div className="flex flex-wrap gap-3">
+                    <Button type="button" variant="outline" tone="brand" size="sm" onClick={() => setMode('edit')}>
                       <Pencil className="h-4 w-4" aria-hidden="true" />
                       수정하기
                     </Button>
-                    <Button data-mbaas-oid="y147cyk" type="button" variant="outline" tone="danger" size="sm" onClick={() => setConfirmingDelete(true)}>
+                    <Button type="button" variant="outline" tone="danger" size="sm" onClick={() => setConfirmingDelete(true)}>
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                       삭제하기
                     </Button>
