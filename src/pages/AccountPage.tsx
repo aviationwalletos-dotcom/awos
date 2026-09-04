@@ -94,7 +94,12 @@ export function AccountPage() {
       setEmailLinkState('done')
       setEmailLinkPw('')
       setEmailLinkPw2('')
-      void fetchLinkedProviders().then(setLinkedProviders)
+      // 서버 확인(schema11)이 오기 전에도 배지가 바로 '연결됨'으로 바뀌도록 먼저 반영한다
+      setLinkedProviders((prev) => [...new Set([...(prev ?? []), 'email'])])
+      void fetchLinkedProviders().then((next) => {
+        // 서버가 email 을 못 돌려줘도(함수 미설치 등) 방금 설정한 사실은 유지한다
+        setLinkedProviders([...new Set([...next, 'email'])])
+      })
     } catch (err) {
       setEmailLinkState('error')
       setEmailLinkError(err instanceof Error ? err.message : '설정에 실패했어요.')

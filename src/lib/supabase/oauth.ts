@@ -31,6 +31,33 @@ export function startOAuthLogin(provider: OAuthProvider): void {
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}${scopeParam}`
 }
 
+/**
+ * 이메일+비밀번호 로그인이 설정돼 있는지 서버에 물어본다(schema11 has_email_login).
+ *
+ * [BUGFIX] 소셜 계정에 비밀번호를 설정해도 GoTrue 는 email identity 를 만들지 않고
+ * app_metadata.providers 에도 'email' 을 넣지 않는다(비밀번호는 auth.users.encrypted_password 에만 저장).
+ * 그래서 예전 판정은 연결 후에도 항상 '미연결'로 보였다.
+ * 함수가 아직 없으면(=schema11 미실행) null 을 돌려주고, 호출부는 기존 판정으로 물러난다.
+ */
+async function fetchHasEmailLogin(token: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/has_email_login`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    })
+    if (!res.ok) return null
+    const value = (await res.json()) as unknown
+    return typeof value === 'boolean' ? value : null
+  } catch {
+    return null
+  }
+}
+
 /** 현재 계정에 연결된 로그인 방법(provider) 목록 — 'email' | 'google' | 'kakao' ... */
 export async function fetchLinkedProviders(): Promise<string[]> {
   const token = getAuthedAccessToken()
@@ -39,9 +66,20 @@ export async function fetchLinkedProviders(): Promise<string[]> {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
   })
   if (!res.ok) return []
-  const body = (await res.json()) as { identities?: Array<{ provider: string }>; app_metadata?: { providers?: string[] } }
-  // 소셜 계정에 비밀번호를 설정하면 identities 에는 안 나오고 app_metadata.providers 에 'email' 이 추가된다
-  return [...new Set([...(body.identities ?? []).map((i) => i.provider), ...(body.app_metadata?.providers ?? [])])]
+  const body = (await res.json()) as {
+    email?: string | null
+    identities?: Array<{ provider: string }>
+    app_metadata?: { providers?: string[] }
+  }
+  const providers = new Set([
+    ...(body.identities ?? []).map((i) => i.provider),
+    ...(body.app_metadata?.providers ?? []),
+  ])
+  // 비밀번호 설정 여부는 위 응답으로 알 수 없어 서버 함수로 확인한다.
+  const hasPassword = await fetchHasEmailLogin(token)
+  if (hasPassword === true) providers.add('email')
+  else if (hasPassword === false) providers.delete('email')
+  return [...providers]
 }
 
 /**
