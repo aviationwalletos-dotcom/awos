@@ -8,7 +8,7 @@ import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
 import { useAuth } from '../contexts/AuthContext'
 import { getAuthedDataClient, updateMyProfileFields } from '../lib/baas/supabaseTransport'
-import { fetchLinkedProviders, startLinkProvider } from '../lib/supabase/oauth'
+import { fetchAuthEmails, fetchLinkedProviders, registerIdentityEmailAsAccountEmail, startLinkProvider } from '../lib/supabase/oauth'
 import type { OAuthProvider } from '../lib/supabase/oauth'
 import { useChangePassword } from '../hooks/baas/useChangePassword'
 import { useIndividualRoleOverride } from '../hooks/useIndividualRoleOverride'
@@ -71,6 +71,27 @@ export function AccountPage() {
   }, [account?.id])
   const justLinked = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('linked') === '1'
   const [linkedProviders, setLinkedProviders] = useState<string[] | null>(null)
+  // 카카오(비즈 앱 전환 전 가입)처럼 계정 이메일이 비어 있고 소셜 identity 에만 이메일이 있는 경우
+  const [authEmails, setAuthEmails] = useState<{ accountEmail: string | null; identityEmail: string | null; identityProvider: string | null } | null>(null)
+  const [emailRegisterState, setEmailRegisterState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [emailRegisterError, setEmailRegisterError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!account?.id) return
+    void fetchAuthEmails().then(setAuthEmails).catch(() => setAuthEmails(null))
+  }, [account?.id])
+  const needsEmailRegister = Boolean(authEmails && !authEmails.accountEmail && authEmails.identityEmail)
+  async function handleRegisterIdentityEmail() {
+    if (!authEmails?.identityEmail) return
+    setEmailRegisterState('sending')
+    setEmailRegisterError(null)
+    try {
+      await registerIdentityEmailAsAccountEmail(authEmails.identityEmail)
+      setEmailRegisterState('sent')
+    } catch (err) {
+      setEmailRegisterState('error')
+      setEmailRegisterError(err instanceof Error ? err.message : '등록에 실패했습니다.')
+    }
+  }
   const [linkTarget, setLinkTarget] = useState<OAuthProvider | null>(null)
   const [linkError, setLinkError] = useState<string | null>(null)
 
@@ -348,7 +369,34 @@ export function AccountPage() {
             <dl data-mbaas-oid="c6ctrzx" className="mt-6 grid grid-cols-1 gap-4 border-t border-white/10 pt-6 sm:grid-cols-2">
               <div data-mbaas-oid="sfsjqz6">
                 <dt data-mbaas-oid="gi9m403" className="text-xs font-semibold text-slate-400">이메일(아이디)</dt>
-                <dd data-mbaas-oid="5y03z7c" data-mbaas-dynamic="true" className="mt-1 text-sm text-white">{account.user_id}</dd>
+                <dd data-mbaas-oid="5y03z7c" data-mbaas-dynamic="true" className="mt-1 text-sm text-white">
+                  {account.user_id || authEmails?.identityEmail || '—'}
+                  {needsEmailRegister && (
+                    <span className="ml-1.5 text-[11px] text-slate-500">({authEmails?.identityProvider === 'kakao' ? '카카오' : authEmails?.identityProvider} 제공)</span>
+                  )}
+                </dd>
+                {needsEmailRegister && (
+                  <div data-mbaas-oid="emailreg" className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                    {emailRegisterState === 'sent' ? (
+                      <>확인 메일을 <span className="font-semibold">{authEmails?.identityEmail}</span>로 보냈어요. 메일의 링크를 누르면 이 주소가 계정 이메일로 등록됩니다.</>
+                    ) : (
+                      <>
+                        이 계정은 이메일 없이 가입되어 소셜 로그인이 준 이메일이 아직 계정에 등록되지 않았어요. 등록하면 이메일 로그인 연결·안내 메일 수신이 가능해요.
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleRegisterIdentityEmail()}
+                            disabled={emailRegisterState === 'sending'}
+                            className="rounded-control bg-sky px-3 py-1.5 text-xs font-semibold text-navy hover:opacity-90 disabled:opacity-50"
+                          >
+                            {emailRegisterState === 'sending' ? '보내는 중…' : `${authEmails?.identityEmail} 를 계정 이메일로 등록`}
+                          </button>
+                          {emailRegisterState === 'error' && <span className="text-rose-300">{emailRegisterError}</span>}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
               <div data-mbaas-oid="fibvish">
                 <dt data-mbaas-oid="j5tyygq" className="text-xs font-semibold text-slate-400">전화번호</dt>

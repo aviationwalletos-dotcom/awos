@@ -132,6 +132,19 @@ interface AuthCtx {
   packed: string
 }
 
+/**
+ * 계정 이메일. 비즈 앱 전환 전에 카카오로 가입한 계정은 auth.users.email 이 비어 있고,
+ * 이후 로그인에서 카카오가 준 이메일은 identities[].identity_data.email 에만 들어온다. 그 값을 대체로 쓴다.
+ */
+function emailOf(user: { email?: string | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }): string {
+  if (user.email) return user.email
+  for (const id of user.identities ?? []) {
+    const e = id.identity_data?.email
+    if (typeof e === 'string' && e.includes('@')) return e
+  }
+  return ''
+}
+
 async function resolveAuth(init: RequestInit | undefined): Promise<AuthCtx | null> {
   const packed = extractPackedToken(init)
   if (!packed) return null
@@ -140,7 +153,7 @@ async function resolveAuth(init: RequestInit | undefined): Promise<AuthCtx | nul
   const authClient = makeAuthClient()
   const { data: userData } = await authClient.auth.getUser(access)
   if (userData?.user) {
-    return { client: dataClientFor(access), userId: userData.user.id, email: userData.user.email ?? '', packed }
+    return { client: dataClientFor(access), userId: userData.user.id, email: emailOf(userData.user), packed }
   }
 
   // access 만료 → refresh로 조용히 갱신 시도
@@ -153,7 +166,7 @@ async function resolveAuth(init: RequestInit | undefined): Promise<AuthCtx | nul
       if (getStoredAccessToken() === packed) setStoredAccessToken(newPacked)
       const { data: u2 } = await authClient.auth.getUser(session.access_token)
       if (u2?.user) {
-        return { client: dataClientFor(session.access_token), userId: u2.user.id, email: u2.user.email ?? '', packed: newPacked }
+        return { client: dataClientFor(session.access_token), userId: u2.user.id, email: emailOf(u2.user), packed: newPacked }
       }
     }
   }

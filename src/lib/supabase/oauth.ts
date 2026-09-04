@@ -43,6 +43,35 @@ export async function fetchLinkedProviders(): Promise<string[]> {
   return [...new Set((body.identities ?? []).map((i) => i.provider))]
 }
 
+/** auth.users.email 과 소셜 identity 이메일을 함께 돌려준다 */
+export async function fetchAuthEmails(): Promise<{ accountEmail: string | null; identityEmail: string | null; identityProvider: string | null }> {
+  const token = getAuthedAccessToken()
+  if (!token) return { accountEmail: null, identityEmail: null, identityProvider: null }
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } })
+  if (!res.ok) return { accountEmail: null, identityEmail: null, identityProvider: null }
+  const body = (await res.json()) as { email?: string | null; identities?: Array<{ provider: string; identity_data?: { email?: string } }> }
+  const hit = (body.identities ?? []).find((i) => typeof i.identity_data?.email === 'string' && i.identity_data.email.includes('@'))
+  return { accountEmail: body.email || null, identityEmail: hit?.identity_data?.email ?? null, identityProvider: hit?.provider ?? null }
+}
+
+/**
+ * 소셜 identity 의 이메일을 계정 이메일(auth.users.email)로 등록한다.
+ * Supabase 가 그 주소로 확인 메일을 보내고, 링크를 누르면 계정 이메일이 확정된다(이메일 로그인·계정 연결 가능).
+ */
+export async function registerIdentityEmailAsAccountEmail(email: string): Promise<void> {
+  const token = getAuthedAccessToken()
+  if (!token) throw new Error('로그인이 필요합니다.')
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: 'PUT',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { msg?: string; error_description?: string; message?: string }
+    throw new Error(body.msg || body.error_description || body.message || `등록 실패 (${res.status})`)
+  }
+}
+
 /**
  * 로그인한 기존 계정에 소셜 로그인 방법을 연결한다(Supabase 수동 연결).
  * 완료 후 /auth/callback → next 경로로 돌아온다.
