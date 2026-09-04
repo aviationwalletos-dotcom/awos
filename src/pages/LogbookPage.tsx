@@ -71,6 +71,8 @@ import { VehicleCards } from '../components/logbook/VehicleCards'
 import { VehicleSummaryCard } from '../components/logbook/VehicleSummaryCard'
 import { RecentFlightsCard } from '../components/logbook/RecentFlightsCard'
 import { EligibilityProgressPanel } from '../components/logbook/EligibilityProgressPanel'
+import { NextGoalCard } from '../components/logbook/NextGoalCard'
+import { Collapsible } from '../components/Collapsible'
 import { savePilotFlightExperienceCertificatePdf, saveUltralightCertificatePdf } from '../lib/pdf'
 import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
@@ -558,8 +560,13 @@ export function LogbookPage() {
             ) : (
               <div data-mbaas-oid="rdnscmp" className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <MyCertificateStatusCard certificates={certificates} roleContent={roleContent} compact holderName={account?.name} track={workLogRole ? 'aircraft' : activeTrack} totalHours={workLogRole ? undefined : trackTotalHours} />
-                {isDrone && <VehicleSummaryCard vehicles={vehicles} onManage={() => setActiveTab('logbook')} />}
-                {isLsa && <RecentFlightsCard entries={trackEntries} />}
+                {(isDrone || isLsa) && (
+                  <div className="flex flex-col gap-4">
+                    <NextGoalCard track={activeTrack} entries={trackEntries} certificates={certificates} vehicles={vehicles} onOpenDetail={() => document.getElementById('elig-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+                    {isDrone && <VehicleSummaryCard vehicles={vehicles} onManage={() => setActiveTab('logbook')} />}
+                    {isLsa && <RecentFlightsCard entries={trackEntries} />}
+                  </div>
+                )}
               </div>
             )}
 
@@ -621,19 +628,6 @@ export function LogbookPage() {
             )}
 
 
-            {isLsa && (
-              <section data-mbaas-oid="cpllsa1" className="bg-panel py-[clamp(24px,4vw,48px)]">
-                <div data-mbaas-oid="cpllsa2" className="mx-auto max-w-4xl px-6">
-                  <Reveal>
-                    <ComplianceSection
-                      title="경량항공기 조종사 응시경력 안내/현황"
-                      description="시행규칙 별표 4 제2호 기준. 경량항공기 구분의 비행기록만으로 계산한 참고 정보입니다."
-                      items={lsaComplianceItems}
-                    />
-                  </Reveal>
-                </div>
-              </section>
-            )}
 
             <section data-mbaas-oid="lgbpg30" className="bg-navy py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="lgbpg31" className="mx-auto max-w-4xl px-6">
@@ -646,11 +640,40 @@ export function LogbookPage() {
                   </p>
                   <div data-mbaas-oid="avfp5fw" className="mt-6">
                     <LogbookTotalsSummary entries={trackEntries} accountId={account?.id} track={activeTrack} />
-                    {(isLsa || isDrone) && <EligibilityProgressPanel track={activeTrack} entries={trackEntries} certificates={certificates} vehicles={vehicles} />}
                   </div>
                 </Reveal>
               </div>
             </section>
+
+            {(isLsa || isDrone) && (
+              <section id="elig-section" data-mbaas-oid="eligsec" className="bg-panel py-[clamp(24px,4vw,48px)]">
+                <div className="mx-auto max-w-4xl px-6">
+                  <Reveal>
+                    <h2 className="font-display text-2xl font-extrabold text-white">응시경력 진척도</h2>
+                    <p className="mt-2 text-sm text-slate-300">
+                      {isLsa ? '시행규칙 별표 4 제2호' : '초경량비행장치·무인비행장치 조종자 증명 운영세칙 별표 1·2·3'} 기준으로 자격증명 → 지도조종자 → 실기평가조종자 순서의 요건을 계산해요. 참고 판정이며 최종 응시자격은 공단이 심사합니다.
+                    </p>
+                    <div className="mt-6">
+                      {/* 지금 활성화된 목표만 요약(첫 화면 카드와 동일). 전체 요건과 안내/현황은 접어둔다 */}
+                      <NextGoalCard track={activeTrack} entries={trackEntries} certificates={certificates} vehicles={vehicles} />
+                    </div>
+                    <EligibilityProgressPanel track={activeTrack} entries={trackEntries} certificates={certificates} vehicles={vehicles} title="전체 요건 보기" />
+                    <Collapsible
+                      id="elig-guide"
+                      className="mt-2"
+                      title={isLsa ? '응시경력 안내/현황' : '법정 요건 안내/현황'}
+                      summary={<span className="text-slate-400">{isLsa ? '별표 4 제2호' : '운영세칙 · 제124조 · 제127조'}</span>}
+                    >
+                      <ComplianceSection
+                        title={isLsa ? '경량항공기 조종사 응시경력 안내/현황' : '초경량비행장치 조종자 법정 요건 안내/현황'}
+                        description={isLsa ? '별표 4 제2호 항목별 안내. 위 진척도와 같은 기록으로 계산한 참고 정보입니다.' : '초경량 구분의 비행기록만으로 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다.'}
+                        items={isLsa ? lsaComplianceItems : droneComplianceItems}
+                      />
+                    </Collapsible>
+                  </Reveal>
+                </div>
+              </section>
+            )}
 
             <section data-mbaas-oid="lgbpg20" className="bg-panel py-[clamp(24px,4vw,48px)]">
               <div data-mbaas-oid="lgbpg21" className="mx-auto max-w-4xl px-6">
@@ -810,19 +833,6 @@ export function LogbookPage() {
             </section>
 
             
-            {isDrone && (
-              <section data-mbaas-oid="cpldrn1" className="bg-panel py-[clamp(24px,4vw,48px)]">
-                <div data-mbaas-oid="cpldrn2" className="mx-auto max-w-4xl px-6">
-                  <Reveal>
-                    <ComplianceSection
-                      title="초경량비행장치 조종자 법정 요건 안내/현황"
-                      description="아래 항목은 초경량 구분의 비행기록만으로 자동 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
-                      items={droneComplianceItems}
-                    />
-                  </Reveal>
-                </div>
-              </section>
-            )}
           </>
         )}
 
