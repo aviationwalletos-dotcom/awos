@@ -98,10 +98,13 @@ export function EntryDetailDialog({
   const [selectedInstructorUserId, setSelectedInstructorUserId] = useState('')
 
   const hasMyAffiliation = Boolean(myAffiliation && myAffiliation.trim())
+  // 기록의 자격 구분에 맞는 교관만 — 초경량 기록은 지도조종자, 경량은 경량 교관, 항공기는 항공기 교관(시행규칙 제77조·운영세칙 제9조)
+  const entryTrackKey = entry ? entryTrack(entry) : 'aircraft'
+  const trackInstructors = useMemo(() => approvedInstructors.filter((i) => i.tracks.includes(entryTrackKey)), [approvedInstructors, entryTrackKey])
   const visibleInstructors = useMemo(() => {
-    if (showAllAffiliations || !hasMyAffiliation) return approvedInstructors
-    return approvedInstructors.filter((instructor) => instructor.affiliation === myAffiliation)
-  }, [approvedInstructors, showAllAffiliations, hasMyAffiliation, myAffiliation])
+    if (showAllAffiliations || !hasMyAffiliation) return trackInstructors
+    return trackInstructors.filter((instructor) => instructor.affiliation === myAffiliation)
+  }, [trackInstructors, showAllAffiliations, hasMyAffiliation, myAffiliation])
 
   // 서명 요청은 반드시 특정 교관을 지정해야 하므로, 선택 가능한 목록이 바뀌면
   // 현재 선택값이 더 이상 유효하지 않을 때 목록의 첫 번째 교관을 자동으로 선택해둔다.
@@ -473,35 +476,54 @@ export function EntryDetailDialog({
                     )}
                   </>
                 )}
+                {entryTrack(entry) === 'ultralight' ? (
+                  <>
+                    {(entry.traineeName || entry.instructorLicenceNo) && (
+                      <div data-mbaas-oid="uldet1">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">교육생 / 지도조종자 자격번호</dt>
+                        <dd className="mt-0.5 text-ink">{entry.traineeName || '—'} / {entry.instructorLicenceNo || '—'}</dd>
+                      </div>
+                    )}
+                    {(entry.hourMeterStart != null || entry.hourMeterEnd != null) && (
+                      <div data-mbaas-oid="uldet2">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">아워미터 (이륙 → 착륙)</dt>
+                        <dd className="mt-0.5 font-mono-data tabular-nums text-ink">{entry.hourMeterStart ?? '—'} → {entry.hourMeterEnd ?? '—'}</dd>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
                 <div data-mbaas-oid="lnddet1">
-                  <dt data-mbaas-oid="lnddet2" className="text-xs font-medium uppercase tracking-wide text-slate-400">계기접근 / 주간 / 야간 이착륙</dt>
-                  <dd data-mbaas-oid="lnddet3" className="mt-0.5 font-mono-data tabular-nums text-ink">
-                    {entry.instrumentApproaches ?? 0}회 · {entry.dayLandings ?? 0}회 / {entry.nightLandings ?? 0}회
-                  </dd>
-                </div>
-                <div data-mbaas-oid="2pfqv5b">
-                  <dt data-mbaas-oid="8evi40u" className="text-xs font-medium uppercase tracking-wide text-slate-400">범주별 시간(단발/다발/회전익/기타)</dt>
-                  <dd data-mbaas-oid="sv75pvz" className="mt-0.5 font-mono-data tabular-nums text-ink">
-                    {(entry.categoryHours?.singleEngineLand ?? 0).toFixed(1)} / {(entry.categoryHours?.multiEngineLand ?? 0).toFixed(1)} /{' '}
-                    {(entry.categoryHours?.rotorcraftHelicopter ?? 0).toFixed(1)} / {(entry.categoryHours?.otherHours ?? 0).toFixed(1)}
-                    {entry.categoryHours?.otherLabel ? ` (${entry.categoryHours.otherLabel})` : ''}
-                  </dd>
-                </div>
-                <div data-mbaas-oid="b5d9rtj">
-                  <dt data-mbaas-oid="4ceqp6z" className="text-xs font-medium uppercase tracking-wide text-slate-400">자격시간(DUAL RECEIVED/PIC/SIC/AS FLIGHT INSTRUCTOR)</dt>
-                  <dd data-mbaas-oid="xr8ol5j" className="mt-0.5 font-mono-data tabular-nums text-ink">
-                    {(entry.pilotingTime?.dualReceived ?? 0).toFixed(1)} / {(entry.pilotingTime?.pic ?? 0).toFixed(1)} /{' '}
-                    {(entry.pilotingTime?.sic ?? 0).toFixed(1)} / {(entry.pilotingTime?.flightInstructor ?? 0).toFixed(1)}
-                  </dd>
-                </div>
-                <div data-mbaas-oid="sopibil">
-                  <dt data-mbaas-oid="mfe7b6k" className="text-xs font-medium uppercase tracking-wide text-slate-400">조건별 시간(주/야/CC/실계기/모의계기)</dt>
-                  <dd data-mbaas-oid="m0itc6g" className="mt-0.5 font-mono-data tabular-nums text-ink">
-                    {(entry.conditions?.day ?? 0).toFixed(1)} / {(entry.conditions?.night ?? 0).toFixed(1)} /{' '}
-                    {(entry.conditions?.crossCountry ?? 0).toFixed(1)} / {(entry.conditions?.actualInstrument ?? 0).toFixed(1)} /{' '}
-                    {(entry.conditions?.simulatedInstrument ?? 0).toFixed(1)}
-                  </dd>
-                </div>
+                      <dt data-mbaas-oid="lnddet2" className="text-xs font-medium uppercase tracking-wide text-slate-400">계기접근 / 주간 / 야간 이착륙</dt>
+                      <dd data-mbaas-oid="lnddet3" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                        {entry.instrumentApproaches ?? 0}회 · {entry.dayLandings ?? 0}회 / {entry.nightLandings ?? 0}회
+                      </dd>
+                    </div>
+                    <div data-mbaas-oid="2pfqv5b">
+                      <dt data-mbaas-oid="8evi40u" className="text-xs font-medium uppercase tracking-wide text-slate-400">범주별 시간(단발/다발/회전익/기타)</dt>
+                      <dd data-mbaas-oid="sv75pvz" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                        {(entry.categoryHours?.singleEngineLand ?? 0).toFixed(1)} / {(entry.categoryHours?.multiEngineLand ?? 0).toFixed(1)} /{' '}
+                        {(entry.categoryHours?.rotorcraftHelicopter ?? 0).toFixed(1)} / {(entry.categoryHours?.otherHours ?? 0).toFixed(1)}
+                        {entry.categoryHours?.otherLabel ? ` (${entry.categoryHours.otherLabel})` : ''}
+                      </dd>
+                    </div>
+                    <div data-mbaas-oid="b5d9rtj">
+                      <dt data-mbaas-oid="4ceqp6z" className="text-xs font-medium uppercase tracking-wide text-slate-400">자격시간(DUAL RECEIVED/PIC/SIC/AS FLIGHT INSTRUCTOR)</dt>
+                      <dd data-mbaas-oid="xr8ol5j" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                        {(entry.pilotingTime?.dualReceived ?? 0).toFixed(1)} / {(entry.pilotingTime?.pic ?? 0).toFixed(1)} /{' '}
+                        {(entry.pilotingTime?.sic ?? 0).toFixed(1)} / {(entry.pilotingTime?.flightInstructor ?? 0).toFixed(1)}
+                      </dd>
+                    </div>
+                    <div data-mbaas-oid="sopibil">
+                      <dt data-mbaas-oid="mfe7b6k" className="text-xs font-medium uppercase tracking-wide text-slate-400">조건별 시간(주/야/CC/실계기/모의계기)</dt>
+                      <dd data-mbaas-oid="m0itc6g" className="mt-0.5 font-mono-data tabular-nums text-ink">
+                        {(entry.conditions?.day ?? 0).toFixed(1)} / {(entry.conditions?.night ?? 0).toFixed(1)} /{' '}
+                        {(entry.conditions?.crossCountry ?? 0).toFixed(1)} / {(entry.conditions?.actualInstrument ?? 0).toFixed(1)} /{' '}
+                        {(entry.conditions?.simulatedInstrument ?? 0).toFixed(1)}
+                      </dd>
+                    </div>
+                  </>
+                )}
                 {Boolean(entry.groundTrainerTime) && (
                   <div data-mbaas-oid="a9mhhzz">
                     <dt data-mbaas-oid="xkv5vkn" className="text-xs font-medium uppercase tracking-wide text-slate-400">지상훈련장비(시뮬레이터)</dt>
@@ -629,9 +651,13 @@ export function EntryDetailDialog({
                       <p data-mbaas-oid="nq52vb2" className="text-xs text-slate-400">승인된 교관 목록을 불러오는 중입니다...</p>
                     ) : instructorsError ? (
                       <p data-mbaas-oid="whlfhgk" role="alert" className="text-xs font-medium text-rose-600">{instructorsError}</p>
-                    ) : approvedInstructors.length === 0 ? (
+                    ) : trackInstructors.length === 0 ? (
                       <p data-mbaas-oid="b04ttjx" className="rounded-control border border-white/10 bg-surface px-3 py-2 text-xs text-slate-400">
-                        현재 승인된 교관이 없어 서명 요청을 보낼 수 없습니다. 교관이 승인되면 다시 시도해주세요.
+                        {entryTrackKey === 'ultralight'
+                          ? '이 기록에 서명할 수 있는 승인된 지도조종자가 없어요. 초경량 기록은 항공기 교관이 아니라 지도조종자(공단 등록)의 확인이 필요합니다(운영세칙 제9조). 지도조종자가 계정정보에서 "초경량비행장치 지도조종자"로 교관 승인을 받으면 목록에 나타나요.'
+                          : entryTrackKey === 'lsa'
+                            ? '이 기록에 서명할 수 있는 승인된 경량항공기 교관이 없어요. 교관이 계정정보에서 "경량항공기 조종교관"으로 승인을 받으면 목록에 나타나요.'
+                            : '현재 승인된 교관이 없어 서명 요청을 보낼 수 없습니다. 교관이 승인되면 다시 시도해주세요.'}
                       </p>
                     ) : (
                       <div data-mbaas-oid="wdbtg5s" className="space-y-2">

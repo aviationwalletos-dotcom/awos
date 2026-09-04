@@ -9,6 +9,7 @@ import { EMPTY_ID_SET, useAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   buildAffiliationLine,
   buildInstructorApplicationTitle,
+  buildTracksLine,
   findInstructorApplicationByUserId,
   parseDecidedAtFromComment,
   resolveApprovalDecision,
@@ -35,9 +36,18 @@ interface InstructorApprovalSectionProps {
   account: AccountResponse
   /** AccountPage에서 계산한 현재 유효 소속 기관(override → 계정 저장값 순 우선). 신청서 content에 포함된다. */
   affiliation?: string
+  /** 사용자가 보유한 자격 구분 — 어느 구분의 교관/지도조종자로 신청할지 고르게 한다 */
+  pilotTracks?: Array<'aircraft' | 'lsa' | 'ultralight'>
 }
 
-export function InstructorApprovalSection({ account, affiliation }: InstructorApprovalSectionProps) {
+const TRACK_ROLE_LABEL: Record<'aircraft' | 'lsa' | 'ultralight', string> = {
+  aircraft: '항공기 조종교관',
+  lsa: '경량항공기 조종교관',
+  ultralight: '초경량비행장치 지도조종자',
+}
+
+export function InstructorApprovalSection({ account, affiliation, pilotTracks = ['aircraft'] }: InstructorApprovalSectionProps) {
+  const [selectedTracks, setSelectedTracks] = useState<Array<'aircraft' | 'lsa' | 'ultralight'>>(() => (pilotTracks.length > 0 ? [pilotTracks[0]] : ['aircraft']))
   const { data, isLoading, error, refetch } = useInstructorApplications()
   const { createApplication, isLoading: isSubmitting, error: submitError, reset: resetSubmit } = useCreateInstructorApplication()
 
@@ -72,6 +82,7 @@ export function InstructorApprovalSection({ account, affiliation }: InstructorAp
 
     try {
       const contentLines = [reason.trim()]
+      contentLines.push('', buildTracksLine(selectedTracks.length > 0 ? selectedTracks : ['aircraft']))
       if (affiliation && affiliation.trim()) {
         contentLines.push('', buildAffiliationLine(affiliation.trim()))
       }
@@ -179,6 +190,29 @@ export function InstructorApprovalSection({ account, affiliation }: InstructorAp
             </p>
           )}
 
+          {pilotTracks.length > 1 && (
+            <div data-mbaas-oid="iatrk" className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-slate-300">어느 구분의 교관으로 신청하나요?</span>
+              <div className="flex flex-wrap gap-2">
+                {pilotTracks.map((t) => {
+                  const on = selectedTracks.includes(t)
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={on}
+                      onClick={() => setSelectedTracks((prev) => (on ? (prev.length > 1 ? prev.filter((x) => x !== t) : prev) : [...prev, t]))}
+                      className={`rounded-control border px-3 py-1.5 text-xs font-semibold ${on ? 'border-sky bg-sky/10 text-sky' : 'border-white/15 text-slate-300 hover:border-white/30'}`}
+                    >
+                      {TRACK_ROLE_LABEL[t]}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[11px] text-slate-500">초경량은 지도조종자(공단 등록) 확인이 비행경력 증명이에요(운영세칙 제9조). 항공기 교관 승인으로는 초경량 기록에 서명할 수 없어요.</p>
+            </div>
+          )}
           <div data-mbaas-oid="iasec20" className="flex flex-col gap-1.5">
             <label data-mbaas-oid="iasec21" htmlFor="instructor-application-reason" className="text-xs font-semibold text-slate-300">
               신청 사유 / 교관 경력

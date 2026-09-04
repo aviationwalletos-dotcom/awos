@@ -40,6 +40,36 @@ export const REJECTION_COMMENT_PREFIX = '[REJECTED]'
 
 /** 신청 게시글 content에 소속 기관을 표기할 때 쓰이는 줄의 접두어. */
 const AFFILIATION_LINE_PREFIX = '소속:'
+/** v1.1 — 신청 게시글 content의 "자격 구분:" 줄. 어느 구분(항공기·경량·초경량)의 교관/지도조종자로 승인받는지 */
+const TRACKS_LINE_PREFIX = '자격 구분:'
+const TRACK_LABEL_TO_KEY: Record<string, 'aircraft' | 'lsa' | 'ultralight'> = {
+  항공기: 'aircraft',
+  경량항공기: 'lsa',
+  초경량비행장치: 'ultralight',
+  초경량: 'ultralight',
+  조종사: 'aircraft',
+}
+const TRACK_KEY_TO_LABEL: Record<'aircraft' | 'lsa' | 'ultralight', string> = { aircraft: '항공기', lsa: '경량항공기', ultralight: '초경량비행장치' }
+
+export function buildTracksLine(tracks: Array<'aircraft' | 'lsa' | 'ultralight'>): string {
+  return `${TRACKS_LINE_PREFIX} ${tracks.map((t) => TRACK_KEY_TO_LABEL[t]).join(', ')}`
+}
+
+/**
+ * content에서 "자격 구분: 항공기, 초경량비행장치" 줄을 파싱한다.
+ * 줄이 없으면(구 형식) 항공기 교관으로 본다 — 기존 승인 교관은 전부 항공기 교관이었다.
+ */
+export function parseTracksFromContent(content: string | null | undefined): Array<'aircraft' | 'lsa' | 'ultralight'> {
+  if (!content) return ['aircraft']
+  const m = new RegExp(`${TRACKS_LINE_PREFIX}\\s*([^\\n]+)`).exec(content)
+  if (!m) return ['aircraft']
+  const keys = m[1]
+    .split(/[,·/]/)
+    .map((s) => s.trim())
+    .map((s) => TRACK_LABEL_TO_KEY[s])
+    .filter((k): k is 'aircraft' | 'lsa' | 'ultralight' => Boolean(k))
+  return keys.length > 0 ? [...new Set(keys)] : ['aircraft']
+}
 
 function pad2(value: number): string {
   return String(value).padStart(2, '0')

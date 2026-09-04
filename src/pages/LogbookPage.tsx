@@ -70,6 +70,7 @@ import { UltralightEntryForm } from '../components/logbook/UltralightEntryForm'
 import { VehicleCards } from '../components/logbook/VehicleCards'
 import { VehicleSummaryCard } from '../components/logbook/VehicleSummaryCard'
 import { RecentFlightsCard } from '../components/logbook/RecentFlightsCard'
+import { EligibilityProgressPanel } from '../components/logbook/EligibilityProgressPanel'
 import { savePilotFlightExperienceCertificatePdf, saveUltralightCertificatePdf } from '../lib/pdf'
 import { PILOT_TRACK_LABEL, PILOT_TRACK_SHORT, countUntaggedEntries, entryTrack, filterEntriesByTrack } from '../lib/tracks'
 import type { PilotTrack } from '../lib/tracks'
@@ -644,7 +645,8 @@ export function LogbookPage() {
                     지금까지 등록한 비행 기록을 기준으로 범주·자격·조건별 누적 시간을 계산합니다.
                   </p>
                   <div data-mbaas-oid="avfp5fw" className="mt-6">
-                    <LogbookTotalsSummary entries={trackEntries} accountId={account?.id} />
+                    <LogbookTotalsSummary entries={trackEntries} accountId={account?.id} track={activeTrack} />
+                    {(isLsa || isDrone) && <EligibilityProgressPanel track={activeTrack} entries={trackEntries} certificates={certificates} vehicles={vehicles} />}
                   </div>
                 </Reveal>
               </div>

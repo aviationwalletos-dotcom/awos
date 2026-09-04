@@ -603,7 +603,7 @@ export function AccountPage() {
             </>
           )}
 
-          {userType === 'individual' && <InstructorApprovalSection account={account} affiliation={effectiveAffiliation} />}
+          {userType === 'individual' && <InstructorApprovalSection account={account} affiliation={effectiveAffiliation} pilotTracks={pilotTracks} />}
 
           {userType === 'individual' && !isApprovalStatusLoading && (
             <p data-mbaas-oid="ibxhint" className="mt-3 flex items-center gap-2 text-xs text-slate-400">

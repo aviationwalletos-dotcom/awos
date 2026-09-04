@@ -13,6 +13,7 @@ import { fetchAuthorizedOrgIds } from '../../lib/baas/authorization'
 import {
   parseAffiliationFromContent,
   parseInstructorApplicationTitle,
+  parseTracksFromContent,
   resolveApprovalDecision,
 } from '../../lib/baas/instructorApproval'
 import { useInstructorApplications } from './useInstructorApplications'
@@ -24,6 +25,8 @@ export interface ApprovedInstructor {
   userId: string
   /** content의 "소속: ..." 줄에서 파싱한 값. 없으면 "미상". */
   affiliation: string
+  /** 승인받은 자격 구분. 구 형식(줄 없음)은 ['aircraft'] */
+  tracks: Array<'aircraft' | 'lsa' | 'ultralight'>
 }
 
 interface UseApprovedInstructorsReturn {
@@ -83,7 +86,8 @@ export function useApprovedInstructors(): UseApprovedInstructorsReturn {
           if (decision.status !== 'approved') return null
 
           const affiliation = parseAffiliationFromContent(item.content) ?? '미상'
-          return { name: parsed.name, userId: parsed.userId, affiliation }
+          const tracks = parseTracksFromContent(item.content)
+          return { name: parsed.name, userId: parsed.userId, affiliation, tracks }
         }),
       )
       setInstructors(results.filter((result): result is ApprovedInstructor => result !== null))

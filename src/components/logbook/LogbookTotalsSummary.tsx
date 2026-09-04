@@ -6,10 +6,14 @@ import { EmptyState } from '../EmptyState'
 import { sumHours } from '../../lib/hours'
 
 import type { LogbookEntry } from '../../types/logbook'
+import { vehicleKindLabel } from '../../lib/tracks'
+import type { PilotTrack } from '../../lib/tracks'
 
 interface LogbookTotalsSummaryProps {
   entries: LogbookEntry[]
   accountId?: string | null
+  /** v1.1 — 자격 구분. 초경량은 로그기록지(임무별 기장/훈련/교관·비행횟수·기체 종류) 기준으로 표시 */
+  track?: PilotTrack
 }
 
 function fmt(n: number): string {
@@ -37,7 +41,7 @@ function isRejectedCertificate(entry: LogbookEntry): boolean {
   return entry.origin === 'flight_experience_certificate' && entry.certificateApprovalStatus === 'rejected'
 }
 
-export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
+export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTotalsSummaryProps) {
   // 교관 전자서명으로 기록의 신뢰성을 검증하므로, 별도의 확인 상태 구분 없이 모든 비행 기록을 합산합니다.
   // 단, 비행경력증명서로 가져온 기록 중 아직 인증 대기중이거나 관리자가 반려한 것은 공식 합계에서
   // 제외하고, 각각 "미인증 비행경력증명서(참고용)"/"반려된 비행경력증명서" 소계로 구분해 표시합니다
@@ -47,6 +51,21 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
   const pendingCertificateBlockTime = sumHours(pendingCertificateEntries.map((e) => e.blockTime))
   const rejectedCertificateEntries = entries.filter(isRejectedCertificate)
   const rejectedCertificateBlockTime = sumHours(rejectedCertificateEntries.map((e) => e.blockTime))
+
+  // 초경량(로그기록지 ⑥ 임무별) 집계
+  const ul = {
+    pic: sumHours(officialEntries.map((e) => e.pilotingTime?.pic)),
+    training: sumHours(officialEntries.map((e) => e.pilotingTime?.training)),
+    instructor: sumHours(officialEntries.map((e) => e.pilotingTime?.flightInstructor)),
+    flights: officialEntries.reduce((s, e) => s + (e.flightCount ?? e.dayLandings ?? 0), 0),
+    byKind: Object.entries(
+      officialEntries.reduce<Record<string, number>>((acc, e) => {
+        const k = e.vehicleKind ? (vehicleKindLabel(e.vehicleKind) ?? e.vehicleKind) : '종류 미기재'
+        acc[k] = (acc[k] ?? 0) + Math.round(e.blockTime * 10)
+        return acc
+      }, {}),
+    ).map(([k, ticks]) => [k, ticks / 10] as const),
+  }
 
   // 공식 합계 — 모든 시간 필드는 0.1h 정수 틱 합산(sumHours)으로 계산해 부동소수점 누적 오차를 차단한다.
   const totals = {
@@ -100,8 +119,31 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
         id="totals-detail"
         className="mt-4"
         title="상세 내역"
-        summary={<span className="text-slate-400">범주·임무·조건별 누적</span>}
+        summary={<span className="text-slate-400">{track === 'ultralight' ? '임무별·기체별 누적' : '범주·임무·조건별 누적'}</span>}
       >
+      {track === 'ultralight' ? (
+        <div data-mbaas-oid="ultot" className="mt-6">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">임무별 누적 (로그기록지 ⑥)</h3>
+          <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <StatCell label="기장" value={ul.pic} />
+            <StatCell label="훈련" value={ul.training} />
+            <StatCell label="교관" value={ul.instructor} />
+            <StatCell label="소계" value={ul.pic + ul.training + ul.instructor} />
+          </dl>
+          <h3 className="mt-6 text-xs font-bold uppercase tracking-wide text-slate-400">비행 횟수 · 기체 종류별 누적</h3>
+          <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div>
+              <dt className="text-xs text-slate-400">비행(착륙) 횟수</dt>
+              <dd className="mt-1 font-mono-data text-lg font-bold tabular-nums text-ink">{ul.flights}회</dd>
+            </div>
+            {ul.byKind.map(([k, v]) => (
+              <StatCell key={k} label={k} value={v} />
+            ))}
+          </dl>
+          <p className="mt-4 text-[11px] text-slate-500">초경량은 야간·계기·크로스컨트리 항목이 없어요. 응시·등록용 경력은 지도조종자 확인과 교육기관 증명으로 인정됩니다(운영세칙 제9조).</p>
+        </div>
+      ) : (
+        <>
       <div data-mbaas-oid="v7u2bc0" className="mt-6">
         <h3 data-mbaas-oid="98sf1q1" className="text-xs font-bold uppercase tracking-wide text-slate-400">항공기 범주별 누적</h3>
         <dl data-mbaas-oid="lq0232k" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
@@ -175,6 +217,8 @@ export function LogbookTotalsSummary({ entries }: LogbookTotalsSummaryProps) {
             관리자가 반려한 기록입니다. 상세 화면에서 반려 사유를 확인해 주세요.
           </p>
         </div>
+      )}
+        </>
       )}
       </Collapsible>
     </div>
