@@ -287,19 +287,22 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             <label htmlFor="cert-singleEngineLand" className={labelClass}>
               단발육상(시간)
             </label>
-            <input id="cert-singleEngineLand" name="singleEngineLand" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-singleEngineLand" name="singleEngineLand" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-multiEngineLand" className={labelClass}>
               다발육상(시간)
             </label>
-            <input id="cert-multiEngineLand" name="multiEngineLand" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-multiEngineLand" name="multiEngineLand" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-rotorcraftHelicopter" className={labelClass}>
               회전익(헬리콥터, 시간)
             </label>
-            <input id="cert-rotorcraftHelicopter" name="rotorcraftHelicopter" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-rotorcraftHelicopter" name="rotorcraftHelicopter" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -312,7 +315,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
               <label htmlFor="cert-categoryOtherHours" className={labelClass}>
                 기타 시간
               </label>
-              <input id="cert-categoryOtherHours" name="categoryOtherHours" type="number" step="0.1" min="0" className={numberInputClass} />
+              <input id="cert-categoryOtherHours" name="categoryOtherHours" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
             </div>
           </div>
         </div>
@@ -328,25 +332,29 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             <label htmlFor="cert-dualReceived" className={labelClass}>
               DUAL RECEIVED(시간)
             </label>
-            <input id="cert-dualReceived" name="dualReceived" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-dualReceived" name="dualReceived" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-picTime" className={labelClass}>
               PILOT-IN-COMMAND(PIC, 시간)
             </label>
-            <input id="cert-picTime" name="picTime" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-picTime" name="picTime" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-sicTime" className={labelClass}>
               SECOND-IN-COMMAND(SIC, 시간)
             </label>
-            <input id="cert-sicTime" name="sicTime" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-sicTime" name="sicTime" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-flightInstructorTime" className={labelClass}>
               AS FLIGHT INSTRUCTOR(시간)
             </label>
-            <input id="cert-flightInstructorTime" name="flightInstructorTime" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-flightInstructorTime" name="flightInstructorTime" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
         </div>
       </fieldset>
@@ -360,7 +368,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           <label htmlFor="cert-groundTrainerTime" className={labelClass}>
             시뮬레이터 시간
           </label>
-          <input id="cert-groundTrainerTime" name="groundTrainerTime" type="number" step="0.1" min="0" className={numberInputClass} />
+          <input id="cert-groundTrainerTime" name="groundTrainerTime" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
         </div>
       </fieldset>
 
@@ -374,31 +383,36 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             <label htmlFor="cert-conditionDay" className={labelClass}>
               주간(시간)
             </label>
-            <input id="cert-conditionDay" name="conditionDay" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-conditionDay" name="conditionDay" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-conditionNight" className={labelClass}>
               야간(시간)
             </label>
-            <input id="cert-conditionNight" name="conditionNight" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-conditionNight" name="conditionNight" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-crossCountry" className={labelClass}>
               크로스컨트리(시간)
             </label>
-            <input id="cert-crossCountry" name="crossCountry" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-crossCountry" name="crossCountry" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-actualInstrument" className={labelClass}>
               실제계기(시간)
             </label>
-            <input id="cert-actualInstrument" name="actualInstrument" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-actualInstrument" name="actualInstrument" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-simulatedInstrument" className={labelClass}>
               모의계기(시간)
             </label>
-            <input id="cert-simulatedInstrument" name="simulatedInstrument" type="number" step="0.1" min="0" className={numberInputClass} />
+            <input id="cert-simulatedInstrument" name="simulatedInstrument" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
         </div>
       </fieldset>
@@ -413,19 +427,22 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             <label htmlFor="cert-instrumentApproaches" className={labelClass}>
               계기 접근 횟수
             </label>
-            <input id="cert-instrumentApproaches" name="instrumentApproaches" type="number" step="1" min="0" className={numberInputClass} />
+            <input id="cert-instrumentApproaches" name="instrumentApproaches" type="number"
+              inputMode="decimal" step="1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-dayLandings" className={labelClass}>
               주간 이착륙 횟수
             </label>
-            <input id="cert-dayLandings" name="dayLandings" type="number" step="1" min="0" className={numberInputClass} />
+            <input id="cert-dayLandings" name="dayLandings" type="number"
+              inputMode="decimal" step="1" min="0" className={numberInputClass} />
           </div>
           <div>
             <label htmlFor="cert-nightLandings" className={labelClass}>
               야간 이착륙 횟수
             </label>
-            <input id="cert-nightLandings" name="nightLandings" type="number" step="1" min="0" className={numberInputClass} />
+            <input id="cert-nightLandings" name="nightLandings" type="number"
+              inputMode="decimal" step="1" min="0" className={numberInputClass} />
           </div>
         </div>
       </fieldset>
@@ -442,6 +459,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           <input id="cert-blockTime"
             name="blockTime"
             type="number"
+              inputMode="decimal"
             step="0.1"
             min="0.1"
             placeholder="예: 152.3"

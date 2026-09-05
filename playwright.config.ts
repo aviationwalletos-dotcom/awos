@@ -24,5 +24,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testIgnore: /signature|pdf/ },
+    // 태블릿(아이패드 미니 크기·터치) — 중간 폭 레이아웃에서 흐름이 깨지지 않는지. 서명·PDF 는 데스크톱에서만.
+    { name: 'tablet', use: { ...devices['iPad Mini'], browserName: 'chromium' }, testIgnore: /signature|pdf/ },
   ],
 })

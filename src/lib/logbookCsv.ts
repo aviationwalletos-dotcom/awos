@@ -126,10 +126,10 @@ export function buildLogbookCsv(entries: LogbookEntry[]): string {
 }
 
 /** CSV 파일을 저장한다(iOS·홈 화면 앱은 공유 시트, 그 외 다운로드). */
-export function downloadLogbookCsv(entries: LogbookEntry[]): void {
+export function downloadLogbookCsv(entries: LogbookEntry[]): Promise<'shared' | 'downloaded'> {
   const now = new Date()
   const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
   // buildLogbookCsv 가 이미 BOM 을 붙인다(엑셀 한글 깨짐 방지)
   const blob = new Blob([buildLogbookCsv(entries)], { type: 'text/csv;charset=utf-8' })
-  void saveBlob(blob, `AWOS_logbook_${stamp}.csv`)
+  return saveBlob(blob, `AWOS_logbook_${stamp}.csv`)
 }

@@ -7,6 +7,7 @@ import { FLIGHT_CATEGORIES, SIM_DEVICE_LABEL } from '../../types/logbook'
 import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types/logbook'
 
 import { Button } from '../Button'
+import { localToday } from '../../lib/ui/localDate'
 
 interface FieldErrors {
   date?: string
@@ -488,7 +489,7 @@ export function EntryForm({
             <input id="date"
               name="date"
               type="date"
-              defaultValue={initialValues?.date ?? (mode === 'create' ? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) : undefined)}
+              defaultValue={initialValues?.date ?? (mode === 'create' ? localToday() : undefined)}
               className={inputClass}
               aria-invalid={Boolean(errors.date)}
               aria-describedby={errors.date ? 'date-error' : undefined}
@@ -623,6 +624,7 @@ export function EntryForm({
               name="singleEngineLand"
               onChange={handleTotalInput}
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.categoryHours?.singleEngineLand}
@@ -637,6 +639,7 @@ export function EntryForm({
               name="multiEngineLand"
               onChange={handleTotalInput}
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.categoryHours?.multiEngineLand}
@@ -650,6 +653,7 @@ export function EntryForm({
             <input id="rotorcraftHelicopter"
               name="rotorcraftHelicopter"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.categoryHours?.rotorcraftHelicopter}
@@ -676,6 +680,7 @@ export function EntryForm({
               <input id="categoryOtherHours"
                 name="categoryOtherHours"
                 type="number"
+              inputMode="decimal"
                 step="0.1"
                 min="0"
                 defaultValue={initialValues?.categoryHours?.otherHours}
@@ -704,6 +709,7 @@ export function EntryForm({
             <input id="dualReceived"
               name="dualReceived"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.pilotingTime?.dualReceived}
@@ -717,6 +723,7 @@ export function EntryForm({
             <input id="picTime"
               name="picTime"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.pilotingTime?.pic}
@@ -730,6 +737,7 @@ export function EntryForm({
             <input id="sicTime"
               name="sicTime"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.pilotingTime?.sic}
@@ -747,6 +755,7 @@ export function EntryForm({
             <input id="flightInstructorTime"
               name="flightInstructorTime"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.pilotingTime?.flightInstructor}
@@ -773,6 +782,7 @@ export function EntryForm({
           <input id="groundTrainerTime"
             name="groundTrainerTime"
             type="number"
+              inputMode="decimal"
             step="0.1"
             min="0"
             defaultValue={initialValues?.groundTrainerTime}
@@ -787,11 +797,13 @@ export function EntryForm({
           <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="sim-instrument" className={labelClass}>모의계기 시간 (선택)</label>
-              <input id="sim-instrument" name="simulatedInstrument" type="number" step="0.1" min="0" className={numberInputClass} />
+              <input id="sim-instrument" name="simulatedInstrument" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
             </div>
             <div>
               <label htmlFor="sim-approaches" className={labelClass}>계기 접근 횟수 (선택)</label>
-              <input id="sim-approaches" name="instrumentApproaches" type="number" step="1" min="0" placeholder="예: 2" className={numberInputClass} />
+              <input id="sim-approaches" name="instrumentApproaches" type="number"
+              inputMode="decimal" step="1" min="0" placeholder="예: 2" className={numberInputClass} />
             </div>
           </div>
           <div className="mt-4">
@@ -819,6 +831,7 @@ export function EntryForm({
               name="conditionDay"
               onChange={handleDayNight}
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.day}
@@ -833,6 +846,7 @@ export function EntryForm({
               name="conditionNight"
               onChange={handleDayNight}
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.night}
@@ -849,6 +863,7 @@ export function EntryForm({
             <input id="crossCountry"
               name="crossCountry"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.crossCountry}
@@ -862,6 +877,7 @@ export function EntryForm({
             <input id="actualInstrument"
               name="actualInstrument"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.actualInstrument}
@@ -875,6 +891,7 @@ export function EntryForm({
             <input id="simulatedInstrument"
               name="simulatedInstrument"
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.simulatedInstrument}
@@ -902,6 +919,7 @@ export function EntryForm({
             <input id="instrumentApproaches"
               name="instrumentApproaches"
               type="number"
+              inputMode="decimal"
               step="1"
               min="0"
               defaultValue={initialValues?.instrumentApproaches}
@@ -916,6 +934,7 @@ export function EntryForm({
             <input id="dayLandings"
               name="dayLandings"
               type="number"
+              inputMode="decimal"
               step="1"
               min="0"
               defaultValue={initialValues?.dayLandings ?? 0}
@@ -930,6 +949,7 @@ export function EntryForm({
             <input id="nightLandings"
               name="nightLandings"
               type="number"
+              inputMode="decimal"
               step="1"
               min="0"
               defaultValue={initialValues?.nightLandings ?? 0}
@@ -959,6 +979,7 @@ export function EntryForm({
               name="blockTime"
               onChange={handleTotalInput}
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0.1"
               defaultValue={initialValues?.blockTime}

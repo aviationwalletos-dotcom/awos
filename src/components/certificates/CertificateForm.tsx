@@ -28,6 +28,7 @@ import type { CertificateSubType } from '../../data/certificateOptions'
 import type { RoleContent } from '../../data/content'
 import { PILOT_TRACK_LABEL } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
+import { localToday } from '../../lib/ui/localDate'
 
 interface FieldErrors {
   name?: string
@@ -244,7 +245,7 @@ export function CertificateForm({
   const medicalNote = useMemo(() => {
     if (category !== '항공신체검사') return null
     const issuedEl = formRef.current?.elements.namedItem('issuedDate') as HTMLInputElement | null
-    const issued = issuedEl?.value || new Date().toISOString().slice(0, 10)
+    const issued = issuedEl?.value || localToday()
     const { months, assumedAge } = medicalValidityMonths({ medicalKey: subKey, issuedDate: issued, birthDate, commercialSinglePilot })
     return { months, assumedAge }
   }, [category, subKey, birthDate, commercialSinglePilot])

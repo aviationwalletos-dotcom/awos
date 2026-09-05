@@ -157,7 +157,11 @@ export function MyRecordsTab({ m }: { m: LogbookModel }) {
                     if (trackEntries.length === entries.length) clearAll();
                     else deleteEntries(ids);
                   }}
-                  onExportCsv={() => downloadLogbookCsv(trackEntries)}
+                  onExportCsv={() =>
+                    void downloadLogbookCsv(trackEntries).catch((err) =>
+                      showToast(`CSV 저장 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`),
+                    )
+                  }
                   printLabel="비행경력증명서 PDF 저장"
                   onPrint={() => {
                     const holderName = account?.name;

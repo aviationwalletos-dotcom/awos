@@ -2,6 +2,7 @@
 // 자유 텍스트 입력 대신 선택 위주로 구성해 실제 존재하는 자격 명칭만 등록되도록 돕습니다.
 
 import type { CertificateCategory } from '../types/certificate'
+import { localToday } from '../lib/ui/localDate'
 
 export interface CertificateSubType {
   key: string
@@ -259,7 +260,7 @@ export function commEducationDueDate(issuedDate: string): string | null {
 /** 무선통신사 교육 기한(발급 후 5년)이 지났는가 */
 export function isCommEducationDue(issuedDate: string): boolean {
   const due = commEducationDueDate(issuedDate)
-  return Boolean(due) && due! <= new Date().toISOString().slice(0, 10)
+  return Boolean(due) && due! <= localToday()
 }
 
 export type ExpiryRequirement = 'required' | 'optional' | 'hidden'

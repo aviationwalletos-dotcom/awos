@@ -13,6 +13,7 @@ import type { LogbookEntry } from '../types/logbook'
 import { isUnmannedKind, vehicleKindLabel } from './tracks'
 import { isInspectionValidOn } from '../types/vehicle'
 import type { Vehicle } from '../types/vehicle'
+import { localToday } from './ui/localDate'
 
 export type RequirementStatus = 'met' | 'unmet' | 'info'
 
@@ -271,7 +272,7 @@ export function computeUltralightCompliance(entries: LogbookEntry[], vehicles: V
     })
   }
 
-  const expiredVehicles = vehicles.filter((v) => !v.inspectionExempt && v.inspectionValidUntil && v.inspectionValidUntil < new Date().toISOString().slice(0, 10))
+  const expiredVehicles = vehicles.filter((v) => !v.inspectionExempt && v.inspectionValidUntil && v.inspectionValidUntil < localToday())
   items.push(
     {
       key: 'airworthiness',

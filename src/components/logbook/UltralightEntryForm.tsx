@@ -13,6 +13,7 @@ import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
 import { isInspectionValidOn, vehicleDisplayName } from '../../types/vehicle'
 import type { Vehicle } from '../../types/vehicle'
+import { localToday } from '../../lib/ui/localDate'
 
 const inputClass =
   'w-full rounded-control border border-white/10 bg-panel px-3 py-2.5 text-sm text-ink placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
@@ -70,7 +71,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
   const unmanned = vehicle ? isUnmannedKind(vehicle.kindKey) : true
 
   const [date, setDate] = useState(
-    initialValues?.date ?? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10),
+    initialValues?.date ?? localToday(),
   )
   const [takeoff, setTakeoff] = useState(initialValues?.takeoffTime ?? '')
   const [landing, setLanding] = useState(initialValues?.landingTime ?? '')
@@ -222,17 +223,20 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
           </div>
           <div>
             <label htmlFor="ul-hm1" className={labelClass}>이륙시점 아워미터</label>
-            <input id="ul-hm1" name="hourMeterStart" type="number" step="0.1" defaultValue={initialValues?.hourMeterStart} className={inputClass} />
+            <input id="ul-hm1" name="hourMeterStart" type="number"
+              inputMode="decimal" step="0.1" defaultValue={initialValues?.hourMeterStart} className={inputClass} />
           </div>
           <div>
             <label htmlFor="ul-hm2" className={labelClass}>착륙시점 아워미터</label>
-            <input id="ul-hm2" name="hourMeterEnd" type="number" step="0.1" defaultValue={initialValues?.hourMeterEnd} className={inputClass} />
+            <input id="ul-hm2" name="hourMeterEnd" type="number"
+              inputMode="decimal" step="0.1" defaultValue={initialValues?.hourMeterEnd} className={inputClass} />
           </div>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="ul-min" className={labelClass}>비행시간 (분)</label>
-            <input id="ul-min" type="number" min="0" step="1" value={minutes} onChange={(e) => setMinutes(e.target.value)} className={inputClass} />
+            <input id="ul-min" type="number"
+              inputMode="decimal" min="0" step="1" value={minutes} onChange={(e) => setMinutes(e.target.value)} className={inputClass} />
             <p className="mt-1 text-[11px] text-slate-500">
               {totalMin > 0 ? `→ ${minutesToHours(totalMin).toFixed(1)}시간으로 저장(둘째자리 버림)` : '시각을 넣으면 자동 계산돼요. 직접 넣어도 됩니다.'}
               {autoMinutes !== null && String(autoMinutes) !== minutes && (
@@ -245,12 +249,14 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
             {unmanned ? (
               <>
                 <label htmlFor="ul-cnt" className={labelClass}>비행 횟수</label>
-                <input id="ul-cnt" name="flightCount" type="number" min="0" step="1" defaultValue={initialValues?.flightCount ?? 1} className={inputClass} />
+                <input id="ul-cnt" name="flightCount" type="number"
+              inputMode="decimal" min="0" step="1" defaultValue={initialValues?.flightCount ?? 1} className={inputClass} />
               </>
             ) : (
               <>
                 <label htmlFor="ul-ldg" className={labelClass}>착륙 횟수</label>
-                <input id="ul-ldg" name="landings" type="number" min="0" step="1" defaultValue={initialValues?.dayLandings ?? 1} className={inputClass} />
+                <input id="ul-ldg" name="landings" type="number"
+              inputMode="decimal" min="0" step="1" defaultValue={initialValues?.dayLandings ?? 1} className={inputClass} />
               </>
             )}
           </div>
@@ -266,15 +272,18 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <label htmlFor="ul-pic" className={labelClass}>기장</label>
-            <input id="ul-pic" type="number" min="0" step="1" value={picMin} onChange={(e) => setPicMin(e.target.value)} className={inputClass} />
+            <input id="ul-pic" type="number"
+              inputMode="decimal" min="0" step="1" value={picMin} onChange={(e) => setPicMin(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="ul-tr" className={labelClass}>훈련</label>
-            <input id="ul-tr" type="number" min="0" step="1" value={trainMin} onChange={(e) => setTrainMin(e.target.value)} className={inputClass} />
+            <input id="ul-tr" type="number"
+              inputMode="decimal" min="0" step="1" value={trainMin} onChange={(e) => setTrainMin(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="ul-in" className={labelClass}>교관</label>
-            <input id="ul-in" type="number" min="0" step="1" value={instrMin} onChange={(e) => setInstrMin(e.target.value)} className={inputClass} />
+            <input id="ul-in" type="number"
+              inputMode="decimal" min="0" step="1" value={instrMin} onChange={(e) => setInstrMin(e.target.value)} className={inputClass} />
           </div>
         </div>
         <p className={`mt-1 text-[11px] ${dutyTotal > 0 && dutyTotal !== totalMin ? 'text-amber-300' : 'text-slate-500'}`}>
