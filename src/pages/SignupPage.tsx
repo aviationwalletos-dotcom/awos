@@ -310,7 +310,7 @@ export function SignupPage() {
 
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold text-slate-300">자격 구분 <span className="font-normal text-slate-500">(여러 개 선택 가능)</span></span>
-              <div role="group" aria-label="자격 구분 선택" className="grid grid-cols-3 gap-2">
+              <div role="group" aria-label="자격 구분 선택" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {ALL_PILOT_TRACKS.map((value) => {
                   const on = pilotTracks.includes(value)
                   return (

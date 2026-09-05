@@ -111,3 +111,12 @@ schema12 파일 상단 `[되돌리기]` 블록 실행. 코드는 이전 zip(`E2E
   만료 토큰을 그대로 쓰던 것 → 요청 전 만료 60초 이내면 refresh 토큰으로 먼저 갱신(`getFreshDataClient`).
 - 가입 전 이메일 확인이 연결된 로그인 방법(카카오·구글)의 이메일까지 보고, 어떤 방법으로 로그인해야 하는지 안내(schema15).
 - 회원 목록: 여러 명 동시에 펼치기.
+
+## 기기 호환 점검 (배포 전, 코드 기준)
+- 카카오톡·네이버 등 인앱 브라우저: 구글 OAuth 차단(403 disallowed_useragent) → 감지 시 안내 배너 + 구글 버튼 비활성, 안드로이드는 "크롬으로 열기"(intent://), iOS 는 Safari 로 열기 안내·주소 복사. 카카오 로그인은 인앱에서도 동작.
+- iOS 입력칸 자동 확대: 모바일에서 input/select/textarea 16px 강제.
+- iPhone PWA·노치: sticky 헤더에 safe-area-inset-top, body 에 inset-bottom.
+- 갤럭시 강제 다크모드 반전 방지: `color-scheme: dark`.
+- 구형 기기: `<dialog>.showModal/close` 와 `AbortSignal.timeout` 폴리필(compat.ts).
+- 좁은 화면: 서명 표 가로 스크롤 래퍼, 가입 자격 구분·초경량 시간 입력 3열 → 1열(sm 이상 3열).
+- iOS 홈화면 앱에서 소셜 로그인이 되돌아오지 않을 때 안내(이메일 로그인 유도).

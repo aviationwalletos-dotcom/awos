@@ -2,9 +2,12 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import App from './App.tsx'
+import { installCompatShims } from './lib/ui/compat'
 
 import './tailwind.css'
 import './index.css'
+
+installCompatShims()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

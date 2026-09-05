@@ -263,7 +263,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
         <p className="mt-1 text-[11px] text-slate-500">
           기장: 자격 보유자의 단독 비행 또는 교육생이 지도조종자 감독 하에 단독으로 비행 · 훈련: 지도조종자 조종장치에 연결된 훈련용 조종장치로 비행 · 교관: 그 훈련의 지도조종자로서 비행 (운영세칙 제10조)
         </p>
-        <div className="mt-2 grid grid-cols-3 gap-3">
+        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <label htmlFor="ul-pic" className={labelClass}>기장</label>
             <input id="ul-pic" type="number" min="0" step="1" value={picMin} onChange={(e) => setPicMin(e.target.value)} className={inputClass} />

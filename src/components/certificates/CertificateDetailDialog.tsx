@@ -66,7 +66,11 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
     if (!dialog) return
 
     if (certificate) {
-      if (!dialog.open) dialog.showModal()
+      // [기기 호환] iOS 15.3 이하·구형 안드로이드 WebView 는 showModal 이 없다 → open 속성으로 대체 표시
+      if (!dialog.open) {
+        if (typeof dialog.showModal === 'function') dialog.showModal()
+        else dialog.setAttribute('open', '')
+      }
     } else if (dialog.open) {
       dialog.close()
     }

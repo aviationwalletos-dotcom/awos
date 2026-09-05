@@ -10,6 +10,8 @@
 
 /* CSS 변수로 커스텀 색상 정의 (미리보기에서도 작동) */
 :root {
+  /* [기기 호환] 갤럭시 '강제 다크모드'·브라우저 자동 반전이 우리 다크 UI 를 다시 뒤집지 않게 선언 */
+  color-scheme: dark;
   --ease-concept: cubic-bezier(0.16, 1, 0.3, 1);
   /* 옵션 A "시네마틱 OS" 다크 팔레트 — tailwind.config.js 토큰과 동기화 */
   --color-primary: #2563eb;
@@ -271,4 +273,44 @@ input:-webkit-autofill:focus {
 /* 7) placeholder 대비 */
 ::placeholder {
   color: rgba(148, 163, 184, 0.75);
+}
+
+
+/* ------------------------------------------------------------------------
+ * [기기 호환] 모바일 보정 (2026-09-05 배포 전 점검)
+ * ------------------------------------------------------------------------ */
+
+/* iOS Safari 는 입력칸 글자가 16px 미만이면 포커스 시 화면을 확대한다. 모바일에서만 16px 로 올린다. */
+@media (max-width: 767px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* 아이폰 홈화면 앱(PWA)·노치 기기: 상단 고정 헤더가 상태바 밑으로 들어가지 않게 safe-area 만큼 띄운다 */
+@supports (padding-top: env(safe-area-inset-top)) {
+  header.sticky.top-0 {
+    padding-top: env(safe-area-inset-top);
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 좁은 화면에서 표·긴 값이 가로로 넘치지 않게 */
+table {
+  word-break: break-word;
+}
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 터치 기기에서 hover 스타일이 '눌린 채' 남는 현상 완화 */
+@media (hover: none) {
+  .hover\:-translate-y-px:hover {
+    transform: none;
+  }
 }

@@ -177,7 +177,11 @@ export function EntryDetailDialog({
     if (!dialog) return
 
     if (entry) {
-      if (!dialog.open) dialog.showModal()
+      // [기기 호환] iOS 15.3 이하·구형 안드로이드 WebView 는 showModal 이 없다 → open 속성으로 대체 표시
+      if (!dialog.open) {
+        if (typeof dialog.showModal === 'function') dialog.showModal()
+        else dialog.setAttribute('open', '')
+      }
     } else if (dialog.open) {
       dialog.close()
     }
@@ -473,7 +477,7 @@ export function EntryDetailDialog({
                             )}
                           </p>
                           {h.changes.length > 0 && (
-                            <table className="mt-1.5 w-full text-[11px]">
+                            <div className="table-scroll"><table className="mt-1.5 w-full text-[11px]">
                               <thead>
                                 <tr className="text-left text-slate-500">
                                   <th className="py-0.5 pr-2 font-semibold">항목</th>
@@ -490,7 +494,7 @@ export function EntryDetailDialog({
                                   </tr>
                                 ))}
                               </tbody>
-                            </table>
+                            </table></div>
                           )}
                         </li>
                       )

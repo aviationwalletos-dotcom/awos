@@ -128,7 +128,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
         return (
           <div className="mt-3 rounded-control border border-sky/20 bg-white/5 px-3 py-2.5 text-xs">
             <p className="mb-1.5 font-semibold text-sky">서명 대상 기록 (이 내용에 서명합니다)</p>
-            <table className="w-full">
+            <div className="table-scroll"><table className="w-full">
               <tbody>
                 {rows.map(([k, v]) => (
                   <tr key={k} className="border-t border-white/10 first:border-t-0">
@@ -137,7 +137,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
             <p className="mt-1.5 font-mono-data text-[10px] text-slate-500">해시 {snap.hash.slice(0, 16)}… · 요청자 {request.requester_name}{request.requester_email ? ` (${request.requester_email})` : ''}</p>
             {request.summary && (
               <details className="mt-1.5">

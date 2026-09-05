@@ -2,6 +2,8 @@
 import React from 'react'
 
 import { startOAuthLogin } from '../lib/supabase/oauth'
+import { InAppBrowserNotice } from './InAppBrowserNotice'
+import { detectInAppBrowser, isIOS } from '../lib/ui/inAppBrowser'
 
 function GoogleIcon() {
   return (
@@ -36,12 +38,25 @@ const KAKAO_ENABLED = import.meta.env?.VITE_ENABLE_KAKAO_LOGIN !== 'false'
 
 export function SocialLoginButtons() {
   if (!GOOGLE_ENABLED && !KAKAO_ENABLED) return null
+  // 인앱 브라우저(카톡 등)에서는 구글 OAuth 가 차단되므로 버튼을 막고 안내를 띄운다
+  const inApp = detectInAppBrowser()
+  // 아이폰 홈화면 앱(PWA 독립 실행)에서는 소셜 로그인이 사파리를 거쳐 돌아오며 실패할 수 있다(저장소가 분리됨).
+  const isStandaloneIOS =
+    isIOS() && typeof window !== 'undefined' && (window.matchMedia?.('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true)
   return (
     <div className="flex flex-col gap-2.5">
+      {inApp && <InAppBrowserNotice compact />}
+      {!inApp && isStandaloneIOS && (
+        <p className="rounded-control border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-slate-400">
+          홈화면 앱에서 소셜 로그인이 되돌아오지 않으면, 이메일·비밀번호 로그인을 이용해 주세요. 비밀번호는 로그인 후 계정정보의 "이메일 로그인 연결하기"에서 설정할 수 있어요.
+        </p>
+      )}
       {GOOGLE_ENABLED && (
       <button type="button"
+        disabled={Boolean(inApp)}
+        title={inApp ? '인앱 브라우저에서는 구글 로그인이 막혀요. 크롬·사파리로 열어 주세요.' : undefined}
         onClick={() => startOAuthLogin('google')}
-        className="flex items-center justify-center gap-2.5 rounded-control border border-white/20 bg-white px-4 py-3 text-sm font-semibold text-[#1F1F1F] transition hover:bg-slate-100
+        className="flex items-center justify-center gap-2.5 rounded-control border border-white/20 bg-white px-4 py-3 text-sm font-semibold text-[#1F1F1F] transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50
           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
       >
         <GoogleIcon />
