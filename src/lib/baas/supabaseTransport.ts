@@ -21,6 +21,7 @@ import { createClient } from '@supabase/supabase-js'
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../supabase/env'
 import { BAAS_BASE_URL, getStoredAccessToken, setStoredAccessToken } from './config'
+import { EMAIL_TAKEN_MESSAGE, PHONE_TAKEN_MESSAGE, checkContactExists, translateProfileUniqueError } from './contactCheck'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -299,7 +300,7 @@ export async function updateMyProfileFields(fields: {
   const userId = getAuthedUserId()
   if (!client || !userId) throw new Error('로그인이 필요합니다.')
   const { error } = await client.from('profiles').update(fields).eq('id', userId)
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(translateProfileUniqueError(error.message) ?? error.message)
   profileCache.delete(userId)
 }
 
@@ -461,7 +462,12 @@ async function ensureProfileFromMetadata(ctx: AuthCtx): Promise<ProfileRow | nul
       institution: (meta.organization_affiliation as string) ?? null,
       phone: (meta.phone as string) ?? null,
     }
-    const { error } = await ctx.client.from('profiles').upsert(row)
+    let { error } = await ctx.client.from('profiles').upsert(row)
+    // 가입 메타데이터의 전화번호가 그 사이 다른 계정에 등록됐으면(유니크 인덱스, schema13) 번호만 비우고 프로필은 만든다.
+    // 그래야 로그인이 막히지 않고, 계정정보에서 번호를 다시 넣을 때 안내를 받는다.
+    if (error && translateProfileUniqueError(error.message)) {
+      ;({ error } = await ctx.client.from('profiles').upsert({ ...row, phone: null }))
+    }
     if (error) return null
     // v1.1 — pilot_tracks 컬럼은 schema10 적용 후에만 존재. 없으면 조용히 무시.
     if (Array.isArray(meta.pilot_tracks)) {
@@ -510,6 +516,11 @@ async function handleSignup(body: Record<string, unknown> | null): Promise<Respo
   const extra = (body?.data ?? {}) as Record<string, unknown>
   if (!email || !password || !name) return fail(400, '필수 정보를 입력해주세요.')
 
+  // [schema13] 서버에서도 한 번 더: 이메일·전화번호 1개 = 계정 1개. 함수가 없으면 건너뛴다.
+  const taken = await checkContactExists(email, phone)
+  if (taken?.emailTaken) return fail(400, EMAIL_TAKEN_MESSAGE)
+  if (taken?.phoneTaken) return fail(400, PHONE_TAKEN_MESSAGE)
+
   const auth = makeAuthClient()
   const { data, error } = await auth.auth.signUp({
     email,
@@ -550,7 +561,9 @@ async function handleSignup(body: Record<string, unknown> | null): Promise<Respo
     phone: phone || null,
   }
   const { error: profileError } = await client.from('profiles').upsert(profileRow)
-  if (profileError) return fail(500, `프로필 저장에 실패했습니다: ${profileError.message}`)
+  if (profileError) {
+    return fail(400, translateProfileUniqueError(profileError.message) ?? `프로필 저장에 실패했습니다: ${profileError.message}`)
+  }
   profileCache.delete(data.user!.id)
 
   const ctx: AuthCtx = {

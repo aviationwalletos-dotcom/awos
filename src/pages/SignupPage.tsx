@@ -7,6 +7,7 @@ import { InstitutionSelect } from '../components/InstitutionSelect'
 import { SocialLoginButtons } from '../components/SocialLoginButtons'
 import { useSignup } from '../hooks/baas/useSignup'
 import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
+import { EMAIL_TAKEN_MESSAGE, PHONE_TAKEN_MESSAGE, checkContactExists } from '../lib/baas/contactCheck'
 import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
 import type { IndividualRole, UserType } from '../lib/baas/types'
 import { ALL_PILOT_TRACKS, PILOT_TRACK_LABEL, PILOT_TRACK_SHORT } from '../lib/tracks'
@@ -85,6 +86,19 @@ export function SignupPage() {
     event.preventDefault()
     if (!validate()) {
       // 실패한 항목이 화면 밖에 있으면 첫 번째 빨간 안내로 스크롤해 '무반응'처럼 보이지 않게 한다
+      window.setTimeout(() => {
+        document.querySelector('.text-rose-400')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }, 30)
+      return
+    }
+
+    // 가입 전 중복 확인 — 이메일·전화번호 1개 = 계정 1개(schema13). 확인 함수가 없으면 건너뛴다.
+    const taken = await checkContactExists(email, phone)
+    if (taken?.emailTaken || taken?.phoneTaken) {
+      setFieldErrors({
+        ...(taken.emailTaken ? { email: EMAIL_TAKEN_MESSAGE } : {}),
+        ...(taken.phoneTaken ? { phone: PHONE_TAKEN_MESSAGE } : {}),
+      })
       window.setTimeout(() => {
         document.querySelector('.text-rose-400')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       }, 30)

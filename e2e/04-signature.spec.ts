@@ -11,6 +11,8 @@ const MARKER = 'E2E-SIGN'
  *       (계정정보 → 교관 승인 신청 → 관리자 승인). 아니면 서명 요청함 탭이 없어 명확한 메시지로 실패한다.
  */
 test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)', async ({ browser }: { browser: Browser }) => {
+  // 두 계정을 오가며 요청이 많고, CI 네트워크가 걸리면 요청당 20초씩 늦어질 수 있어 넉넉히 잡는다
+  test.setTimeout(240_000)
   const studentCtx = await browser.newContext()
   const student = await studentCtx.newPage()
   await login(student, 'student')
@@ -138,7 +140,17 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   const completeButton = card.getByTestId('signature-complete')
   // 그려졌다면 버튼이 활성화된다. 아니면 이유를 분명히 남긴다
   await expect(completeButton, '서명 패드에 그린 획이 인식되지 않았어요(버튼이 비활성 상태)').toBeEnabled({ timeout: 5_000 })
-  await completeButton.click()
+  // 목록이 다시 그려지는 순간과 겹치면 클릭이 빗나갈 수 있어 최대 3번 시도한다
+  let clicked = false
+  for (let attempt = 0; attempt < 3 && !clicked; attempt += 1) {
+    try {
+      await card.getByTestId('signature-complete').click({ timeout: 15_000 })
+      clicked = true
+    } catch (err) {
+      if (attempt === 2) throw err
+      await instructor.waitForTimeout(1_500)
+    }
+  }
   // 서명 완료 후 카드는 "대기중" 목록에서 사라진다(완료됨 탭으로 이동).
   // 안 사라지면 카드 안 문구(서버 오류 메시지 등)를 그대로 남긴다.
   try {

@@ -113,9 +113,9 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
         비행 기록에 교관 전자서명을 하려면 자격 구분별로 승인이 필요해요. 항공기 교관 승인으로는 경량·초경량 기록에 서명할 수 없어요(운영세칙 제9조).
       </p>
 
-      {isLoading ? (
+      {isLoading && Object.keys(byTrack).length === 0 ? (
         <p className="mt-5 text-sm text-slate-400">신청 현황을 불러오는 중입니다...</p>
-      ) : error ? (
+      ) : error && Object.keys(byTrack).length === 0 ? (
         <div role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
           <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3" onClick={() => void refetch()}>

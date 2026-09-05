@@ -307,9 +307,15 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
         </div>
       )}
 
-      {isLoading ? (
+      {error && data && (
+        <p role="status" className="mt-4 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+          목록을 새로 읽지 못했어요({error}). 마지막으로 받은 목록을 보여주고 있어요.{' '}
+          <button type="button" className="font-semibold underline underline-offset-2" onClick={() => void handleDecided()}>다시 시도</button>
+        </p>
+      )}
+      {isLoading && !data ? (
         <p className="mt-6 text-sm text-slate-400">목록을 불러오는 중입니다...</p>
-      ) : error ? (
+      ) : error && !data ? (
         <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
           <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void handleDecided()}>

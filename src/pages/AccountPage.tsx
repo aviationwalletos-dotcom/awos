@@ -7,7 +7,8 @@ import { InstitutionSelect } from '../components/InstitutionSelect'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
 import { useAuth } from '../contexts/AuthContext'
-import { getAuthedDataClient, updateMyProfileFields } from '../lib/baas/supabaseTransport'
+import { baasFetch, getAuthedDataClient, updateMyProfileFields } from '../lib/baas/supabaseTransport'
+import { BAAS_BASE_URL } from '../lib/baas/config'
 import { fetchAuthEmails, fetchLinkedProviders, linkEmailLoginWithPassword, registerIdentityEmailAsAccountEmail, startLinkProvider } from '../lib/supabase/oauth'
 import type { OAuthProvider } from '../lib/supabase/oauth'
 import { useChangePassword } from '../hooks/baas/useChangePassword'
@@ -144,11 +145,35 @@ export function AccountPage() {
     }
   }
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  // 탈퇴 재확인 — 이메일 로그인이 있으면 비밀번호, 소셜 전용이면 확인 문구. 실수로 누르는 것을 막는다.
+  const DELETE_PHRASE = '탈퇴합니다'
+  const hasPasswordLogin = Boolean(linkedProviders?.includes('email'))
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deletePhrase, setDeletePhrase] = useState('')
+  const [deleteAcknowledged, setDeleteAcknowledged] = useState(false)
+  const canConfirmDelete = deleteAcknowledged && (hasPasswordLogin ? deletePassword.length > 0 : deletePhrase.trim() === DELETE_PHRASE)
 
   async function handleDeleteAccount() {
     setDeleteError(null)
+    if (!deleteAcknowledged) {
+      setDeleteError('데이터가 영구 삭제된다는 안내를 확인해 주세요.')
+      return
+    }
     setDeleteStep('working')
     try {
+      // 1) 본인 재확인
+      if (hasPasswordLogin) {
+        const loginId = authEmails?.accountEmail ?? account?.user_id ?? ''
+        const res = await baasFetch(`${BAAS_BASE_URL}/account/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: loginId, user_pw: deletePassword }),
+        })
+        if (!res.ok) throw new Error('비밀번호가 올바르지 않아요. 다시 확인해 주세요.')
+      } else if (deletePhrase.trim() !== DELETE_PHRASE) {
+        throw new Error(`확인 문구 "${DELETE_PHRASE}"를 정확히 입력해 주세요.`)
+      }
+      // 2) 삭제
       const client = getAuthedDataClient()
       if (!client) throw new Error('로그인 정보를 찾을 수 없습니다. 다시 로그인 후 시도해 주세요.')
       const { error } = await client.rpc('delete_my_account')
@@ -803,12 +828,51 @@ export function AccountPage() {
             {(deleteStep === 'confirm' || deleteStep === 'working') && (
               <div className="mt-4 rounded-control border border-rose-400/30 bg-navy p-4">
                 <p className="text-sm font-semibold text-ink">정말 탈퇴하시겠어요?</p>
-                <p className="mt-1 text-xs text-slate-400">이 작업은 되돌릴 수 없습니다.</p>
+                <p className="mt-1 text-xs text-slate-400">이 작업은 되돌릴 수 없습니다. 본인 확인 후 진행돼요.</p>
+
+                <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-slate-300">
+                  <input type="checkbox"
+                    checked={deleteAcknowledged}
+                    onChange={(e) => setDeleteAcknowledged(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-rose-400"
+                  />
+                  <span>비행기록·자격증·서명 요청 등 모든 데이터가 즉시 영구 삭제되고 복구할 수 없다는 것을 이해했어요.</span>
+                </label>
+
+                {hasPasswordLogin ? (
+                  <div className="mt-3">
+                    <label htmlFor="delete-password" className="mb-1 block text-xs font-semibold text-slate-300">비밀번호 재확인</label>
+                    <input id="delete-password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="현재 비밀번호"
+                      className="w-full max-w-sm rounded-control border border-white/15 bg-panel px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-3">
+                    <label htmlFor="delete-phrase" className="mb-1 block text-xs font-semibold text-slate-300">
+                      확인 문구 입력 — 아래 칸에 <span className="font-mono-data text-rose-300">{DELETE_PHRASE}</span> 라고 적어 주세요
+                    </label>
+                    <input id="delete-phrase"
+                      type="text"
+                      autoComplete="off"
+                      value={deletePhrase}
+                      onChange={(e) => setDeletePhrase(e.target.value)}
+                      placeholder={DELETE_PHRASE}
+                      className="w-full max-w-sm rounded-control border border-white/15 bg-panel px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                    />
+                    <p className="mt-1 text-[11px] text-slate-500">소셜 로그인만 연결된 계정이라 비밀번호 대신 문구로 확인해요.</p>
+                  </div>
+                )}
+
                 {deleteError && <p className="mt-2 text-xs text-rose-300">{deleteError}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button type="button"
                     onClick={() => void handleDeleteAccount()}
-                    disabled={deleteStep === 'working'}
+                    disabled={deleteStep === 'working' || !canConfirmDelete}
                     className="rounded-control bg-rose-500/90 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-500 disabled:opacity-60"
                   >
                     {deleteStep === 'working' ? '삭제 중…' : '네, 영구 삭제합니다'}
