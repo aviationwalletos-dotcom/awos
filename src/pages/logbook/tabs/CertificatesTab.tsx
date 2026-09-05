@@ -1,7 +1,6 @@
 // CertificatesTab — LogbookPage 탭. 모델은 useLogbookPageModel 에서 받는다.
 import React from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck } from "lucide-react";
 import { Reveal } from "../../../components/Reveal";
 import { CertificateApprovalStatusWatcher } from "../../../components/certificates/CertificateApprovalStatusWatcher";
 import { CertificateForm } from "../../../components/certificates/CertificateForm";
@@ -16,7 +15,6 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
     certificates,
     handleCreateCertificate,
     isApprovedInstructor,
-    isPilotLike,
     operationType,
     roleContent,
     setSelectedCertificate,
@@ -68,43 +66,8 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
         <section className="bg-surface py-[clamp(24px,4vw,48px)]">
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
-              <div
-                className={`flex items-start gap-3 rounded-card border p-5 ${
-                  roleContent
-                    ? `${roleContent.borderClass} ${roleContent.bgClass}`
-                    : "border-sky/30 bg-sky/10"
-                }`}
-              >
-                <ShieldCheck
-                  className={`mt-0.5 h-5 w-5 shrink-0 ${roleContent ? roleContent.colorClass : "text-sky"}`}
-                  aria-hidden="true"
-                />
-                <div>
-                  <p
-                    className={`text-xs font-semibold uppercase tracking-wide ${roleContent ? roleContent.colorClass : "text-sky"}`}
-                  >
-                    {roleContent
-                      ? `${roleContent.name} 자격 템플릿`
-                      : "자격증 관리"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {roleContent
-                      ? roleContent.summary
-                      : "면허, 항공신체검사, 법정교육 등 자격 항목을 자유롭게 등록하고 관리하세요. 역할을 설정하면 역할별 추천 자격 템플릿과 강조 색상이 표시됩니다."}
-                  </p>
-                  {!isPilotLike && (
-                    <p className="mt-2 text-xs text-slate-400">
-                      만료일이 등록된 자격증은 D-30/D-7 기준으로 카드에 경고
-                      배지가 표시됩니다. 이 직군의 구체적인 법정 갱신 주기는
-                      아직 제공되지 않아, 등록한 자격증의 만료 알림으로 갱신
-                      시점을 관리해 주세요.
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="mt-8">
-                <TsIntegrationCard />
-              </div>
+              {/* 역할별 "자격 템플릿" 안내 카드는 정보량이 적어 제거(2026-09-05). 역할 색상은 등록 폼 칩에 그대로 쓰인다. */}
+              <TsIntegrationCard />
               <h2 className="mt-8 font-display text-2xl font-extrabold text-ink">
                 자격증 등록
               </h2>

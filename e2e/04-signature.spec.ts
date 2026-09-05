@@ -132,11 +132,14 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   const card = instructor.getByTestId('signature-request-card').filter({ hasText: MARKER }).first()
   await expect(card).toBeVisible({ timeout: 30_000 })
   const pad = card.getByTestId('signature-pad')
-  // 패드가 화면 밖이면 마우스 좌표가 캔버스를 벗어나 아무것도 안 그려진다 → 먼저 화면 안으로
-  await pad.scrollIntoViewIfNeeded()
+  // 패드를 화면 "가운데"로 — scrollIntoViewIfNeeded 는 최소 스크롤이라 패드가 상단 고정 탭바 밑에 깔릴 수 있다.
+  // 그 상태로 마우스를 누르면 탭이 클릭돼 서명함이 사라진다(이전 실패 원인).
+  await pad.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'nearest' }))
+  await instructor.waitForTimeout(300)
   const box = await pad.boundingBox()
   if (!box) throw new Error('서명 패드 없음')
-  await instructor.mouse.move(box.x + 20, box.y + box.height / 2)
+  // hover 는 "그 좌표에서 패드가 실제로 이벤트를 받는지"까지 확인한다(다른 요소가 덮고 있으면 실패)
+  await pad.hover({ position: { x: 20, y: box.height / 2 } })
   await instructor.mouse.down()
   await instructor.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 15, { steps: 10 })
   await instructor.mouse.move(box.x + box.width - 20, box.y + box.height / 2 + 10, { steps: 10 })

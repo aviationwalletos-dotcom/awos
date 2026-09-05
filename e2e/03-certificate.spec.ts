@@ -1,11 +1,20 @@
 import { expect, test } from '@playwright/test'
 import { appears, login, openTab, tinyPng } from './helpers'
+import type { Page } from '@playwright/test'
+
+async function expandCertList(page: Page) {
+  const toggle = page.getByTestId('cert-list-toggle')
+  if (await appears(toggle, 1_500)) {
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
+  }
+}
 
 test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ page }) => {
   await login(page, 'student')
   await openTab(page, /자격증/)
 
   // 예전 실행이 남긴 테스트 자격증 정리(최대 5개, 실패해도 진행)
+  await expandCertList(page)
   for (let i = 0; i < 5; i += 1) {
     const stale = page.getByTestId('cert-item').filter({ hasText: /E2E-의료기관|E2E 항공전문의료기관/ }).first()
     if ((await stale.count()) === 0) break
@@ -42,6 +51,8 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
 
   await expect(page.getByText(/자격증이 추가되었습니다/)).toBeVisible()
 
+  // 목록은 기본 3개만 보이고 나머지는 접혀 있다 — 새 자격증이 뒤쪽이면 펼친다
+  await expandCertList(page)
   const item = page.getByTestId('cert-item').filter({ hasText: issuerTag }).first()
   await expect(item).toBeVisible()
   await item.click()

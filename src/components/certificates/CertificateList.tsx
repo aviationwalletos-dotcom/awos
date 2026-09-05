@@ -1,5 +1,5 @@
-import React from 'react'
-import { OctagonAlert, Shield, ShieldCheck, ShieldX, TriangleAlert } from 'lucide-react'
+import React, { useState } from 'react'
+import { ChevronDown, ChevronUp, OctagonAlert, Shield, ShieldCheck, ShieldX, TriangleAlert } from 'lucide-react'
 
 import { isCommEducationDue } from '../../data/certificateOptions'
 import { CERTIFICATE_STATUS_LABEL, daysUntil, getCertificateStatus } from '../../types/certificate'
@@ -64,9 +64,16 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
     )
   }
 
+  // 목록이 길면 아래 "자격증 등록"이 묻힌다 → 기본 3개만 보이고 나머지는 펼쳐보기
+  const COLLAPSED_COUNT = 3
+  const [isExpanded, setIsExpanded] = useState(false)
+  const hiddenCount = Math.max(0, sortedCertificates.length - COLLAPSED_COUNT)
+  const visibleCertificates = isExpanded || hiddenCount === 0 ? sortedCertificates : sortedCertificates.slice(0, COLLAPSED_COUNT)
+
   return (
+    <>
     <ul className="divide-y divide-white/[0.08] overflow-hidden rounded-card border border-white/10 bg-panel">
-      {sortedCertificates.map((cert) => {
+      {visibleCertificates.map((cert) => {
         const status = getCertificateStatus(cert.expiryDate)
         const remaining = cert.expiryDate ? daysUntil(cert.expiryDate) : null
         const Icon = STATUS_ICON[status]
@@ -113,5 +120,27 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
         )
       })}
     </ul>
+    {hiddenCount > 0 && (
+      <button type="button"
+        onClick={() => setIsExpanded((v) => !v)}
+        aria-expanded={isExpanded}
+        data-testid="cert-list-toggle"
+        className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-control border border-white/10 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5
+          focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+      >
+        {isExpanded ? (
+          <>
+            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+            접기
+          </>
+        ) : (
+          <>
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            {hiddenCount}개 더 보기
+          </>
+        )}
+      </button>
+    )}
+    </>
   )
 }
