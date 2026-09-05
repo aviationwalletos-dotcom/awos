@@ -44,8 +44,15 @@ export function useApprovalRequests(params: ListApprovalParams, options: UseAppr
     }
   }, [])
 
+  // 필터(key)가 바뀌면 이전 필터의 목록은 버린다 — 탭을 바꿨는데 옛 탭 목록이 남아 보이면 안 된다.
+  // (같은 필터의 주기적 재조회가 실패할 때만 마지막 목록을 유지한다)
+  const lastKeyRef = useRef(key)
   useEffect(() => {
     if (!enabled) return
+    if (lastKeyRef.current !== key) {
+      lastKeyRef.current = key
+      setData(null)
+    }
     setIsLoading(true)
     let retryTimer: number | undefined
     // 첫 조회가 일시적 네트워크 문제로 실패하면 3초 뒤 한 번 더 시도한다

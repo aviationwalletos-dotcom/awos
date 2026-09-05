@@ -1,7 +1,8 @@
 import { type Browser, expect, test } from '@playwright/test'
 import { deleteEntriesByMarker, login, openTab, today } from './helpers'
 
-const MARKER = 'E2E-SIGN'
+// 실행마다 고유한 표식 — 이전 실행이 남긴 요청 카드와 섞이지 않게(카드는 이 문구가 든 메모로 찾는다)
+const MARKER = `E2E-SIGN-${Date.now().toString(36)}`
 
 /**
  * 교관 서명 흐름 — approval_requests(schema12) 기준.
@@ -161,7 +162,10 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
     throw new Error(`서명 완료 후에도 카드가 대기중에 남아 있어요. 카드 내용: ${cardText}`)
   }
   await instructor.getByRole('tab', { name: /^완료됨$/ }).click()
-  await expect(instructor.getByTestId('signature-request-card').filter({ hasText: MARKER }).first().getByText(/완료됨/)).toBeVisible({ timeout: 15_000 })
+  // 완료됨 탭의 새 조회가 CI에서 걸리면 20초 뒤 재시도되므로 넉넉히 기다린다
+  await expect(
+    instructor.getByTestId('signature-request-card').filter({ hasText: MARKER }).filter({ hasText: /완료됨/ }).first(),
+  ).toBeVisible({ timeout: 60_000 })
 
   // 학생: 새로고침 후 서명 반영(AutoSyncEntryDecisions 60초 폴링 + 진입 즉시 1회)
   await student.reload()
