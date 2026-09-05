@@ -45,14 +45,25 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   // 교관: 서명함에서 카드 찾고 서명
   const instructorCtx = await browser.newContext()
   const instructor = await instructorCtx.newPage()
-  // 진단: 승인/서명 관련 요청의 HTTP 상태와 콘솔 오류를 모아 실패 메시지에 붙인다
+  // 진단: 모든 API 요청(정적 파일 제외)의 시작/응답을 기록하고, 응답이 오지 않은 요청은 PENDING 으로 남긴다
   const netLog: string[] = []
   const consoleLog: string[] = []
+  const pending = new Map<string, string>()
+  const shortUrl = (u: string) => u.replace(/^https?:\/\/[^/]+/, '').slice(0, 120)
+  const isApi = (u: string) => /supabase\.co|\/rest\/v1|\/auth\/v1|\/storage\/v1|\/rpc\//.test(u)
+  instructor.on('request', (req) => {
+    if (isApi(req.url())) pending.set(req.url() + req.method(), `${req.method()} ${shortUrl(req.url())}`)
+  })
   instructor.on('response', (res) => {
-    const url = res.url()
-    if (/approval_requests|\/rpc\/|account\/info|\/auth\/v1\/token/.test(url)) {
-      netLog.push(`${res.status()} ${res.request().method()} ${url.replace(/^https?:\/\/[^/]+/, '')}`.slice(0, 160))
-    }
+    const req = res.request()
+    if (!isApi(req.url())) return
+    pending.delete(req.url() + req.method())
+    netLog.push(`${res.status()} ${req.method()} ${shortUrl(req.url())}`)
+  })
+  instructor.on('requestfailed', (req) => {
+    if (!isApi(req.url())) return
+    pending.delete(req.url() + req.method())
+    netLog.push(`FAILED(${req.failure()?.errorText ?? '?'}) ${req.method()} ${shortUrl(req.url())}`)
   })
   instructor.on('console', (msg) => {
     if (msg.type() === 'error' || msg.type() === 'warning') consoleLog.push(`${msg.type()}: ${msg.text()}`.slice(0, 200))
@@ -72,7 +83,8 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
       throw new Error(
         `교관 계정(${email})에 "서명 요청함" 탭이 없습니다 — 현재 주소: ${instructor.url()} / 보이는 탭: [${tabNames.map((t) => t.trim()).join(', ')}]\n` +
           `화면 텍스트: ${bodyText}\n` +
-          `네트워크(최근 12건):\n${netLog.slice(-12).join('\n')}\n` +
+          `네트워크(최근 20건):\n${netLog.slice(-20).join('\n')}\n` +
+          `응답 없이 걸린 요청:\n${[...pending.values()].join('\n') || '(없음)'}\n` +
           `콘솔(최근 8건):\n${consoleLog.slice(-8).join('\n')}`,
       )
     }
