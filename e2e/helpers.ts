@@ -23,6 +23,14 @@ export async function login(page: Page, role: keyof typeof creds) {
   await expect(page.getByRole('tab', { name: /비행기록/ })).toBeVisible()
 }
 
+/** 기록 폼의 "＋ 상세 시간 입력"이 접혀 있으면 펼친다(범주·자격·조건·이착륙 칸은 그 안에 있다) */
+export async function expandEntryDetails(page: Page) {
+  const toggle = page.getByTestId('entry-details-toggle')
+  if (await appears(toggle, 3_000)) {
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
+  }
+}
+
 export async function openTab(page: Page, name: RegExp) {
   await page.getByRole('tab', { name }).click()
   // 기록 입력 탭의 입력 폼은 기본 접힘 — 테스트는 바로 채우므로 펼쳐 둔다

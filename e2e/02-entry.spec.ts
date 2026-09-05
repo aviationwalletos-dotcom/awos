@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { deleteEntriesByMarker, login, openTab, today } from './helpers'
+import { deleteEntriesByMarker, expandEntryDetails, login, openTab, today } from './helpers'
 
 const MARKER = 'E2E-ENTRY'
 
@@ -16,6 +16,8 @@ test.describe('비행기록', () => {
     await page.locator('#departure').fill('RKTL')
     await page.locator('#arrival').fill('RKPU')
     await page.locator('#blockTime').fill('1.2')
+    // 이착륙 횟수는 접힌 "상세 시간 입력" 안에 있다
+    await expandEntryDetails(page)
     await page.locator('#dayLandings').fill('2')
     await page.locator('#notes').fill(MARKER)
     await page.getByTestId('entry-submit').click()
