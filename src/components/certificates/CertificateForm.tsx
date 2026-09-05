@@ -29,6 +29,7 @@ import type { RoleContent } from '../../data/content'
 import { PILOT_TRACK_LABEL } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
 import { localToday } from '../../lib/ui/localDate'
+import { InfoTip } from '../InfoTip'
 
 interface FieldErrors {
   name?: string
@@ -330,8 +331,9 @@ export function CertificateForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="category" className={labelClass}>
+          <label htmlFor="category" className={`${labelClass} inline-flex items-center gap-1`}>
             구분
+            <InfoTip label="구분 안내">{PILOT_TRACK_LABEL[track]} 자격으로 등록돼요. 계기비행증명·조종교육증명·한정도 여기서 골라요.</InfoTip>
           </label>
           <select id="category"
             name="category"
@@ -345,7 +347,6 @@ export function CertificateForm({
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 자격으로 등록돼요.</p>
         </div>
 
         {subTypes.length > 0 && (
@@ -369,7 +370,12 @@ export function CertificateForm({
 
         {hasLicenceNumber && (
           <div>
-            <label htmlFor="licenceNumber" className={labelClass}>자격번호 <span className="text-slate-500">(III. SERIAL NO.)</span></label>
+            <label htmlFor="licenceNumber" className={`${labelClass} inline-flex items-center gap-1`}>
+              자격번호 <span className="text-slate-500">(III. SERIAL NO.)</span>
+              {isLicenceCategory && (
+                <InfoTip label="자격번호 안내">계기비행증명·조종교육증명·추가 한정은 같은 자격번호로 자격증에 인쇄되므로 따로 번호를 받지 않아요.</InfoTip>
+              )}
+            </label>
             <input
               id="licenceNumber"
               name="licenceNumber"
@@ -378,9 +384,6 @@ export function CertificateForm({
               placeholder="예: 12-015238"
               className={`${inputClass} font-mono-data`}
             />
-            {isLicenceCategory && (
-              <p className="mt-1 text-[11px] text-slate-500">계기비행증명·조종교육증명·추가 한정은 같은 자격번호로 자격증에 인쇄되므로 따로 번호를 받지 않아요.</p>
-            )}
           </div>
         )}
 
@@ -440,16 +443,16 @@ export function CertificateForm({
             </div>
             {aircraftCategory === 'AIRPLANE' && (
               <div>
-                <label htmlFor="lic-cls" className={labelClass}>등급 한정</label>
+                <label htmlFor="lic-cls" className={`${labelClass} inline-flex items-center gap-1`}>
+                  등급 한정
+                  <InfoTip label="한정 안내">나중에 추가로 딴 등급·형식 한정은 구분을 "한정 추가"로 따로 등록하세요. 카드에는 자격증명과 함께 보여요.</InfoTip>
+                </label>
                 <select id="lic-cls" value={classRating} onChange={(e) => setClassRating(e.target.value as 'SEL' | 'MEL' | 'SES' | 'MES')} className={inputClass}>
                   <option value="SEL">육상단발(SEL)</option>
                   <option value="MEL">육상다발(MEL)</option>
                   <option value="SES">수상단발(SES)</option>
                   <option value="MES">수상다발(MES)</option>
                 </select>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  나중에 추가로 딴 등급·형식 한정은 구분을 "한정 추가"로 따로 등록하세요. 카드에는 자격증명과 함께 보여요.
-                </p>
               </div>
             )}
           </>
@@ -479,8 +482,11 @@ export function CertificateForm({
       )}
 
       <div>
-        <label htmlFor="name" className={labelClass}>
+        <label htmlFor="name" className={`${labelClass} inline-flex items-center gap-1`}>
           자격/면허 명칭
+          {!isFreeText && (
+            <InfoTip label="명칭 안내">위 구분/세부 종류 선택에 따라 자동으로 정해져요. 정확한 인식을 위해 직접 고칠 수 없어요.</InfoTip>
+          )}
         </label>
         {isFreeText ? (
           <>
@@ -501,7 +507,6 @@ export function CertificateForm({
             <p className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               {nameValue}
             </p>
-            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류 선택에 따라 자동으로 결정되며, 정확한 인식을 위해 직접 수정할 수 없어요.</p>
           </>
         )}
         {errors.name && (

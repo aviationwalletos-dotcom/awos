@@ -102,7 +102,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
                     <span className="rounded bg-orange-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-orange-300">교육 확인 필요</span>
                   )}
                 </span>
-                <span className="mt-0.5 block truncate text-[11px] text-slate-400">
+                <span className="sr-only">
                   {cert.category} · {cert.issuer} · {cert.expiryDate ? `만료 ${cert.expiryDate}` : `발급 ${cert.issuedDate}`}
                 </span>
               </span>
