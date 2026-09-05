@@ -7,6 +7,7 @@ import { ComplianceSection } from "../../../components/compliance/ComplianceSect
 import { EligibilityProgressPanel } from "../../../components/logbook/EligibilityProgressPanel";
 import { NextGoalCard } from "../../../components/logbook/NextGoalCard";
 import type { LogbookModel } from "../useLogbookPageModel";
+import { InfoTip } from "../../../components/InfoTip";
 
 export function EligibilityTab({ m }: { m: LogbookModel }) {
   const {
@@ -22,16 +23,15 @@ export function EligibilityTab({ m }: { m: LogbookModel }) {
     <section id="elig-section" className="bg-panel py-[clamp(24px,4vw,48px)]">
       <div className="mx-auto max-w-4xl px-6">
         <Reveal>
-          <h2 className="font-display text-2xl font-extrabold text-white">
+          <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-white">
             응시경력 진척도
+            <InfoTip size="md" label="응시경력 계산 기준">
+              {isLsa
+                ? "시행규칙 별표 4 제2호"
+                : "초경량비행장치·무인비행장치 조종자 증명 운영세칙 별표 1·2·3"}{" "}
+              기준으로 자격증명 → 지도조종자 → 실기평가조종자 순서의 요건을 계산해요. 참고 판정이며 최종 응시자격은 공단이 심사해요.
+            </InfoTip>
           </h2>
-          <p className="mt-2 text-sm text-slate-300">
-            {isLsa
-              ? "시행규칙 별표 4 제2호"
-              : "초경량비행장치·무인비행장치 조종자 증명 운영세칙 별표 1·2·3"}{" "}
-            기준으로 자격증명 → 지도조종자 → 실기평가조종자 순서의 요건을
-            계산해요. 참고 판정이며 최종 응시자격은 공단이 심사합니다.
-          </p>
           <div className="mt-6">
             <NextGoalCard
               track={activeTrack}

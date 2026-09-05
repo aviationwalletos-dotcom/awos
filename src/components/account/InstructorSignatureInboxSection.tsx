@@ -17,6 +17,7 @@ import { useApprovalRequests } from '../../lib/approvals/hooks'
 import { SIGNED_FIELD_LABEL, snapshotFromPayload } from '../../lib/approvals/snapshot'
 import { type ApprovalRequest, type PilotTrack, TRACK_LABEL } from '../../lib/approvals/types'
 import type { AccountResponse } from '../../lib/baas/types'
+import { InfoTip } from '../InfoTip'
 
 function formatDateTime(value: string | null | undefined): string {
   if (!value) return ''
@@ -282,12 +283,12 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
         <div>
           <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
             <Inbox className="h-4 w-4 text-sky" aria-hidden="true" />
-            서명 요청함
+            서명 요청함{track ? ` · ${TRACK_LABEL[track]}` : ''}
+            <InfoTip label="서명 요청함 안내">
+              학생이 나에게 보낸 {track ? `${TRACK_LABEL[track]} ` : ''}비행 기록 서명 요청이에요. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록돼요.
+              {track ? ' 다른 구분의 요청은 상단에서 구분을 바꾸면 보여요.' : ''}
+            </InfoTip>
           </h2>
-          <p className="mt-1 text-xs text-slate-400">
-            학생이 나에게 보낸 {track ? `${TRACK_LABEL[track]} ` : ''}비행 기록 서명 요청입니다. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록됩니다.
-            {track ? ' 다른 구분의 요청은 상단 트랙 카드에서 구분을 바꾸면 보여요.' : ''}
-          </p>
         </div>
         <div className="flex gap-1.5" role="tablist" aria-label="서명 요청 상태">
           {TAB_OPTIONS.map((option) => (

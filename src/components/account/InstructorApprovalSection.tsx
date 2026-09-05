@@ -13,6 +13,7 @@ import { type ApprovalRequest, type PilotTrack, TRACK_INSTRUCTOR_LABEL } from '.
 import type { AccountResponse } from '../../lib/baas/types'
 import { useCertificates } from '../../hooks/useCertificates'
 import type { Certificate } from '../../types/certificate'
+import { InfoTip } from '../InfoTip'
 
 /** 구분별로 교관 신청에 필요한 자격증 카테고리 */
 const INSTRUCTOR_CERT_CATEGORY: Record<PilotTrack, Certificate['category']> = {
@@ -154,10 +155,10 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
       <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
         <ShieldCheck className="h-4 w-4 text-sky" aria-hidden="true" />
         교관 승인 신청
+        <InfoTip label="교관 승인 안내">
+          비행 기록에 교관 전자서명을 하려면 자격 구분별로 승인이 필요해요. 항공기 교관 승인으로는 경량·초경량 기록에 서명할 수 없어요(운영세칙 제9조).
+        </InfoTip>
       </h2>
-      <p className="mt-1 text-xs text-slate-400">
-        비행 기록에 교관 전자서명을 하려면 자격 구분별로 승인이 필요해요. 항공기 교관 승인으로는 경량·초경량 기록에 서명할 수 없어요(운영세칙 제9조).
-      </p>
 
       {isLoading && Object.keys(byTrack).length === 0 ? (
         <p className="mt-5 text-sm text-slate-400">신청 현황을 불러오는 중입니다...</p>

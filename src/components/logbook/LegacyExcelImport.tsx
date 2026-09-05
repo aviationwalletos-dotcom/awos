@@ -1,4 +1,4 @@
-import { AlertTriangle, FileSpreadsheet, Upload } from 'lucide-react'
+import { AlertTriangle, Upload } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 
 import type {
@@ -11,6 +11,7 @@ import type {
 import { Button } from '../Button'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import { importWithReload } from '../../lib/lazyImport'
+import { InfoTip } from '../InfoTip'
 
 // SheetJS(xlsx)는 무겁고(수백 KB) 엑셀 가져오기를 실제로 사용할 때만 필요하므로, 파일 파싱 시점에
 // 동적 import()로 지연 로드한다. 이렇게 하면 앱 첫 로딩 번들에서 xlsx가 빠져(별도 청크로 분리),
@@ -596,16 +597,11 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
 
   return (
     <div>
-      <div className="mb-5 flex items-start gap-3 rounded-control border border-white/10 bg-surface p-4">
-        <FileSpreadsheet className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-        <p className="text-xs text-slate-400">
-          개인 엑셀 로그북 파일(.xlsx/.xls/.csv)을 업로드하면 첫 번째 시트를 자동으로 읽어 컬럼을 최대한 자동 매핑합니다.
-          매핑 결과를 검토/수정한 뒤 미리보기를 확인하고 가져오기를 눌러 확정하세요.
-        </p>
-      </div>
-
-      <label htmlFor="legacyExcelFile" className="mb-1.5 block text-sm font-medium text-ink">
+      <label htmlFor="legacyExcelFile" className="mb-1.5 flex items-center gap-1 text-sm font-medium text-ink">
         엑셀/CSV 파일 선택
+        <InfoTip label="엑셀 가져오기 설명">
+          .xlsx/.xls/.csv 파일의 첫 번째 시트를 읽어 컬럼을 자동으로 맞춰요. 매핑을 확인·수정한 뒤 미리보기를 보고 가져오기를 누르면 확정돼요. 파일은 이 브라우저 안에서만 처리돼요.
+        </InfoTip>
       </label>
       <input id="legacyExcelFile"
         type="file"

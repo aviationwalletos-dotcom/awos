@@ -31,6 +31,13 @@ function valuesForKind(entries: LogbookEntry[], kind: LogbookFilterKind): string
 
 export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChange }: EntryFilterBarProps) {
   const values = valuesForKind(entries, kind)
+  // 날짜 필터용: 기록이 있는 날짜와 건수(최신순)
+  const dateOptions = React.useMemo(() => {
+    if (kind !== 'date') return [] as Array<[string, number]>
+    const counts = new Map<string, number>()
+    for (const e of entries) counts.set(e.date, (counts.get(e.date) ?? 0) + 1)
+    return Array.from(counts.entries()).sort((a, b) => b[0].localeCompare(a[0]))
+  }, [entries, kind])
 
   return (
     <div>
@@ -58,40 +65,40 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
       </div>
 
       {kind === 'date' && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <label htmlFor="entry-date-filter" className="text-xs font-medium text-slate-400">날짜 선택</label>
-          <input
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-l-2 border-sky/40 pl-3">
+          <label htmlFor="entry-date-filter" className="text-xs font-medium text-slate-400">↳ 날짜</label>
+          {/* 기록이 있는 날짜만 고르는 select — 갤럭시에서 날짜 입력칸 글자가 겹쳐 보이던 문제를 피하고, 없는 날짜를 고를 일도 없앤다 */}
+          <select
             id="entry-date-filter"
-            type="date"
             value={value ?? ''}
             onChange={(e) => onValueChange(e.target.value || null)}
-            className="rounded-control border border-white/10 bg-panel px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-          />
-          {value && (
-            <button type="button" onClick={() => onValueChange(null)} className="text-xs text-slate-400 underline hover:text-sky">지우기</button>
-          )}
+            className="min-h-[36px] rounded-control border border-white/10 bg-panel px-3 py-1.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+          >
+            <option value="">전체 날짜</option>
+            {dateOptions.map(([d, n]) => (
+              <option key={d} value={d}>{d} ({n}건)</option>
+            ))}
+          </select>
         </div>
       )}
 
       {kind === 'unsigned' && (
-        <p className="mt-3 text-xs text-slate-400">
-          교관 서명이 아직 없는 기록(실비행·시뮬레이터 모두)만 보여줍니다. 이월 기록은 "이월 기록" 탭에서 따로 봐요.
-        </p>
+        <p className="mt-3 border-l-2 border-sky/40 pl-3 text-xs text-slate-400">↳ 교관 서명이 없는 기록만 (이월 기록 제외)</p>
       )}
       {kind === 'imported' && (
-        <p className="mt-3 text-xs text-slate-400">
-          엑셀 로그북에서 가져온 기록과 비행경력증명서로 이월한 기록만 보여줍니다.
-        </p>
+        <p className="mt-3 border-l-2 border-sky/40 pl-3 text-xs text-slate-400">↳ 엑셀·비행경력증명서로 옮겨온 기록만</p>
       )}
 
       {kind !== 'all' && kind !== 'date' && kind !== 'unsigned' && kind !== 'imported' && values.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={`${FILTER_KIND_LABEL[kind]} 세부 값 선택`}>
+        // 하위 필터: 왼쪽 세로선 + "↳ 기종" 라벨 + 작은 알약 모양으로 상위 칩과 구분한다
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-l-2 border-sky/40 pl-3" role="group" aria-label={`${FILTER_KIND_LABEL[kind]} 세부 값 선택`}>
+          <span className="mr-1 text-xs font-medium text-slate-400">↳ {FILTER_KIND_LABEL[kind].replace('별', '')}</span>
           <button type="button"
             data-state={value === null ? 'active' : 'idle'}
             onClick={() => onValueChange(null)}
-            className={`inline-flex min-h-[36px] items-center rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors
+            className={`inline-flex min-h-[32px] items-center rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-              ${value === null ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
+              ${value === null ? 'border-sky/70 bg-sky/15 text-[#00D4FF]' : 'border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06]'}`}
           >
             전체
           </button>
@@ -102,9 +109,9 @@ export function EntryFilterBar({ entries, kind, value, onKindChange, onValueChan
                 type="button"
                 data-state={isActive ? 'active' : 'idle'}
                 onClick={() => onValueChange(v)}
-                className={`inline-flex min-h-[36px] items-center rounded-control border px-3 py-1.5 text-xs font-semibold font-mono-data transition-colors
+                className={`inline-flex min-h-[32px] items-center rounded-full border px-3 py-1 text-[11px] font-semibold font-mono-data transition-colors
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                  ${isActive ? 'border-sky bg-sky/10 text-[#00D4FF]' : 'border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]'}`}
+                  ${isActive ? 'border-sky/70 bg-sky/15 text-[#00D4FF]' : 'border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06]'}`}
               >
                 {v}
               </button>

@@ -7,6 +7,7 @@ import { LegacyImportSection } from "../../../components/logbook/LegacyImportSec
 import { UltralightEntryForm } from "../../../components/logbook/UltralightEntryForm";
 import { VehicleCards } from "../../../components/logbook/VehicleCards";
 import type { LogbookModel } from "../useLogbookPageModel";
+import { InfoTip } from "../../../components/InfoTip";
 
 export function InputTab({ m }: { m: LogbookModel }) {
   const {
@@ -42,8 +43,11 @@ export function InputTab({ m }: { m: LogbookModel }) {
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-display text-2xl font-extrabold text-ink">
+                <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
                   새 비행 기록 추가
+                  <InfoTip size="md" label="기록 추가 안내">
+                    비행을 마쳤다면 "기록 추가하기"를 눌러 입력 폼을 펼치세요. 과거 기록을 옮겨오려면 아래 "종이 로그북 기록 가져오기"를 이용하세요.
+                  </InfoTip>
                 </h2>
                 <button
                   type="button"
@@ -68,11 +72,6 @@ export function InputTab({ m }: { m: LogbookModel }) {
                   )}
                 </button>
               </div>
-              {!isFormOpen && (
-                <p className="mt-2 text-sm text-slate-400">
-                  비행을 마쳤다면 "기록 추가하기"를 눌러 입력 폼을 펼치세요. 과거 기록을 옮겨오려면 아래 "종이 로그북 기록 가져오기"를 이용하세요.
-                </p>
-              )}
               <div id="new-entry-form" hidden={!isFormOpen}>
               {isDrone && (
                 <div className="mt-4">
@@ -123,13 +122,12 @@ export function InputTab({ m }: { m: LogbookModel }) {
         <section className="bg-panel py-[clamp(24px,4vw,48px)]">
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
-              <h2 className="font-display text-2xl font-extrabold text-ink">
+              <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
                 종이 로그북 기록 가져오기
+                <InfoTip size="md" label="가져오기 안내">
+                  종이 로그북(탈론 로그 등)이나 개인 엑셀 파일로 관리하던 과거 기록을 이 앱으로 옮겨올 수 있어요.
+                </InfoTip>
               </h2>
-              <p className="mt-2 text-sm text-slate-400">
-                기존에 종이 로그북(탈론 로그 등)이나 개인 엑셀 파일로 관리하던
-                과거 비행 기록을 이 앱으로 옮겨올 수 있습니다.
-              </p>
               <div className="mt-6">
                 <div id="legacy-import">
                   <LegacyImportSection

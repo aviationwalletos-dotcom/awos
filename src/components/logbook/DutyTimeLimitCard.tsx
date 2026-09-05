@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react'
-import { Info, TimerReset } from 'lucide-react'
+import { TimerReset } from 'lucide-react'
+
+import { InfoTip } from '../InfoTip'
 
 import type { LogbookEntry } from '../../types/logbook'
 import { computeDutyTimeLimits } from '../../lib/dutyTimeLimits'
@@ -46,17 +48,19 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
         </p>
       </div>
 
-      <p className={`mt-2 rounded-control border px-2.5 py-1.5 text-[11px] leading-relaxed ${
-        operationType === 'commercial' ? 'border-amber-400/30 bg-amber-400/10 text-amber-200' : 'border-white/10 bg-white/[0.03] text-slate-400'
-      }`}>
-        {operationType === 'commercial'
-          ? '여객·2인조종·운송사업은 승무원 편성(1인/2인/3인 이상)과 편조에 따라 한도가 달라요(규칙 별표 18). 아래는 1인 조종 기준 참고치라 정확하지 않을 수 있습니다. 회사 운항규정을 우선하세요.'
-          : '아래 한도(8h/35h/100h/1,000h)는 항공운송·항공기사용사업 종사자 기준(규칙 별표 18)이에요. 자가용·훈련비행에는 법정 한도가 아닌 참고치입니다.'}
-      </p>
+      {operationType === 'commercial' ? (
+        <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-200">
+          운송사업은 승무원 편성에 따라 한도가 달라요. 아래는 1인 조종 기준 참고치예요.
+          <InfoTip className="ml-1" label="승무시간 한도 기준 설명">
+            여객·2인조종·운송사업은 승무원 편성(1인/2인/3인 이상)과 편조에 따라 한도가 달라요(시행규칙 별표 18). 아래는 1인 조종 기준 참고치라 정확하지 않을 수 있습니다. 회사 운항규정을 우선하세요.
+          </InfoTip>
+        </p>
+      ) : null}
 
       {!hasData ? (
         <p className="mt-3 text-xs text-slate-400">
-          비행 기록을 등록하면 오늘 비행 가능 여부와 남은 비행 가능 시간이 표시됩니다.
+          비행 기록을 등록하면 오늘 비행 가능 여부와 남은 시간이 표시돼요.
+          <DutyTimeDisclaimer compact operationType={operationType} />
         </p>
       ) : (
         <div className={compact ? 'mt-3' : 'mt-6'}>
@@ -73,21 +77,28 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
               {remainingHours.toFixed(1)}시간
             </span>{' '}
             더 비행 가능합니다.
+            <DutyTimeDisclaimer compact={compact} operationType={operationType} />
           </p>
         </div>
       )}
-
-      <DutyTimeDisclaimer compact={compact} />
     </div>
   )
 }
 
-function DutyTimeDisclaimer({ compact = false }: { compact?: boolean }) {
+/** 면책·기준 설명은 ⓘ 아이콘 뒤로(폰에서 본문보다 설명이 길어 보이던 것 정리) */
+function DutyTimeDisclaimer({ compact = false, operationType }: { compact?: boolean; operationType?: string }) {
   return (
-    <p className={`${compact ? 'mt-3' : 'mt-6'} flex items-start gap-1.5 text-[11px] text-slate-400`}>
-      <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-      이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관/관련 규정을 통해
-      확인해야 합니다.
-    </p>
+    <span className={`${compact ? 'ml-1' : 'ml-1.5'} inline-flex align-middle`}>
+      <InfoTip label="승무시간 계산 기준·주의" side="top">
+        {operationType !== 'commercial' && (
+          <>
+            한도(8h/35h/100h/1,000h)는 항공운송·항공기사용사업 종사자 기준(시행규칙 별표 18)이에요. 자가용·훈련비행에는 법정 한도가 아닌 참고치예요.
+            <br />
+            <br />
+          </>
+        )}
+        이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관·관련 규정을 통해 확인해야 합니다.
+      </InfoTip>
+    </span>
   )
 }

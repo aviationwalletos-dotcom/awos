@@ -8,6 +8,7 @@ import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types
 
 import { Button } from '../Button'
 import { localToday } from '../../lib/ui/localDate'
+import { InfoTip } from '../InfoTip'
 
 interface FieldErrors {
   date?: string
@@ -357,7 +358,13 @@ export function EntryForm({
       {/* v1.1 — 자격 구분은 상단 전환기 값을 그대로 쓴다(중복 선택 제거). 경량·초경량만 종류를 고른다. */}
       {kindOptions.length > 0 && (
         <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
-          <label htmlFor="vehicleKind" className={labelClass}>종류</label>
+          <label htmlFor="vehicleKind" className={`${labelClass} inline-flex items-center gap-1`}>
+            종류
+            <InfoTip label="종류 안내">
+              {PILOT_TRACK_LABEL[vehicleClass]} 기록이에요. 종류는 자격 한정 단위라 응시경력 계산에 쓰여요. 경량·초경량은 야간 시간이 저장되지 않아요.
+              {isUnmanned ? ' 무인비행장치 기록은 참고·보조 자료이고, 응시·등록용 경력은 지도조종자 확인과 교육기관 증명으로만 인정돼요.' : ''}
+            </InfoTip>
+          </label>
           <select
             id="vehicleKind"
             name="vehicleKind"
@@ -370,14 +377,7 @@ export function EntryForm({
               <option key={k.key} value={k.key}>{k.label}</option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11px] text-slate-500">
-            {PILOT_TRACK_LABEL[vehicleClass]} 기록 · 종류는 자격 한정 단위라 응시경력 계산에 쓰여요. 경량·초경량은 야간 시간이 저장되지 않습니다.
-          </p>
-          {isUnmanned && (
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-              무인비행장치 기록은 참고·보조 자료예요. 응시·등록용 비행경력은 지도조종자 확인과 교육기관 증명으로만 인정됩니다.
-            </p>
-          )}
+
         </div>
       )}
 
@@ -431,13 +431,11 @@ export function EntryForm({
                 onChange={(e) => handleStudentSoloChange(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-sky"
               />
-              <span>
+              <span className="inline-flex items-center gap-1">
                 <span className="font-semibold">단독 비행(Solo)이었어요</span>
-                <span className="mt-0.5 block text-[11px] text-slate-400">
-                  {studentSolo
-                    ? '단독 비행은 PIC 시간과 단독 시간으로 기록돼요(자가용 응시경력의 "단독 10시간"에 합산).'
-                    : '교관 동승 교육 비행은 교육 받은 시간(Dual received)에만 기록되고 PIC는 0이에요.'}
-                </span>
+                <InfoTip label="단독 비행 기록 방식">
+                  체크하면 PIC 시간 + 단독 시간으로 기록돼요(자가용 응시경력의 "단독 10시간"에 합산). 체크 안 하면 교관 동승 교육 비행으로 보고 교육 받은 시간(Dual)에만 기록되고 PIC는 0이에요.
+                </InfoTip>
               </span>
             </label>
             <input type="hidden" name="soloTime" defaultValue={initialValues?.pilotingTime?.solo ?? ''} />
@@ -745,7 +743,12 @@ export function EntryForm({
             />
             <label className="mt-1.5 flex items-start gap-1.5 text-[11px] text-slate-400">
               <input type="checkbox" name="twoPilotAircraft" defaultChecked={initialValues?.twoPilotAircraft ?? false} className="mt-0.5 h-3.5 w-3.5 accent-sky" />
-              <span>비행교범상 2인 조종 항공기 — 체크 안 하면 응시경력 산정 시 SIC 시간은 1/2만 인정돼요(시행규칙 제78조)</span>
+              <span className="inline-flex items-center gap-1">
+                2인 조종 항공기(비행교범 기준)
+                <InfoTip label="2인 조종 항공기 설명">
+                  체크하지 않으면 응시경력 산정 때 SIC 시간이 1/2만 인정돼요(시행규칙 제78조).
+                </InfoTip>
+              </span>
             </label>
           </div>
           <div>

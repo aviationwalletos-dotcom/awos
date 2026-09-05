@@ -14,6 +14,7 @@ import {
 } from "../../../lib/pdf";
 import type { LogbookModel } from "../useLogbookPageModel";
 import { describeImportError } from "../../../lib/lazyImport";
+import { InfoTip } from "../../../components/InfoTip";
 
 export function MyRecordsTab({ m }: { m: LogbookModel }) {
   const {
@@ -89,11 +90,10 @@ export function MyRecordsTab({ m }: { m: LogbookModel }) {
             <Reveal>
               <h2 className="font-display text-2xl font-extrabold text-white">
                 총 비행시간 요약
+                <InfoTip size="md" label="총 비행시간 계산 기준">
+                  지금까지 등록한 비행 기록을 기준으로 범주·자격·조건별 누적 시간을 계산해요. 지금 보고 있는 구분의 기록만 포함돼요.
+                </InfoTip>
               </h2>
-              <p className="mt-2 text-sm text-slate-300">
-                지금까지 등록한 비행 기록을 기준으로 범주·자격·조건별 누적
-                시간을 계산합니다.
-              </p>
               <div className="mt-6">
                 <LogbookTotalsSummary
                   entries={trackEntries}

@@ -1,9 +1,10 @@
-import { FileCheck2, FileSpreadsheet, Info } from 'lucide-react'
+import { FileCheck2, FileSpreadsheet } from 'lucide-react'
 import React, { useState } from 'react'
 
 import { LegacyExcelImport } from './LegacyExcelImport'
 import { FlightExperienceCertificateForm } from './FlightExperienceCertificateForm'
 import type { LogbookEntryInput } from '../../types/logbook'
+import { InfoTip } from '../InfoTip'
 
 interface LegacyImportSectionProps {
   onAddEntries: (inputs: LogbookEntryInput[]) => void
@@ -27,16 +28,14 @@ export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) 
 
   return (
     <div>
-      <div className="mb-6 flex items-start gap-3 rounded-control border border-amber-400/40 bg-amber-400/10 p-4">
-        <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
-        <p className="text-xs text-amber-300">
-          "엑셀로 가져오기"로 저장한 기록은 일반 비행기록과 동일하게 로컬과 서버에 동기화되지만, 기관(학교)의
-          별도 검토·승인 절차는 거치지 않습니다. 기관의 확인이 필요한 경우 "비행경력증명서로 가져오기"를
-          이용해 증명서 사진을 첨부해 주세요. 이 항목은 기관 계정 대시보드로 전달되어 담당자가 직접
-          승인 또는 반려할 수 있습니다.
-        </p>
+      <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-slate-300">
+        가져오기 방법
+        <InfoTip label="두 방법의 차이">
+          <span className="font-semibold text-slate-100">엑셀로 가져오기</span>는 바로 기록에 들어가지만 기관(학교) 검토는 거치지 않아요.
+          <br />
+          <span className="font-semibold text-slate-100">비행경력증명서로 가져오기</span>는 증명서 사진을 첨부해 기관 담당자가 승인·반려해요. 공식 총 비행시간에 넣으려면 이쪽이에요.
+        </InfoTip>
       </div>
-
       <div role="tablist" aria-label="종이 로그북 가져오기 방법 선택" className="mb-6 flex flex-wrap gap-2">
         {TABS.map(({ key, label, icon: Icon }) => {
           const isActive = activeTab === key

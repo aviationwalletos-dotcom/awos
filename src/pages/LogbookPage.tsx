@@ -219,9 +219,6 @@ export function LogbookPage() {
               </div>
             )}
 
-            <p className="mt-4 text-xs text-slate-400">
-              기록은 이 기기와 서버에 함께 안전하게 저장돼요.
-            </p>
           </div>
         </section>
 

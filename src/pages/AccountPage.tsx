@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { Button } from '../components/Button'
+import { InfoTip } from '../components/InfoTip'
 import { InstitutionSelect } from '../components/InstitutionSelect'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
@@ -492,11 +493,8 @@ export function AccountPage() {
             <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
               <MapPin className="h-4 w-4 text-sky" aria-hidden="true" />
               소속 기관
+              <InfoTip label="설명 보기">교관 승인 신청과 서명 요청에서 같은 소속끼리 먼저 보이게 하는 데 쓰여요.</InfoTip>
             </h2>
-            <p className="mt-1 flex items-start gap-2 text-xs text-slate-400">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
-              교관 승인 신청 및 서명 요청 시 소속 기관 필터에 사용됩니다.
-            </p>
 
             <form onSubmit={handleSaveAffiliation} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1">
@@ -532,11 +530,8 @@ export function AccountPage() {
               <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
                 <User className="h-4 w-4 text-sky" aria-hidden="true" />
                 보유 자격 구분
+                <InfoTip label="설명 보기">여러 개 고를 수 있어요. 비행기록·자격증·커런시는 구분별로 따로 계산되어 섞이지 않아요.</InfoTip>
               </h2>
-              <p className="mt-1 flex items-start gap-2 text-xs text-slate-400">
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
-                자격을 여러 개 갖고 있으면 여러 개 고를 수 있어요. 비행기록·자격증·커런시는 구분별로 따로 계산되어 섞이지 않습니다.
-              </p>
               {isDerivedFromLegacyRole && (
                 <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
                   아직 직접 고르지 않아 기존 역할({individualRoleLabel})에서 가져온 값이에요. 한 번 저장해 두면 이 안내가 사라집니다.
@@ -584,12 +579,8 @@ export function AccountPage() {
               <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
                 <User className="h-4 w-4 text-sky" aria-hidden="true" />
                 생년월일 · 국적 · 운항형태
+                <InfoTip label="설명 보기">항공신체검사 유효기간은 연령으로 갈려요(별표 8: 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월). 운항형태는 커런시 기준(180일 / 90일+야간)과 1종 신체검사 6개월 예외를 가려요.</InfoTip>
               </h2>
-              <p className="mt-1 flex items-start gap-2 text-xs text-slate-400">
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
-                항공신체검사 유효기간은 연령으로 갈려요(별표 8: 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월).
-                운항형태는 커런시 기준(180일 / 90일+야간)과 1종 신체검사 6개월 예외를 가릅니다.
-              </p>
               <form onSubmit={handleSaveBirth} className="mt-5 flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>

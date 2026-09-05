@@ -7,6 +7,7 @@ import { CertificateForm } from "../../../components/certificates/CertificateFor
 import { TsIntegrationCard } from "../../../components/certificates/TsIntegrationCard";
 import { CertificateList } from "../../../components/certificates/CertificateList";
 import type { LogbookModel } from "../useLogbookPageModel";
+import { InfoTip } from "../../../components/InfoTip";
 
 export function CertificatesTab({ m }: { m: LogbookModel }) {
   const {
@@ -68,13 +69,12 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
             <Reveal>
               {/* 역할별 "자격 템플릿" 안내 카드는 정보량이 적어 제거(2026-09-05). 역할 색상은 등록 폼 칩에 그대로 쓰인다. */}
               <TsIntegrationCard />
-              <h2 className="mt-8 font-display text-2xl font-extrabold text-ink">
+              <h2 className="mt-8 flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
                 자격증 등록
+                <InfoTip size="md" label="자격증 등록 안내">
+                  면허·항공신체검사·법정교육 등을 등록하면 만료가 가까워질 때 카드에 경고가 떠요. 사진을 첨부해 관리자 인증을 받으면 "인증됨" 표시가 붙어요.
+                </InfoTip>
               </h2>
-              <p className="mt-2 text-sm text-slate-400">
-                면허, 항공신체검사, 법정교육 등 자격 항목을 등록하면 만료 임박
-                시 카드에 경고 배지가 표시됩니다.
-              </p>
               <div className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
                 <CertificateForm
                   mode="create"

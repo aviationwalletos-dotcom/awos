@@ -20,6 +20,7 @@ import { useApprovalRequests } from '../../lib/approvals/hooks'
 import { type ApprovalKind, type ApprovalRequest, type ApprovalStatus, TRACK_LABEL } from '../../lib/approvals/types'
 import { clearAttachmentCache, getCachedAttachmentUrl, setCachedAttachmentUrl } from '../../lib/baas/approvalAttachmentCache'
 import { createSignedBoardFileUrl } from '../../lib/baas/supabaseTransport'
+import { InfoTip } from '../InfoTip'
 
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'all'
 
@@ -284,7 +285,10 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
           ))}
         </div>
       </div>
-      <p className="mt-2 text-xs text-slate-500">{description}</p>
+      <p className="mt-2 flex items-center gap-1 text-xs text-slate-500">
+        <InfoTip label="이 탭의 설명">{description}</InfoTip>
+        <span className="sr-only">{description}</span>
+      </p>
 
       {myAffiliation ? (
         <label className="mt-4 flex min-h-[44px] w-fit cursor-pointer items-center gap-2 rounded-control border border-white/15 px-3 py-2 text-xs font-semibold text-slate-300">
