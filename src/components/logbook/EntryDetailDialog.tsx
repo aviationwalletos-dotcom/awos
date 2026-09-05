@@ -251,7 +251,7 @@ export function EntryDetailDialog({
         subjectId: entry.id,
         affiliation: myAffiliation?.trim() || null,
         title: buildSignatureRequestTitle(entry),
-        summary: buildSignatureRequestContent(entry, account, { name: target.name, userId: target.email ?? target.userId }),
+        summary: buildSignatureRequestContent(entry, account, { name: target.name, affiliation: target.affiliation !== '미상' ? target.affiliation : undefined }),
         // [증거] 서명 대상 기록의 전체 스냅샷 + 해시. 서명 뒤 기록이 바뀌어도 "서명 당시 내용"이 서버에 남는다.
         payload: { signedSnapshot: await buildSignedSnapshot(entry) },
       })

@@ -68,7 +68,6 @@ export interface CreateApprovalRequestInput {
 export interface ApprovedInstructor {
   userId: string
   name: string
-  email: string | null
   track: PilotTrack
   affiliation: string | null
   approvedAt: string | null

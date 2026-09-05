@@ -14,6 +14,7 @@ import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { useUploadSignatureImage } from '../../hooks/baas/useUploadSignatureImage'
 import { decideApprovalRequest } from '../../lib/approvals/api'
 import { useApprovalRequests } from '../../lib/approvals/hooks'
+import { SIGNED_FIELD_LABEL, snapshotFromPayload } from '../../lib/approvals/snapshot'
 import { type ApprovalRequest, type PilotTrack, TRACK_LABEL } from '../../lib/approvals/types'
 import type { AccountResponse } from '../../lib/baas/types'
 
@@ -114,11 +115,39 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
         )}
       </div>
 
-      {request.summary && (
-        <p className="mt-3 whitespace-pre-wrap rounded-control border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-300">
-          {request.summary}
-        </p>
-      )}
+      {/* [무결성] 서명 대상은 요청 행의 스냅샷(payload.signedSnapshot)이다. 요약 텍스트는 학생이 쓴 자유 문장이라
+          스냅샷과 다르게 적을 수 있으므로, 교관에게는 스냅샷을 표로 직접 보여주고 요약은 참고로만 접어 둔다. */}
+      {(() => {
+        const snap = snapshotFromPayload(request.payload)
+        if (!snap) {
+          return request.summary ? (
+            <p className="mt-3 whitespace-pre-wrap rounded-control border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-300">{request.summary}</p>
+          ) : null
+        }
+        const rows = Object.entries(snap.fields).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+        return (
+          <div className="mt-3 rounded-control border border-sky/20 bg-white/5 px-3 py-2.5 text-xs">
+            <p className="mb-1.5 font-semibold text-sky">서명 대상 기록 (이 내용에 서명합니다)</p>
+            <table className="w-full">
+              <tbody>
+                {rows.map(([k, v]) => (
+                  <tr key={k} className="border-t border-white/10 first:border-t-0">
+                    <td className="py-0.5 pr-3 text-slate-400">{SIGNED_FIELD_LABEL[k] ?? k}</td>
+                    <td className="py-0.5 font-mono-data text-slate-200">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-1.5 font-mono-data text-[10px] text-slate-500">해시 {snap.hash.slice(0, 16)}… · 요청자 {request.requester_name}{request.requester_email ? ` (${request.requester_email})` : ''}</p>
+            {request.summary && (
+              <details className="mt-1.5">
+                <summary className="cursor-pointer text-[11px] text-slate-500">요청자가 적은 요약 보기</summary>
+                <p className="mt-1 whitespace-pre-wrap text-[11px] text-slate-400">{request.summary}</p>
+              </details>
+            )}
+          </div>
+        )
+      })()}
 
       <div className="mt-3">
         {isSigned ? (

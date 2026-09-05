@@ -130,20 +130,18 @@ let instructorsCache: { at: number; promise: Promise<ApprovedInstructor[]> } | n
 async function fetchApprovedInstructorsOnce(): Promise<ApprovedInstructor[]> {
   const client = getAuthedDataClient()
   if (!client) return []
-  // 승인 교관 목록은 RPC 로만 받는다(schema12 list_approved_instructors) — 신청 사유 등 본문은 노출되지 않는다.
+  // 승인 교관 목록은 RPC 로만 받는다(schema14 list_approved_instructors) — 이름·구분·소속·승인일만. 이메일·신청 사유는 노출되지 않는다.
   const { data, error } = await client.rpc('list_approved_instructors')
   if (error) return []
   return ((data ?? []) as Array<{
     user_id: string
     name: string
-    email: string | null
     track: PilotTrack
     affiliation: string | null
     approved_at: string | null
   }>).map((r) => ({
     userId: r.user_id,
     name: r.name,
-    email: r.email,
     track: r.track,
     affiliation: r.affiliation,
     approvedAt: r.approved_at,

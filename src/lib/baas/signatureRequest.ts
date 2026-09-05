@@ -18,7 +18,8 @@ export function buildSignatureRequestTitle(entry: LogbookEntry): string {
 /** 서명 요청 대상으로 특정 교관을 지정할 때 사용하는 식별 정보. */
 export interface SignatureTargetInstructor {
   name: string
-  userId: string
+  /** 소속(표시용). 이메일·uuid 는 적지 않는다 */
+  affiliation?: string
 }
 
 /** 서명 요청 요약 — 비행 상세를 사람이 읽기 쉬운 텍스트로 정리한다. */
@@ -29,7 +30,7 @@ export function buildSignatureRequestContent(
 ): string {
   const lines: string[] = []
   if (targetInstructor) {
-    lines.push(`대상 교관: ${targetInstructor.name} (${targetInstructor.userId})`)
+    lines.push(`대상 교관: ${targetInstructor.name}${targetInstructor.affiliation ? ` (${targetInstructor.affiliation})` : ''}`)
   }
   lines.push(
     `날짜: ${entry.date}`,

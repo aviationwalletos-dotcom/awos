@@ -11,7 +11,6 @@ export interface ApprovedInstructor {
   name: string
   /** auth 사용자 uuid — 서명 요청의 target_id 로 그대로 쓴다 */
   userId: string
-  email: string | null
   /** 소속. 없으면 "미상". */
   affiliation: string
   /** 승인받은 자격 구분(복수) */
@@ -36,7 +35,6 @@ function groupByUser(rows: ApprovedInstructorRow[]): ApprovedInstructor[] {
       map.set(r.userId, {
         name: r.name,
         userId: r.userId,
-        email: r.email,
         affiliation: r.affiliation || '미상',
         tracks: [r.track],
       })
