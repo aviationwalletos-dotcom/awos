@@ -46,21 +46,32 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   const instructorCtx = await browser.newContext()
   const instructor = await instructorCtx.newPage()
   await login(instructor, 'instructor')
-  const inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
-  if (!(await inboxTab.isVisible({ timeout: 10_000 }).catch(() => false))) {
-    throw new Error('교관 계정에 "서명 요청함" 탭이 없습니다 — 계정정보에서 항공기 교관 승인 신청 후 관리자 승인을 먼저 완료해 주세요.')
+  // 탭은 교관 승인 조회가 끝난 뒤 붙는다 — 넉넉히 기다리고, 안 보이면 한 번 새로고침해 재확인
+  let inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
+  if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
+    await instructor.reload()
+    inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
+    if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
+      throw new Error('교관 계정에 "서명 요청함" 탭이 없습니다 — 계정정보에서 항공기 교관 승인 신청 후 관리자 승인을 먼저 완료해 주세요.')
+    }
   }
   await inboxTab.click()
   const card = instructor.getByTestId('signature-request-card').filter({ hasText: MARKER }).first()
   await expect(card).toBeVisible({ timeout: 30_000 })
   const pad = card.getByTestId('signature-pad')
+  // 패드가 화면 밖이면 마우스 좌표가 캔버스를 벗어나 아무것도 안 그려진다 → 먼저 화면 안으로
+  await pad.scrollIntoViewIfNeeded()
   const box = await pad.boundingBox()
   if (!box) throw new Error('서명 패드 없음')
   await instructor.mouse.move(box.x + 20, box.y + box.height / 2)
   await instructor.mouse.down()
-  await instructor.mouse.move(box.x + box.width - 20, box.y + box.height / 2 + 10, { steps: 12 })
+  await instructor.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 15, { steps: 10 })
+  await instructor.mouse.move(box.x + box.width - 20, box.y + box.height / 2 + 10, { steps: 10 })
   await instructor.mouse.up()
-  await card.getByTestId('signature-complete').click()
+  const completeButton = card.getByTestId('signature-complete')
+  // 그려졌다면 버튼이 활성화된다. 아니면 이유를 분명히 남긴다
+  await expect(completeButton, '서명 패드에 그린 획이 인식되지 않았어요(버튼이 비활성 상태)').toBeEnabled({ timeout: 5_000 })
+  await completeButton.click()
   // 서명 완료 후 카드는 "대기중" 목록에서 사라진다(완료됨 탭으로 이동)
   await expect(card).toHaveCount(0, { timeout: 30_000 })
   await instructor.getByRole('tab', { name: /^완료됨$/ }).click()

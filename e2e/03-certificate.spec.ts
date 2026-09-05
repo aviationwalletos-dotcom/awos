@@ -5,9 +5,22 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
   await login(page, 'student')
   await openTab(page, /자격증/)
 
+  // 예전 실행이 남긴 테스트 자격증 정리(최대 5개, 실패해도 진행)
+  for (let i = 0; i < 5; i += 1) {
+    const stale = page.getByTestId('cert-item').filter({ hasText: /E2E-의료기관|E2E 항공전문의료기관/ }).first()
+    if ((await stale.count()) === 0) break
+    await stale.click()
+    const d = page.getByRole('dialog')
+    await d.getByRole('button', { name: /삭제하기/ }).click().catch(() => undefined)
+    await d.getByRole('button', { name: /삭제 확인/ }).click().catch(() => undefined)
+    await expect(stale).toHaveCount(0, { timeout: 10_000 }).catch(() => undefined)
+  }
+
   await page.locator('#category').selectOption({ label: '항공신체검사' })
   // 항공신체검사는 발급기관 자동값이 없다(지정 의료기관마다 달라서 비워 둔다) — 직접 채워야 제출된다.
-  await page.locator('#issuer').fill('E2E 항공전문의료기관')
+  // 이번 실행에서만 쓰는 고유 발급기관명 — 예전 실행이 남긴 자격증과 섞이지 않게 이걸로 찾는다
+  const issuerTag = `E2E-의료기관-${Date.now().toString(36)}`
+  await page.locator('#issuer').fill(issuerTag)
   await page.locator('#issuedDate').fill('2026-01-15')
   // 항공신체검사는 만료일이 필수다(expiryRequirement = 'required').
   await page.locator('#expiryDate').fill('2027-01-14')
@@ -29,7 +42,7 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
 
   await expect(page.getByText(/자격증이 추가되었습니다/)).toBeVisible()
 
-  const item = page.getByTestId('cert-item').filter({ hasText: /항공신체검사/ }).first()
+  const item = page.getByTestId('cert-item').filter({ hasText: issuerTag }).first()
   await expect(item).toBeVisible()
   await item.click()
   const dialog = page.getByRole('dialog')
