@@ -47,10 +47,18 @@ export function useApprovalRequests(params: ListApprovalParams, options: UseAppr
   useEffect(() => {
     if (!enabled) return
     setIsLoading(true)
-    void refetch()
-    if (!pollMs) return
+    let retryTimer: number | undefined
+    // 첫 조회가 일시적 네트워크 문제로 실패하면 3초 뒤 한 번 더 시도한다
+    // (교관 승인 조회가 실패하면 서명 요청함 탭이 그 세션 내내 안 보이는 문제 방지)
+    void refetch().then((rows) => {
+      if (rows === null) retryTimer = window.setTimeout(() => void refetch(), 3000)
+    })
+    if (!pollMs) return () => window.clearTimeout(retryTimer)
     const timer = window.setInterval(() => void refetch(), pollMs)
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearInterval(timer)
+      window.clearTimeout(retryTimer)
+    }
     // key 가 바뀌면(필터 변경) 다시 읽는다
   }, [enabled, key, pollMs, refetch])
 

@@ -8,12 +8,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
+import { useToast } from '../Toast'
 import { SignaturePad } from '../logbook/SignaturePad'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { useUploadSignatureImage } from '../../hooks/baas/useUploadSignatureImage'
 import { decideApprovalRequest } from '../../lib/approvals/api'
 import { useApprovalRequests } from '../../lib/approvals/hooks'
-import { type ApprovalRequest, TRACK_LABEL } from '../../lib/approvals/types'
+import { type ApprovalRequest, type PilotTrack, TRACK_LABEL } from '../../lib/approvals/types'
 import type { AccountResponse } from '../../lib/baas/types'
 
 function formatDateTime(value: string | null | undefined): string {
@@ -28,8 +29,8 @@ function formatDateTime(value: string | null | undefined): string {
 interface SignatureRequestCardProps {
   request: ApprovalRequest
   account: AccountResponse
-  /** 서명/반려 후 상위 목록 재조회 */
-  onDecided: () => Promise<unknown> | void
+  /** 서명/반려 후 상위 목록 재조회 + 안내 */
+  onDecided: (outcome: 'signed' | 'rejected') => Promise<unknown> | void
 }
 
 function SignatureRequestCard({ request, account, onDecided }: SignatureRequestCardProps) {
@@ -51,12 +52,13 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
     resetUpload()
     setError(null)
     setIsDeciding(true)
-    // 저장소 업로드가 실패하거나 15초 안에 끝나지 않으면 data URL 을 그대로 서명 경로로 쓴다(핵심 기능 보호).
+    // 저장소 업로드가 실패하거나 8초 안에 끝나지 않으면 data URL 을 그대로 서명 경로로 쓴다(핵심 기능 보호).
+    // (E2E에서 업로드가 15초 제한까지 걸려 서명 완료가 26초 걸렸다 — 이미지는 작아서 인라인 저장으로 충분하다)
     let imageUrl: string = signatureDataUrl
     try {
       const uploaded = await Promise.race<string>([
         uploadSignatureImage(signatureDataUrl),
-        new Promise<string>((_, reject) => window.setTimeout(() => reject(new Error('업로드 시간 초과')), 15000)),
+        new Promise<string>((_, reject) => window.setTimeout(() => reject(new Error('업로드 시간 초과')), 8000)),
       ])
       if (uploaded) imageUrl = uploaded
     } catch (err) {
@@ -66,7 +68,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
     try {
       await decideApprovalRequest(request.id, 'approved', { signaturePath: imageUrl })
       setSignatureDataUrl(null)
-      await onDecided()
+      await onDecided('signed')
     } catch (err) {
       const message = err instanceof Error ? err.message : '서명 등록에 실패했습니다.'
       setError(`서명 등록 실패: ${message}`)
@@ -81,7 +83,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
     try {
       await decideApprovalRequest(request.id, 'rejected', { note: rejectNote.trim() || undefined })
       setRejectOpen(false)
-      await onDecided()
+      await onDecided('rejected')
     } catch (err) {
       setError(err instanceof Error ? err.message : '반려에 실패했습니다.')
     } finally {
@@ -189,17 +191,25 @@ interface InstructorSignatureInboxSectionProps {
   account: AccountResponse
   /** 서명 교관 본인의 제125조 조종교육 비행경험 충족 여부(미충족이면 제77조②나목 증명 자격 경고) */
   instructorCurrencyMet?: boolean
+  /** 지금 보고 있는 자격 구분 — 이 구분의 요청만 보여준다(항공기 요청이 초경량 탭에 섞이지 않게) */
+  track?: PilotTrack
 }
 
-export function InstructorSignatureInboxSection({ account, instructorCurrencyMet = true }: InstructorSignatureInboxSectionProps) {
+export function InstructorSignatureInboxSection({ account, instructorCurrencyMet = true, track }: InstructorSignatureInboxSectionProps) {
   const [tab, setTab] = useState<TabFilter>('pending')
   const [page, setPage] = useState(1)
+  const { toast, showToast } = useToast()
 
-  // 대기중은 pending 만, 완료됨은 approved+rejected 만 서버에서 받는다.
+  // 대기중은 pending 만, 완료됨은 approved+rejected 만 서버에서 받는다. 구분(track)도 서버에서 거른다.
   const { data, isLoading, error, refetch } = useApprovalRequests(
-    { scope: 'inbox', kind: 'signature', status: tab === 'pending' ? 'pending' : ['approved', 'rejected'], limit: 200 },
+    { scope: 'inbox', kind: 'signature', status: tab === 'pending' ? 'pending' : ['approved', 'rejected'], track, limit: 200 },
     { pollMs: tab === 'pending' ? 30_000 : undefined },
   )
+
+  async function handleDecided(outcome: 'signed' | 'rejected') {
+    await refetch()
+    showToast(outcome === 'signed' ? '서명이 등록되었어요. 완료됨 탭에서 확인할 수 있어요.' : '요청을 반려했어요.')
+  }
   const items = useMemo(() => data ?? [], [data])
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
 
@@ -214,6 +224,7 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
 
   return (
     <div className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
+      {toast}
       {!instructorCurrencyMet && (
         <div role="alert" className="mb-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-xs text-amber-200">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -229,7 +240,8 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
             서명 요청함
           </h2>
           <p className="mt-1 text-xs text-slate-400">
-            학생이 나에게 보낸 비행 기록 서명 요청입니다. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록됩니다.
+            학생이 나에게 보낸 {track ? `${TRACK_LABEL[track]} ` : ''}비행 기록 서명 요청입니다. 내용을 확인한 뒤 직접 서명하고 "서명 완료"를 누르면 서명 이미지와 함께 본인 명의로 등록됩니다.
+            {track ? ' 다른 구분의 요청은 상단 트랙 카드에서 구분을 바꾸면 보여요.' : ''}
           </p>
         </div>
         <div className="flex gap-1.5" role="tablist" aria-label="서명 요청 상태">
@@ -265,7 +277,7 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
           <ul className="mt-5 space-y-3">
             {paged.map((request) => (
               <li key={request.id}>
-                <SignatureRequestCard request={request} account={account} onDecided={refetch} />
+                <SignatureRequestCard request={request} account={account} onDecided={handleDecided} />
               </li>
             ))}
           </ul>

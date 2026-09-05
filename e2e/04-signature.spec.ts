@@ -49,7 +49,7 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   // 탭은 교관 승인 조회가 끝난 뒤 붙는다 — 넉넉히 기다리고, 안 보이면 한 번 새로고침해 재확인
   let inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
   if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
-    await instructor.reload()
+    await instructor.goto('/logbook')
     inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
     if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
       // 무엇이 보였는지 그대로 남긴다(계정 착오·라우팅 문제·탭 누락을 한 번에 구분)
@@ -78,8 +78,14 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   // 그려졌다면 버튼이 활성화된다. 아니면 이유를 분명히 남긴다
   await expect(completeButton, '서명 패드에 그린 획이 인식되지 않았어요(버튼이 비활성 상태)').toBeEnabled({ timeout: 5_000 })
   await completeButton.click()
-  // 서명 완료 후 카드는 "대기중" 목록에서 사라진다(완료됨 탭으로 이동)
-  await expect(card).toHaveCount(0, { timeout: 30_000 })
+  // 서명 완료 후 카드는 "대기중" 목록에서 사라진다(완료됨 탭으로 이동).
+  // 안 사라지면 카드 안 문구(서버 오류 메시지 등)를 그대로 남긴다.
+  try {
+    await expect(card).toHaveCount(0, { timeout: 60_000 })
+  } catch {
+    const cardText = (await card.innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 400)
+    throw new Error(`서명 완료 후에도 카드가 대기중에 남아 있어요. 카드 내용: ${cardText}`)
+  }
   await instructor.getByRole('tab', { name: /^완료됨$/ }).click()
   await expect(instructor.getByTestId('signature-request-card').filter({ hasText: MARKER }).first().getByText(/완료됨/)).toBeVisible({ timeout: 15_000 })
 
