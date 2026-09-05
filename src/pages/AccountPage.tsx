@@ -1,13 +1,13 @@
 import { ArrowLeft, Building2, Info, KeyRound, LogOut, MapPin, User, UserCircle2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { Button } from '../components/Button'
 import { InstitutionSelect } from '../components/InstitutionSelect'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
 import { useAuth } from '../contexts/AuthContext'
-import { baasFetch, getAuthedDataClient, updateMyProfileFields } from '../lib/baas/supabaseTransport'
+import { baasFetch, getFreshDataClient, updateMyProfileFields } from '../lib/baas/supabaseTransport'
 import { BAAS_BASE_URL } from '../lib/baas/config'
 import { fetchAuthEmails, fetchLinkedProviders, linkEmailLoginWithPassword, registerIdentityEmailAsAccountEmail, startLinkProvider } from '../lib/supabase/oauth'
 import type { OAuthProvider } from '../lib/supabase/oauth'
@@ -174,7 +174,7 @@ export function AccountPage() {
         throw new Error(`확인 문구 "${DELETE_PHRASE}"를 정확히 입력해 주세요.`)
       }
       // 2) 삭제
-      const client = getAuthedDataClient()
+      const client = await getFreshDataClient()
       if (!client) throw new Error('로그인 정보를 찾을 수 없습니다. 다시 로그인 후 시도해 주세요.')
       const { error } = await client.rpc('delete_my_account')
       if (error) {
@@ -214,14 +214,21 @@ export function AccountPage() {
   } = usePilotTracks(account)
 
   const hasSetupParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('setup') === '1'
-  // "신규 가입"은 역할·자격 구분이 아직 저장되지 않은 계정만. 이미 설정된 계정이 setup=1로 들어오면 로그북으로 보낸다.
+  // "신규 가입"은 역할·자격 구분이 아직 저장되지 않은 계정만.
   const alreadySetUp = Boolean(account?.data?.individual_role) || !isDerivedFromLegacyRole
-  const isSetupMode = hasSetupParam && !alreadySetUp
+  // [BUGFIX] 이미 설정된 계정이 setup=1로 들어온 경우에만 로그북으로 보낸다 — "처음 들어왔을 때" 기준으로 한 번만 판정.
+  // 예전엔 저장할 때마다 다시 판정해서, 자격 구분을 저장하는 순간 로그북으로 튕겼다(아래 항목을 더 고칠 수 없었다).
+  const setupDecisionRef = useRef<'pending' | 'redirect' | 'stay'>('pending')
+  if (setupDecisionRef.current === 'pending' && account?.id) {
+    setupDecisionRef.current = hasSetupParam && alreadySetUp ? 'redirect' : 'stay'
+  }
+  const isSetupMode = hasSetupParam && setupDecisionRef.current === 'stay'
   useEffect(() => {
-    if (hasSetupParam && alreadySetUp && account?.id) {
+    if (setupDecisionRef.current === 'redirect') {
       window.location.replace('/logbook')
     }
-  }, [hasSetupParam, alreadySetUp, account?.id])
+    // account?.id 가 들어와 판정이 끝난 뒤 한 번만 실행되면 된다
+  }, [account?.id])
   const { override: affiliationOverride, setOverride: setAffiliationOverride } = useOrganizationAffiliationOverride(account)
   const { isApproved: isApprovedInstructor, isLoading: isApprovalStatusLoading } = useInstructorApprovalStatus(
     userType === 'individual' ? account : null,

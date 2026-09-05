@@ -5,7 +5,7 @@
 //  - 판정은 RPC(decide_approval_request)로만 한다. 클라이언트가 status 를 직접 고치지 않는다.
 //  - "승인된 교관" 집합은 짧게 캐시하고, 판정이 일어나면 즉시 비운다.
 
-import { getAuthedDataClient, getAuthedUserId } from '../baas/supabaseTransport'
+import { getAuthedUserId, getFreshDataClient } from '../baas/supabaseTransport'
 import type {
   ApprovalKind,
   ApprovalRequest,
@@ -17,8 +17,9 @@ import type {
 
 const TABLE = 'approval_requests'
 
-function requireClient() {
-  const client = getAuthedDataClient()
+async function requireClient() {
+  // 토큰이 곧 만료면 먼저 갱신("JWT expired" 방지)
+  const client = await getFreshDataClient()
   const userId = getAuthedUserId()
   if (!client || !userId) throw new Error('로그인이 필요합니다.')
   return { client, userId }
@@ -46,7 +47,7 @@ export interface ListApprovalParams {
 }
 
 export async function listApprovalRequests(params: ListApprovalParams): Promise<ApprovalRequest[]> {
-  const { client, userId } = requireClient()
+  const { client, userId } = await requireClient()
   let q = client.from(TABLE).select('*').order('created_at', { ascending: false }).limit(params.limit ?? 200)
   if (params.scope === 'mine') q = q.eq('requester_id', userId)
   else if (params.scope === 'inbox') q = q.eq('target_id', userId)
@@ -61,14 +62,14 @@ export async function listApprovalRequests(params: ListApprovalParams): Promise<
 }
 
 export async function fetchApprovalRequest(id: string): Promise<ApprovalRequest | null> {
-  const { client } = requireClient()
+  const { client } = await requireClient()
   const { data, error } = await client.from(TABLE).select('*').eq('id', id).maybeSingle()
   if (error) throw new Error(translateError(error.message))
   return (data as ApprovalRequest | null) ?? null
 }
 
 export async function createApprovalRequest(input: CreateApprovalRequestInput): Promise<ApprovalRequest> {
-  const { client, userId } = requireClient()
+  const { client, userId } = await requireClient()
   const row = {
     kind: input.kind,
     requester_id: userId,
@@ -101,7 +102,7 @@ export async function decideApprovalRequest(
   decision: 'approved' | 'rejected',
   options: { note?: string; signaturePath?: string } = {},
 ): Promise<ApprovalRequest> {
-  const { client } = requireClient()
+  const { client } = await requireClient()
   const { data, error } = await client.rpc('decide_approval_request', {
     p_id: id,
     p_decision: decision,
@@ -114,7 +115,7 @@ export async function decideApprovalRequest(
 }
 
 export async function cancelApprovalRequest(id: string): Promise<void> {
-  const { client } = requireClient()
+  const { client } = await requireClient()
   const { error } = await client.rpc('cancel_approval_request', { p_id: id })
   if (error) throw new Error(translateError(error.message))
   invalidateApprovalCaches()
@@ -128,7 +129,7 @@ const CACHE_TTL_MS = 2 * 60 * 1000
 let instructorsCache: { at: number; promise: Promise<ApprovedInstructor[]> } | null = null
 
 async function fetchApprovedInstructorsOnce(): Promise<ApprovedInstructor[]> {
-  const client = getAuthedDataClient()
+  const client = await getFreshDataClient()
   if (!client) return []
   // 승인 교관 목록은 RPC 로만 받는다(schema14 list_approved_instructors) — 이름·구분·소속·승인일만. 이메일·신청 사유는 노출되지 않는다.
   const { data, error } = await client.rpc('list_approved_instructors')

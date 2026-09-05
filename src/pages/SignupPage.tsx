@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, UserPlus } from 'lucide-react'
 
@@ -7,7 +7,7 @@ import { InstitutionSelect } from '../components/InstitutionSelect'
 import { SocialLoginButtons } from '../components/SocialLoginButtons'
 import { useSignup } from '../hooks/baas/useSignup'
 import { resendSignupConfirmation } from '../lib/supabase/passwordReset'
-import { EMAIL_TAKEN_MESSAGE, PHONE_TAKEN_MESSAGE, checkContactExists } from '../lib/baas/contactCheck'
+import { PHONE_TAKEN_MESSAGE, checkContactExists, emailTakenMessageFor } from '../lib/baas/contactCheck'
 import { formatPhone, validateEmail, validatePhone } from '../lib/baas/utils'
 import type { IndividualRole, UserType } from '../lib/baas/types'
 import { ALL_PILOT_TRACKS, PILOT_TRACK_LABEL, PILOT_TRACK_SHORT } from '../lib/tracks'
@@ -48,6 +48,18 @@ export function SignupPage() {
   const [isDone, setIsDone] = useState(false)
   const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
+  // 이미 가입된 이메일이면 어떤 로그인 방법에 묶여 있는지 알려준다(카카오/구글/비밀번호)
+  const [registeredProviders, setRegisteredProviders] = useState<string[]>([])
+  useEffect(() => {
+    if (!alreadyRegistered) return
+    let alive = true
+    void checkContactExists(email, null).then((r) => {
+      if (alive && r) setRegisteredProviders(r.emailProviders)
+    })
+    return () => {
+      alive = false
+    }
+  }, [alreadyRegistered, email])
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
 
   async function handleResend() {
@@ -96,7 +108,7 @@ export function SignupPage() {
     const taken = await checkContactExists(email, phone)
     if (taken?.emailTaken || taken?.phoneTaken) {
       setFieldErrors({
-        ...(taken.emailTaken ? { email: EMAIL_TAKEN_MESSAGE } : {}),
+        ...(taken.emailTaken ? { email: emailTakenMessageFor(taken.emailProviders) } : {}),
         ...(taken.phoneTaken ? { phone: PHONE_TAKEN_MESSAGE } : {}),
       })
       window.setTimeout(() => {
@@ -142,6 +154,11 @@ export function SignupPage() {
         <div className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky/15 text-2xl">📮</span>
           <h1 className="mt-4 font-display text-xl font-extrabold">{alreadyRegistered ? '이미 가입된 이메일이에요' : '인증 메일을 보냈어요!'}</h1>
+          {alreadyRegistered && registeredProviders.length > 0 && (
+            <p className="mt-3 rounded-control border border-sky/30 bg-sky/10 px-3 py-2 text-xs text-sky">
+              {emailTakenMessageFor(registeredProviders)}
+            </p>
+          )}
           {alreadyRegistered && (
             <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
               이 이메일로 가입한 계정이 이미 있어서 새 인증 메일은 보내지 않았어요. 인증을 아직 안 했다면 아래 "인증 메일 다시 보내기"를, 이미 인증했다면 로그인하세요.

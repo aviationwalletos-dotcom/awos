@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '../Button'
 import { EmptyState } from '../EmptyState'
 import { CERTIFICATE_BOARD_ID, LOGBOOK_BOARD_ID } from '../../lib/baas/config'
-import { getAuthedDataClient, getAuthedUserId } from '../../lib/baas/supabaseTransport'
+import { getAuthedUserId, getFreshDataClient } from '../../lib/baas/supabaseTransport'
 import { parseCertificateFromContent } from '../../lib/certificateSync'
 import { computeFlightReadiness, isMedicalStatusValid } from '../../lib/flightReadiness'
 import { sumHours } from '../../lib/hours'
@@ -50,7 +50,15 @@ export function MemberDirectoryPanel() {
   const [stats, setStats] = useState<Record<string, MemberStats>>({})
   const [memberCerts, setMemberCerts] = useState<Record<string, Certificate[]>>({})
   const [emails, setEmails] = useState<Record<string, string>>({})
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  // 여러 명을 동시에 펼쳐 비교할 수 있게 집합으로 관리한다(예전엔 하나 펼치면 다른 게 접혔다)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set())
+  const toggleExpanded = (id: string) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   const [reasonFor, setReasonFor] = useState<MemberRow | null>(null)
   const [statsNote, setStatsNote] = useState<string | null>(null)
   const [emptyReason, setEmptyReason] = useState<EmptyReason>(null)
@@ -62,7 +70,7 @@ export function MemberDirectoryPanel() {
     setError(null)
     setEmptyReason(null)
     try {
-      const client = getAuthedDataClient()
+      const client = await getFreshDataClient()
       if (!client) throw new Error('로그인 정보가 없습니다. 로그아웃 후 다시 로그인해 주세요.')
 
       const { data, error: qError } = await client
@@ -270,11 +278,11 @@ export function MemberDirectoryPanel() {
               const st = stats[m.id]
               return (
                 <React.Fragment key={m.id}>
-                <tr onClick={() => setExpandedId((prev) => (prev === m.id ? null : m.id))}
+                <tr onClick={() => toggleExpanded(m.id)}
                   className="cursor-pointer hover:bg-white/[0.03]"
                 >
                   <td className="px-4 py-3 font-medium text-ink">
-                    <span className="mr-1.5 inline-block text-[10px] text-slate-500">{expandedId === m.id ? '▼' : '▶'}</span>
+                    <span className="mr-1.5 inline-block text-[10px] text-slate-500">{expandedIds.has(m.id) ? '▼' : '▶'}</span>
                     {m.name}
                   </td>
                   <td className="px-4 py-3 text-slate-300">
@@ -302,7 +310,7 @@ export function MemberDirectoryPanel() {
                     )}
                   </td>
                 </tr>
-                {expandedId === m.id && (
+                {expandedIds.has(m.id) && (
                   <tr className="bg-white/[0.02]">
                     <td colSpan={6} className="px-4 py-4">
                       <div className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">

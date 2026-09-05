@@ -3,7 +3,7 @@
 // 합성 id를 돌려주어, 상위 훅(useLogbookEntries/useCertificates)을 고치지 않고
 // 저장 위치만 게시판 → 테이블로 바꾼다.
 
-import { getAuthedDataClient, getAuthedUserId } from './supabaseTransport'
+import { getAuthedUserId, getFreshDataClient } from './supabaseTransport'
 
 export type PrivateTable = 'user_logbook_entries' | 'user_certificates'
 
@@ -34,15 +34,16 @@ export function parsePrivatePostId(postId: string): { table: PrivateTable; appId
 const recordCache = new Map<string, PrivateRecordRow>()
 const cacheKey = (table: PrivateTable, appId: string) => `${table}:${appId}`
 
-function requireClient() {
-  const client = getAuthedDataClient()
+async function requireClient() {
+  // 토큰이 곧 만료면 먼저 갱신("JWT expired" 방지)
+  const client = await getFreshDataClient()
   const userId = getAuthedUserId()
   if (!client || !userId) throw new Error('로그인이 필요합니다.')
   return { client, userId }
 }
 
 export async function upsertPrivateRecord(table: PrivateTable, appId: string, contentJson: string): Promise<void> {
-  const { client, userId } = requireClient()
+  const { client, userId } = await requireClient()
   let data: unknown
   try {
     data = JSON.parse(contentJson)
@@ -57,7 +58,7 @@ export async function upsertPrivateRecord(table: PrivateTable, appId: string, co
 }
 
 export async function deletePrivateRecord(table: PrivateTable, appId: string): Promise<void> {
-  const { client, userId } = requireClient()
+  const { client, userId } = await requireClient()
   const { error } = await client.from(table).delete().eq('user_id', userId).eq('app_id', appId)
   if (error) throw new Error(error.message)
   recordCache.delete(cacheKey(table, appId))
@@ -69,7 +70,7 @@ export interface PrivateRecordRow {
 }
 
 export async function listMyPrivateRecords(table: PrivateTable): Promise<PrivateRecordRow[]> {
-  const { client, userId } = requireClient()
+  const { client, userId } = await requireClient()
   const { data, error } = await client
     .from(table)
     .select('app_id,data')
@@ -85,7 +86,7 @@ export async function listMyPrivateRecords(table: PrivateTable): Promise<Private
 export async function fetchMyPrivateRecord(table: PrivateTable, appId: string): Promise<PrivateRecordRow | null> {
   const cached = recordCache.get(cacheKey(table, appId))
   if (cached) return cached
-  const { client, userId } = requireClient()
+  const { client, userId } = await requireClient()
   const { data, error } = await client
     .from(table)
     .select('app_id,data')

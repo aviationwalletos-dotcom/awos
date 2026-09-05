@@ -21,7 +21,7 @@ import { createClient } from '@supabase/supabase-js'
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../supabase/env'
 import { BAAS_BASE_URL, getStoredAccessToken, setStoredAccessToken } from './config'
-import { EMAIL_TAKEN_MESSAGE, PHONE_TAKEN_MESSAGE, checkContactExists, translateProfileUniqueError } from './contactCheck'
+import { PHONE_TAKEN_MESSAGE, checkContactExists, emailTakenMessageFor, translateProfileUniqueError } from './contactCheck'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -296,7 +296,7 @@ export async function updateMyProfileFields(fields: {
   birth_date?: string | null
   operation_type?: string | null
 }): Promise<void> {
-  const client = getAuthedDataClient()
+  const client = await getFreshDataClient()
   const userId = getAuthedUserId()
   if (!client || !userId) throw new Error('로그인이 필요합니다.')
   const { error } = await client.from('profiles').update(fields).eq('id', userId)
@@ -336,9 +336,56 @@ export function getAuthedDataClient() {
   return dataClientFor(access)
 }
 
+// [BUGFIX 2026-09-05 · "JWT expired"]
+//  BaaS 경로(baasFetch)는 resolveAuth 가 만료된 토큰을 조용히 갱신하지만, 데이터 클라이언트를 직접 쓰는
+//  경로(approval_requests, 회원 목록, 프로필 수정 등)는 저장된 토큰을 그대로 써서 1시간 뒤 "JWT expired"가 떴다.
+//  요청 전에 만료가 60초 안이면 refresh 토큰으로 먼저 갱신한다(동시 호출은 한 번만 갱신).
+function jwtExpiresAtMs(access: string): number | null {
+  try {
+    const payload = JSON.parse(atob(access.split('.')[1] ?? ''))
+    return typeof payload?.exp === 'number' ? payload.exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+let refreshInFlight: Promise<string | null> | null = null
+export async function ensureFreshAccessToken(): Promise<string | null> {
+  const packed = getStoredAccessToken()
+  if (!packed) return null
+  const { access, refresh } = unpackToken(packed)
+  const exp = jwtExpiresAtMs(access)
+  if (!exp || exp - Date.now() > 60_000 || !refresh) return access
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      try {
+        const { data } = await makeAuthClient().auth.refreshSession({ refresh_token: refresh })
+        const session = data?.session
+        if (session?.access_token) {
+          const newPacked = packToken(session.access_token, session.refresh_token)
+          if (getStoredAccessToken() === packed) setStoredAccessToken(newPacked)
+          return session.access_token
+        }
+        return access
+      } catch {
+        return access
+      } finally {
+        refreshInFlight = null
+      }
+    })()
+  }
+  return refreshInFlight
+}
+
+/** 토큰이 곧 만료면 갱신한 뒤 데이터 클라이언트를 돌려준다. 직접 데이터 클라이언트를 쓰는 곳은 이걸 쓴다. */
+export async function getFreshDataClient(): Promise<SupabaseClient | null> {
+  await ensureFreshAccessToken()
+  return getAuthedDataClient()
+}
+
 export async function createSignedBoardFileUrl(rawUrl: string, expiresInSeconds = 60 * 60): Promise<string | null> {
   if (!rawUrl) return null
   if (rawUrl.startsWith('data:')) return rawUrl
+  await ensureFreshAccessToken()
   const marker = '/board-files/'
   const idx = rawUrl.indexOf(marker)
   if (idx === -1) return null
@@ -518,7 +565,7 @@ async function handleSignup(body: Record<string, unknown> | null): Promise<Respo
 
   // [schema13] 서버에서도 한 번 더: 이메일·전화번호 1개 = 계정 1개. 함수가 없으면 건너뛴다.
   const taken = await checkContactExists(email, phone)
-  if (taken?.emailTaken) return fail(400, EMAIL_TAKEN_MESSAGE)
+  if (taken?.emailTaken) return fail(400, emailTakenMessageFor(taken.emailProviders))
   if (taken?.phoneTaken) return fail(400, PHONE_TAKEN_MESSAGE)
 
   const auth = makeAuthClient()
