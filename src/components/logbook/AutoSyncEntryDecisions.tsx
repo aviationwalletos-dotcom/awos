@@ -90,8 +90,19 @@ export function AutoSyncEntryDecisions({ entries, onUpdate }: AutoSyncEntryDecis
           },
         })
       } else if (req.status === 'rejected' || req.status === 'cancelled') {
-        // 반려·취소된 요청은 연결을 끊어 다시 요청할 수 있게 한다(사유는 상세 다이얼로그에서 표시)
-        onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: undefined })
+        // 반려·취소된 요청은 연결을 끊어 다시 요청할 수 있게 한다. 반려 사유는 기록에 남겨 상세에서 보여준다.
+        onUpdate(entry.id, {
+          ...toLogbookEntryInput(entry),
+          signatureRequestPostId: undefined,
+          lastSignatureRejection:
+            req.status === 'rejected'
+              ? {
+                  note: req.decision_note || '교관이 서명 요청을 반려했어요.',
+                  at: req.decided_at ? new Date(req.decided_at).getTime() : Date.now(),
+                  instructorName: req.decided_by_name || '교관',
+                }
+              : entry.lastSignatureRejection,
+        })
       }
     }
   }, [data, hasPending, pendingCertificateEntries, pendingSignatureEntries, onUpdate])

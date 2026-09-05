@@ -33,6 +33,7 @@ export function toLogbookEntryInput(entry: LogbookEntry): LogbookEntryInput {
     instructorSignature: entry.instructorSignature,
     signatureRequestPostId: entry.signatureRequestPostId,
     signedRequestId: entry.signedRequestId,
+    lastSignatureRejection: entry.lastSignatureRejection,
     origin: entry.origin,
     legacySourceNote: entry.legacySourceNote,
     twoPilotAircraft: entry.twoPilotAircraft,

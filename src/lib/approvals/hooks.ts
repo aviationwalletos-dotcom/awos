@@ -30,17 +30,30 @@ export function useApprovalRequests(params: ListApprovalParams, options: UseAppr
   const paramsRef = useRef(params)
   paramsRef.current = params
 
+  // [경쟁 조건] 필터가 바뀌어 새 조회가 나간 뒤 옛 조회가 늦게 도착하면 옛 목록이 덮어쓴다(예: 항공기→경량 전환 직후).
+  // 조회마다 번호를 붙여, 가장 최근 조회의 결과만 반영한다. 언마운트 뒤 도착한 결과도 버린다.
+  const seqRef = useRef(0)
+  const aliveRef = useRef(true)
+  useEffect(() => {
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
   const refetch = useCallback(async () => {
+    const seq = ++seqRef.current
     setError(null)
     try {
       const rows = await listApprovalRequests(paramsRef.current)
+      if (!aliveRef.current || seq !== seqRef.current) return rows
       setData(rows)
       return rows
     } catch (err) {
+      if (!aliveRef.current || seq !== seqRef.current) return null
       setError(err instanceof Error ? err.message : '요청 목록을 불러오지 못했습니다.')
       return null
     } finally {
-      setIsLoading(false)
+      if (aliveRef.current && seq === seqRef.current) setIsLoading(false)
     }
   }, [])
 
@@ -131,21 +144,23 @@ export function useApprovalRequestById(
     setError(null)
     try {
       const row = await fetchApprovalRequest(target)
+      // [경쟁 조건] 다른 기록으로 바꾼 뒤 옛 조회가 늦게 오면 엉뚱한 기록에 판정이 붙을 수 있다 → 지금 id 와 다르면 버린다
+      if (idRef.current !== target) return row
       setRequest(row)
       return row
     } catch (err) {
+      if (idRef.current !== target) return null
       setError(err instanceof Error ? err.message : '요청 상태를 확인하지 못했습니다.')
       return null
     } finally {
-      setIsLoading(false)
+      if (idRef.current === target) setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (!enabled || !id) {
-      setRequest(null)
-      return
-    }
+    // id 가 바뀌면 이전 행을 즉시 비운다(다른 기록의 행이 새 조회 전까지 남아 있지 않게)
+    setRequest(null)
+    if (!enabled || !id) return
     void refetch()
     if (!pollMs) return
     const timer = window.setInterval(() => void refetch(), pollMs)

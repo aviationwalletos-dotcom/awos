@@ -109,6 +109,8 @@ export interface LogbookEntry {
   // [3단계] 이 기록에 대해 만든 서명 요청(approval_requests.id, schema12). 필드 이름은 호환을 위해 유지.
   // 값이 있고 instructorSignature가 없으면 "서명 요청 대기중" 상태로 간주한다.
   signatureRequestPostId?: string
+  // 교관이 서명 요청을 반려했을 때의 사유. 새 요청을 보내면 지운다(상세 화면에서 안내).
+  lastSignatureRejection?: { note: string; at: number; instructorName: string }
   // [증거] 마지막으로 서명이 완료된 요청 id. 서명 뒤 기록을 고쳐 서명이 해제돼도 유지되어,
   // 상세 화면에서 "서명 당시 내용"(approval_requests.payload.signedSnapshot)을 나란히 보여준다.
   signedRequestId?: string

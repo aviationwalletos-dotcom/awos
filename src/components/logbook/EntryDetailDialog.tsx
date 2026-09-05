@@ -194,15 +194,15 @@ export function EntryDetailDialog({
     setSignatureInvalidatedNotice(false)
     setSelectedInstructorUserId('')
     setShowAllAffiliations(false)
-    setSignatureRejectedNote(null)
     resetSendRequest()
   }, [entry?.id, resetSendRequest])
 
   // 서명 요청이 승인(=교관 서명 완료)되면 이 기록에 서명을 붙인다. 판정자·시각·이미지는 행에서 그대로 온다.
   // 교관이 반려하면 요청 id 를 지워 다시 요청할 수 있게 한다(사유는 아래 화면에 표시).
-  const [signatureRejectedNote, setSignatureRejectedNote] = useState<string | null>(null)
   useEffect(() => {
     if (!entry || entry.instructorSignature || !pendingRequestPostId || !signatureRequest) return
+    // [안전] 다른 기록의 요청 행이 잠깐 남아 있는 순간에 엉뚱한 기록에 서명이 붙지 않도록 id 를 대조한다
+    if (signatureRequest.id !== pendingRequestPostId) return
     if (signatureRequest.status === 'approved' && signatureRequest.decided_by) {
       onUpdate(entry.id, {
         ...toLogbookEntryInput(entry),
@@ -217,14 +217,25 @@ export function EntryDetailDialog({
       return
     }
     if (signatureRequest.status === 'rejected' || signatureRequest.status === 'cancelled') {
-      setSignatureRejectedNote(signatureRequest.status === 'rejected' ? signatureRequest.decision_note || '교관이 서명 요청을 반려했어요.' : null)
-      onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: undefined })
+      onUpdate(entry.id, {
+        ...toLogbookEntryInput(entry),
+        signatureRequestPostId: undefined,
+        lastSignatureRejection:
+          signatureRequest.status === 'rejected'
+            ? {
+                note: signatureRequest.decision_note || '교관이 서명 요청을 반려했어요.',
+                at: signatureRequest.decided_at ? new Date(signatureRequest.decided_at).getTime() : Date.now(),
+                instructorName: signatureRequest.decided_by_name || '교관',
+              }
+            : entry.lastSignatureRejection,
+      })
     }
   }, [entry, pendingRequestPostId, signatureRequest, onUpdate])
 
   // 비행경력증명서 인증 요청이 판정되면 기록 상태를 갱신한다(승인 → confirmed, 반려 → rejected).
   useEffect(() => {
     if (!entry || !shouldTrackCertificateDecision || !certificateRequest) return
+    if (certificateRequest.id !== certificateRequestPostId) return
     if (certificateRequest.status === 'pending') return
     const nextStatus = certificateRequest.status === 'approved' ? 'confirmed' : 'rejected'
     if (entry.certificateApprovalStatus === nextStatus) return
@@ -243,7 +254,6 @@ export function EntryDetailDialog({
     const target = approvedInstructors.find((instructor) => instructor.userId === selectedInstructorUserId)
     if (!target) return
     resetSendRequest()
-    setSignatureRejectedNote(null)
     setIsSendingRequest(true)
     try {
       const created = await createApprovalRequest({
@@ -259,7 +269,7 @@ export function EntryDetailDialog({
         // [증거] 서명 대상 기록의 전체 스냅샷 + 해시. 서명 뒤 기록이 바뀌어도 "서명 당시 내용"이 서버에 남는다.
         payload: { signedSnapshot: await buildSignedSnapshot(entry) },
       })
-      onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: created.id })
+      onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: created.id, lastSignatureRejection: undefined })
     } catch (err) {
       setSendRequestError(err instanceof Error ? err.message : '서명 요청을 보내지 못했습니다.')
     } finally {
@@ -769,9 +779,10 @@ export function EntryDetailDialog({
                   </div>
                 ) : (
                   <div className="mt-3 space-y-3">
-                    {signatureRejectedNote && (
+                    {entry.lastSignatureRejection && (
                       <p role="alert" className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-                        교관이 서명 요청을 반려했어요. 사유: {signatureRejectedNote}
+                        {entry.lastSignatureRejection.instructorName} 교관이 서명 요청을 반려했어요
+                        {' '}({formatSignedAt(entry.lastSignatureRejection.at)}). 사유: {entry.lastSignatureRejection.note}
                       </p>
                     )}
                     <p className="text-xs text-slate-400">
