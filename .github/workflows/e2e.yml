@@ -29,6 +29,20 @@ jobs:
           E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
           E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
       - run: npx playwright install --with-deps chromium
+      - name: 배포 반영 대기 (사이트 커밋 = 테스트 커밋)
+        run: |
+          echo "테스트 커밋: $GITHUB_SHA"
+          for i in $(seq 1 40); do
+            deployed=$(curl -fsS -m 10 "https://aviationwallet.com/version.json?t=$(date +%s)" | sed -n 's/.*"commit": *"\([^"]*\)".*/\1/p' || true)
+            echo "[$i] 사이트 커밋: ${deployed:-(없음)}"
+            if [ "$deployed" = "$GITHUB_SHA" ]; then echo "배포 반영 확인"; exit 0; fi
+            sleep 10
+          done
+          echo "::warning::400초 동안 사이트 커밋이 테스트 커밋과 일치하지 않았어요. 이전 배포본으로 테스트할 수 있어요."
+      - name: 러너 → Supabase 연결 진단 (IPv4/IPv6)
+        run: |
+          echo "IPv4:"; curl -4 -sS -m 10 -o /dev/null -w '%{http_code} %{time_total}s\n' https://vflyqnbdquaanpkvuinz.supabase.co/auth/v1/health || echo "IPv4 실패"
+          echo "IPv6:"; curl -6 -sS -m 10 -o /dev/null -w '%{http_code} %{time_total}s\n' https://vflyqnbdquaanpkvuinz.supabase.co/auth/v1/health || echo "IPv6 실패/미지원"
       - run: npx playwright test
         env:
           E2E_BASE_URL: https://aviationwallet.com

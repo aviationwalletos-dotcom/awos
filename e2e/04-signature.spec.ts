@@ -53,8 +53,11 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   const pending = new Map<string, string>()
   const shortUrl = (u: string) => u.replace(/^https?:\/\/[^/]+/, '').slice(0, 120)
   const isApi = (u: string) => /supabase\.co|\/rest\/v1|\/auth\/v1|\/storage\/v1|\/rpc\//.test(u)
+  let apiOrigin = ''
   instructor.on('request', (req) => {
-    if (isApi(req.url())) pending.set(req.url() + req.method(), `${req.method()} ${shortUrl(req.url())}`)
+    if (!isApi(req.url())) return
+    if (!apiOrigin && /supabase\.co/.test(req.url())) apiOrigin = new URL(req.url()).origin
+    pending.set(req.url() + req.method(), `${req.method()} ${shortUrl(req.url())}`)
   })
   instructor.on('response', (res) => {
     const req = res.request()
@@ -83,10 +86,9 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
       const email = process.env.E2E_INSTRUCTOR_EMAIL ?? '(미설정)'
       const bodyText = (await instructor.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 300)
       // 연결 진단: 브라우저에서 supabase.co / 우리 사이트로 직접 요청, 러너(Node)에서도 supabase.co 로 요청
-      const supabaseOrigin = [...pending.values(), ...netLog].map((l) => l.match(/https?:\/\/[^/]+/)?.[0]).find(Boolean)
-        ?? (await instructor.evaluate(() => (window as unknown as { __SUPABASE_URL__?: string }).__SUPABASE_URL__ ?? ''))
+      const supabaseOrigin = apiOrigin
       const probe = await instructor
-        .evaluate(async () => {
+        .evaluate(async (sbOrigin: string) => {
           const timed = async (url: string, init?: RequestInit) => {
             const t0 = Date.now()
             try {
@@ -96,14 +98,13 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
               return `ERR ${(e as Error).name}: ${(e as Error).message} (${Date.now() - t0}ms)`
             }
           }
-          const sbEntry = performance.getEntriesByType('resource').map((e) => e.name).find((n) => /supabase\.co/.test(n))
-          const sb = sbEntry ? new URL(sbEntry).origin : ''
+          const sb = sbOrigin
           return {
             site: await timed('/manifest.webmanifest', { cache: 'no-store' }),
             supabaseRest: sb ? await timed(`${sb}/rest/v1/`, { headers: { apikey: 'probe' } }) : '(supabase origin 미확인)',
             supabaseAuth: sb ? await timed(`${sb}/auth/v1/health`) : '(supabase origin 미확인)',
           }
-        })
+        }, supabaseOrigin)
         .catch((e) => ({ error: String(e) }))
       let runnerProbe = '(skip)'
       if (supabaseOrigin) {
