@@ -29,19 +29,39 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 // 클라이언트 팩토리
 // ---------------------------------------------------------------------------
 
-/** 세션을 전혀 저장하지 않는 인증 전용 클라이언트(로그인 검증·토큰 갱신·가입에만 사용). */
+// [BUGFIX 2026-09-05 · 교착]
+//  supabase-js 는 accessToken 옵션이 없으면 REST/RPC/Storage 요청마다 내부적으로 auth.getSession() 을
+//  먼저 기다린다. getSession 은 navigator.locks 로 "sb-<ref>-auth-token" 잠금을 잡는데, 이 이름은
+//  storageKey 에서 나오므로 메인 클라이언트(세션 유지·자동 갱신)와 여기서 만든 클라이언트가 같은 잠금을
+//  두고 경합했다. 게다가 인증 확인(resolveAuth)마다 새 클라이언트를 만들어("Multiple GoTrueClient instances"
+//  경고 ×6) 경합이 더 잦았다. 결과: 요청이 네트워크로 나가지도 못한 채 멈춤 → 승인 조회 실패로 서명 요청함
+//  탭 누락, 재진입 시 "로그인 상태를 확인하는 중" 무한 대기(E2E 04에서 재현, 사람 브라우저는 타이밍상 통과).
+//  대책:
+//   1) 데이터 클라이언트는 accessToken 콜백을 주어 getSession 을 아예 타지 않게 한다.
+//   2) 인증 전용 클라이언트는 하나만 만들어 재사용하고, storageKey 를 따로 줘 잠금 이름을 분리한다.
+
+/** 세션을 전혀 저장하지 않는 인증 전용 클라이언트(로그인 검증·토큰 갱신·가입에만 사용). 하나만 만들어 재사용. */
+let sharedAuthClient: SupabaseClient | null = null
 function makeAuthClient(): SupabaseClient {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  if (sharedAuthClient) return sharedAuthClient
+  sharedAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storageKey: 'awos-auth-shim', // 메인 클라이언트와 잠금 이름 분리
+    },
   })
+  return sharedAuthClient
 }
 
-/** 특정 access token의 권한으로 동작하는 데이터 클라이언트(간단 캐시). */
+/** 특정 access token의 권한으로 동작하는 데이터 클라이언트(간단 캐시). getSession 을 타지 않는다. */
 let cachedDataClient: { token: string; client: SupabaseClient } | null = null
 function dataClientFor(accessToken: string): SupabaseClient {
   if (cachedDataClient?.token === accessToken) return cachedDataClient.client
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
+    accessToken: async () => accessToken,
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'awos-data-client' },
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
   })
   cachedDataClient = { token: accessToken, client }

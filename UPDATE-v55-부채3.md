@@ -39,6 +39,12 @@
 - 새로고침당 호출: (게시글 목록 + 댓글 배치 + 카드 수×상세) → **쿼리 1번**
 - 학생 배경 동기화: 대기 기록 N건 → 쿼리 1번/60초
 
+## 덤으로 잡은 오래된 교착 버그 (E2E 04가 찾아냄)
+- `dataClientFor`(데이터 클라이언트)에 `accessToken` 콜백이 없어 supabase-js 가 요청마다 `auth.getSession()` 잠금을 기다렸고,
+  인증 확인마다 새 GoTrueClient 를 만들어(경고 ×6) 메인 클라이언트와 같은 잠금을 두고 경합 → 요청이 네트워크로 나가지 못한 채 멈춤.
+  증상: 서명 요청함 탭 간헐 누락, 재진입 시 "로그인 상태를 확인하는 중…" 무한 대기. 사람 브라우저는 타이밍상 통과했음.
+- 대책: 데이터 클라이언트 `accessToken` 지정(getSession 미사용), 인증 전용 클라이언트 1개 재사용 + storageKey 분리.
+
 ## 삭제한 것
 - 훅 9개: useCreate{CertificateApprovalPost,FlightExperienceCertificatePost,InstructorApplication,SignatureRequest}, use{CertificateApproval,FlightExperienceCertificate}BoardPosts, useInstructorApplications, useSignatureRequests, useCommentsBatch
 - 워처 3개: InstructorSignatureDecisionWatcher, CertificateDecisionWatcher, CertificateApprovalLinkRepair
