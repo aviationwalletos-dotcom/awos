@@ -130,27 +130,23 @@ let instructorsCache: { at: number; promise: Promise<ApprovedInstructor[]> } | n
 async function fetchApprovedInstructorsOnce(): Promise<ApprovedInstructor[]> {
   const client = getAuthedDataClient()
   if (!client) return []
-  const { data, error } = await client
-    .from(TABLE)
-    .select('requester_id, requester_name, requester_email, track, affiliation, decided_at')
-    .eq('kind', 'instructor')
-    .eq('status', 'approved')
-    .limit(500)
+  // 승인 교관 목록은 RPC 로만 받는다(schema12 list_approved_instructors) — 신청 사유 등 본문은 노출되지 않는다.
+  const { data, error } = await client.rpc('list_approved_instructors')
   if (error) return []
   return ((data ?? []) as Array<{
-    requester_id: string
-    requester_name: string
-    requester_email: string | null
+    user_id: string
+    name: string
+    email: string | null
     track: PilotTrack
     affiliation: string | null
-    decided_at: string | null
+    approved_at: string | null
   }>).map((r) => ({
-    userId: r.requester_id,
-    name: r.requester_name,
-    email: r.requester_email,
+    userId: r.user_id,
+    name: r.name,
+    email: r.email,
     track: r.track,
     affiliation: r.affiliation,
-    approvedAt: r.decided_at,
+    approvedAt: r.approved_at,
   }))
 }
 
@@ -171,4 +167,29 @@ export async function fetchApprovedInstructorIdSet(track?: PilotTrack): Promise<
 
 export function invalidateApprovalCaches(): void {
   instructorsCache = null
+}
+
+// ---------------------------------------------------------------------------
+// 고아 id 판정 — 옛 게시판 id 가 남은 기록·자격증 정리용
+// ---------------------------------------------------------------------------
+// 부채 3단계에서 게시판 데이터를 이관하지 않았으므로, 예전에 보낸 서명·인증 요청 id 는 새 테이블에 없다.
+// 그런 id 를 들고 있는 기록/자격증은 영원히 "대기중"이 되므로, 한 번 직접 조회해 없으면 연결을 끊어 준다.
+// 목록 조회 결과가 최신 insert 보다 오래됐을 수 있어(경쟁 조건) "목록에 없음"만으로는 판정하지 않고 반드시 단건 조회로 확인한다.
+
+const verifiedIds = new Set<string>()
+const missingIds = new Set<string>()
+
+/** 요청 id 가 새 테이블에 존재하는지. 결과는 세션 동안 기억한다(존재/부재 모두). */
+export async function verifyApprovalRequestExists(id: string): Promise<boolean> {
+  if (verifiedIds.has(id)) return true
+  if (missingIds.has(id)) return false
+  try {
+    const row = await fetchApprovalRequest(id)
+    if (row) verifiedIds.add(id)
+    else missingIds.add(id)
+    return Boolean(row)
+  } catch {
+    // 조회 실패(네트워크·테이블 미설치)는 판정 보류 — 끊지 않는다
+    return true
+  }
 }

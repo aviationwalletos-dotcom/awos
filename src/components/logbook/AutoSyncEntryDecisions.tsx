@@ -3,8 +3,9 @@
 // 부채 3단계: 댓글 배치 조회 + 권한 집합 대조 → approval_requests 에서 "내가 요청자이고 판정이 끝난 행"만
 // 1회 조회(60초 폴링). 대기 기록이 수백 건이어도 요청은 1번이고, 판정자·시각·서명 이미지는 행에 그대로 있다.
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
+import { verifyApprovalRequestExists } from '../../lib/approvals/api'
 import { useApprovalRequests } from '../../lib/approvals/hooks'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 
@@ -37,6 +38,30 @@ export function AutoSyncEntryDecisions({ entries, onUpdate }: AutoSyncEntryDecis
     { scope: 'mine', kind: ['signature', 'flight_experience'], status: ['approved', 'rejected', 'cancelled'], limit: 300 },
     { enabled: hasPending, pollMs: 60_000 },
   )
+
+  // [3단계] 옛 게시판 id 를 들고 있는 기록은 새 테이블에 없다 → 단건 조회로 확인한 뒤 연결을 끊어 다시 요청/직접 확인할 수 있게 한다.
+  const checkedRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    if (!hasPending) return
+    const candidates = [
+      ...pendingSignatureEntries.map((e) => ({ entry: e, id: e.signatureRequestPostId as string, field: 'signature' as const })),
+      ...pendingCertificateEntries.map((e) => ({ entry: e, id: e.certificateRequestPostId as string, field: 'certificate' as const })),
+    ].filter((c) => !checkedRef.current.has(c.id))
+    if (candidates.length === 0) return
+    let cancelled = false
+    void (async () => {
+      for (const c of candidates) {
+        checkedRef.current.add(c.id)
+        const exists = await verifyApprovalRequestExists(c.id)
+        if (cancelled || exists) continue
+        if (c.field === 'signature') onUpdate(c.entry.id, { ...toLogbookEntryInput(c.entry), signatureRequestPostId: undefined })
+        else onUpdate(c.entry.id, { ...toLogbookEntryInput(c.entry), certificateRequestPostId: undefined })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [hasPending, pendingSignatureEntries, pendingCertificateEntries, onUpdate])
 
   useEffect(() => {
     if (!data || !hasPending) return

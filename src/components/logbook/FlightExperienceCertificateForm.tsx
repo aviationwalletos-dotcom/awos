@@ -158,6 +158,9 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           kind: 'flight_experience',
           requesterName: account.name || account.user_id,
           requesterEmail: account.user_id,
+          // 증명서는 여러 장(기관별)을 따로 제출할 수 있어야 하므로 제출마다 고유 대상 id 를 붙인다
+          // ("대기중 요청 1건" 유니크 인덱스가 사용자 단위로 걸리지 않게)
+          subjectId: `fec-${date}-${Date.now().toString(36)}`,
           affiliation: myAffiliation?.trim() || null,
           title: `비행경력증명서 — ${account.name || account.user_id} (${date})`,
           summary: buildFlightExperienceCertificateContent({

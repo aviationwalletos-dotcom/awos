@@ -1,7 +1,7 @@
 import { Camera, CheckCircle2, Clock3, Pencil, RefreshCw, Send, ShieldCheck, Trash2, X } from 'lucide-react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createApprovalRequest } from '../../lib/approvals/api'
+import { cancelApprovalRequest, createApprovalRequest } from '../../lib/approvals/api'
 import { useApprovalRequestById } from '../../lib/approvals/hooks'
 import { buildSignatureRequestContent, buildSignatureRequestTitle } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
@@ -151,6 +151,7 @@ export function EntryDetailDialog({
     setSignatureInvalidatedNotice(false)
     setSelectedInstructorUserId('')
     setShowAllAffiliations(false)
+    setSignatureRejectedNote(null)
     resetSendRequest()
   }, [entry?.id, resetSendRequest])
 
@@ -226,6 +227,19 @@ export function EntryDetailDialog({
     } finally {
       setIsSendingRequest(false)
     }
+  }
+
+  // 대기중인 서명 요청 취소 — 서버 행은 cancelled 로(실패해도 로컬 연결은 끊는다: 옛 게시판 id 정리 경로)
+  const [isCancellingRequest, setIsCancellingRequest] = useState(false)
+  async function handleCancelPendingRequest() {
+    if (!entry || !entry.signatureRequestPostId) return
+    setIsCancellingRequest(true)
+    try {
+      await cancelApprovalRequest(entry.signatureRequestPostId).catch(() => undefined)
+    } finally {
+      setIsCancellingRequest(false)
+    }
+    onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: undefined })
   }
 
   function handleConfirmCertificate() {
@@ -624,17 +638,34 @@ export function EntryDetailDialog({
                         {commentsCheckError}
                       </p>
                     )}
-                    <Button type="button"
-                      variant="outline"
-                      tone="brand"
-                      size="sm"
-                      loading={isCheckingSignature}
-                      disabled={isCheckingSignature}
-                      onClick={() => void refetchComments()}
-                    >
-                      <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                      서명 상태 확인
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button"
+                        variant="outline"
+                        tone="brand"
+                        size="sm"
+                        loading={isCheckingSignature}
+                        disabled={isCheckingSignature}
+                        onClick={() => void refetchComments()}
+                      >
+                        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                        서명 상태 확인
+                      </Button>
+                      <Button type="button"
+                        variant="outline"
+                        tone="neutral"
+                        size="sm"
+                        loading={isCancellingRequest}
+                        disabled={isCancellingRequest}
+                        onClick={() => void handleCancelPendingRequest()}
+                      >
+                        요청 취소
+                      </Button>
+                    </div>
+                    {signatureRequest === null && !isCheckingSignature && (
+                      <p className="text-[11px] text-slate-500">
+                        요청이 서버에 없으면(예전 방식으로 보낸 요청) "요청 취소" 뒤 다시 보내 주세요.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="mt-3 space-y-3">

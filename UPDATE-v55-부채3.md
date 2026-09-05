@@ -17,6 +17,7 @@
 - `approval_requests` — kind(5종) · requester · target(서명 대상 교관) · track · subject_id · status · decided_by/at · signature_path
 - 판정은 `decide_approval_request(id, 'approved'|'rejected', note, signature_path)` RPC로만. 직접 UPDATE 정책 없음 → **판정 후 불변**, 감사 추적 내장
 - 서명 요청의 대상은 "그 구분으로 승인된 교관"만 — DB 트리거로 강제(fail-closed)
+- 승인 교관 목록은 `list_approved_instructors()` RPC 로만 제공(이름·이메일·구분·소속·승인일). 신청 사유 등 본문은 다른 회원에게 노출되지 않음
 - 같은 대상에 대기중 요청 1건만(부분 유니크 인덱스) → 중복 클릭 방지
 
 ### 교관 승인
@@ -43,6 +44,11 @@
 - 워처 3개: InstructorSignatureDecisionWatcher, CertificateDecisionWatcher, CertificateApprovalLinkRepair
 - lib: instructorApproval.ts(댓글 판정), signatureRequest.ts의 [SIGNED] 파싱, certificateApproval.ts의 제목 파싱
 - config.ts의 게시판 ID 4개(교관 승인·서명 요청·자격증 인증·비행경력증명서)
+
+## 기존 데이터 처리
+- 게시판 시절 요청 id 를 든 기록·자격증은 새 테이블에 없다 → 워처가 단건 조회로 확인한 뒤 연결을 끊는다.
+  기록은 "서명 요청 대기중" 대신 다시 요청 가능 상태로, 자격증은 "인증 요청 다시 보내기" 상태로 돌아간다.
+- 서명 대기중 화면에 "요청 취소" 버튼 추가(서버 행은 cancelled, 로컬 연결 해제).
 
 ## 유지한 것 (호환)
 - `LogbookEntry.signatureRequestPostId` / `certificateRequestPostId` / `Certificate.approvalRequestPostId` — 이름은 그대로, 값은 이제 `approval_requests.id`

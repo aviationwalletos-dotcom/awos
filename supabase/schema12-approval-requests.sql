@@ -21,6 +21,7 @@
 -- [되돌리기]
 --   drop function if exists public.decide_approval_request(uuid, text, text, text);
 --   drop function if exists public.cancel_approval_request(uuid);
+--   drop function if exists public.list_approved_instructors();
 --   drop function if exists public.is_awos_admin();
 --   drop table if exists public.approval_requests;
 
@@ -129,7 +130,8 @@ create trigger trg_approval_requests_validate before insert on public.approval_r
 -- 3) RLS ------------------------------------------------------------------------
 alter table public.approval_requests enable row level security;
 
--- 읽기: 요청자 본인 / 서명 대상 교관 / 관리자 / (누구나) 승인된 교관 목록(서명 대상 선택용)
+-- 읽기: 요청자 본인 / 서명 대상 교관 / 관리자.
+-- 승인된 교관 "목록"은 아래 list_approved_instructors() 로만 제공한다(신청 사유 등 본문은 노출하지 않는다).
 drop policy if exists "ar_select" on public.approval_requests;
 create policy "ar_select" on public.approval_requests
   for select to authenticated
@@ -137,7 +139,6 @@ create policy "ar_select" on public.approval_requests
     requester_id = auth.uid()
     or target_id = auth.uid()
     or public.is_awos_admin()
-    or (kind = 'instructor' and status = 'approved')
   );
 
 -- 쓰기: 본인 명의 대기중 요청만 만들 수 있다. 판정 컬럼은 비어 있어야 한다.
@@ -249,14 +250,38 @@ $$;
 revoke all on function public.cancel_approval_request(uuid) from public;
 grant execute on function public.cancel_approval_request(uuid) to authenticated;
 
--- 6) 확인 ---------------------------------------------------------------------
+-- 6) 승인 교관 목록(학생의 서명 대상 선택·판정 집합용) --------------------------
+-- 이름·이메일·구분·소속·승인일만 돌려준다. 신청 사유(summary)·판정 메모는 포함하지 않는다.
+create or replace function public.list_approved_instructors()
+returns table (
+  user_id uuid,
+  name text,
+  email text,
+  track text,
+  affiliation text,
+  approved_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select r.requester_id, r.requester_name, r.requester_email, r.track, r.affiliation, r.decided_at
+    from public.approval_requests r
+   where r.kind = 'instructor' and r.status = 'approved'
+     and auth.uid() is not null
+$$;
+revoke all on function public.list_approved_instructors() from public;
+grant execute on function public.list_approved_instructors() to authenticated;
+
+-- 7) 확인 ---------------------------------------------------------------------
 select '테이블(1이어야)' as 항목, count(*)::text as 값
   from information_schema.tables
  where table_schema = 'public' and table_name = 'approval_requests'
 union all
-select 'RPC(2여야)', count(*)::text
+select 'RPC(3이어야)', count(*)::text
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
- where n.nspname = 'public' and p.proname in ('decide_approval_request','cancel_approval_request')
+ where n.nspname = 'public' and p.proname in ('decide_approval_request','cancel_approval_request','list_approved_instructors')
 union all
 select '정책(2여야)', count(*)::text
   from pg_policies where tablename = 'approval_requests';
