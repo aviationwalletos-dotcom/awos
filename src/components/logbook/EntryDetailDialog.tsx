@@ -2,7 +2,8 @@ import { Camera, CheckCircle2, Clock3, Pencil, RefreshCw, Send, ShieldCheck, Tra
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cancelApprovalRequest, createApprovalRequest } from '../../lib/approvals/api'
-import { useApprovalRequestById } from '../../lib/approvals/hooks'
+import { useApprovalRequestById, useApprovalRequests } from '../../lib/approvals/hooks'
+import { SIGNED_FIELD_LABEL, buildSignedSnapshot, matchesSnapshot, snapshotFromPayload } from '../../lib/approvals/snapshot'
 import { buildSignatureRequestContent, buildSignatureRequestTitle } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
@@ -133,6 +134,44 @@ export function EntryDetailDialog({
   // [SEC-003] 비공개 버킷 전환 후에도 교관 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
   const resolvedInstructorSignatureUrl = useSignedFileUrl(entry?.instructorSignature?.signatureDataUrl)
 
+  // [증거] 이 기록의 서명 이력 — 승인(서명 완료)된 요청 전부. 각 요청에는 그때의 기록 스냅샷·해시가 있다.
+  // 종이 로그북에서 줄을 긋고 옆에 적듯, 몇 번째 서명 뒤에 무엇이 바뀌었는지 차수별로 보여준다. 서버 행이라 지울 수 없다.
+  const hasSignatureHistory = Boolean(entry?.signedRequestId || entry?.instructorSignature)
+  const { data: signedRequests } = useApprovalRequests(
+    { scope: 'mine', kind: 'signature', status: 'approved', subjectId: entry?.id, limit: 50 },
+    { enabled: Boolean(entry) && hasSignatureHistory },
+  )
+  const [signatureHistory, setSignatureHistory] = useState<
+    Array<{ id: string; order: number; signedAt: string | null; instructor: string; matches: boolean | null; changes: Array<{ key: string; before: unknown; after: unknown }> }>
+  >([])
+  useEffect(() => {
+    let alive = true
+    if (!entry || !signedRequests) {
+      setSignatureHistory([])
+      return
+    }
+    const current = toLogbookEntryInput(entry) as unknown as Record<string, unknown>
+    const ordered = [...signedRequests].sort((a, b) => (a.decided_at ?? '').localeCompare(b.decided_at ?? ''))
+    void Promise.all(
+      ordered.map(async (req, i) => {
+        const snap = snapshotFromPayload(req.payload)
+        const matches = snap ? await matchesSnapshot(entry, snap) : null
+        const changes = snap
+          ? Object.entries(snap.fields)
+              .filter(([k, v]) => JSON.stringify(v ?? null) !== JSON.stringify(current[k] ?? null))
+              .map(([k, v]) => ({ key: k, before: v, after: current[k] ?? null }))
+          : []
+        return { id: req.id, order: i + 1, signedAt: req.decided_at, instructor: req.decided_by_name || '교관', matches, changes }
+      }),
+    ).then((rows) => {
+      if (alive) setSignatureHistory(rows)
+    })
+    return () => {
+      alive = false
+    }
+  }, [entry, signedRequests])
+  const latestSignature = signatureHistory.length > 0 ? signatureHistory[signatureHistory.length - 1] : null
+
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -163,6 +202,7 @@ export function EntryDetailDialog({
     if (signatureRequest.status === 'approved' && signatureRequest.decided_by) {
       onUpdate(entry.id, {
         ...toLogbookEntryInput(entry),
+        signedRequestId: signatureRequest.id,
         instructorSignature: {
           instructorName: signatureRequest.decided_by_name || '교관',
           instructorUserId: signatureRequest.decided_by,
@@ -212,14 +252,8 @@ export function EntryDetailDialog({
         affiliation: myAffiliation?.trim() || null,
         title: buildSignatureRequestTitle(entry),
         summary: buildSignatureRequestContent(entry, account, { name: target.name, userId: target.email ?? target.userId }),
-        payload: {
-          date: entry.date,
-          aircraftType: entry.aircraftType,
-          departure: entry.departure,
-          arrival: entry.arrival,
-          blockTime: entry.blockTime,
-          flightCategory: entry.flightCategory,
-        },
+        // [증거] 서명 대상 기록의 전체 스냅샷 + 해시. 서명 뒤 기록이 바뀌어도 "서명 당시 내용"이 서버에 남는다.
+        payload: { signedSnapshot: await buildSignedSnapshot(entry) },
       })
       onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: created.id })
     } catch (err) {
@@ -410,6 +444,68 @@ export function EntryDetailDialog({
                 </div>
               )}
 
+              {signatureHistory.length > 0 && (
+                <details className="mb-3 rounded-control border border-white/10 bg-white/[0.03] px-3 py-2 text-xs" open={!entry.instructorSignature}>
+                  <summary className="cursor-pointer font-semibold text-slate-200">
+                    서명 이력 {signatureHistory.length}건
+                    {latestSignature && (latestSignature.matches === false || !entry.instructorSignature) ? ' — 마지막 서명 뒤에 수정됨' : ''}
+                  </summary>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    서명할 때의 기록 내용이 서버에 그대로 남아요(종이 로그북의 "줄 긋고 옆에 적기"). 서명 뒤 고친 항목은 차수별로 표시돼요.
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {signatureHistory.map((h) => {
+                      const isCurrent = Boolean(entry.instructorSignature) && h.id === latestSignature?.id && h.matches !== false
+                      return (
+                        <li key={h.id} className="rounded-control border border-white/10 bg-navy px-3 py-2">
+                          <p className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-slate-200">{h.order}차 서명</span>
+                            <span className="font-mono-data tabular-nums text-slate-400">{h.signedAt ? formatSignedAt(new Date(h.signedAt).getTime()) : ''}</span>
+                            <span className="text-slate-400">{h.instructor}</span>
+                            {isCurrent ? (
+                              <span className="text-go">현재 유효 · 내용 일치(해시 검증)</span>
+                            ) : h.changes.length > 0 ? (
+                              <span className="text-amber-300">이후 수정됨</span>
+                            ) : h.matches === null ? (
+                              <span className="text-slate-500">스냅샷 없음(예전 방식 서명)</span>
+                            ) : (
+                              <span className="text-slate-400">이후 다시 서명됨</span>
+                            )}
+                          </p>
+                          {h.changes.length > 0 && (
+                            <table className="mt-1.5 w-full text-[11px]">
+                              <thead>
+                                <tr className="text-left text-slate-500">
+                                  <th className="py-0.5 pr-2 font-semibold">항목</th>
+                                  <th className="py-0.5 pr-2 font-semibold">{h.order}차 서명 때</th>
+                                  <th className="py-0.5 font-semibold">지금</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {h.changes.map((c) => (
+                                  <tr key={c.key} className="border-t border-white/10">
+                                    <td className="py-0.5 pr-2 text-slate-300">{SIGNED_FIELD_LABEL[c.key] ?? c.key}</td>
+                                    <td className="py-0.5 pr-2 font-mono-data text-amber-200">{c.before === null || c.before === undefined ? '-' : typeof c.before === 'object' ? JSON.stringify(c.before) : String(c.before)}</td>
+                                    <td className="py-0.5 font-mono-data text-slate-200">{c.after === null || c.after === undefined ? '-' : typeof c.after === 'object' ? JSON.stringify(c.after) : String(c.after)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  {!entry.instructorSignature && (
+                    <p className="mt-2 text-[11px] text-slate-400">지금 내용으로 다시 서명을 요청하면 {signatureHistory.length + 1}차 서명으로 기록돼요.</p>
+                  )}
+                </details>
+              )}
+              {entry.instructorSignature && latestSignature?.matches === false && (
+                <p role="alert" className="mb-2 text-[11px] font-semibold text-rose-300">
+                  ⚠ 마지막 서명 때 내용과 다릅니다(해시 불일치). 서명 뒤에 기록이 바뀌었을 수 있어요.
+                </p>
+              )}
               {signatureInvalidatedNotice && (
                 <div role="status" className="rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                   <p className="text-xs font-medium text-amber-300">

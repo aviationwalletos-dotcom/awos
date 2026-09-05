@@ -131,7 +131,16 @@ export function isWorkLogRole(
 
 export function useLogbookPageModel() {
   const { account, userType } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabKey>("myRecords");
+  // /logbook?tab=certificates 처럼 URL 로 탭을 지정해 들어올 수 있다(계정정보 → "자격증 탭에서 등록하기" 등)
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    try {
+      const wanted = new URLSearchParams(window.location.search).get("tab");
+      const valid: TabKey[] = ["myRecords", "certificates", "eligibility", "currency", "logbook", "signatureInbox", "workLog"];
+      return wanted && (valid as string[]).includes(wanted) ? (wanted as TabKey) : "myRecords";
+    } catch {
+      return "myRecords";
+    }
+  });
 
   const { override: roleOverride } = useIndividualRoleOverride(account);
   const accountIndividualRole = account?.data?.individual_role as

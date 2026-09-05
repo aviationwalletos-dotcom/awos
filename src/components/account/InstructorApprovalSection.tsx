@@ -4,12 +4,23 @@
 
 import { AlertTriangle, CheckCircle2, Clock3, ShieldCheck } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { Button } from '../Button'
 import { createApprovalRequest } from '../../lib/approvals/api'
 import { useMyInstructorApprovals } from '../../lib/approvals/hooks'
 import { type ApprovalRequest, type PilotTrack, TRACK_INSTRUCTOR_LABEL } from '../../lib/approvals/types'
 import type { AccountResponse } from '../../lib/baas/types'
+import { useCertificates } from '../../hooks/useCertificates'
+import type { Certificate } from '../../types/certificate'
+
+/** 구분별로 교관 신청에 필요한 자격증 카테고리 */
+const INSTRUCTOR_CERT_CATEGORY: Record<PilotTrack, Certificate['category']> = {
+  aircraft: '조종교육증명',
+  lsa: '경량항공기 조종교육증명',
+  ultralight: '지도조종자',
+}
+const APPROVAL_LABEL: Record<string, string> = { approved: '인증됨', pending: '인증 대기중', rejected: '인증 반려' }
 
 function formatDateTime(value: string | null | undefined): string {
   if (!value) return ''
@@ -68,6 +79,19 @@ function StatusLine({ request }: { request: ApprovalRequest }) {
 export function InstructorApprovalSection({ account, affiliation, pilotTracks = ['aircraft'] }: InstructorApprovalSectionProps) {
   const { byTrack, isLoading, error, refetch } = useMyInstructorApprovals(account.id)
   const tracks = useMemo(() => TRACK_ORDER.filter((t) => pilotTracks.includes(t)), [pilotTracks])
+  // 교관 신청 전제: 그 구분의 조종교육증명(지도조종자)이 자격증 탭에 등록돼 있어야 한다.
+  // 등록된 증명 정보는 신청서에 자동으로 붙어 관리자가 본다(인증됨/대기중 포함).
+  const { certificates } = useCertificates(account)
+  const instructorCertByTrack = useMemo(() => {
+    const out: Partial<Record<PilotTrack, Certificate>> = {}
+    for (const t of TRACK_ORDER) {
+      const found = certificates
+        .filter((c) => c.category === INSTRUCTOR_CERT_CATEGORY[t])
+        .sort((a, b) => (a.approvalStatus === 'approved' ? -1 : 0) - (b.approvalStatus === 'approved' ? -1 : 0))[0]
+      if (found) out[t] = found
+    }
+    return out
+  }, [certificates])
 
   // 신청 폼은 한 번에 하나의 구분만 연다
   const [openTrack, setOpenTrack] = useState<PilotTrack | null>(null)
@@ -82,6 +106,12 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
     setIsSubmitting(true)
     setSubmitError(null)
     setSubmitSuccess(null)
+    const cert = instructorCertByTrack[openTrack]
+    if (!cert) {
+      setSubmitError(`${INSTRUCTOR_CERT_CATEGORY[openTrack]}을(를) 자격증 탭에 먼저 등록해 주세요.`)
+      setIsSubmitting(false)
+      return
+    }
     try {
       await createApprovalRequest({
         kind: 'instructor',
@@ -90,7 +120,23 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
         track: openTrack,
         affiliation: affiliation?.trim() || null,
         title: `${TRACK_INSTRUCTOR_LABEL[openTrack]} 승인 신청 — ${account.name}`,
-        summary: reason.trim(),
+        summary: [
+          `${cert.category}: ${cert.name} · 발급 ${cert.issuedDate}${cert.issuer ? ` · ${cert.issuer}` : ''} · ${APPROVAL_LABEL[cert.approvalStatus ?? ''] ?? '미인증'}`,
+          '',
+          reason.trim(),
+        ].join('\n'),
+        payload: {
+          instructorCertificate: {
+            id: cert.id,
+            category: cert.category,
+            name: cert.name,
+            issuer: cert.issuer,
+            issuedDate: cert.issuedDate,
+            expiryDate: cert.expiryDate ?? null,
+            approvalStatus: cert.approvalStatus ?? null,
+            approvalRequestId: cert.approvalRequestPostId ?? null,
+          },
+        },
       })
       setSubmitSuccess(openTrack)
       setOpenTrack(null)
@@ -126,12 +172,20 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
         <ul className="mt-5 space-y-3">
           {tracks.map((track) => {
             const request = byTrack[track]
-            const canApply = !request || request.status === 'rejected'
+            const cert = instructorCertByTrack[track]
+            const canApply = (!request || request.status === 'rejected') && Boolean(cert)
             const isOpen = openTrack === track
             return (
               <li key={track} className="rounded-control border border-white/10 bg-navy p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-white">{TRACK_INSTRUCTOR_LABEL[track]}</p>
+                  {(!request || request.status === 'rejected') && !cert && (
+                    <Link to="/logbook?tab=certificates"
+                      className="inline-flex min-h-[40px] items-center rounded-control border border-sky/40 bg-sky/10 px-3 text-xs font-semibold text-sky hover:bg-sky/15"
+                    >
+                      자격증 탭에서 {INSTRUCTOR_CERT_CATEGORY[track]} 등록하기 →
+                    </Link>
+                  )}
                   {canApply && !isOpen && (
                     <Button type="button" size="sm" variant="outline" tone="brand"
                       data-testid={`instructor-apply-${track}`}
@@ -146,6 +200,17 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
                   )}
                 </div>
 
+                {(!request || request.status === 'rejected') && !cert && (
+                  <p className="mt-2 text-xs text-slate-400">
+                    교관 신청에는 <span className="font-semibold text-slate-200">{INSTRUCTOR_CERT_CATEGORY[track]}</span>이 필요해요. 자격증 탭에 먼저 등록(사진 첨부)하면 여기서 신청할 수 있어요.
+                  </p>
+                )}
+                {cert && (!request || request.status === 'rejected') && (
+                  <p className="mt-2 text-xs text-slate-400">
+                    등록된 증명: <span className="text-slate-200">{cert.name}</span> · 발급 {cert.issuedDate} · {APPROVAL_LABEL[cert.approvalStatus ?? ''] ?? '미인증'}
+                    {cert.approvalStatus !== 'approved' ? ' — 인증이 끝나지 않아도 신청은 되지만, 관리자가 함께 확인해요.' : ''}
+                  </p>
+                )}
                 {request && (
                   <div className="mt-3">
                     <StatusLine request={request} />

@@ -81,6 +81,7 @@ export function AutoSyncEntryDecisions({ entries, onUpdate }: AutoSyncEntryDecis
       if (req.status === 'approved' && req.decided_by) {
         onUpdate(entry.id, {
           ...toLogbookEntryInput(entry),
+          signedRequestId: req.id,
           instructorSignature: {
             instructorName: req.decided_by_name || '교관',
             instructorUserId: req.decided_by,
