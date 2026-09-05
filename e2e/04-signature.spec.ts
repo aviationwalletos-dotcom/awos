@@ -129,6 +129,16 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
     }
   }
   await inboxTab.click()
+  // 교관이 여러 구분을 가지면 기본 구분이 항공기가 아닐 수 있다(재헌 계정은 경량으로 시작).
+  // 서명함은 지금 보는 구분의 요청만 보여주므로 항공기 구분을 명시적으로 고른다.
+  const aircraftTrackTab = instructor.getByRole('tablist', { name: /자격 구분 전환/ }).getByRole('tab', { name: /^항공기$/ })
+  if (await appears(aircraftTrackTab, 5_000)) {
+    if ((await aircraftTrackTab.getAttribute('aria-selected')) !== 'true') {
+      await aircraftTrackTab.click()
+      // 구분을 바꾸면 탭 목록이 다시 그려진다 — 서명함 탭을 다시 연다
+      await instructor.getByRole('tab', { name: /서명 요청함/ }).click()
+    }
+  }
   const card = instructor.getByTestId('signature-request-card').filter({ hasText: MARKER }).first()
   await expect(card).toBeVisible({ timeout: 30_000 })
   const pad = card.getByTestId('signature-pad')

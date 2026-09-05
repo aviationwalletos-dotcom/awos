@@ -222,9 +222,11 @@ interface InstructorSignatureInboxSectionProps {
   instructorCurrencyMet?: boolean
   /** 지금 보고 있는 자격 구분 — 이 구분의 요청만 보여준다(항공기 요청이 초경량 탭에 섞이지 않게) */
   track?: PilotTrack
+  /** 다른 구분에 대기중 요청이 있을 때 그 구분으로 바로 전환 */
+  onSwitchTrack?: (track: PilotTrack) => void
 }
 
-export function InstructorSignatureInboxSection({ account, instructorCurrencyMet = true, track }: InstructorSignatureInboxSectionProps) {
+export function InstructorSignatureInboxSection({ account, instructorCurrencyMet = true, track, onSwitchTrack }: InstructorSignatureInboxSectionProps) {
   const [tab, setTab] = useState<TabFilter>('pending')
   const [page, setPage] = useState(1)
   const { toast, showToast } = useToast()
@@ -240,6 +242,20 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
     showToast(outcome === 'signed' ? '서명이 등록되었어요. 완료됨 탭에서 확인할 수 있어요.' : '요청을 반려했어요.')
   }
   const items = useMemo(() => data ?? [], [data])
+
+  // 다른 구분에 대기중인 요청 — 교관이 지금 보는 구분과 다른 구분의 요청을 놓치지 않게 개수만 보여준다
+  const { data: allPending } = useApprovalRequests(
+    { scope: 'inbox', kind: 'signature', status: 'pending', limit: 200 },
+    { enabled: Boolean(track), pollMs: 60_000 },
+  )
+  const otherTrackCounts = useMemo(() => {
+    const counts: Partial<Record<PilotTrack, number>> = {}
+    for (const r of allPending ?? []) {
+      if (!r.track || r.track === track) continue
+      counts[r.track] = (counts[r.track] ?? 0) + 1
+    }
+    return counts
+  }, [allPending, track])
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
 
   useEffect(() => {
@@ -289,6 +305,21 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
         </div>
       </div>
 
+      {Object.keys(otherTrackCounts).length > 0 && (
+        <div role="status" className="mt-4 flex flex-wrap items-center gap-2 rounded-control border border-sky/30 bg-sky/10 px-3 py-2 text-xs text-sky">
+          <span className="font-semibold">다른 구분에 대기중인 서명 요청이 있어요:</span>
+          {(Object.entries(otherTrackCounts) as Array<[PilotTrack, number]>).map(([t, n]) => (
+            <button key={t}
+              type="button"
+              onClick={() => onSwitchTrack?.(t)}
+              className="inline-flex min-h-[32px] items-center rounded-control border border-sky/40 bg-navy px-2.5 text-xs font-semibold text-sky hover:bg-sky/15"
+              data-testid={`inbox-switch-${t}`}
+            >
+              {TRACK_LABEL[t]} {n}건 보기 →
+            </button>
+          ))}
+        </div>
+      )}
       {/* 이미 받아둔 목록이 있으면 일시적 오류에도 목록을 유지하고 경고만 띄운다(화면이 통째로 사라지지 않게) */}
       {error && data && (
         <p role="status" className="mt-4 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
