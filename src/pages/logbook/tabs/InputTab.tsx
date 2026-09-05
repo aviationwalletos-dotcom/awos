@@ -42,7 +42,7 @@ export function InputTab({ m }: { m: LogbookModel }) {
         >
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
                   새 기록
                   <InfoTip size="md" label="기록 추가 안내">

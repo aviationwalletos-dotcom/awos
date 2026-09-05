@@ -8,6 +8,7 @@ import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types
 
 import { Button } from '../Button'
 import { localToday } from '../../lib/ui/localDate'
+import { Minus, Plus } from 'lucide-react'
 import { InfoTip } from '../InfoTip'
 
 interface FieldErrors {
@@ -462,22 +463,21 @@ export function EntryForm({
           ))}
         </div>
         {entryKind === 'sim' && (
-          <>
-            <p className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
-              시뮬레이터 기록 모드: <span className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리돼요.
-            </p>
-            <div className="mt-3">
-              <label htmlFor="simDevice" className={labelClass}>모의비행훈련장치 구분</label>
-              <select id="simDevice" name="simDevice" value={simDevice} onChange={(e) => setSimDevice(e.target.value as SimDeviceKind)} className={inputClass}>
-                {(['FFS', 'FTD', 'BATD'] as SimDeviceKind[]).map((d) => (
-                  <option key={d} value={d}>{SIM_DEVICE_LABEL[d]}</option>
-                ))}
-              </select>
-              <p className="mt-1 text-[11px] text-slate-500">
-                별표 4 인정 상한이 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치예요.
-              </p>
-            </div>
-          </>
+          <div className="mt-3">
+            <label htmlFor="simDevice" className={`${labelClass} inline-flex items-center gap-1`}>
+              모의비행훈련장치 구분
+              <InfoTip label="시뮬레이터 기록 안내">
+                시뮬레이터 기록은 <span className="font-semibold text-slate-100">시뮬레이터 시간만 필수</span>예요. 모의계기·계기접근·비고는 선택이고, 출발/도착지와 비행시간 칸은 자동으로 처리돼요.
+                <br />
+                별표 4 인정 상한은 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치예요.
+              </InfoTip>
+            </label>
+            <select id="simDevice" name="simDevice" value={simDevice} onChange={(e) => setSimDevice(e.target.value as SimDeviceKind)} className={inputClass}>
+              {(['FFS', 'FTD', 'BATD'] as SimDeviceKind[]).map((d) => (
+                <option key={d} value={d}>{SIM_DEVICE_LABEL[d]}</option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
       {/* 기본 정보 */}
@@ -612,17 +612,69 @@ export function EntryForm({
 
       <hr className="border-white/[0.08]" />
 
+      <hr className="border-white/[0.08]" />
+
+      {/* 블록타임 · 비고 */}
+      {entryKind === 'flight' && (<>
+
+      <fieldset>
+        <legend className={sectionTitleClass}>블록타임 · 비고</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="blockTime" className={labelClass}>
+              블록타임(시간)
+            </label>
+            <input id="blockTime"
+              name="blockTime"
+              onChange={handleTotalInput}
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              min="0.1"
+              defaultValue={initialValues?.blockTime}
+              placeholder="예: 1.5"
+              className={numberInputClass}
+              aria-invalid={Boolean(errors.blockTime)}
+              aria-describedby={errors.blockTime ? 'blockTime-error' : undefined}
+            />
+            {errors.blockTime && (
+              <p id="blockTime-error" className="mt-1.5 text-xs text-rose-600">
+                {errors.blockTime}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="mt-5">
+          <label htmlFor="notes" className={labelClass}>
+            비고 (선택)
+          </label>
+          <textarea id="notes"
+            name="notes"
+            rows={3}
+            defaultValue={initialValues?.notes}
+            placeholder="특이사항, 기동, 훈련과목, 단독비행 승인 등을 남겨 주세요."
+            className={inputClass}
+          />
+        </div>
+      </fieldset>
+      </>)}
+
+
       {entryKind === 'flight' && (
         <button type="button"
           onClick={() => setShowDetails((v) => !v)}
           aria-expanded={showDetails}
           aria-controls="entry-details"
           data-testid="entry-details-toggle"
-          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-control border border-white/15 px-4 text-sm font-semibold text-slate-200 hover:bg-white/5
-            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+          className={`flex w-full items-center justify-between gap-3 rounded-control border px-4 py-3 text-left text-sm font-semibold transition-colors
+            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
+            ${showDetails ? 'border-white/15 text-slate-200 hover:bg-white/5' : 'border-sky/40 bg-sky/10 text-sky hover:bg-sky/15'}`}
         >
-          {showDetails ? '상세 시간 입력 접기' : '상세 시간 입력 펼치기'}
-          <span className="text-xs font-normal text-slate-400">범주·자격·조건·이착륙 — 비워 두면 역할에 따라 자동으로 채워져요</span>
+          <span className="inline-flex items-center gap-2">
+            {showDetails ? <Minus className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
+            {showDetails ? '상세 시간 입력 접기' : '상세 시간 입력'}
+          </span>
+          <span className="text-xs font-normal text-slate-400">범주·자격·조건·이착륙 — 비워 두면 역할에 따라 자동</span>
         </button>
       )}
 
@@ -877,12 +929,12 @@ export function EntryForm({
             />
           </div>
           <div>
-            <label htmlFor="crossCountry" className={labelClass}>
+            <label htmlFor="crossCountry" className={`${labelClass} inline-flex items-center gap-1`}>
               크로스컨트리(시간)
+              <InfoTip label="크로스컨트리 정의">
+                출발지 외 1개 지점 착륙을 포함한 비행시간(운항기술기준 정의 43). 자가용·사업용·계기비행증명 응시경력용은 출발지에서 직선 50NM 이상 떨어진 공항 착륙을 포함해야 해요.
+              </InfoTip>
             </label>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-              출발지 외 1개 지점 착륙을 포함한 비행시간(운항기술기준 정의 43). 자가용·사업용·계기비행증명 응시경력용은 출발지에서 직선 50NM 이상 떨어진 공항 착륙을 포함해야 해요.
-            </p>
             <input id="crossCountry"
               name="crossCountry"
               type="number"
@@ -985,52 +1037,6 @@ export function EntryForm({
       </>)}
       </div>
 
-      <hr className="border-white/[0.08]" />
-
-      {/* 블록타임 · 비고 */}
-      {entryKind === 'flight' && (<>
-
-      <fieldset>
-        <legend className={sectionTitleClass}>블록타임 · 비고</legend>
-        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="blockTime" className={labelClass}>
-              블록타임(시간)
-            </label>
-            <input id="blockTime"
-              name="blockTime"
-              onChange={handleTotalInput}
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min="0.1"
-              defaultValue={initialValues?.blockTime}
-              placeholder="예: 1.5"
-              className={numberInputClass}
-              aria-invalid={Boolean(errors.blockTime)}
-              aria-describedby={errors.blockTime ? 'blockTime-error' : undefined}
-            />
-            {errors.blockTime && (
-              <p id="blockTime-error" className="mt-1.5 text-xs text-rose-600">
-                {errors.blockTime}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mt-5">
-          <label htmlFor="notes" className={labelClass}>
-            비고 (선택)
-          </label>
-          <textarea id="notes"
-            name="notes"
-            rows={3}
-            defaultValue={initialValues?.notes}
-            placeholder="특이사항, 기동, 훈련과목, 단독비행 승인 등을 남겨 주세요."
-            className={inputClass}
-          />
-        </div>
-      </fieldset>
-      </>)}
 
       
 
