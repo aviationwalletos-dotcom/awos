@@ -80,11 +80,44 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
       const tabNames = await instructor.getByRole('tab').allInnerTexts().catch(() => [] as string[])
       const email = process.env.E2E_INSTRUCTOR_EMAIL ?? '(미설정)'
       const bodyText = (await instructor.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 300)
+      // 연결 진단: 브라우저에서 supabase.co / 우리 사이트로 직접 요청, 러너(Node)에서도 supabase.co 로 요청
+      const supabaseOrigin = [...pending.values(), ...netLog].map((l) => l.match(/https?:\/\/[^/]+/)?.[0]).find(Boolean)
+        ?? (await instructor.evaluate(() => (window as unknown as { __SUPABASE_URL__?: string }).__SUPABASE_URL__ ?? ''))
+      const probe = await instructor
+        .evaluate(async () => {
+          const timed = async (url: string, init?: RequestInit) => {
+            const t0 = Date.now()
+            try {
+              const r = await fetch(url, { ...init, signal: AbortSignal.timeout(10_000) })
+              return `${r.status} (${Date.now() - t0}ms)`
+            } catch (e) {
+              return `ERR ${(e as Error).name}: ${(e as Error).message} (${Date.now() - t0}ms)`
+            }
+          }
+          const sbEntry = performance.getEntriesByType('resource').map((e) => e.name).find((n) => /supabase\.co/.test(n))
+          const sb = sbEntry ? new URL(sbEntry).origin : ''
+          return {
+            site: await timed('/manifest.webmanifest', { cache: 'no-store' }),
+            supabaseRest: sb ? await timed(`${sb}/rest/v1/`, { headers: { apikey: 'probe' } }) : '(supabase origin 미확인)',
+            supabaseAuth: sb ? await timed(`${sb}/auth/v1/health`) : '(supabase origin 미확인)',
+          }
+        })
+        .catch((e) => ({ error: String(e) }))
+      let runnerProbe = '(skip)'
+      if (supabaseOrigin) {
+        const t0 = Date.now()
+        runnerProbe = await instructor.request
+          .get(`${supabaseOrigin}/auth/v1/health`, { timeout: 10_000 })
+          .then((r) => `${r.status()} (${Date.now() - t0}ms)`)
+          .catch((e) => `ERR ${String(e).slice(0, 80)} (${Date.now() - t0}ms)`)
+      }
       throw new Error(
         `교관 계정(${email})에 "서명 요청함" 탭이 없습니다 — 현재 주소: ${instructor.url()} / 보이는 탭: [${tabNames.map((t) => t.trim()).join(', ')}]\n` +
           `화면 텍스트: ${bodyText}\n` +
           `네트워크(최근 20건):\n${netLog.slice(-20).join('\n')}\n` +
           `응답 없이 걸린 요청:\n${[...pending.values()].join('\n') || '(없음)'}\n` +
+          `브라우저 직접 요청: ${JSON.stringify(probe)}\n` +
+          `러너(Node) 직접 요청 → supabase auth/health: ${runnerProbe}\n` +
           `콘솔(최근 8건):\n${consoleLog.slice(-8).join('\n')}`,
       )
     }

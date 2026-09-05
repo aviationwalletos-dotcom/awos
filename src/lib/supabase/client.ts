@@ -8,9 +8,16 @@ import { createClient } from '@supabase/supabase-js'
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
 
+// 요청이 응답 없이 무한 대기하지 않도록 20초 제한(supabaseTransport.timedFetch 와 같은 취지)
+function timedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (init?.signal || typeof AbortSignal === 'undefined' || typeof AbortSignal.timeout !== 'function') return fetch(input, init)
+  return fetch(input, { ...init, signal: AbortSignal.timeout(20_000) })
+}
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
   },
+  global: { fetch: timedFetch },
 })

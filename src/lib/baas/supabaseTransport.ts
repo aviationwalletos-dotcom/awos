@@ -40,6 +40,21 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 //   1) 데이터 클라이언트는 accessToken 콜백을 주어 getSession 을 아예 타지 않게 한다.
 //   2) 인증 전용 클라이언트는 하나만 만들어 재사용하고, storageKey 를 따로 줘 잠금 이름을 분리한다.
 
+// [2026-09-05 · 요청 시간 제한]
+//  E2E 에서 supabase.co 로 보낸 요청이 응답도 실패도 없이 무한히 걸리는 현상이 재현됐다(연결 정체).
+//  걸린 요청을 영원히 기다리면 화면이 "로그인 상태를 확인하는 중"에 멈춘다. 일반 요청 20초, 파일 업로드 60초를
+//  넘기면 오류로 끊어 호출부(재시도 로직·오류 표시)가 동작하게 한다.
+const REQUEST_TIMEOUT_MS = 20_000
+const UPLOAD_TIMEOUT_MS = 60_000
+function timedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (init?.signal || typeof AbortSignal === 'undefined' || typeof AbortSignal.timeout !== 'function') {
+    return fetch(input, init)
+  }
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+  const ms = url.includes('/storage/v1/') ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS
+  return fetch(input, { ...init, signal: AbortSignal.timeout(ms) })
+}
+
 /** 세션을 전혀 저장하지 않는 인증 전용 클라이언트(로그인 검증·토큰 갱신·가입에만 사용). 하나만 만들어 재사용. */
 let sharedAuthClient: SupabaseClient | null = null
 function makeAuthClient(): SupabaseClient {
@@ -51,6 +66,7 @@ function makeAuthClient(): SupabaseClient {
       detectSessionInUrl: false,
       storageKey: 'awos-auth-shim', // 메인 클라이언트와 잠금 이름 분리
     },
+    global: { fetch: timedFetch },
   })
   return sharedAuthClient
 }
@@ -62,7 +78,7 @@ function dataClientFor(accessToken: string): SupabaseClient {
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     accessToken: async () => accessToken,
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'awos-data-client' },
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    global: { headers: { Authorization: `Bearer ${accessToken}` }, fetch: timedFetch },
   })
   cachedDataClient = { token: accessToken, client }
   return client

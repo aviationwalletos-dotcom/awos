@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { ShieldAlert } from 'lucide-react'
 
 import { useAuth } from '../contexts/AuthContext'
+import { getStoredAccessToken } from '../lib/baas/config'
 import type { UserType } from '../lib/baas/types'
 
 interface RequireUserTypeProps {
@@ -28,7 +29,7 @@ const TYPE_PATH: Record<UserType, string> = {
  * - 로그인했지만 유형 불일치: 안내 메시지와 함께 자신의 유형에 맞는 페이지로 이동 링크 제공
  */
 export function RequireUserType({ userType, children }: RequireUserTypeProps) {
-  const { isAuthenticated, isLoading, userType: currentUserType } = useAuth()
+  const { isAuthenticated, isLoading, userType: currentUserType, error, refetchAccount } = useAuth()
 
   if (isLoading) {
     return (
@@ -44,6 +45,25 @@ export function RequireUserType({ userType, children }: RequireUserTypeProps) {
   }
 
   if (!isAuthenticated) {
+    // 토큰은 있는데 계정 조회가 오류(시간 초과·네트워크)로 끝난 경우 — 로그인 화면으로 튕기지 말고 다시 시도하게 한다.
+    if (error && getStoredAccessToken()) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-navy-dark px-6 text-white">
+          <div className="max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
+            <ShieldAlert className="mx-auto h-10 w-10 text-amber-300" aria-hidden="true" />
+            <h1 className="mt-4 font-display text-xl font-extrabold">연결이 불안정해요</h1>
+            <p className="mt-3 text-sm text-slate-300">계정 정보를 불러오지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.</p>
+            <p className="mt-1 break-all text-xs text-slate-500">{error}</p>
+            <button type="button"
+              onClick={() => void refetchAccount()}
+              className="mt-5 inline-flex min-h-[44px] items-center rounded-control bg-sky px-5 text-sm font-bold text-navy hover:bg-sky/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      )
+    }
     return <Navigate to="/login" replace />
   }
 
