@@ -52,7 +52,13 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
     await instructor.reload()
     inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
     if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
-      throw new Error('교관 계정에 "서명 요청함" 탭이 없습니다 — 계정정보에서 항공기 교관 승인 신청 후 관리자 승인을 먼저 완료해 주세요.')
+      // 무엇이 보였는지 그대로 남긴다(계정 착오·라우팅 문제·탭 누락을 한 번에 구분)
+      const tabNames = await instructor.getByRole('tab').allInnerTexts().catch(() => [] as string[])
+      const email = process.env.E2E_INSTRUCTOR_EMAIL ?? '(미설정)'
+      throw new Error(
+        `교관 계정(${email})에 "서명 요청함" 탭이 없습니다 — 현재 주소: ${instructor.url()} / 보이는 탭: [${tabNames.map((t) => t.trim()).join(', ')}]. ` +
+          '이 계정이 항공기 교관으로 승인돼 있는지(계정정보 → 교관 승인 신청 카드) 확인해 주세요.',
+      )
     }
   }
   await inboxTab.click()
