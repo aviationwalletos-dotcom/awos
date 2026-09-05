@@ -12,7 +12,7 @@ interface ComplianceSectionProps {
 
 /**
  * 직군별 법정 요건 안내/현황 섹션 공통 wrapper.
- * 측정 가능한 항목은 자동 계산된 충족/미충족을, 측정이 어려운 항목은 "참고" 배지로 보여줍니다.
+ * 측정 가능한 항목은 자동 계산된 충족/미충족을, 측정이 어려운 항목은 "참고" 배지로 보여줘요.
  */
 export function ComplianceSection({ title, description, items }: ComplianceSectionProps) {
   return (
@@ -36,7 +36,7 @@ export function ComplianceSection({ title, description, items }: ComplianceSecti
       >
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         이 화면은 참고자료를 근거로 한 자동 계산이며, 실제 법적 기준은 관련 법령 원문과 소속 기관 규정을 통해 반드시
-        재확인해야 합니다.
+        재확인해야 해요.
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">

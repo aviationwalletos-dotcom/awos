@@ -21,7 +21,7 @@ export function LogbookOnboarding({ onStartExcel, onStartCertificate, onStartNew
     <div className="rounded-card border border-white/10 bg-white/[0.03] p-cardpad">
       <h3 className="font-display text-xl font-extrabold text-ink">로그북을 시작해 볼까요?</h3>
       <p className="mt-2 text-sm leading-relaxed text-slate-400">
-        지금 상황에 맞는 방법을 고르세요. 어떤 방법으로 시작해도 이후에 나머지를 병행할 수 있습니다.
+        지금 상황에 맞는 방법을 고르세요. 어떤 방법으로 시작해도 이후에 나머지를 병행할 수 있어요.
       </p>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -29,7 +29,7 @@ export function LogbookOnboarding({ onStartExcel, onStartCertificate, onStartNew
           <FileSpreadsheet className="h-6 w-6 text-sky" aria-hidden="true" />
           <p className="mt-3 font-display text-base font-bold text-ink">엑셀 로그북 가져오기</p>
           <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-            기존에 엑셀 파일로 관리했다면 — 업로드하면 컬럼을 자동으로 매핑해 일괄 등록합니다.
+            기존에 엑셀 파일로 관리했다면 — 업로드하면 컬럼을 자동으로 매핑해 일괄 등록해요.
           </p>
         </button>
 
@@ -37,7 +37,7 @@ export function LogbookOnboarding({ onStartExcel, onStartCertificate, onStartNew
           <FileText className="h-6 w-6 text-sky" aria-hidden="true" />
           <p className="mt-3 font-display text-base font-bold text-ink">비행경력증명서로 시작</p>
           <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-            엑셀 파일은 없고 증명서만 있다면 — 항목별 누적 시간을 입력해 이관합니다.
+            엑셀 파일은 없고 증명서만 있다면 — 항목별 누적 시간을 입력해 이관해요.
           </p>
         </button>
 
@@ -45,7 +45,7 @@ export function LogbookOnboarding({ onStartExcel, onStartCertificate, onStartNew
           <PlaneTakeoff className="h-6 w-6 text-sky" aria-hidden="true" />
           <p className="mt-3 font-display text-base font-bold text-ink">첫 비행 기록하기</p>
           <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-            오늘부터 새로 시작한다면 — 날짜·구간·기종·시간만으로 30초면 기록됩니다.
+            오늘부터 새로 시작한다면 — 날짜·구간·기종·시간만으로 30초면 기록돼요.
           </p>
         </button>
       </div>

@@ -32,8 +32,8 @@ export function TsIntegrationCard() {
               )}
             </h3>
             <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-400">
-              한국교통안전공단(TS) 자격 정보 연동을 준비하고 있습니다. 연동이 열리면 보유 자격과 유효기간을
-              직접 입력하지 않고 불러올 수 있습니다. 그때까지는 아래에서 직접 등록해 주세요.
+              한국교통안전공단(TS) 자격 정보 연동을 준비하고 있어요. 연동이 열리면 보유 자격과 유효기간을
+              직접 입력하지 않고 불러올 수 있어요. 그때까지는 아래에서 직접 등록해 주세요.
             </p>
           </div>
         </div>

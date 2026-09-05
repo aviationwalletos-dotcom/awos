@@ -37,9 +37,9 @@ function isUnconfirmedCertificateEntry(entry: LogbookEntry): boolean {
 interface FlightReadinessPanelProps {
   entries: LogbookEntry[]
   certificates?: Certificate[]
-  /** 상태공유 버튼 및 개인설정 서버 동기화에 필요한 계정 정보(이름/이메일/소속). 없으면 공유 버튼을 표시하지 않습니다. */
+  /** 상태공유 버튼 및 개인설정 서버 동기화에 필요한 계정 정보(이름/이메일/소속). 없으면 공유 버튼을 표시하지 않아요. */
   account?: AccountResponse | null
-  /** true면 히어로 등 좁은 영역에 맞춘 축약형(작은 배지 + 칩 한 줄)으로 렌더링합니다. */
+  /** true면 히어로 등 좁은 영역에 맞춘 축약형(작은 배지 + 칩 한 줄)으로 렌더링해요. */
   compact?: boolean
 }
 
@@ -190,7 +190,7 @@ export function FlightReadinessPanel({
 
         {!hasData ? (
           <p className="mt-3 text-xs text-slate-400">
-            자격증·비행 기록을 등록하면 실시간 GO/NO-GO 판정이 표시됩니다.
+            자격증·비행 기록을 등록하면 실시간 GO/NO-GO 판정이 표시돼요.
           </p>
         ) : (
           <div className="mt-3 flex items-center gap-3">
@@ -240,8 +240,8 @@ export function FlightReadinessPanel({
         <div className="mt-6 flex flex-col items-center gap-3 rounded-control border border-dashed border-white/15 bg-white/[0.02] py-10 text-center">
           <Gauge className="h-8 w-8 text-slate-400" aria-hidden="true" />
           <p className="max-w-xs text-sm text-slate-400">
-            아직 등록된 자격증이나 비행 기록이 없어 비행 적합성을 계산할 수 없습니다. 자격증 관리·비행기록 관리 탭에서
-            정보를 등록하면 이 자리에 실시간 GO/NO-GO 판정이 표시됩니다.
+            아직 등록된 자격증이나 비행 기록이 없어 비행 적합성을 계산할 수 없어요. 자격증 관리·비행기록 관리 탭에서
+            정보를 등록하면 이 자리에 실시간 GO/NO-GO 판정이 표시돼요.
           </p>
         </div>
       ) : (
@@ -266,8 +266,8 @@ export function FlightReadinessPanel({
             </p>
             <p className="mt-1 text-xs text-slate-400">
               {summary.overallGo
-                ? '항공신체검사와 최근 비행경험 기본 요건을 충족해 일반 비행이 가능합니다'
-                : '항공신체검사 또는 최근 비행경험 기본 요건이 충족되지 않아 일반 비행이 제한됩니다'}
+                ? '항공신체검사와 최근 비행경험 기본 요건을 충족해 일반 비행이 가능해요'
+                : '항공신체검사 또는 최근 비행경험 기본 요건이 충족되지 않아 일반 비행이 제한돼요'}
             </p>
           </div>
 
@@ -284,7 +284,7 @@ export function FlightReadinessPanel({
 
       <p className="mt-6 text-xs text-slate-400">
         이 판정은 등록된 자격증·비행 기록을 바탕으로 한 참고용 자동 계산이며, 실제 법적 판단은 소속 기관/관련 규정을
-        통해 확인해야 합니다. 자세한 산출 근거는 아래 "커런시 관리" 탭에서 확인할 수 있습니다.
+        통해 확인해야 해요. 자세한 산출 근거는 아래 "커런시 관리" 탭에서 확인할 수 있어요.
       </p>
     </div>
   )

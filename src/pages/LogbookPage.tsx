@@ -171,6 +171,7 @@ export function LogbookPage() {
                     track={activeTrack}
                     totalHours={trackTotalHours}
                   />
+                  {/* 승무시간 한도는 모든 계정에 표시 — 훈련원은 자가용 과정에도 8시간 한도를 적용하는 곳이 있다 */}
                   <DutyTimeLimitCard
                     entries={trackEntries}
                     compact

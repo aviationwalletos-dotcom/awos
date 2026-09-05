@@ -6,13 +6,13 @@ export type StatusBadgeSurface = 'light' | 'dark'
 interface StatusBadgeProps {
   tone: StatusBadgeTone
   label: string
-  /** lucide-react 아이콘 컴포넌트 (선택). 지정하지 않으면 텍스트만 표시합니다. */
+  /** lucide-react 아이콘 컴포넌트 (선택). 지정하지 않으면 텍스트만 표시해요. */
   icon?: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
-  /** icon 대신 작은 상태 점(dot)을 표시합니다(GO/NO-GO 등 상태 표시에 사용). */
+  /** icon 대신 작은 상태 점(dot)을 표시해요(GO/NO-GO 등 상태 표시에 사용). */
   dot?: boolean
   /** 배지가 올라가는 배경 맥락. 밝은 카드(white)는 'light', 어두운 카드(navy)는 'dark'. */
   surface?: StatusBadgeSurface
-  /** 테두리를 함께 표시할지 여부 (일부 화면은 테두리가 있는 스타일을 사용합니다). */
+  /** 테두리를 함께 표시할지 여부 (일부 화면은 테두리가 있는 스타일을 사용해요). */
   bordered?: boolean
   className?: string
 }
@@ -55,9 +55,9 @@ const BORDER_CLASSES: Record<StatusBadgeSurface, Record<StatusBadgeTone, string>
 }
 
 /**
- * 승인/대기/반려 등 상태 의미를 화면 전반에서 통일해 표시하는 공용 배지입니다.
+ * 승인/대기/반려 등 상태 의미를 화면 전반에서 통일해 표시하는 공용 배지예요.
  * tone은 항상 success=완료/승인/GO(초록), pending=대기중(주황), danger=반려/NO-GO/오류(빨강),
- * neutral=중립 상태를 의미합니다. 배경 맥락(밝은 카드/어두운 카드)에 따라 surface를 지정해
+ * neutral=중립 상태를 의미해요. 배경 맥락(밝은 카드/어두운 카드)에 따라 surface를 지정해
  * 대비를 유지하세요.
  */
 export function StatusBadge({ tone, label, icon: Icon, dot = false, surface = 'light', bordered = false, className = '' }: StatusBadgeProps) {

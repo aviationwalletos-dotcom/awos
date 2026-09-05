@@ -76,7 +76,7 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
         setPhotoUrl(url)
         setPhotoLoaded(true)
       } catch (err) {
-        if (!cancelled) setPhotoError(err instanceof Error ? err.message : '첨부를 불러오지 못했습니다.')
+        if (!cancelled) setPhotoError(err instanceof Error ? err.message : '첨부를 불러오지 못했어요.')
       }
     })()
     return () => {
@@ -93,7 +93,7 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
       setNote('')
       await onDecided()
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : '처리에 실패했습니다.')
+      setSubmitError(err instanceof Error ? err.message : '처리에 실패했어요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -150,7 +150,7 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
       {photoOpen && !photoLoaded && !photoError && (
         <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
           <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
-          첨부를 불러오는 중입니다...
+          첨부를 불러오는 중이에요...
         </p>
       )}
       {photoError && <p role="alert" className="mt-3 text-xs font-medium text-rose-300">{photoError}</p>}
@@ -303,7 +303,7 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
         <div className="mt-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-4 py-3">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" aria-hidden="true" />
           <p className="text-xs font-medium text-amber-300">
-            소속 기관을 먼저 설정해주세요. 소속 기관이 없으면 전체 요청이 표시됩니다.{' '}
+            소속 기관을 먼저 설정해주세요. 소속 기관이 없으면 전체 요청이 표시돼요.{' '}
             <Link to="/account" className="rounded font-semibold underline underline-offset-2 hover:text-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky">
               계정정보로 이동
             </Link>
@@ -318,7 +318,7 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
         </p>
       )}
       {isLoading && !data ? (
-        <p className="mt-6 text-sm text-slate-400">목록을 불러오는 중입니다...</p>
+        <p className="mt-6 text-sm text-slate-400">목록을 불러오는 중이에요...</p>
       ) : error && !data ? (
         <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>

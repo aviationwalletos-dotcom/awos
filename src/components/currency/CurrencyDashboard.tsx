@@ -15,7 +15,7 @@ import { computeFlightReadiness, parseEntryDate } from '../../lib/flightReadines
 
 // ── 날짜 유틸 ────────────────────────────────────────────────────────────
 // 날짜 계산 로직은 다른 화면(히어로 비행 적합성 패널)과 판정 기준을 공유하기 위해
-// `src/lib/flightReadiness.ts`로 이동했습니다. 여기서는 표시용 포맷팅만 담당합니다.
+// `src/lib/flightReadiness.ts`로 이동했어요. 여기서는 표시용 포맷팅만 담당해요.
 
 function formatDate(dateStr: string): string {
   const d = parseEntryDate(dateStr)
@@ -57,7 +57,7 @@ interface CurrencyDashboardProps {
   entries: LogbookEntry[]
   account?: AccountResponse | null
   certificates?: Certificate[]
-  /** 승인된 교관 계정일 때만 "조종교육 비행경험(교관 커런시)" 섹션을 노출합니다. */
+  /** 승인된 교관 계정일 때만 "조종교육 비행경험(교관 커런시)" 섹션을 노출해요. */
   isApprovedInstructor?: boolean
 }
 
@@ -108,7 +108,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
         <div className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
           <p>
             <strong>제1종(운송용/사업용 조종사, 부조종사)</strong>: 만 60세 미만 12개월, 만 60세
-            이상 6개월 유효(단독운항 항공운송사업 종사자는 만 40세 이상부터 6개월이 적용될 수 있습니다).
+            이상 6개월 유효(단독운항 항공운송사업 종사자는 만 40세 이상부터 6개월이 적용될 수 있어요).
           </p>
           <p className="mt-1.5">
             <strong>제2종(자가용 조종사, 조종연습생)</strong>: 만 40세 미만 60개월(5년), 만
@@ -116,7 +116,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
           </p>
           <p className="mt-1.5">
             <strong>월말 만료 원칙</strong>: 계산된 유효기간 종료일이 그 달의 말일이 아니면, 그
-            달의 말일까지 유효한 것으로 인정됩니다(예: 5년 유효로 계산된 만료일이 2031-07-11이면 실제로는
+            달의 말일까지 유효한 것으로 인정돼요(예: 5년 유효로 계산된 만료일이 2031-07-11이면 실제로는
             2031-07-31까지 유효).
           </p>
         </div>
@@ -127,8 +127,8 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" aria-hidden="true" />
             <p>
               (조종사/교관 대상) 이 서비스는 비행교육원 교관/사업용 조종사를 위한 것으로, <strong>제1종 항공신체검사증명을
-              반드시 유효하게 유지</strong>해야 합니다. 현재 유효한 제1종 항공신체검사증명이 등록되어 있지 않거나 만료된
-              상태입니다.
+              반드시 유효하게 유지</strong>해야 해요. 현재 유효한 제1종 항공신체검사증명이 등록되어 있지 않거나 만료된
+              상태예요.
             </p>
           </div>
         )}
@@ -223,7 +223,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
         </div>
 
         <p className="mt-4 text-xs text-slate-400">
-          항공신체검사증명은 "자격증 관리" 탭에서 등록/수정할 수 있습니다.
+          항공신체검사증명은 "자격증 관리" 탭에서 등록/수정할 수 있어요.
         </p>
       </Collapsible>
 
@@ -231,13 +231,13 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
         <p>
           이 화면은 <strong>항공안전법상 조종사 최근 비행경험 규정</strong>을 참고해 자동 계산한 참고용
-          정보이며, 실제 법적 판단은 소속 기관/관련 규정을 통해 확인해야 합니다.
+          정보이며, 실제 법적 판단은 소속 기관/관련 규정을 통해 확인해야 해요.
         </p>
       </div>
 
       {entries.length === 0 ? (
         <div className="mt-6 rounded-card border border-dashed border-white/15 bg-panel p-cardpad text-center text-sm text-slate-400">
-          비행 기록이 없어 최근 비행경험/계기비행 경험/조종교육 비행경험 커런시를 계산할 수 없습니다. 비행기록 관리 탭에서
+          비행 기록이 없어 최근 비행경험/계기비행 경험/조종교육 비행경험 커런시를 계산할 수 없어요. 비행기록 관리 탭에서
           이착륙 횟수·계기접근·비행교관 시간을 포함한 기록을 추가해 보세요.
         </div>
       ) : (
@@ -276,7 +276,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             <div className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
               {recency.nightRequired
                 ? '운항기술기준 8.2.2 가항(시행규칙 제121조): 여객 운송 또는 2인 이상 조종 항공기의 기장은 최근 90일 이내 동일 등급 형식으로 3회 이상 이·착륙, 야간비행은 그 중 야간 1회 포함. 지정 모의비행장치 경험 인정.'
-                : '운항기술기준 8.2.2 나항: 그 외 기장은 최근 180일 이내 동일 등급 항공기 형식(또는 모의비행장치)으로 3회 이상 이·착륙. 야간 1회는 법정 요건이 아니라 참고치로만 표시합니다.'}
+                : '운항기술기준 8.2.2 나항: 그 외 기장은 최근 180일 이내 동일 등급 항공기 형식(또는 모의비행장치)으로 3회 이상 이·착륙. 야간 1회는 법정 요건이 아니라 참고치로만 표시해요.'}
             </div>
             {recency.byClass.length > 0 && (
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -290,7 +290,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                   </div>
                 ))}
                 <p className="text-[11px] text-slate-500 sm:col-span-2">
-                  등급은 기록의 범주별 시간(단발/다발/회전익) 또는 기종명으로 판정해요. 등급 미기재 기록은 모든 등급에 합산됩니다.
+                  등급은 기록의 범주별 시간(단발/다발/회전익) 또는 기종명으로 판정해요. 등급 미기재 기록은 모든 등급에 합산돼요.
                 </p>
               </div>
             )}
@@ -329,7 +329,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 <p className="mt-1 text-sm text-slate-400">
                   {recency.baseMet
                     ? `최근 ${recency.windowDays}일 누적 야간 이·착륙 횟수`
-                    : '기본 이·착륙 요건 미충족 시 야간 비행 요건도 함께 미충족으로 표시됩니다'}
+                    : '기본 이·착륙 요건 미충족 시 야간 비행 요건도 함께 미충족으로 표시돼요'}
                 </p>
               </div>
             </div>
@@ -342,9 +342,9 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             summary={<StatusBadge tone={ifr.met ? 'met' : 'unmet'} label={ifr.met ? '기준 충족' : '기준 미달'} />}
           >
             <div className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
-              최근 6개월 이내 계기접근 6회 이상 및 실제·모의계기 비행시간 합계 6시간 이상을 모두 충족해야 합니다.
-              국토교통부장관이 인정한 자로부터 계기비행심사를 이수한 경우 이수일로부터 6개월간 유지된 것으로 봅니다.
-              모의비행장치를 이용한 계기비행 경험도 인정됩니다.
+              최근 6개월 이내 계기접근 6회 이상 및 실제·모의계기 비행시간 합계 6시간 이상을 모두 충족해야 해요.
+              국토교통부장관이 인정한 자로부터 계기비행심사를 이수한 경우 이수일로부터 6개월간 유지된 것으로 봐요.
+              모의비행장치를 이용한 계기비행 경험도 인정돼요.
             </div>
             <p className="mt-4 text-sm text-slate-400">
               최근 6개월 이내 비행 기록 <span className="font-mono-data tabular-nums font-semibold text-ink">{ifr.recentCount}</span>건 기준
@@ -376,7 +376,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
 
               {ifr.checkDateValid && (
                 <p className="mt-3 rounded-control bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                  계기비행심사 이수일({formatDate(instrumentCheckDate as string)}) 기준 6개월 이내로, 계기비행심사로 유지 중입니다.
+                  계기비행심사 이수일({formatDate(instrumentCheckDate as string)}) 기준 6개월 이내로, 계기비행심사로 유지 중이에요.
                 </p>
               )}
 
@@ -416,9 +416,9 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             summary={<StatusBadge tone={instructor.met || instructor.isNewInstructorGrace ? 'met' : 'unmet'} label={instructor.isNewInstructorGrace ? '신임 유예' : instructor.met ? '기준 충족' : '기준 미달'} />}
           >
             <div className="mt-2 rounded-control border border-sky/20 bg-sky/5 p-3 text-xs text-slate-400">
-              최근 1년 이내 비행교관으로서의 비행시간 합계가 10시간 이상이어야 합니다. 조종교육증명을 최초로 취득한 날부터
+              최근 1년 이내 비행교관으로서의 비행시간 합계가 10시간 이상이어야 해요. 조종교육증명을 최초로 취득한 날부터
               1년까지는 이 요건을 적용받지 않으며, 자격을 갖춘 자와 동승하여 야간 이·착륙 1회 이상을 포함한 10시간 이상
-              비행 시에도 요건 충족으로 인정됩니다.
+              비행 시에도 요건 충족으로 인정돼요.
             </div>
             <p className="mt-4 text-sm text-slate-400">
               최근 1년 이내 비행 기록 <span className="font-mono-data tabular-nums font-semibold text-ink">{instructor.recentCount}</span>건 기준
@@ -445,13 +445,13 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
               {instructor.isNewInstructorGrace && (
                 <p className="mt-3 rounded-control bg-sky/10 px-3 py-2 text-xs font-medium text-[#00D4FF]">
                   자격증 탭에 등록된 조종교육증명 발급일({formatDate(instructor.firstCertDate as string)}) 기준 1년 이내로, 신임 교관
-                  유예기간이 적용되어 이 요건이 적용되지 않습니다.
+                  유예기간이 적용되어 이 요건이 적용되지 않아요.
                 </p>
               )}
 
               {!instructor.isNewInstructorGrace && instructorRecoveryChecked && (
                 <p className="mt-3 rounded-control bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                  동승 비행 회복 조건 충족으로 자기 신고되었습니다. 본인이 조건 충족을 확인한 자기 신고 항목입니다.
+                  동승 비행 회복 조건 충족으로 자기 신고됐어요. 본인이 조건 충족을 확인한 자기 신고 항목이에요.
                 </p>
               )}
 
@@ -464,11 +464,11 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                     className="mt-0.5 h-4 w-4 rounded border-white/15 text-sky focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                   />
                   <span>
-                    자격을 갖춘 자와 동승해 야간 이·착륙 1회 이상을 포함한 10시간 이상 비행으로 회복 조건을 충족했습니다
+                    자격을 갖춘 자와 동승해 야간 이·착륙 1회 이상을 포함한 10시간 이상 비행으로 회복 조건을 충족했어요
                   </span>
                 </label>
                 <p className="mt-2 text-xs text-slate-400">
-                  동승자의 자격 보유 여부는 로그북 데이터로 자동 판별할 수 없어 본인 확인에 따른 자기 신고 항목입니다.
+                  동승자의 자격 보유 여부는 로그북 데이터로 자동 판별할 수 없어 본인 확인에 따른 자기 신고 항목이에요.
                   
                 </p>
               </div>

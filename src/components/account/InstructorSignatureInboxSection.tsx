@@ -72,7 +72,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
       setSignatureDataUrl(null)
       await onDecided('signed')
     } catch (err) {
-      const message = err instanceof Error ? err.message : '서명 등록에 실패했습니다.'
+      const message = err instanceof Error ? err.message : '서명 등록에 실패했어요.'
       setError(`서명 등록 실패: ${message}`)
     } finally {
       setIsDeciding(false)
@@ -87,7 +87,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
       setRejectOpen(false)
       await onDecided('rejected')
     } catch (err) {
-      setError(err instanceof Error ? err.message : '반려에 실패했습니다.')
+      setError(err instanceof Error ? err.message : '반려에 실패했어요.')
     } finally {
       setIsDeciding(false)
     }
@@ -128,7 +128,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
         const rows = Object.entries(snap.fields).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
         return (
           <div className="mt-3 rounded-control border border-sky/20 bg-white/5 px-3 py-2.5 text-xs">
-            <p className="mb-1.5 font-semibold text-sky">서명 대상 기록 (이 내용에 서명합니다)</p>
+            <p className="mb-1.5 font-semibold text-sky">서명 대상 기록 (이 내용에 서명해요)</p>
             <div className="table-scroll"><table className="w-full">
               <tbody>
                 {rows.map(([k, v]) => (
@@ -183,7 +183,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-slate-400">
-              아래 영역에 직접 서명한 뒤 "서명 완료"를 누르면 본인 명의로 서명이 등록됩니다. 등록 후에는 되돌릴 수 없어요.
+              아래 영역에 직접 서명한 뒤 "서명 완료"를 누르면 본인 명의로 서명이 등록돼요. 등록 후에는 되돌릴 수 없어요.
             </p>
             <SignaturePad onChange={setSignatureDataUrl} disabled={isProcessing} />
             {error && <p className="text-xs font-medium text-rose-300">{error}</p>}
@@ -329,7 +329,7 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
         </p>
       )}
       {isLoading && !data ? (
-        <p className="mt-5 text-sm text-slate-400">서명 요청을 불러오는 중입니다...</p>
+        <p className="mt-5 text-sm text-slate-400">서명 요청을 불러오는 중이에요...</p>
       ) : error && !data ? (
         <div role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
@@ -337,8 +337,8 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
         </div>
       ) : items.length === 0 ? (
         <EmptyState className="mt-5" surface="dark" icon={Inbox}
-          title={tab === 'pending' ? '대기중인 서명 요청이 없습니다' : '완료된 서명 요청이 없습니다'}
-          description={tab === 'pending' ? '학생이 서명을 요청하면 여기에 표시됩니다.' : '서명하거나 반려한 요청이 여기에 남습니다.'}
+          title={tab === 'pending' ? '대기중인 서명 요청이 없어요' : '완료된 서명 요청이 없어요'}
+          description={tab === 'pending' ? '학생이 서명을 요청하면 여기에 표시돼요.' : '서명하거나 반려한 요청이 여기에 남아요.'}
         />
       ) : (
         <>

@@ -33,11 +33,11 @@ interface SyncNotice {
 }
 
 /**
- * 엑셀 로그북 파일이 없는 사용자를 위한 대안 이관 방법입니다. "특정 비행 1건"이 아니라 발급받은
+ * 엑셀 로그북 파일이 없는 사용자를 위한 대안 이관 방법이에요. "특정 비행 1건"이 아니라 발급받은
  * 비행경력증명서에 적힌 "누적 비행경력 총합"을 항목별로 입력받고, 증명서 사진을 함께 첨부해
- * 비행기록 1건으로 저장합니다. 제출 시 "비행경력증명서" 게시판(동적 게시판)에 실제 기관 인증
+ * 비행기록 1건으로 저장해요. 제출 시 "비행경력증명서" 게시판(동적 게시판)에 실제 기관 인증
  * 요청 게시글을 생성해(사진은 정식 첨부파일로 업로드) 소속 기관 계정의 실제 검토를 받을 수
- * 있으며, 요청 제출에 실패한 경우에만 본인이 직접 확인 완료로 표시하는 로컬 폴백이 남아 있습니다.
+ * 있으며, 요청 제출에 실패한 경우에만 본인이 직접 확인 완료로 표시하는 로컬 폴백이 남아 있어요.
  */
 export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCertificateFormProps) {
   const { account } = useAuth()
@@ -59,7 +59,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     if (!file) return
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
     if (!file.type.startsWith('image/') && !isPdf) {
-      setImageError('이미지 또는 PDF 파일만 첨부할 수 있습니다.')
+      setImageError('이미지 또는 PDF 파일만 첨부할 수 있어요.')
       return
     }
     setImageError(null)
@@ -73,7 +73,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     reader.onload = () => {
       setImageDataUrl(typeof reader.result === 'string' ? reader.result : null)
     }
-    reader.onerror = () => setImageError('사진을 읽는 중 오류가 발생했습니다. 다시 시도해 주세요.')
+    reader.onerror = () => setImageError('사진을 읽는 중 오류가 발생했어요. 다시 시도해 주세요.')
     reader.readAsDataURL(file)
   }
 
@@ -217,11 +217,11 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     setSubmitted(true)
     setSyncNotice(
       certificateRequestPostId
-        ? { tone: 'success', message: '관리자에게 인증 요청을 제출했습니다. "내 비행 기록" 상세 화면에서 승인/반려 여부를 확인할 수 있습니다.' }
+        ? { tone: 'success', message: '관리자에게 인증 요청을 제출했어요. "내 비행 기록" 상세 화면에서 승인/반려 여부를 확인할 수 있어요.' }
         : {
             tone: 'warning',
             message:
-              '기록은 이 브라우저에 저장되었지만, 관리자 인증 요청 제출에는 실패했습니다(네트워크 오류 등). 상세 화면에서 "학교/교관에게 확인받았습니다" 버튼으로 자기 확인할 수 있습니다.',
+              '기록은 이 브라우저에 저장되었지만, 관리자 인증 요청 제출에는 실패했어요(네트워크 오류 등). 상세 화면에서 "학교/교관에게 확인받았어요" 버튼으로 자기 확인할 수 있어요.',
           },
     )
     } finally {
@@ -236,9 +236,9 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         <FileCheck2 className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
         <p className="text-xs text-slate-400">
           이 폼은 "비행 1건"이 아니라, 비행경력증명서에 적힌 <strong>누적 비행경력 총합</strong>을 항목별로 옮겨 적는
-          용도입니다. 출발/도착지나 기종처럼 개별 비행에만 해당하는 값은 입력하지 않습니다. 저장하면 관리자에게 실제
+          용도예요. 출발/도착지나 기종처럼 개별 비행에만 해당하는 값은 입력하지 않아요. 저장하면 관리자에게 실제
           인증 요청을 제출하는 "인증 대기중" 상태의 비행기록 1건으로 등록되며, 관리자가 원본과 대조해 승인/반려하면 자동으로
-          반영됩니다.
+          반영돼요.
         </p>
       </div>
 
@@ -482,7 +482,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         <legend className={sectionTitleClass}>8. 비행경력증명서 사진</legend>
         <p className={sectionHintClass}>
           이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
-          담당자가 확인할 수 있습니다(선택 입력).
+          담당자가 확인할 수 있어요(선택 입력).
         </p>
         <label htmlFor="cert-image"
           className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm font-medium text-ink
@@ -515,8 +515,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky" aria-hidden="true" />
         <p className="text-xs font-medium text-[#00D4FF]">
           저장하면 "인증 대기중" 상태로 표시되며, 동시에 소속 기관이 실제로 검토·승인/반려할 수 있도록 "비행경력증명서"
-          게시판에 인증 요청도 함께 제출됩니다. 상세 화면에서 승인/반려 결과가 자동으로 반영됩니다. 요청 제출 자체에
-          실패한 경우에만 본인이 직접 "학교/교관에게 확인받았습니다" 버튼으로 확인 처리할 수 있습니다.
+          게시판에 인증 요청도 함께 제출돼요. 상세 화면에서 승인/반려 결과가 자동으로 반영돼요. 요청 제출 자체에
+          실패한 경우에만 본인이 직접 "학교/교관에게 확인받았어요" 버튼으로 확인 처리할 수 있어요.
         </p>
       </div>
 

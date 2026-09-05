@@ -19,7 +19,7 @@ test.describe('비행기록', () => {
     await page.locator('#dayLandings').fill('2')
     await page.locator('#notes').fill(MARKER)
     await page.getByTestId('entry-submit').click()
-    await expect(page.getByText(/비행기록이 추가되었습니다/)).toBeVisible()
+    await expect(page.getByText(/비행기록이 추가/)).toBeVisible()
 
     await openTab(page, /비행기록/)
     const item = page.getByTestId('entry-item').filter({ hasText: 'RKTL' }).filter({ hasText: 'C172S' }).first()
@@ -38,6 +38,6 @@ test.describe('비행기록', () => {
     await page.locator('#aircraftType').fill('')
     await page.getByTestId('entry-submit').click()
     await expect(page.locator('[aria-invalid="true"], .text-rose-400').first()).toBeVisible()
-    await expect(page.getByText(/비행기록이 추가되었습니다/)).toHaveCount(0)
+    await expect(page.getByText(/비행기록이 추가/)).toHaveCount(0)
   })
 })

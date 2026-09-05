@@ -75,10 +75,10 @@ export type TabDef = {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 };
 
-// 조종사(및 역할 미설정 계정 폴백)용 기본 탭 구성. 절대 변경하지 않습니다.
+// 조종사(및 역할 미설정 계정 폴백)용 기본 탭 구성. 절대 변경하지 않아요.
 export const PILOT_TABS: TabDef[] = [
   { key: "myRecords", label: "비행기록", icon: ListChecks },
-  { key: "logbook", label: "기록 입력·가져오기", icon: PlaneTakeoff },
+  { key: "logbook", label: "기록 입력", icon: PlaneTakeoff },
   { key: "certificates", label: "자격증", icon: ShieldCheck },
   { key: "currency", label: "커런시", icon: Gauge },
 ];
@@ -89,10 +89,10 @@ export const SIGNATURE_INBOX_TAB: TabDef = {
   icon: Inbox,
 };
 
-// 초경량 조종자용 탭 구성: 비행기록 구조는 재사용하되 커런시/실시간 적합성 등 조종사 전용 개념은 제외합니다.
+// 초경량 조종자용 탭 구성: 비행기록 구조는 재사용하되 커런시/실시간 적합성 등 조종사 전용 개념은 제외해요.
 export const DRONE_TABS: TabDef[] = [
   { key: "myRecords", label: "비행기록", icon: ListChecks },
-  { key: "logbook", label: "기록 입력·가져오기", icon: PlaneTakeoff },
+  { key: "logbook", label: "기록 입력", icon: PlaneTakeoff },
   { key: "certificates", label: "자격증", icon: ShieldCheck },
   // 응시경력 진척도는 내용이 길어 자격증 다음 탭으로 분리(2026-09-05)
   { key: "eligibility", label: "응시경력", icon: Target },
@@ -169,7 +169,7 @@ export function useLogbookPageModel() {
   useEffect(() => {
     const onFail = () =>
       showToast(
-        "브라우저 저장 공간이 부족해 오프라인 사본을 갱신하지 못했어요. 서버에는 저장됩니다.",
+        "브라우저 저장 공간이 부족해 오프라인 사본을 갱신하지 못했어요. 서버에는 저장돼요.",
       );
     window.addEventListener("awos:local-storage-failed", onFail);
     return () =>
@@ -376,7 +376,7 @@ export function useLogbookPageModel() {
         ).length;
         if (failedCount > 0) {
           console.warn(
-            `[LogbookPage] 서명 요청 게시글 ${failedCount}건 삭제에 실패했습니다(이미 삭제되었거나 네트워크 오류일 수 있음). 로컬 비행 기록 삭제는 정상 진행되었습니다.`,
+            `[LogbookPage] 서명 요청 게시글 ${failedCount}건 삭제에 실패했어요(이미 삭제되었거나 네트워크 오류일 수 있음). 로컬 비행 기록 삭제는 정상 진행됐어요.`,
           );
         }
       },
@@ -493,8 +493,8 @@ export function useLogbookPageModel() {
       setIsResyncing(false);
       setResyncMessage(
         attempted > 0
-          ? `서버와 다시 동기화를 시도했습니다. (미동기화 기록 ${attempted}건 중 ${succeeded}건 재전송 성공)`
-          : "서버와 다시 동기화를 시도했습니다.",
+          ? `서버와 다시 동기화를 시도했어요. (미동기화 기록 ${attempted}건 중 ${succeeded}건 재전송 성공)`
+          : "서버와 다시 동기화를 시도했어요.",
       );
       window.setTimeout(() => setResyncMessage(null), 4000);
     });
@@ -549,7 +549,7 @@ export function useLogbookPageModel() {
 
   // 새 비행 기록 입력 모드: 비행 직후 최소 입력(quick)이 기본, 공식 양식 전체는 detail.
 
-  // 드론 조종자는 "항공기" 대신 "기체" 개념을 사용하므로 입력 폼/상세 라벨만 자연스럽게 조정합니다.
+  // 드론 조종자는 "항공기" 대신 "기체" 개념을 사용하므로 입력 폼/상세 라벨만 자연스럽게 조정해요.
   const aircraftLabelProps = isDrone
     ? {
         aircraftTypeLabel: "기체 모델",

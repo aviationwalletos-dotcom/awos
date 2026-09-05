@@ -49,7 +49,7 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
     throw new Error(`자격증 폼 검증에 막혔습니다: ${(await fieldError.innerText()).trim()}`)
   }
 
-  await expect(page.getByText(/자격증이 추가되었습니다/)).toBeVisible()
+  await expect(page.getByText(/자격증이 추가/)).toBeVisible()
 
   // 목록은 기본 3개만 보이고 나머지는 접혀 있다 — 새 자격증이 뒤쪽이면 펼친다
   await expandCertList(page)

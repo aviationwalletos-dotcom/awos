@@ -22,7 +22,7 @@ export function Problem() {
           >
             종이와 엑셀로 관리하는 비행기록은
             <br />
-            같은 문제가 반복됩니다
+            같은 문제가 반복돼요
           </h2>
         </Reveal>
 
@@ -40,7 +40,7 @@ export function Problem() {
 
         <Reveal>
           <p className="mt-8 text-sm text-slate-400">
-            AWOS는 이 과정을 하나의 기록 체계로 대체합니다. 아래에서 지원 항목을 확인하세요.
+            AWOS는 이 과정을 하나의 기록 체계로 대체해요. 아래에서 지원 항목을 확인하세요.
           </p>
         </Reveal>
       </div>

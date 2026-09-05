@@ -70,10 +70,10 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
       <EmptyState
         surface="dark"
         icon={Users}
-        title={noneSharedYet ? '아직 상태를 공유한 소속 인력이 없습니다' : '조건에 맞는 인력이 없습니다'}
+        title={noneSharedYet ? '아직 상태를 공유한 소속 인력이 없어요' : '조건에 맞는 인력이 없어요'}
         description={
           noneSharedYet
-            ? '개인 계정으로 로그인해 로그북 탭에서 "내 상태를 소속 기관에 공유" 버튼을 눌러야 이 목록에 나타납니다.'
+            ? '개인 계정으로 로그인해 로그북 탭에서 "내 상태를 소속 기관에 공유" 버튼을 눌러야 이 목록에 나타나요.'
             : '필터를 변경해 다른 인력을 확인해 보세요.'
         }
       />
@@ -142,7 +142,7 @@ export function PersonnelTable({ personnel, totalCount, onDismiss, onRestore }: 
                     onRestore && (
                       <button type="button"
                         onClick={() => onRestore(p.id)}
-                        title="이 목록에서 다시 표시합니다."
+                        title="이 목록에서 다시 표시해요."
                         className="inline-flex items-center gap-1 rounded-control border border-white/15 px-2 py-1 text-xs font-semibold text-slate-300
                           hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                       >

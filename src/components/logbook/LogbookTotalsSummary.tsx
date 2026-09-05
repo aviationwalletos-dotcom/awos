@@ -42,10 +42,10 @@ function isRejectedCertificate(entry: LogbookEntry): boolean {
 }
 
 export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTotalsSummaryProps) {
-  // 교관 전자서명으로 기록의 신뢰성을 검증하므로, 별도의 확인 상태 구분 없이 모든 비행 기록을 합산합니다.
+  // 교관 전자서명으로 기록의 신뢰성을 검증하므로, 별도의 확인 상태 구분 없이 모든 비행 기록을 합산해요.
   // 단, 비행경력증명서로 가져온 기록 중 아직 인증 대기중이거나 관리자가 반려한 것은 공식 합계에서
-  // 제외하고, 각각 "미인증 비행경력증명서(참고용)"/"반려된 비행경력증명서" 소계로 구분해 표시합니다
-  // (승인 완료되면 공식 합계에 포함됩니다).
+  // 제외하고, 각각 "미인증 비행경력증명서(참고용)"/"반려된 비행경력증명서" 소계로 구분해 표시해요
+  // (승인 완료되면 공식 합계에 포함돼요).
   const officialEntries = entries.filter((e) => !isUnconfirmedCertificate(e))
   const pendingCertificateEntries = entries.filter(isPendingCertificate)
   const pendingCertificateBlockTime = sumHours(pendingCertificateEntries.map((e) => e.blockTime))
@@ -103,7 +103,7 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         <EmptyState
           className="mt-4"
           icon={PlaneTakeoff}
-          title="아직 등록된 비행 기록이 없습니다"
+          title="아직 등록된 비행 기록이 없어요"
           description="아래에서 비행 기록을 추가해 보세요."
         />
       )}
@@ -140,7 +140,7 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
               <StatCell key={k} label={k} value={v} />
             ))}
           </dl>
-          <p className="mt-4 text-[11px] text-slate-500">초경량은 야간·계기·크로스컨트리 항목이 없어요. 응시·등록용 경력은 지도조종자 확인과 교육기관 증명으로 인정됩니다(운영세칙 제9조).</p>
+          <p className="mt-4 text-[11px] text-slate-500">초경량은 야간·계기·크로스컨트리 항목이 없어요. 응시·등록용 경력은 지도조종자 확인과 교육기관 증명으로 인정돼요(운영세칙 제9조).</p>
         </div>
       ) : (
         <>
@@ -199,7 +199,7 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
             </span>
           </p>
           <p className="mt-1 text-xs text-amber-300">
-            관리자가 원본 증명서와 대조해 승인하면 공식 총 비행시간 합계에 자동으로 포함됩니다.
+            관리자가 원본 증명서와 대조해 승인하면 공식 총 비행시간 합계에 자동으로 포함돼요.
           </p>
         </div>
       )}
@@ -214,7 +214,7 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
             </span>
           </p>
           <p className="mt-1 text-xs text-rose-300">
-            관리자가 반려한 기록입니다. 상세 화면에서 반려 사유를 확인해 주세요.
+            관리자가 반려한 기록이에요. 상세 화면에서 반려 사유를 확인해 주세요.
           </p>
         </div>
       )}

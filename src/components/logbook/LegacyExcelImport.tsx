@@ -66,14 +66,14 @@ const FIELD_OPTIONS: { value: MappableField; label: string }[] = [
   { value: 'instrumentApproaches', label: '계기접근 횟수' },
 ]
 
-// 자동 컬럼 매핑에 쓰이는 유사어 표(소문자/공백/기호 제거 후 비교). 우선순위 순으로 검사합니다.
-// 실제 조종사 로그북 엑셀 내보내기(예: ETA/탈론 로그 계열 서식)의 원문 헤더도 포함되어 있습니다.
+// 자동 컬럼 매핑에 쓰이는 유사어 표(소문자/공백/기호 제거 후 비교). 우선순위 순으로 검사해요.
+// 실제 조종사 로그북 엑셀 내보내기(예: ETA/탈론 로그 계열 서식)의 원문 헤더도 포함되어 있어요.
 //
-// exactOnly: 헤더 전체가 완전히 일치할 때만 매칭을 허용하는 짧고 모호한 유사어입니다.
+// exactOnly: 헤더 전체가 완전히 일치할 때만 매칭을 허용하는 짧고 모호한 유사어예요.
 // 예를 들어 "pic"은 "PIC/IP"(비행 구분 역할 텍스트 열, 정규화 시 "picip")처럼 실제로는 다른 의미의
 // 헤더에도 부분 문자열로 포함될 수 있어, 일반 fallback(부분 포함) 매칭에서는 제외하고 완전 일치일
-// 때만 사용합니다. "PIC"(Type of Piloting 그룹의 실제 PIC 시간 숫자 열)는 정규화 후 정확히 "pic"이
-// 되므로 완전 일치로는 정상적으로 매칭됩니다.
+// 때만 사용해요. "PIC"(Type of Piloting 그룹의 실제 PIC 시간 숫자 열)는 정규화 후 정확히 "pic"이
+// 되므로 완전 일치로는 정상적으로 매칭돼요.
 const FIELD_SYNONYMS: { field: MappableField; synonyms: string[]; exactOnly?: string[] }[] = [
   { field: 'date', synonyms: ['date', '날짜', '일자', 'dt'] },
   { field: 'departure', synonyms: [`from`, 'departure', 'depairport', '출발', '출발지', '출발공항', 'dep'] },
@@ -135,14 +135,14 @@ function normalizeHeader(raw: string): string {
 function guessField(header: string): MappableField {
   const normalized = normalizeHeader(header)
   if (!normalized) return 'ignore'
-  // 1단계: 완전 일치(synonyms + exactOnly)만 검사합니다. 짧고 모호한 유사어(예: "pic", "sic")는
-  // exactOnly에만 있어 이 단계에서 정상적으로 매칭됩니다.
+  // 1단계: 완전 일치(synonyms + exactOnly)만 검사해요. 짧고 모호한 유사어(예: "pic", "sic")는
+  // exactOnly에만 있어 이 단계에서 정상적으로 매칭돼요.
   for (const { field, synonyms, exactOnly } of FIELD_SYNONYMS) {
     if (synonyms.some((s) => normalized === s)) return field
     if (exactOnly?.some((s) => normalized === s)) return field
   }
-  // 2단계: 부분 문자열 포함(fallback) 매칭입니다. exactOnly 유사어는 여기서 제외되어, "PIC/IP"처럼
-  // "pic"을 부분 문자열로 포함하지만 실제로는 다른 의미인 헤더가 잘못 매칭되지 않도록 합니다.
+  // 2단계: 부분 문자열 포함(fallback) 매칭이에요. exactOnly 유사어는 여기서 제외되어, "PIC/IP"처럼
+  // "pic"을 부분 문자열로 포함하지만 실제로는 다른 의미인 헤더가 잘못 매칭되지 않도록 해요.
   for (const { field, synonyms } of FIELD_SYNONYMS) {
     if (synonyms.some((s) => normalized.includes(s))) return field
   }
@@ -168,7 +168,7 @@ function parseDateValue(raw: string): string | null {
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
   }
   // 실제 조종사 로그북 엑셀 내보내기에서 흔한 "01 Jul 25" / "01 Jul 2025" 형식(일 월(약어) 연도).
-  // 브라우저별 Date 파서 편차를 피하기 위해 명시적으로 처리합니다.
+  // 브라우저별 Date 파서 편차를 피하기 위해 명시적으로 처리해요.
   const dMonY = s.match(/^(\d{1,2})[\s.-]+([A-Za-z]{3,9})[\s.,-]+(\d{2}|\d{4})$/)
   if (dMonY) {
     const [, d, monRaw, yRaw] = dMonY
@@ -196,9 +196,9 @@ function parseNumberValue(raw: string): number | undefined {
 }
 
 // 실제 조종사 로그북 엑셀 서식은 헤더가 첫 행이 아니거나(예: 기관명/기간 등 안내 행이 앞에 있음),
-// 필드명이 여러 행에 걸쳐 계층적으로 표기되는 경우가 있습니다(예: "LDG" 아래 "DAY"/"NIGHT").
+// 필드명이 여러 행에 걸쳐 계층적으로 표기되는 경우가 있어요(예: "LDG" 아래 "DAY"/"NIGHT").
 // 유사어 매칭 점수가 가장 높은 행을 실제 헤더 행으로 추정하고, 바로 아래 행이 보조 라벨처럼
-// 보이면 합쳐서 컬럼 헤더 문자열로 사용합니다.
+// 보이면 합쳐서 컬럼 헤더 문자열로 사용해요.
 function scoreHeaderRow(cells: string[]): number {
   let score = 0
   for (const cell of cells) {
@@ -241,7 +241,7 @@ function detectHeaderLayout(rows: string[][]): HeaderLayout {
       bestIndex = i
     }
   }
-  // 매칭 점수가 낮으면(단순 단일 헤더 행 서식) 기존처럼 첫 행을 헤더로 사용합니다.
+  // 매칭 점수가 낮으면(단순 단일 헤더 행 서식) 기존처럼 첫 행을 헤더로 사용해요.
   const headerIndex = bestScore >= 3 ? bestIndex : 0
   const mainHeader = rows[headerIndex].map((c) => String(c ?? '').trim())
   const subRow = rows[headerIndex + 1]
@@ -260,7 +260,7 @@ function detectHeaderLayout(rows: string[][]): HeaderLayout {
 // 일부 실제 서식(예: ETA/탈론 로그 계열)은 시간 항목 헤더 텍스트가 실제 데이터가 들어있는 열의
 // 바로 오른쪽 열에 표기되어 있어(예: "S/E" 라벨은 오른쪽 칸에 있지만 실제 값은 왼쪽 칸에 있음),
 // 자동 매핑된 열이 항상 비어 있고 바로 왼쪽의 매핑되지 않은 열에 실제 숫자 값이 있다면
-// 매핑을 왼쪽 열로 보정합니다. 날짜/텍스트 필드에는 적용하지 않습니다.
+// 매핑을 왼쪽 열로 보정해요. 날짜/텍스트 필드에는 적용하지 않아요.
 const NUMERIC_SHIFT_CANDIDATE_FIELDS = new Set<MappableField>([
   'blockTime', 'dayLandings', 'nightLandings', 'singleEngineTime', 'multiEngineTime',
   'crossCountryTime', 'conditionDayTime', 'conditionNightTime', 'actualInstrumentTime',
@@ -331,12 +331,12 @@ interface LegacyExcelImportProps {
 }
 
 const MAX_PREVIEW_ROWS = 30
-// 오류만 필터링해 볼 때는 검토 목적상 더 많은 행을 보여줍니다.
+// 오류만 필터링해 볼 때는 검토 목적상 더 많은 행을 보여줘요.
 const MAX_PREVIEW_ROWS_INVALID_FILTER = 100
 
 /**
  * 개인 엑셀 로그북 파일을 업로드해 자동으로 컬럼을 매핑하고, 매핑 결과를 미리보기로 확인한 뒤
- * 한 번에 여러 건의 비행 기록으로 일괄 가져오는 컴포넌트입니다. 파싱/변환은 모두 브라우저에서만 실행됩니다.
+ * 한 번에 여러 건의 비행 기록으로 일괄 가져오는 컴포넌트예요. 파싱/변환은 모두 브라우저에서만 실행돼요.
  */
 export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
   const [fileName, setFileName] = useState<string | null>(null)
@@ -346,7 +346,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
   const [dataRows, setDataRows] = useState<string[][]>([])
   const [mapping, setMapping] = useState<Record<number, MappableField>>({})
   const [importResult, setImportResult] = useState<{ added: number; skipped: number } | null>(null)
-  // 가져오기를 눌러 확정한 뒤에도 화면에서 계속 검토할 수 있도록 상태를 유지합니다.
+  // 가져오기를 눌러 확정한 뒤에도 화면에서 계속 검토할 수 있도록 상태를 유지해요.
   const [hasImported, setHasImported] = useState(false)
   const [statusFilter, setStatusFilter] = useState<RowStatusFilter>('all')
 
@@ -372,13 +372,13 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       const workbook = XLSX.read(buffer, { type: 'array', cellDates: true })
       const firstSheetName = workbook.SheetNames[0]
       if (!firstSheetName) {
-        setParseError('파일에서 시트를 찾을 수 없습니다. 엑셀(.xlsx/.xls) 또는 CSV 파일인지 확인해 주세요.')
+        setParseError('파일에서 시트를 찾을 수 없어요. 엑셀(.xlsx/.xls) 또는 CSV 파일인지 확인해 주세요.')
         return
       }
       const sheet = workbook.Sheets[firstSheetName]
       const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '', dateNF: 'yyyy-mm-dd' })
       if (!rows || rows.length === 0) {
-        setParseError('파일에서 읽을 수 있는 데이터가 없습니다.')
+        setParseError('파일에서 읽을 수 있는 데이터가 없어요.')
         return
       }
 
@@ -389,7 +389,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
         .filter((row) => row.some((cell) => cell.trim() !== ''))
 
       if (body.length === 0) {
-        setParseError('헤더 행 아래에 데이터가 없습니다.')
+        setParseError('헤더 행 아래에 데이터가 없어요.')
         return
       }
 
@@ -403,7 +403,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       setDataRows(body)
       setMapping(correctedMapping)
     } catch {
-      setParseError('파일을 읽는 중 오류가 발생했습니다. 엑셀(.xlsx/.xls) 또는 CSV 형식인지 확인 후 다시 시도해 주세요.')
+      setParseError('파일을 읽는 중 오류가 발생했어요. 엑셀(.xlsx/.xls) 또는 CSV 형식인지 확인 후 다시 시도해 주세요.')
     } finally {
       setIsParsing(false)
     }
@@ -502,7 +502,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
           : undefined
 
       // FTD(Flight Training Device, 지상 시뮬레이터) 세션은 실제 비행이 아니므로 출발지/도착지/블록타임이
-      // 원래 기록되지 않고, 대신 지상훈련장비 시간·모의계기 시간·계기접근 횟수 중 하나로 기록됩니다.
+      // 원래 기록되지 않고, 대신 지상훈련장비 시간·모의계기 시간·계기접근 횟수 중 하나로 기록돼요.
       const isSimulatorRow = aircraftType.trim().toUpperCase() === 'FTD'
 
       const missing: string[] = []
@@ -583,8 +583,8 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
     onImportEntries(inputs)
     setImportResult({ added: inputs.length, skipped: invalidCount })
     setHasImported(true)
-    // 오류 행을 계속 검토할 수 있도록 headerRow/dataRows/mapping은 초기화하지 않습니다.
-    // 오류가 없다면(전부 정상 가져옴) 더 검토할 내용이 없으므로 화면을 정리합니다.
+    // 오류 행을 계속 검토할 수 있도록 headerRow/dataRows/mapping은 초기화하지 않아요.
+    // 오류가 없다면(전부 정상 가져옴) 더 검토할 내용이 없으므로 화면을 정리해요.
     if (invalidCount === 0) {
       setHeaderRow([])
       setDataRows([])
@@ -612,7 +612,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
       />
 
-      {isParsing && <p className="mt-3 text-sm text-slate-400">파일을 읽는 중입니다...</p>}
+      {isParsing && <p className="mt-3 text-sm text-slate-400">파일을 읽는 중이에요...</p>}
 
       {parseError && (
         <div role="alert" className="mt-4 flex items-start gap-2 rounded-control border border-rose-400/40 bg-rose-500/10 px-4 py-3">
@@ -624,8 +624,8 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       {importResult && (
         <div role="status" className="mt-4 rounded-control border border-go/30 bg-go/10 px-4 py-3">
           <p className="text-sm font-medium text-go">
-            {importResult.added}건을 가져왔습니다.
-            {importResult.skipped > 0 && ` ${importResult.skipped}건은 형식 오류로 제외되었습니다.`}
+            {importResult.added}건을 가져왔어요.
+            {importResult.skipped > 0 && ` ${importResult.skipped}건은 형식 오류로 제외됐어요.`}
           </p>
         </div>
       )}
@@ -677,7 +677,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
               {invalidCount > 0 && `, 형식 오류 ${invalidCount}건`})
             </h4>
             <p className="mt-2 text-xs leading-relaxed text-slate-400">
-              날짜·기종이 없는 하단 합계/서명 행은 자동으로 제외됩니다. ·
+              날짜·기종이 없는 하단 합계/서명 행은 자동으로 제외돼요. ·
               엑셀에 계기접근 횟수 컬럼이 없는 경우(울진 탈론 리포트 등) 0으로 저장되니, 계기 비행 기록은
               가져온 뒤 목록에서 해당 기록을 눌러 횟수를 보완해 주세요.
             </p>
@@ -709,7 +709,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
 
             {statusFilter === 'invalid' && invalidCount > 0 && (
               <p className="mt-3 text-xs text-slate-400">
-                아래 형식 오류 행은 이 화면에서 자동으로 가져올 수 없습니다. 각 행의 오류 사유를 확인한 뒤,
+                아래 형식 오류 행은 이 화면에서 자동으로 가져올 수 없어요. 각 행의 오류 사유를 확인한 뒤,
                 "새 비행 기록 추가" 폼에서 직접 입력해 주세요.
               </p>
             )}
@@ -773,7 +773,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
             </div>
             {filteredRows.length > visibleMaxRows && (
               <p className="mt-2 text-xs text-slate-400">
-                최대 {visibleMaxRows}행까지만 미리보기로 표시됩니다. 가져오기는 전체 유효 행에 적용됩니다.
+                최대 {visibleMaxRows}행까지만 미리보기로 표시돼요. 가져오기는 전체 유효 행에 적용돼요.
               </p>
             )}
           </div>
@@ -781,8 +781,8 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
           <div className="mt-5">
             {hasImported ? (
               <p className="text-sm font-medium text-go">
-                이미 유효한 {validRows.length}건을 가져왔습니다.
-                {invalidCount > 0 && ' 오류 행은 위 목록에서 계속 확인할 수 있습니다.'}
+                이미 유효한 {validRows.length}건을 가져왔어요.
+                {invalidCount > 0 && ' 오류 행은 위 목록에서 계속 확인할 수 있어요.'}
               </p>
             ) : (
               <Button type="button" tone="brand" size="md" disabled={validRows.length === 0} onClick={handleImport}>

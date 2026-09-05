@@ -9,9 +9,9 @@ export function FlightExperienceCertificateApprovalPanel() {
     <ApprovalQueuePanel
       kinds={['flight_experience']}
       title="비행경력증명서 승인"
-      description="엑셀 파일이 없는 회원이 제출한 비행경력증명서 인증 요청(첨부 사진 포함)입니다. 승인하면 그 기록이 공식 총 비행시간에 포함돼요."
+      description="엑셀 파일이 없는 회원이 제출한 비행경력증명서 인증 요청(첨부 사진 포함)이에요. 승인하면 그 기록이 공식 총 비행시간에 포함돼요."
       icon={FileCheck2}
-      emptyTitle="해당하는 인증 요청이 없습니다"
+      emptyTitle="해당하는 인증 요청이 없어요"
       showAttachment
     />
   )

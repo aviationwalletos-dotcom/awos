@@ -33,7 +33,7 @@ function InquiryRow({ item }: { item: BoardPostListItem }) {
     if (!open || content !== null) return
     void fetchDetail(item.id)
       .then((detail) => setContent(detail.content ?? ''))
-      .catch(() => setContent('(내용을 불러오지 못했습니다)'))
+      .catch(() => setContent('(내용을 불러오지 못했어요)'))
   }, [open, content, fetchDetail, item.id])
 
   async function handleReply() {
@@ -47,7 +47,7 @@ function InquiryRow({ item }: { item: BoardPostListItem }) {
       setReply('')
       await refetchComments()
     } catch (err) {
-      setSendError(err instanceof Error ? err.message : '답변 등록에 실패했습니다.')
+      setSendError(err instanceof Error ? err.message : '답변 등록에 실패했어요.')
     }
   }
 
@@ -90,7 +90,7 @@ function InquiryRow({ item }: { item: BoardPostListItem }) {
             <textarea rows={3}
               value={reply}
               onChange={(e) => setReply(e.target.value)}
-              placeholder="답변을 입력하세요 — 회원의 문의하기 페이지에 표시됩니다."
+              placeholder="답변을 입력하세요 — 회원의 문의하기 페이지에 표시돼요."
               className="w-full rounded-control border border-white/15 bg-panel px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
             />
             {sendError && <p className="mt-1.5 text-xs text-rose-300">{sendError}</p>}
@@ -123,7 +123,7 @@ export function InquiryAdminPanel() {
     return <p className="text-sm text-rose-300">{error}</p>
   }
   if (items.length === 0) {
-    return <EmptyState icon={Inbox} title="접수된 문의가 없습니다" description="회원이 문의하기 페이지에서 문의를 남기면 여기에 표시돼요." />
+    return <EmptyState icon={Inbox} title="접수된 문의가 없어요" description="회원이 문의하기 페이지에서 문의를 남기면 여기에 표시돼요." />
   }
   return (
     <ul className="space-y-3">

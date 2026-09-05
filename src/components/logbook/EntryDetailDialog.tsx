@@ -271,7 +271,7 @@ export function EntryDetailDialog({
       })
       onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: created.id, lastSignatureRejection: undefined })
     } catch (err) {
-      setSendRequestError(err instanceof Error ? err.message : '서명 요청을 보내지 못했습니다.')
+      setSendRequestError(err instanceof Error ? err.message : '서명 요청을 보내지 못했어요.')
     } finally {
       setIsSendingRequest(false)
     }
@@ -338,7 +338,7 @@ export function EntryDetailDialog({
             <div className="mt-5">
               {entry.instructorSignature && (
                 <p className="mb-4 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-xs font-medium text-amber-300">
-                  이 기록은 교관 서명이 완료된 상태입니다. 내용을 수정하고 저장하면 기존 서명이 취소됩니다.
+                  이 기록은 교관 서명이 완료된 상태예요. 내용을 수정하고 저장하면 기존 서명이 취소돼요.
                 </p>
               )}
               {entryTrack(entry) === 'ultralight' ? (
@@ -404,13 +404,13 @@ export function EntryDetailDialog({
 
                   {entry.certificateApprovalStatus === 'confirmed' ? (
                     <p className="mt-3 text-xs font-medium text-go">
-                      인증이 완료되어 공식 총 비행시간 합계에 포함됩니다.
+                      인증이 완료되어 공식 총 비행시간 합계에 포함돼요.
                     </p>
                   ) : entry.certificateApprovalStatus === 'rejected' ? (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs font-medium text-rose-300">
-                        관리자가 이 인증 요청을 반려했습니다. 공식 총 비행시간 합계에서 제외되고 "반려된
-                        비행경력증명서"로 별도 표시됩니다.
+                        관리자가 이 인증 요청을 반려했어요. 공식 총 비행시간 합계에서 제외되고 "반려된
+                        비행경력증명서"로 별도 표시돼요.
                       </p>
                       {certificateRequest?.status === 'rejected' && certificateRequest.decided_at && (
                         <p className="rounded-control border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
@@ -425,7 +425,7 @@ export function EntryDetailDialog({
                       <div role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
                         <p className="text-sm font-medium text-amber-300">
-                          관리자에게 인증 요청을 제출했습니다. 관리자가 승인/반려하면 이 화면에 자동으로 반영됩니다.
+                          관리자에게 인증 요청을 제출했어요. 관리자가 승인/반려하면 이 화면에 자동으로 반영돼요.
                         </p>
                       </div>
                       {certificateCommentsError && (
@@ -445,13 +445,13 @@ export function EntryDetailDialog({
                   ) : (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs text-slate-400">
-                        이 기록은 관리자에게 인증 요청이 제출되지 않았습니다(제출 당시 네트워크 오류 등). 아직 인증
+                        이 기록은 관리자에게 인증 요청이 제출되지 않았어요(제출 당시 네트워크 오류 등). 아직 인증
                         대기중이라 공식 총 비행시간 합계에서 제외되고 "미인증 비행경력증명서(참고용)"에만
-                        표시됩니다. 아래에서 본인이 직접 확인 완료로 표시할 수 있습니다(실제 기관 승인이 아닙니다).
+                        표시돼요. 아래에서 본인이 직접 확인 완료로 표시할 수 있어요(실제 기관 승인이 아닙니다).
                       </p>
                       <Button type="button" variant="outline" tone="brand" size="sm" onClick={handleConfirmCertificate}>
                         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        학교/교관에게 확인받았습니다
+                        학교/교관에게 확인받았어요
                       </Button>
                     </div>
                   )}
@@ -523,7 +523,7 @@ export function EntryDetailDialog({
               {signatureInvalidatedNotice && (
                 <div role="status" className="rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                   <p className="text-xs font-medium text-amber-300">
-                    기록 수정으로 기존 교관 서명이 취소되었습니다. 필요하다면 아래에서 다시 서명을 요청해 주세요.
+                    기록 수정으로 기존 교관 서명이 취소됐어요. 필요하다면 아래에서 다시 서명을 요청해 주세요.
                   </p>
                 </div>
               )}
@@ -679,7 +679,7 @@ export function EntryDetailDialog({
                         확정 일시: {formatCertifiedAt(entry.pilotCertification.certifiedAt)}
                       </p>
                     )}
-                    <p className="text-[11px] text-slate-500">본인 서명은 시행규칙 제77조의 경력 증명이 아니라 v45부터 입력을 받지 않아요. 예전에 붙은 서명만 표시합니다.</p>
+                    <p className="text-[11px] text-slate-500">본인 서명은 시행규칙 제77조의 경력 증명이 아니라 v45부터 입력을 받지 않아요. 예전에 붙은 서명만 표시해요.</p>
                   </div>
                 </div>
               )}
@@ -693,7 +693,7 @@ export function EntryDetailDialog({
                 {entry.instructorSignature ? (
                   confirmingCancelSignature ? (
                     <div role="alert" className="mt-3 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-                      <p className="text-sm font-medium text-rose-300">교관 서명을 취소하시겠습니까?</p>
+                      <p className="text-sm font-medium text-rose-300">교관 서명을 취소할까요?</p>
                       <div className="mt-3 flex gap-2">
                         <Button type="button" tone="danger" size="sm" onClick={handleCancelSignature}>
                           서명 취소 확인
@@ -740,7 +740,7 @@ export function EntryDetailDialog({
                     <div role="status" className="flex items-start gap-2 rounded-control border border-amber-400/40 bg-amber-400/10 px-4 py-3">
                       <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
                       <p className="text-sm font-medium text-amber-300">
-                        교관에게 서명 요청을 보냈습니다. 승인된 교관이 서명 요청함에서 확인 후 서명을 완료하면 이 화면에 자동으로 표시됩니다.
+                        교관에게 서명 요청을 보냈어요. 승인된 교관이 서명 요청함에서 확인 후 서명을 완료하면 이 화면에 자동으로 표시돼요.
                       </p>
                     </div>
                     {commentsCheckError && (
@@ -786,20 +786,20 @@ export function EntryDetailDialog({
                       </p>
                     )}
                     <p className="text-xs text-slate-400">
-                      교관에게 서명을 요청하면, 승인된 교관이 서명 요청함에서 확인 후 서명을 완료할 수 있습니다. 교관 로그인을 기다릴 필요가 없습니다.
+                      교관에게 서명을 요청하면, 승인된 교관이 서명 요청함에서 확인 후 서명을 완료할 수 있어요. 교관 로그인을 기다릴 필요가 없어요.
                     </p>
 
                     {isLoadingInstructors ? (
-                      <p className="text-xs text-slate-400">승인된 교관 목록을 불러오는 중입니다...</p>
+                      <p className="text-xs text-slate-400">승인된 교관 목록을 불러오는 중이에요...</p>
                     ) : instructorsError ? (
                       <p role="alert" className="text-xs font-medium text-rose-600">{instructorsError}</p>
                     ) : trackInstructors.length === 0 ? (
                       <p className="rounded-control border border-white/10 bg-surface px-3 py-2 text-xs text-slate-400">
                         {entryTrackKey === 'ultralight'
-                          ? '이 기록에 서명할 수 있는 승인된 지도조종자가 없어요. 초경량 기록은 항공기 교관이 아니라 지도조종자(공단 등록)의 확인이 필요합니다(운영세칙 제9조). 지도조종자가 계정정보에서 "초경량비행장치 지도조종자"로 교관 승인을 받으면 목록에 나타나요.'
+                          ? '이 기록에 서명할 수 있는 승인된 지도조종자가 없어요. 초경량 기록은 항공기 교관이 아니라 지도조종자(공단 등록)의 확인이 필요해요(운영세칙 제9조). 지도조종자가 계정정보에서 "초경량비행장치 지도조종자"로 교관 승인을 받으면 목록에 나타나요.'
                           : entryTrackKey === 'lsa'
                             ? '이 기록에 서명할 수 있는 승인된 경량항공기 교관이 없어요. 교관이 계정정보에서 "경량항공기 조종교관"으로 승인을 받으면 목록에 나타나요.'
-                            : '현재 승인된 교관이 없어 서명 요청을 보낼 수 없습니다. 교관이 승인되면 다시 시도해주세요.'}
+                            : '현재 승인된 교관이 없어 서명 요청을 보낼 수 없어요. 교관이 승인되면 다시 시도해주세요.'}
                       </p>
                     ) : (
                       <div className="space-y-2">
@@ -837,7 +837,7 @@ export function EntryDetailDialog({
                         </select>
                         {visibleInstructors.length === 0 && (
                           <p className="text-xs text-slate-400">
-                            선택한 소속에 해당하는 승인된 교관이 없습니다. "전체 보기"를 눌러 다른 소속 교관도 확인해보세요.
+                            선택한 소속에 해당하는 승인된 교관이 없어요. "전체 보기"를 눌러 다른 소속 교관도 확인해보세요.
                           </p>
                         )}
                       </div>
@@ -866,7 +866,7 @@ export function EntryDetailDialog({
 
               {confirmingDelete ? (
                 <div role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-                  <p className="text-sm font-medium text-rose-300">이 비행 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+                  <p className="text-sm font-medium text-rose-300">이 비행 기록을 삭제할까요? 되돌릴 수 없어요.</p>
                   <div className="mt-3 flex gap-2">
                     <Button type="button" tone="danger" size="sm"
                       onClick={() => {
@@ -885,7 +885,7 @@ export function EntryDetailDialog({
                 <div className="pt-2">
                   {entry.instructorSignature && (
                     <p className="mb-2 text-xs text-slate-400">
-                      서명된 기록을 수정하면 서명이 취소됩니다.
+                      서명된 기록을 수정하면 서명이 취소돼요.
                     </p>
                   )}
                   <div className="flex flex-wrap gap-3">

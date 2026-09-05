@@ -17,14 +17,18 @@ import {
 } from 'lucide-react'
 
 import { Button } from '../Button'
+import { MoreMenu } from '../MoreMenu'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
 import { sumHours } from '../../lib/hours'
+import { entryTrack } from '../../lib/tracks'
 import type { LogbookEntry } from '../../types/logbook'
 
 const PAGE_SIZE = 10
 
 type DisplayBadge = 'X-C' | 'LCL' | 'NGT' | 'FTD'
+// 조종사 로그북 관용 약어 그대로 쓴다(LCL 공역·X-C 크로스컨트리·NGT 야간·FTD 시뮬레이터) — 조종사에겐 이게 더 빨리 읽힌다.
+// 초경량 기록에는 이 구분이 의미가 없어 배지를 붙이지 않는다(2026-09-06).
 
 const CATEGORY_BADGE: Record<DisplayBadge, string> = {
   NGT: 'bg-white/10 text-slate-200',
@@ -35,12 +39,13 @@ const CATEGORY_BADGE: Record<DisplayBadge, string> = {
 
 // 배지에 표시할 분류는 entry.flightCategory(단일 선택값, 엑셀 이관 기록은 기본값 '주간'으로
 // 채워지는 경우가 많음)를 그대로 신뢰하지 않고, 지상훈련장비 시간 및 conditions의 실제 기록된
-// 시간 값을 근거로 다시 계산합니다.
+// 시간 값을 근거로 다시 계산해요.
 // 규칙:
-// 1) 지상훈련장비 시간(groundTrainerTime)이 0보다 크면 다른 배지 없이 FTD만 표시합니다.
+// 1) 지상훈련장비 시간(groundTrainerTime)이 0보다 크면 다른 배지 없이 FTD만 표시해요.
 // 2) 그 외에는 크로스컨트리(X-C) 여부에 따라 X-C 또는 LCL을 기본 배지로 표시하고,
-//    야간(NGT) 시간이 있으면 기본 배지 옆에 NGT 배지를 추가로 표시합니다.
+//    야간(NGT) 시간이 있으면 기본 배지 옆에 NGT 배지를 추가로 표시해요.
 function deriveBadges(entry: LogbookEntry): DisplayBadge[] {
+  if (entryTrack(entry) === 'ultralight') return []
   if ((entry.groundTrainerTime ?? 0) > 0) return ['FTD']
 
   const conditions = entry.conditions
@@ -52,7 +57,7 @@ function deriveBadges(entry: LogbookEntry): DisplayBadge[] {
 
 interface EntryListProps {
   entries: LogbookEntry[]
-  /** 필터와 무관한 계정 전체 기록 수. "전체 삭제" 확인 문구/비활성화 판단에 사용합니다. */
+  /** 필터와 무관한 계정 전체 기록 수. "전체 삭제" 확인 문구/비활성화 판단에 사용해요. */
   totalAccountEntryCount: number
   /** 서버에 아직 저장되지 않은(미동기화) 기록 수. 0보다 크면 경고 배지를 띄운다. */
   pendingSyncCount: number
@@ -83,11 +88,11 @@ export function EntryList({
   const [confirmingDeleteSelected, setConfirmingDeleteSelected] = useState(false)
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false)
 
-  // 클라이언트 사이드 페이지네이션 — 필터링된 entries를 PAGE_SIZE 단위로만 잘라 화면에 보여줍니다.
+  // 클라이언트 사이드 페이지네이션 — 필터링된 entries를 PAGE_SIZE 단위로만 잘라 화면에 보여줘요.
   const [currentPage, setCurrentPage] = useState(0)
   const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
 
-  // 필터 변경이나 삭제로 목록이 줄어들어 현재 페이지가 범위를 벗어나면 마지막 유효 페이지로 보정합니다.
+  // 필터 변경이나 삭제로 목록이 줄어들어 현재 페이지가 범위를 벗어나면 마지막 유효 페이지로 보정해요.
   useEffect(() => {
     if (currentPage > totalPages - 1) {
       setCurrentPage(Math.max(0, totalPages - 1))
@@ -99,7 +104,7 @@ export function EntryList({
     [entries, currentPage],
   )
 
-  // 필터 변경 등으로 목록에서 사라진 항목의 선택 상태는 정리합니다.
+  // 필터 변경 등으로 목록에서 사라진 항목의 선택 상태는 정리해요.
   useEffect(() => {
     setSelectedIds((prev) => {
       const next = new Set([...prev].filter((id) => entries.some((e) => e.id === id)))
@@ -122,8 +127,8 @@ export function EntryList({
     })
   }
 
-  // "전체 선택"은 현재 페이지에 보이는 항목 기준으로 동작합니다. 다른 페이지에서 이미 선택된
-  // 항목은 유지한 채 현재 페이지 항목만 추가/해제합니다.
+  // "전체 선택"은 현재 페이지에 보이는 항목 기준으로 동작해요. 다른 페이지에서 이미 선택된
+  // 항목은 유지한 채 현재 페이지 항목만 추가/해제해요.
   function toggleSelectAll() {
     const pageIds = pagedEntries.map((e) => e.id)
     const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id))
@@ -167,7 +172,7 @@ export function EntryList({
           {pendingSyncCount > 0 && (
             <span
               className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-amber-300"
-              title="네트워크 문제 등으로 서버에 아직 저장되지 않은 기록입니다. 이 기기(로컬)에는 안전하게 저장되어 있으며, 우측 상단 '서버와 다시 동기화' 버튼으로 재전송할 수 있어요."
+              title="네트워크 문제 등으로 서버에 아직 저장되지 않은 기록이에요. 이 기기(로컬)에는 안전하게 저장되어 있으며, 우측 상단 '서버와 다시 동기화' 버튼으로 재전송할 수 있어요."
             >
               <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
               서버 미동기화 {pendingSyncCount}건
@@ -176,58 +181,63 @@ export function EntryList({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button"
-            variant={selectMode ? 'solid' : 'outline'}
-            tone="neutral"
-            size="sm"
-            onClick={toggleSelectMode}
-          >
-            {selectMode ? <X className="h-4 w-4" aria-hidden="true" /> : <ListChecks className="h-4 w-4" aria-hidden="true" />}
-            {selectMode ? '선택 모드 종료' : '선택 모드'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            tone="brand"
-            size="sm"
-            disabled={totalAccountEntryCount === 0}
-            onClick={onExportCsv}
-            title="계정의 모든 비행기록을 CSV 파일로 저장합니다 (필터와 무관)"
-          >
-            <FileDown className="h-4 w-4" aria-hidden="true" />
-            CSV 백업
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            tone="neutral"
-            size="sm"
-            disabled={totalAccountEntryCount === 0}
-            onClick={onPrint}
-            title="이 자격 구분의 비행기록 전체를 비행경력증명서 서식으로 만들어요. 대화상자에서 'PDF로 저장'을 고르면 파일이 됩니다."
-          >
-            <Printer className="h-4 w-4" aria-hidden="true" />
-            {printLabel}
-          </Button>
-          <Button type="button"
-            variant="outline"
-            tone="danger"
-            size="sm"
-            disabled={totalAccountEntryCount === 0}
-            onClick={() => setConfirmingDeleteAll(true)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            전체 삭제
-          </Button>
+          {/* 자주 쓰는 PDF 만 바로, 나머지(선택 모드·CSV·전체 삭제)는 ⋯ 메뉴로 — 폰에서 버튼 4개가 두 줄을 차지하고
+              "전체 삭제"가 PDF 옆에 같은 크기로 있던 것을 정리(2026-09-06) */}
+          {selectMode ? (
+            <Button type="button" variant="solid" tone="neutral" size="sm" onClick={toggleSelectMode}>
+              <X className="h-4 w-4" aria-hidden="true" />
+              선택 모드 종료
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              tone="brand"
+              size="sm"
+              disabled={totalAccountEntryCount === 0}
+              onClick={onPrint}
+              title="이 자격 구분의 비행기록 전체를 비행경력증명서 서식으로 만들어요."
+            >
+              <Printer className="h-4 w-4" aria-hidden="true" />
+              {printLabel}
+            </Button>
+          )}
+          <MoreMenu
+            ariaLabel="기록 목록 더 보기"
+            items={[
+              {
+                key: 'select',
+                label: selectMode ? '선택 모드 종료' : '선택해서 삭제',
+                icon: selectMode ? <X className="h-4 w-4" aria-hidden="true" /> : <ListChecks className="h-4 w-4" aria-hidden="true" />,
+                onSelect: toggleSelectMode,
+              },
+              {
+                key: 'csv',
+                label: 'CSV 백업',
+                icon: <FileDown className="h-4 w-4" aria-hidden="true" />,
+                onSelect: onExportCsv,
+                disabled: totalAccountEntryCount === 0,
+                title: '계정의 모든 비행기록을 CSV 파일로 저장해요 (필터와 무관)',
+              },
+              {
+                key: 'deleteAll',
+                label: '전체 삭제',
+                icon: <Trash2 className="h-4 w-4" aria-hidden="true" />,
+                onSelect: () => setConfirmingDeleteAll(true),
+                disabled: totalAccountEntryCount === 0,
+                danger: true,
+              },
+            ]}
+          />
         </div>
       </div>
 
       {confirmingDeleteAll && (
         <div role="alert" className="mb-4 rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
           <p className="text-sm font-medium text-rose-300">
-            등록된 모든 비행 기록({totalAccountEntryCount}건)을 삭제하시겠습니까? 되돌릴 수 없습니다.
+            등록된 모든 비행 기록({totalAccountEntryCount}건)을 삭제할까요? 되돌릴 수 없어요.
             <br />
-            이 작업은 현재 적용된 필터와 무관하게 이 계정의 모든 비행 기록을 삭제합니다. 필터링된 목록 중 일부만 지우려면 "선택 모드"의 선택 삭제 기능을 이용해 주세요.
+            필터와 무관하게 이 계정의 모든 비행 기록이 지워져요. 일부만 지우려면 ⋯ 메뉴의 "선택해서 삭제"를 쓰세요.
           </p>
           <div className="mt-3 flex gap-2">
             <Button type="button" tone="danger" size="sm" onClick={handleConfirmDeleteAll}>
@@ -259,7 +269,7 @@ export function EntryList({
           {confirmingDeleteSelected ? (
             <div role="alert" className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-rose-300">
-                선택한 {selectedIds.size}건을 삭제하시겠습니까? 되돌릴 수 없습니다.
+                선택한 {selectedIds.size}건을 삭제할까요? 되돌릴 수 없어요.
               </span>
               <Button type="button" tone="danger" size="sm" onClick={handleConfirmDeleteSelected}>
                 삭제 확인
@@ -291,7 +301,7 @@ export function EntryList({
       {entries.length === 0 ? (
         <EmptyState
           icon={PlaneTakeoff}
-          title="조건에 맞는 비행 기록이 없습니다"
+          title="조건에 맞는 비행 기록이 없어요"
           description="위 입력 폼으로 첫 기록을 추가하거나 필터를 변경해 보세요."
         />
       ) : (
@@ -358,7 +368,7 @@ export function EntryList({
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {!entry.syncPostId && (
                       <span className="inline-flex items-center gap-1 rounded-control bg-white/[0.07] px-2.5 py-1 text-xs font-bold text-slate-400"
-                        title="아직 서버에 저장되지 않아 다른 기기에서 보이지 않을 수 있습니다. 잠시 후 자동으로 다시 시도합니다."
+                        title="아직 서버에 저장되지 않아 다른 기기에서 보이지 않을 수 있어요. 잠시 후 자동으로 다시 시도해요."
                       >
                         <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
                         서버 동기화 대기중

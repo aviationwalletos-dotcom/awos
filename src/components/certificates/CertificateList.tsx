@@ -59,7 +59,7 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
   if (certificates.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-white/15 bg-panel p-cardpad text-center text-sm text-slate-400">
-        등록된 자격증이 없습니다. 위 등록 폼으로 첫 자격증을 추가해 보세요.
+        등록된 자격증이 없어요. 위 등록 폼으로 첫 자격증을 추가해 보세요.
       </div>
     )
   }

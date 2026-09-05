@@ -18,7 +18,7 @@ export function Pricing() {
             과징금 대비 압도적으로 낮은 비용
           </h2>
           <p className="mt-4 max-w-2xl text-slate-400">
-            기관 규모와 감사 대응 수준에 맞춰 세 가지 티어를 선택할 수 있습니다.
+            기관 규모와 감사 대응 수준에 맞춰 세 가지 티어를 선택할 수 있어요.
           </p>
         </Reveal>
 

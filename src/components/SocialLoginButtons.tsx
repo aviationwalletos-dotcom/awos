@@ -80,7 +80,7 @@ export function SocialLoginButtons() {
       </div>
       <p className="text-center text-[11px] leading-relaxed text-slate-500">
         소셜 로그인 시 <a href="/terms.html" target="_blank" rel="noreferrer" className="underline hover:text-slate-300">이용약관</a>과{' '}
-        <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline hover:text-slate-300">개인정보처리방침</a>에 동의한 것으로 간주됩니다.
+        <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline hover:text-slate-300">개인정보처리방침</a>에 동의한 것으로 간주돼요.
       </p>
     </div>
   )

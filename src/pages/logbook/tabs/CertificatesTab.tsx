@@ -83,7 +83,7 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                       { ...input, track: input.track ?? activeTrack },
                       options?.approvalFile,
                     );
-                    showToast("자격증이 추가되었습니다.");
+                    showToast("자격증이 추가됐어요.");
                   }}
                   roleTemplate={roleContent}
                   track={activeTrack}

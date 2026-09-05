@@ -32,7 +32,7 @@ export function VerifyEmailPage() {
             <CheckCircle2 className="mx-auto h-12 w-12 text-go" aria-hidden="true" />
             <h1 className="mt-4 font-display text-xl font-extrabold">이메일 인증 완료!</h1>
             <p className="mt-2 text-sm text-slate-400">
-              가입이 마무리됐어요. 이제 디지털 로그북을 시작할 수 있습니다.
+              가입이 마무리됐어요. 이제 디지털 로그북을 시작할 수 있어요.
             </p>
             <Button size="lg" className="mt-6 w-full" onClick={() => { window.location.href = '/logbook' }}>
               AWOS 시작하기 →

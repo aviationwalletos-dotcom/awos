@@ -33,7 +33,7 @@ export function ResetPasswordPage() {
       await updatePasswordWithToken(token, password)
       setDone(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.')
+      setError(err instanceof Error ? err.message : '비밀번호 변경에 실패했어요.')
     } finally {
       setIsLoading(false)
     }

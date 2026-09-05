@@ -19,7 +19,7 @@ export function ExpiryAlertList({ personnel }: ExpiryAlertListProps) {
   if (riskItems.length === 0) {
     return (
       <p className="rounded-card border border-go/30 bg-go/10 p-6 text-sm font-medium text-go">
-        현재 만료 임박한 자격이 없습니다. 모든 인력이 정상(GO) 상태입니다.
+        현재 만료 임박한 자격이 없어요. 모든 인력이 정상(GO) 상태예요.
       </p>
     )
   }

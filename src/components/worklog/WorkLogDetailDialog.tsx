@@ -118,7 +118,7 @@ export function WorkLogDetailDialog({ entry, copy, onClose, onUpdate, onDelete }
 
               {confirmingDelete ? (
                 <div role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-                  <p className="text-sm font-medium text-rose-300">이 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+                  <p className="text-sm font-medium text-rose-300">이 기록을 삭제할까요? 되돌릴 수 없어요.</p>
                   <div className="mt-3 flex gap-2">
                     <Button type="button" tone="danger" size="sm"
                       onClick={() => {

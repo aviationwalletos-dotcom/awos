@@ -144,7 +144,7 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
       setReason('')
       await refetch()
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : '신청에 실패했습니다.')
+      setSubmitError(err instanceof Error ? err.message : '신청에 실패했어요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -161,7 +161,7 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
       </h2>
 
       {isLoading && Object.keys(byTrack).length === 0 ? (
-        <p className="mt-5 text-sm text-slate-400">신청 현황을 불러오는 중입니다...</p>
+        <p className="mt-5 text-sm text-slate-400">신청 현황을 불러오는 중이에요...</p>
       ) : error && Object.keys(byTrack).length === 0 ? (
         <div role="alert" className="mt-5 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
@@ -224,7 +224,7 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
 
                 {submitSuccess === track && (
                   <p role="status" className="mt-3 rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                    신청이 접수되었습니다. 승인 대기중입니다.
+                    신청이 접수됐어요. 승인 대기중이에요.
                   </p>
                 )}
 
@@ -247,7 +247,7 @@ export function InstructorApprovalSection({ account, affiliation, pilotTracks = 
                         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                     />
                     <p className="text-xs text-slate-400">
-                      소속 기관: {affiliation && affiliation.trim() ? affiliation : '미설정 (계정정보 상단에서 소속 기관을 먼저 등록하면 신청서에 함께 표시됩니다.)'}
+                      소속 기관: {affiliation && affiliation.trim() ? affiliation : '미설정 (계정정보 상단에서 소속 기관을 먼저 등록하면 신청서에 함께 표시돼요.)'}
                     </p>
                     <div className="flex gap-2">
                       <Button type="submit" size="sm" disabled={!reason.trim() || isSubmitting} loading={isSubmitting}

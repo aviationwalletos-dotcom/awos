@@ -8,8 +8,8 @@ interface SignaturePadProps {
 }
 
 /**
- * 외부 라이브러리 없이 HTML5 canvas + pointer 이벤트만으로 동작하는 간단한 서명 캡처 패드입니다.
- * 빈 캔버스 상태에서는 onChange(null)을, 한 번이라도 그려지면 onChange(dataUrl)을 호출합니다.
+ * 외부 라이브러리 없이 HTML5 canvas + pointer 이벤트만으로 동작하는 간단한 서명 캡처 패드예요.
+ * 빈 캔버스 상태에서는 onChange(null)을, 한 번이라도 그려지면 onChange(dataUrl)을 호출해요.
  */
 /**
  * 저장용 PNG는 축소해서 내보낸다. 원본 캔버스는 devicePixelRatio 배율(예: 1200×320)이라 PNG가 15~30KB이고,

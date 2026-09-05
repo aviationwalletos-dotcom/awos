@@ -71,7 +71,7 @@ export function MemberDirectoryPanel() {
     setEmptyReason(null)
     try {
       const client = await getFreshDataClient()
-      if (!client) throw new Error('로그인 정보가 없습니다. 로그아웃 후 다시 로그인해 주세요.')
+      if (!client) throw new Error('로그인 정보가 없어요. 로그아웃 후 다시 로그인해 주세요.')
 
       const { data, error: qError } = await client
         .from('profiles')
@@ -187,10 +187,10 @@ export function MemberDirectoryPanel() {
         if (!tablesMissing) setStatsNote(null)
       } catch (aggErr) {
         setStats({})
-        setStatsNote(aggErr instanceof Error ? aggErr.message : '기록 집계에 실패해 기본 정보만 표시합니다.')
+        setStatsNote(aggErr instanceof Error ? aggErr.message : '기록 집계에 실패해 기본 정보만 표시해요.')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '구성원 목록을 불러오지 못했습니다.')
+      setError(err instanceof Error ? err.message : '구성원 목록을 불러오지 못했어요.')
     } finally {
       setIsLoading(false)
     }
@@ -223,13 +223,13 @@ export function MemberDirectoryPanel() {
     return (
       <div className="space-y-4">
         <EmptyState icon={Users}
-          title="표시할 구성원이 없습니다"
+          title="표시할 구성원이 없어요"
           description={
             emptyReason === 'not_admin'
-              ? '진단 결과: 지금 로그인한 계정이 관리자 명단(authorized_orgs)에 없습니다 — 관리자 계정(AWOS 관리자)으로 로그인했는지 확인하거나, 이 계정을 명단에 추가해 주세요.'
+              ? '진단 결과: 지금 로그인한 계정이 관리자 명단(authorized_orgs)에 없어요 — 관리자 계정(AWOS 관리자)으로 로그인했는지 확인하거나, 이 계정을 명단에 추가해 주세요.'
               : emptyReason === 'policy'
-                ? '진단 결과: 현재 관리자 본인 계정만 조회됩니다 — 관리자 조회 권한(schema5 SQL)이 아직 적용되지 않았습니다.'
-                : '진단 결과: 본인 계정조차 조회되지 않습니다 — 로그인 세션 문제일 수 있으니 로그아웃 후 다시 로그인해 주세요.'
+                ? '진단 결과: 현재 관리자 본인 계정만 조회돼요 — 관리자 조회 권한(schema5 SQL)이 아직 적용되지 않았어요.'
+                : '진단 결과: 본인 계정조차 조회되지 않아요 — 로그인 세션 문제일 수 있으니 로그아웃 후 다시 로그인해 주세요.'
           }
         />
         {emptyReason === 'policy' && (
@@ -326,7 +326,7 @@ export function MemberDirectoryPanel() {
                       <div className="mt-4">
                         <p className="text-xs uppercase tracking-wide text-slate-500">보유 자격증 ({(memberCerts[m.id] ?? []).length}건)</p>
                         {(memberCerts[m.id] ?? []).length === 0 ? (
-                          <p className="mt-1.5 text-sm text-slate-400">등록된 자격증이 없습니다.</p>
+                          <p className="mt-1.5 text-sm text-slate-400">등록된 자격증이 없어요.</p>
                         ) : (
                           <ul className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                             {(memberCerts[m.id] ?? []).map((cert) => {
@@ -361,8 +361,8 @@ export function MemberDirectoryPanel() {
       {reasonFor && (() => {
         const st = stats[reasonFor.id]
         const reasons = [
-          !st?.medicalValid ? { title: '항공신체검사 미유효', detail: '유효한 항공신체검사증명이 등록되어 있지 않거나 만료되었습니다. 신체검사 갱신 후 자격증 탭에 등록해야 합니다.' } : null,
-          !st?.recencyMet ? { title: '최근비행 기준 미달', detail: '최근 90일 내 이착륙 3회 이상 등 최근비행 요건을 충족하지 못했습니다. 기록이 누락됐다면 로그북에 추가하세요.' } : null,
+          !st?.medicalValid ? { title: '항공신체검사 미유효', detail: '유효한 항공신체검사증명이 등록되어 있지 않거나 만료됐어요. 신체검사 갱신 후 자격증 탭에 등록해야 해요.' } : null,
+          !st?.recencyMet ? { title: '최근비행 기준 미달', detail: '최근 90일 내 이착륙 3회 이상 등 최근비행 요건을 충족하지 못했어요. 기록이 누락됐다면 로그북에 추가하세요.' } : null,
         ].filter((r): r is { title: string; detail: string } => r !== null)
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6" onClick={() => setReasonFor(null)}>
@@ -377,7 +377,7 @@ export function MemberDirectoryPanel() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-[11px] text-slate-500">참고 판정(v0.9)이며 법령 기준 확정 후 갱신됩니다.</p>
+              <p className="mt-4 text-[11px] text-slate-500">참고 판정(v0.9)이며 법령 기준 확정 후 갱신돼요.</p>
               <div className="mt-4 text-right">
                 <Button type="button" size="sm" variant="outline" tone="neutral" onClick={() => setReasonFor(null)}>닫기</Button>
               </div>

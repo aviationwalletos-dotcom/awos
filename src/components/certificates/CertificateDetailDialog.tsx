@@ -51,7 +51,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
       onUpdate(certificate.id, { ...rest, approvalStatus: 'pending', approvalRequestPostId: request.id, approvalRevokedAt: undefined })
       setApprovalDone(true)
     } catch (err) {
-      setApprovalError(err instanceof Error ? err.message : '인증 요청에 실패했습니다. 다시 시도해 주세요.')
+      setApprovalError(err instanceof Error ? err.message : '인증 요청에 실패했어요. 다시 시도해 주세요.')
     } finally {
       setIsRequestingApproval(false)
     }
@@ -182,7 +182,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                     다음 교육 기한: <span className="font-mono-data font-semibold">{commEducationDueDate(certificate.issuedDate) ?? '-'}</span>
                     {isCommEducationDue(certificate.issuedDate) && certificate.approvalStatus !== 'approved'
                       ? ' — 기한이 지났어요. 아래에서 교육 이수증을 첨부해 관리자 인증을 요청하세요.'
-                      : ' — 기한 내입니다.'}
+                      : ' — 기한 내예요.'}
                   </p>
                 </div>
               )}
@@ -196,12 +196,12 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                     <p className="text-sm font-semibold text-ink">관리자 인증</p>
                     {effectiveStatus === 'approved' && (
                       <p className="mt-2 text-sm font-semibold text-go">
-                        인증 완료 — 관리자가 확인한 자격입니다.
+                        인증 완료 — 관리자가 확인한 자격이에요.
                       </p>
                     )}
                     {effectiveStatus === 'pending' && !requestNotSent && (
                       <p className="mt-2 text-sm text-amber-300">
-                        승인 대기 중 — 관리자 확인 후 이 카드에 자동 반영됩니다.
+                        승인 대기 중 — 관리자 확인 후 이 카드에 자동 반영돼요.
                       </p>
                     )}
                     {effectiveStatus === undefined && certificate.approvalRevokedAt && (
@@ -223,7 +223,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
                         )}
                         <p className="mt-1 text-xs leading-relaxed text-slate-400">
                           자격증 사진(이미지 또는 PDF)을 첨부해 관리자에게 인증을 요청하세요. 관리자 페이지의
-                          &lsquo;자격증·신체검사 요청함&rsquo;에서 확인 후 승인합니다.
+                          &lsquo;자격증·신체검사 요청함&rsquo;에서 확인 후 승인해요.
                         </p>
                         <input type="file"
                           accept="image/*,application/pdf,.pdf"
@@ -257,7 +257,7 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
 
               {confirmingDelete ? (
                 <div role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">
-                  <p className="text-sm font-medium text-rose-300">이 자격증을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+                  <p className="text-sm font-medium text-rose-300">이 자격증을 삭제할까요? 되돌릴 수 없어요.</p>
                   <div className="mt-3 flex gap-2">
                     <Button type="button" tone="danger" size="sm"
                       onClick={() => {

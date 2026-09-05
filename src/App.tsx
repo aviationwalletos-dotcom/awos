@@ -31,7 +31,7 @@ function NotFoundPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-24 text-center">
       <h1 className="mb-4 text-6xl font-bold text-slate-300">404</h1>
-      <p className="mb-6 text-slate-400">페이지를 찾을 수 없습니다.</p>
+      <p className="mb-6 text-slate-400">페이지를 찾을 수 없어요.</p>
       <Link to="/" className="text-sky-600 hover:underline">
         홈으로 돌아가기
       </Link>

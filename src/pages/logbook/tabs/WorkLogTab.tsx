@@ -23,7 +23,7 @@ export function WorkLogTab({ m }: { m: LogbookModel }) {
             <Reveal>
               <ComplianceSection
                 title={workLogComplianceTitle}
-                description="아래 항목은 등록한 자격증·업무기록을 바탕으로 자동 계산한 참고 정보입니다."
+                description="아래 항목은 등록한 자격증·업무기록을 바탕으로 자동 계산한 참고 정보여요."
                 items={workLogComplianceItems}
               />
             </Reveal>

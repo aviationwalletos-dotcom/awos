@@ -84,9 +84,9 @@ export function SignupPage() {
     else if (!validatePhone(phone)) errors.phone = '010-1234-5678 형식으로 입력해주세요.'
 
     if (!password) errors.password = '비밀번호를 입력해주세요.'
-    else if (password.length < 8) errors.password = '비밀번호는 8자 이상이어야 합니다.'
+    else if (password.length < 8) errors.password = '비밀번호는 8자 이상이어야 해요.'
 
-    if (password !== passwordConfirm) errors.passwordConfirm = '비밀번호가 일치하지 않습니다.'
+    if (password !== passwordConfirm) errors.passwordConfirm = '비밀번호가 일치하지 않아요.'
 
     if (!agreedTerms || !agreedPrivacy) errors.agreement = '필수 약관에 모두 동의해주세요.'
 
@@ -190,7 +190,7 @@ export function SignupPage() {
         <div className="w-full max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-go" aria-hidden="true" />
           <h1 className="mt-4 font-display text-xl font-extrabold">
-            회원가입이 완료되었습니다
+            회원가입이 완료됐어요
           </h1>
           <p className="mt-2 text-sm text-slate-400">
             이제 로그인하여 디지털 로그북을 이용해보세요.
@@ -236,7 +236,7 @@ export function SignupPage() {
               가입하세요
             </h1>
             <p className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
-              가입 후 바로 비행기록을 시작할 수 있습니다.
+              가입 후 바로 비행기록을 시작할 수 있어요.
             </p>
           </div>
 
@@ -380,7 +380,7 @@ export function SignupPage() {
                     className="mt-0.5 h-4 w-4 accent-sky"
                   />
                   <span>
-                    <span className="font-semibold text-sky">(필수)</span> 이용약관에 동의합니다{' '}
+                    <span className="font-semibold text-sky">(필수)</span> 이용약관에 동의해요{' '}
                     <a href="/terms.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
                   </span>
                 </label>
@@ -391,7 +391,7 @@ export function SignupPage() {
                     className="mt-0.5 h-4 w-4 accent-sky"
                   />
                   <span>
-                    <span className="font-semibold text-sky">(필수)</span> 개인정보 수집·이용에 동의합니다{' '}
+                    <span className="font-semibold text-sky">(필수)</span> 개인정보 수집·이용에 동의해요{' '}
                     <a href="/privacy.html" target="_blank" rel="noreferrer" className="text-slate-400 underline underline-offset-2 hover:text-sky">전문 보기</a>
                   </span>
                 </label>

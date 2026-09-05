@@ -150,7 +150,7 @@ export function MemberStatusOverview() {
             소속 회원 GO/NO-GO 현황
           </h3>
           <p className="mt-1 text-xs text-slate-400">
-            회원이 AWOS에서 "내 상태를 소속 기관에 공유" 버튼을 눌러 남긴 최신 스냅샷입니다. 실시간으로 자동 갱신되지
+            회원이 AWOS에서 "내 상태를 소속 기관에 공유" 버튼을 눌러 남긴 최신 스냅샷이에요. 실시간으로 자동 갱신되지
             않으니, 최신 정보를 원하면 회원에게 다시 공유를 요청하세요.
           </p>
         </div>
@@ -173,7 +173,7 @@ export function MemberStatusOverview() {
         <div className="mt-4 flex items-start gap-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-4 py-3">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" aria-hidden="true" />
           <p className="text-xs font-medium text-amber-300">
-            계정정보에서 소속 기관을 먼저 설정해주세요. 소속 기관이 없으면 전체 회원 상태가 표시됩니다.{' '}
+            계정정보에서 소속 기관을 먼저 설정해주세요. 소속 기관이 없으면 전체 회원 상태가 표시돼요.{' '}
             <Link to="/account"
               className="font-semibold underline underline-offset-2 hover:text-amber-200
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
@@ -191,7 +191,7 @@ export function MemberStatusOverview() {
       </div>
 
       {isLoading ? (
-        <p className="mt-6 text-sm text-slate-400">회원 상태를 불러오는 중입니다...</p>
+        <p className="mt-6 text-sm text-slate-400">회원 상태를 불러오는 중이에요...</p>
       ) : error ? (
         <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
@@ -204,11 +204,11 @@ export function MemberStatusOverview() {
           className="mt-6"
           surface="dark"
           icon={Users}
-          title={items.length === 0 ? '아직 상태를 공유한 소속 회원이 없습니다' : '해당 소속의 공유된 회원 상태가 없습니다'}
+          title={items.length === 0 ? '아직 상태를 공유한 소속 회원이 없어요' : '해당 소속의 공유된 회원 상태가 없어요'}
           description={
             items.length === 0
-              ? '회원이 로그북 탭에서 상태를 공유하면 이 목록에 나타납니다.'
-              : '"전체 보기"로 다른 소속 회원도 확인할 수 있습니다.'
+              ? '회원이 로그북 탭에서 상태를 공유하면 이 목록에 나타나요.'
+              : '"전체 보기"로 다른 소속 회원도 확인할 수 있어요.'
           }
         />
       ) : (

@@ -96,7 +96,7 @@ function Chips({ items, onPick }: { items?: string[]; onPick: (value: string) =>
 }
 
 // 아래 스타일 상수/헬퍼는 FlightExperienceCertificateForm.tsx(비행경력증명서로 가져오기)에서도
-// 동일한 필드 스타일을 재사용하기 위해 export합니다.
+// 동일한 필드 스타일을 재사용하기 위해 export해요.
 export const inputClass =
   'w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
 
@@ -221,6 +221,9 @@ export function EntryForm({
   const isUnmanned = vehicleClass === 'ultralight' && isUnmannedKind(vehicleKind)
 
   const isSimKind = entryKind === 'sim'
+  // 빠른 입력: 처음엔 기본 정보·출발/도착·블록타임만 보이고, 범주·자격·조건·이착륙 상세는 접어 둔다.
+  // 학생 기록의 대부분은 4~5칸이면 나머지가 역할에 따라 자동으로 채워진다. 수정 모드는 펼쳐서 시작.
+  const [showDetails, setShowDetails] = useState<boolean>(Boolean(initialValues))
   const presets = getEntryPresets(entryKind)
   const historyTypes = suggestions?.aircraftTypes?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
   const historyRegs = suggestions?.registrations?.filter((v) => (isSimKind ? /ftd|multi|mento|frasca/i.test(v) : !/ftd|multi|mento|frasca/i.test(v)))
@@ -283,14 +286,15 @@ export function EntryForm({
     }
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
-
-      scrollToFirstError(formRef.current)
+      setShowDetails(true)
+      // 접혀 있던 상세 섹션이 펼쳐진 뒤(다음 프레임) 첫 오류로 스크롤해야 hidden 요소를 건너뛰지 않는다
+      window.setTimeout(() => scrollToFirstError(formRef.current), 0)
       return
     }
 
     setErrors({})
 
-    // 연도(year)는 사용자가 입력하지 않고 비행 날짜(date)에서 자동으로 추출합니다.
+    // 연도(year)는 사용자가 입력하지 않고 비행 날짜(date)에서 자동으로 추출해요.
     const year = date ? Number(date.slice(0, 4)) : undefined
 
     onSubmit({
@@ -303,7 +307,7 @@ export function EntryForm({
       aircraftIdentification: String(form.get('aircraftIdentification') || '').trim() || undefined,
       blockTime: isSim ? 0 : blockTime,
       // 대표 비행 종류(flightCategory)는 더 이상 폼에서 입력받지 않고 기본값으로 채웁니다.
-      // 목록/필터의 실제 배지는 EntryList.tsx의 deriveBadges()가 기록된 시간 값을 기준으로 다시 계산합니다.
+      // 목록/필터의 실제 배지는 EntryList.tsx의 deriveBadges()가 기록된 시간 값을 기준으로 다시 계산해요.
       flightCategory: FLIGHT_CATEGORIES[0] as LogbookEntryInput['flightCategory'],
       categoryHours: {
         singleEngineLand: numOrUndef(form.get('singleEngineLand')),
@@ -460,7 +464,7 @@ export function EntryForm({
         {entryKind === 'sim' && (
           <>
             <p className="rounded-card border border-orange-400/30 bg-orange-400/10 p-3 text-xs leading-relaxed text-orange-200">
-              시뮬레이터 기록 모드: <span className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리됩니다.
+              시뮬레이터 기록 모드: <span className="font-semibold">시뮬레이터 시간은 필수</span>, 모의계기·계기접근·비고는 선택이에요. 출발/도착지와 비행시간 칸은 자동으로 처리돼요.
             </p>
             <div className="mt-3">
               <label htmlFor="simDevice" className={labelClass}>모의비행훈련장치 구분</label>
@@ -470,15 +474,15 @@ export function EntryForm({
                 ))}
               </select>
               <p className="mt-1 text-[11px] text-slate-500">
-                별표 4 인정 상한이 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치입니다.
+                별표 4 인정 상한이 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치예요.
               </p>
             </div>
           </>
         )}
       </div>
-      {/* 1. 기본 비행 정보 */}
+      {/* 기본 정보 */}
       <fieldset>
-        <legend className={sectionTitleClass}>1. 기본 비행 정보</legend>
+        <legend className={sectionTitleClass}>기본 정보</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="date" className={labelClass}>
@@ -538,11 +542,11 @@ export function EntryForm({
 
       <hr className="border-white/[0.08]" />
 
-      {/* 2. 출발/도착지 */}
+      {/* 출발/도착지 */}
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>2. 출발/도착지</legend>
+        <legend className={sectionTitleClass}>출발/도착지</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div>
             <label htmlFor="departure" className={labelClass}>
@@ -608,11 +612,27 @@ export function EntryForm({
 
       <hr className="border-white/[0.08]" />
 
+      {entryKind === 'flight' && (
+        <button type="button"
+          onClick={() => setShowDetails((v) => !v)}
+          aria-expanded={showDetails}
+          aria-controls="entry-details"
+          data-testid="entry-details-toggle"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-control border border-white/15 px-4 text-sm font-semibold text-slate-200 hover:bg-white/5
+            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+        >
+          {showDetails ? '상세 시간 입력 접기' : '상세 시간 입력 펼치기'}
+          <span className="text-xs font-normal text-slate-400">범주·자격·조건·이착륙 — 비워 두면 역할에 따라 자동으로 채워져요</span>
+        </button>
+      )}
+
+      {/* 상세 섹션(3·4·6·7)은 접어도 unmount 하지 않는다 — 자동 채움 값이 그대로 제출되어야 하므로 hidden 만 쓴다 */}
+      <div id="entry-details" hidden={!showDetails && entryKind === 'flight'}>
       {/* 3. 항공기 범주/등급별 시간 */}
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>3. 항공기 범주/등급별 시간 (선택)</legend>
+        <legend className={sectionTitleClass}>항공기 범주/등급별 시간 (선택)</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label htmlFor="singleEngineLand" className={labelClass}>
@@ -698,7 +718,7 @@ export function EntryForm({
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>4. 비행 자격 시간 종류 (선택)</legend>
+        <legend className={sectionTitleClass}>비행 자격 시간 (선택)</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label htmlFor="dualReceived" className={labelClass}>
@@ -777,7 +797,7 @@ export function EntryForm({
       {entryKind === 'sim' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>5. 지상훈련장비 — 시뮬레이터 시간 (필수)</legend>
+        <legend className={sectionTitleClass}>시뮬레이터 시간 (필수)</legend>
         <div className="mt-3 max-w-xs">
           <label htmlFor="groundTrainerTime" className={labelClass}>
             시뮬레이터 시간
@@ -824,7 +844,7 @@ export function EntryForm({
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>6. 비행 조건별 시간 (선택)</legend>
+        <legend className={sectionTitleClass}>비행 조건별 시간 (선택)</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <label htmlFor="conditionDay" className={labelClass}>
@@ -913,7 +933,7 @@ export function EntryForm({
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>7. 접근/이착륙 횟수 (선택)</legend>
+        <legend className={sectionTitleClass}>접근/이착륙 횟수 (선택)</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div>
             <label htmlFor="instrumentApproaches" className={labelClass}>
@@ -963,16 +983,15 @@ export function EntryForm({
         </div>
       </fieldset>
       </>)}
-
-      
+      </div>
 
       <hr className="border-white/[0.08]" />
 
-      {/* 8. 총 비행시간 및 비고 */}
+      {/* 블록타임 · 비고 */}
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>8. 총 비행시간 및 비고</legend>
+        <legend className={sectionTitleClass}>블록타임 · 비고</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="blockTime" className={labelClass}>
@@ -1023,7 +1042,7 @@ export function EntryForm({
         className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-8 flex flex-wrap gap-3 border-t border-white/10 bg-navy/95 px-cardpad py-4 backdrop-blur-sm"
       >
         <Button type="submit" name="formAction" value="save" size="md" data-testid="entry-submit">
-          {mode === 'create' ? '비행 기록 추가하기' : '수정 내용 저장하기'}
+          {mode === 'create' ? '저장' : '수정 내용 저장하기'}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>

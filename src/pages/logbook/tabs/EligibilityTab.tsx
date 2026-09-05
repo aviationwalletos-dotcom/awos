@@ -65,8 +65,8 @@ export function EligibilityTab({ m }: { m: LogbookModel }) {
               }
               description={
                 isLsa
-                  ? "별표 4 제2호 항목별 안내. 위 진척도와 같은 기록으로 계산한 참고 정보입니다."
-                  : "초경량 구분의 비행기록만으로 계산한 참고 정보입니다. 항공기·경량항공기 기록은 섞이지 않습니다."
+                  ? "별표 4 제2호 항목별 안내. 위 진척도와 같은 기록으로 계산한 참고 정보여요."
+                  : "초경량 구분의 비행기록만으로 계산한 참고 정보여요. 항공기·경량항공기 기록은 섞이지 않아요."
               }
               items={isLsa ? lsaComplianceItems : droneComplianceItems}
             />

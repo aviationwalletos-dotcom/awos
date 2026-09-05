@@ -69,7 +69,7 @@ export function NextGoalCard({ track, entries, certificates, vehicles = [], onOp
           })}
         </ul>
       )}
-      {hasRef && <p className="mt-3 text-[10px] leading-relaxed text-slate-500">무인은 앱 기록 기준 참고치예요. 응시경력은 교육기관 증명서로만 인정됩니다.</p>}
+      {hasRef && <p className="mt-3 text-[10px] leading-relaxed text-slate-500">무인은 앱 기록 기준 참고치예요. 응시경력은 교육기관 증명서로만 인정돼요.</p>}
     </div>
   )
 }

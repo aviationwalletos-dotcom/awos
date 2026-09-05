@@ -9,7 +9,7 @@ import { adoptAuthSession, baasFetch } from '../lib/baas/supabaseTransport'
 /**
  * 로그인 직후 이 계정이 기관(관리자) 계정인지 확인한다.
  * [BUGFIX] 예전에는 확인 없이 /logbook·/account?setup=1 로 보내서, 기관 계정으로 소셜 로그인하면
- * 개인 전용 페이지 가드에 막혀 "접근 권한이 없습니다" 화면이 먼저 떴다.
+ * 개인 전용 페이지 가드에 막혀 "접근 권한이 없어요" 화면이 먼저 떴다.
  */
 async function isOrganizationAccount(): Promise<boolean> {
   try {

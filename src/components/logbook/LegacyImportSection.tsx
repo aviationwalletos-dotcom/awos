@@ -18,10 +18,10 @@ const TABS: { key: ImportTab; label: string; icon: React.ComponentType<{ classNa
 ]
 
 /**
- * 기존 종이 로그북(탈론 로그 등) 기록을 이 앱으로 옮겨오는 섹션입니다. 개인 엑셀 파일이 있으면
+ * 기존 종이 로그북(탈론 로그 등) 기록을 이 앱으로 옮겨오는 섹션이에요. 개인 엑셀 파일이 있으면
  * "엑셀로 가져오기"를, 엑셀 파일이 없으면 발급받은 비행경력증명서 사진과 항목별 누적 시간을 직접
- * 입력하는 "비행경력증명서로 가져오기"를 이용할 수 있습니다.
- * "비행경력증명서로 가져오기"는 기관(학교) 계정의 승인/반려 워크플로우와 연동되어 있습니다.
+ * 입력하는 "비행경력증명서로 가져오기"를 이용할 수 있어요.
+ * "비행경력증명서로 가져오기"는 기관(학교) 계정의 승인/반려 워크플로우와 연동되어 있어요.
  */
 export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) {
   const [activeTab, setActiveTab] = useState<ImportTab>('excel')

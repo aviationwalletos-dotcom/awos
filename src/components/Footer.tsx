@@ -10,8 +10,8 @@ export function Footer() {
             Aviation Wallet <span className="text-sky">OS</span>
           </p>
           <p className="mt-1 max-w-sm text-xs leading-relaxed">
-            조종사를 위한 디지털 로그북입니다. 국내 비행경력증명서 서식으로 기록하고,
-            자격 유효기간과 커런시를 함께 관리합니다.
+            조종사를 위한 디지털 로그북이에요. 국내 비행경력증명서 서식으로 기록하고,
+            자격 유효기간과 커런시를 함께 관리해요.
           </p>
         </div>
 

@@ -44,9 +44,9 @@ export function InputTab({ m }: { m: LogbookModel }) {
             <Reveal>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
-                  새 비행 기록 추가
+                  새 기록
                   <InfoTip size="md" label="기록 추가 안내">
-                    비행을 마쳤다면 "기록 추가하기"를 눌러 입력 폼을 펼치세요. 과거 기록을 옮겨오려면 아래 "종이 로그북 기록 가져오기"를 이용하세요.
+                    비행을 마쳤다면 "기록 추가하기"를 눌러 입력 폼을 펼치세요. 과거 기록을 옮겨오려면 아래 "과거 기록 가져오기"를 이용하세요.
                   </InfoTip>
                 </h2>
                 <button
@@ -67,7 +67,7 @@ export function InputTab({ m }: { m: LogbookModel }) {
                   ) : (
                     <>
                       <Plus className="h-4 w-4" aria-hidden="true" />
-                      기록 추가하기
+                      기록 추가
                     </>
                   )}
                 </button>
@@ -90,7 +90,7 @@ export function InputTab({ m }: { m: LogbookModel }) {
                     holderName={account?.name}
                     onSubmit={(input) => {
                       addEntry(input);
-                      showToast("비행기록이 추가되었습니다.");
+                      showToast("비행기록이 추가됐어요.");
                     }}
                   />
                 ) : (
@@ -103,8 +103,8 @@ export function InputTab({ m }: { m: LogbookModel }) {
                       });
                       showToast(
                         input.pilotCertification
-                          ? "본인 서명과 함께 비행기록이 저장되었습니다."
-                          : "비행기록이 추가되었습니다.",
+                          ? "본인 서명과 함께 비행기록이 저장됐어요."
+                          : "비행기록이 추가됐어요.",
                       );
                     }}
                     suggestions={entrySuggestions}
@@ -123,7 +123,7 @@ export function InputTab({ m }: { m: LogbookModel }) {
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
               <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
-                종이 로그북 기록 가져오기
+                과거 기록 가져오기
                 <InfoTip size="md" label="가져오기 안내">
                   종이 로그북(탈론 로그 등)이나 개인 엑셀 파일로 관리하던 과거 기록을 이 앱으로 옮겨올 수 있어요.
                 </InfoTip>

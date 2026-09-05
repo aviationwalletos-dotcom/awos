@@ -345,7 +345,7 @@ export function CertificateForm({
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 자격으로 등록됩니다.</p>
+          <p className="mt-1.5 text-[11px] text-slate-500">{PILOT_TRACK_LABEL[track]} 자격으로 등록돼요.</p>
         </div>
 
         {subTypes.length > 0 && (
@@ -458,7 +458,7 @@ export function CertificateForm({
         {category === '무선통신사' && (
           <p className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
             무선통신사는 <span className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며, 발급 5년이 지나면
-            교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리됩니다.
+            교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리돼요.
           </p>
         )}
       </div>
@@ -494,14 +494,14 @@ export function CertificateForm({
               aria-invalid={Boolean(errors.name)}
               aria-describedby={errors.name ? 'cert-name-error' : undefined}
             />
-            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류를 선택하면 자동으로 채워지며, 필요하면 직접 수정할 수 있습니다.</p>
+            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류를 선택하면 자동으로 채워지며, 필요하면 직접 수정할 수 있어요.</p>
           </>
         ) : (
           <>
             <p className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
               {nameValue}
             </p>
-            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류 선택에 따라 자동으로 결정되며, 정확한 인식을 위해 직접 수정할 수 없습니다.</p>
+            <p className="mt-1.5 text-xs text-slate-400">위 구분/세부 종류 선택에 따라 자동으로 결정되며, 정확한 인식을 위해 직접 수정할 수 없어요.</p>
           </>
         )}
         {errors.name && (
@@ -587,7 +587,7 @@ export function CertificateForm({
             )}
             {category === '항공신체검사' && (
               <p className="mt-1.5 text-xs text-slate-400">
-                월말 만료 원칙: 계산된 만료일이 그 달의 말일이 아니면 그 달 말일까지 유효합니다.
+                월말 만료 원칙: 계산된 만료일이 그 달의 말일이 아니면 그 달 말일까지 유효해요.
               </p>
             )}
           </div>
@@ -595,7 +595,7 @@ export function CertificateForm({
           <div>
             <span className={labelClass}>만료일</span>
             <p className="rounded-control border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-400">
-              이 자격은 만료 개념이 없습니다.
+              이 자격은 만료 개념이 없어요.
             </p>
           </div>
         )}
@@ -625,7 +625,7 @@ export function CertificateForm({
           <p className="mt-1.5 text-xs text-slate-400">
             {mode === 'create'
               ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'
-              : '수정 시에는 첨부하지 않아도 됩니다. 재인증은 상세 화면에서 요청하세요.'}
+              : '수정 시에는 첨부하지 않아도 돼요. 재인증은 상세 화면에서 요청하세요.'}
           </p>
           {errors.approvalFile && (
             <p className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>

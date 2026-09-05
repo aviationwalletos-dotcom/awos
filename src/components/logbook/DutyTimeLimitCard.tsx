@@ -8,7 +8,7 @@ import { computeDutyTimeLimits } from '../../lib/dutyTimeLimits'
 
 interface DutyTimeLimitCardProps {
   entries: LogbookEntry[]
-  /** true면 히어로 등 좁은 영역에 맞춘 축약형으로 렌더링합니다. */
+  /** true면 히어로 등 좁은 영역에 맞춘 축약형으로 렌더링해요. */
   compact?: boolean
   /** v1.1 — 운항형태. commercial이면 승무원 편성별 한도 미반영 경고를 띄운다 */
   operationType?: 'general' | 'commercial'
@@ -52,7 +52,7 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
         <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-200">
           운송사업은 승무원 편성에 따라 한도가 달라요. 아래는 1인 조종 기준 참고치예요.
           <InfoTip className="ml-1" label="승무시간 한도 기준 설명">
-            여객·2인조종·운송사업은 승무원 편성(1인/2인/3인 이상)과 편조에 따라 한도가 달라요(시행규칙 별표 18). 아래는 1인 조종 기준 참고치라 정확하지 않을 수 있습니다. 회사 운항규정을 우선하세요.
+            여객·2인조종·운송사업은 승무원 편성(1인/2인/3인 이상)과 편조에 따라 한도가 달라요(시행규칙 별표 18). 아래는 1인 조종 기준 참고치라 정확하지 않을 수 있어요. 회사 운항규정을 우선하세요.
           </InfoTip>
         </p>
       ) : null}
@@ -76,7 +76,7 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
             <span className="font-mono-data font-bold text-white">
               {remainingHours.toFixed(1)}시간
             </span>{' '}
-            더 비행 가능합니다.
+            더 비행 가능해요.
             <DutyTimeDisclaimer compact={compact} operationType={operationType} />
           </p>
         </div>
@@ -97,7 +97,7 @@ function DutyTimeDisclaimer({ compact = false, operationType }: { compact?: bool
             <br />
           </>
         )}
-        이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관·관련 규정을 통해 확인해야 합니다.
+        이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관·관련 규정을 통해 확인해야 해요.
       </InfoTip>
     </span>
   )

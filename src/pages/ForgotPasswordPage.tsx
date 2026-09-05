@@ -22,7 +22,7 @@ export function ForgotPasswordPage() {
       await requestPasswordReset(email.trim())
       setSent(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '재설정 메일 전송에 실패했습니다.')
+      setError(err instanceof Error ? err.message : '재설정 메일 전송에 실패했어요.')
     } finally {
       setIsLoading(false)
     }

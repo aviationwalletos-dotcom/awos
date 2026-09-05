@@ -75,7 +75,7 @@ export function PersonnelFilterBar({
 
         {onShowDismissedChange ? (
           <label className="flex min-h-[44px] w-fit cursor-pointer items-center gap-2 rounded-control border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-slate-200"
-            title="목록에서 제외 처리한 회원(예: 탈퇴 회원)도 함께 표시합니다."
+            title="목록에서 제외 처리한 회원(예: 탈퇴 회원)도 함께 표시해요."
           >
             <input type="checkbox"
               checked={Boolean(showDismissed)}

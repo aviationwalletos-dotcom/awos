@@ -54,9 +54,9 @@ export function InstructorApprovalPanel() {
     <ApprovalQueuePanel
       kinds={['instructor']}
       title="교관 승인 관리"
-      description="회원이 자격 구분별로 보낸 교관(지도조종자) 승인 신청을 확인하고 승인/반려합니다. 승인된 구분의 기록에만 서명할 수 있어요."
+      description="회원이 자격 구분별로 보낸 교관(지도조종자) 승인 신청을 확인하고 승인/반려해요. 승인된 구분의 기록에만 서명할 수 있어요."
       icon={ShieldCheck}
-      emptyTitle="해당하는 신청서가 없습니다"
+      emptyTitle="해당하는 신청서가 없어요"
       renderExtra={renderInstructorCertificate}
     />
   )

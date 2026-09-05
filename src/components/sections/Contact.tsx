@@ -29,7 +29,7 @@ export function Contact() {
     const email = String(form.get('email') || '').trim()
     if (!email) nextErrors.email = '이메일을 입력해 주세요.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = '이메일 형식을 확인해 주세요.'
-    if (!form.get('consent')) nextErrors.consent = '개인정보 수집 동의가 필요합니다.'
+    if (!form.get('consent')) nextErrors.consent = '개인정보 수집 동의가 필요해요.'
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
@@ -37,7 +37,7 @@ export function Contact() {
       return
     }
 
-    // NOTE: 실제 제출/백엔드 연동은 이번 UI 구현 범위 밖입니다. docs/TODO.md 참고.
+    // NOTE: 실제 제출/백엔드 연동은 이번 UI 구현 범위 밖이에요. docs/TODO.md 참고.
     setErrors({})
     setStatus('success')
   }
@@ -67,9 +67,9 @@ export function Contact() {
             <div className="flex flex-col items-center gap-4 rounded-card border border-go/30 bg-go/10 p-10 text-center">
               <CheckCircle2 className="h-12 w-12 text-go" aria-hidden="true" />
               <div>
-                <h3 className="text-lg font-bold text-white">문의가 접수되었습니다</h3>
+                <h3 className="text-lg font-bold text-white">문의가 접수됐어요</h3>
                 <p className="mt-2 text-sm text-slate-300">
-                  영업일 기준 2일 이내에 담당자가 이메일 또는 전화로 연락드릴 예정입니다.
+                  영업일 기준 2일 이내에 담당자가 이메일 또는 전화로 연락드릴 예정이에요.
                 </p>
               </div>
               <Button variant="outline" tone="neutral" size="sm" className="border-white/30 text-white hover:bg-white/10" onClick={handleReset}>
@@ -195,7 +195,7 @@ export function Contact() {
                     aria-invalid={Boolean(errors.consent)}
                     aria-describedby={errors.consent ? 'consent-error' : undefined}
                   />
-                  <span>개인정보 수집 및 이용에 동의합니다. (필수)</span>
+                  <span>개인정보 수집 및 이용에 동의해요. (필수)</span>
                 </label>
                 {errors.consent && (
                   <p id="consent-error" className="mt-1.5 text-xs text-rose-300">

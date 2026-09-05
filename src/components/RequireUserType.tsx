@@ -38,7 +38,7 @@ export function RequireUserType({ userType, children }: RequireUserTypeProps) {
           <span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-sky border-t-transparent"
             aria-hidden="true"
           />
-          <p className="text-sm text-slate-300">로그인 상태를 확인하는 중입니다...</p>
+          <p className="text-sm text-slate-300">로그인 상태를 확인하는 중이에요...</p>
         </div>
       </div>
     )
@@ -76,11 +76,11 @@ export function RequireUserType({ userType, children }: RequireUserTypeProps) {
       <div className="flex min-h-screen items-center justify-center bg-navy-dark px-6 text-white">
         <div className="max-w-md rounded-card border border-white/10 bg-white/5 p-cardpad text-center">
           <ShieldAlert className="mx-auto h-10 w-10 text-rose-400" aria-hidden="true" />
-          <h1 className="mt-4 font-display text-xl font-extrabold">접근 권한이 없습니다</h1>
+          <h1 className="mt-4 font-display text-xl font-extrabold">접근 권한이 없어요</h1>
           <p className="mt-3 text-sm text-slate-300">
-            이 페이지는 {allowedLabel} 전용입니다. 현재 계정은{' '}
+            이 페이지는 {allowedLabel} 전용이에요. 현재 계정은{' '}
             <span>{TYPE_LABEL[currentUserType]}</span>(으)로 등록되어 있어 접근할 수
-            없습니다.
+            없어요.
           </p>
           <Link to={correctPath}
             className="mt-6 inline-flex items-center justify-center rounded-control bg-sky px-5 py-2.5 text-sm font-semibold text-navy transition-colors hover:bg-sky/90

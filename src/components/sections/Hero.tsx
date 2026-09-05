@@ -110,7 +110,7 @@ export function Hero() {
           <p className="mt-6 max-w-xl text-slate-300"
             style={{ fontSize: 'clamp(1rem, 0.94rem + 0.3vw, 1.125rem)', lineHeight: 1.7 }}
           >
-            비행기록을 입력하면, 필요한 시간과 자격이 자동으로 정리됩니다.
+            비행기록을 입력하면, 필요한 시간과 자격이 자동으로 정리돼요.
             <strong className="font-semibold text-white"> 국내 비행경력증명서 서식</strong> 기준 · 교관 전자서명 · CSV · PDF 내보내기 지원.
           </p>
 

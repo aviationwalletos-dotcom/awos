@@ -28,7 +28,7 @@ function MyInquiryItem({ item }: { item: BoardPostListItem }) {
     if (!open || content !== null) return
     void fetchDetail(item.id)
       .then((detail) => setContent(detail.content ?? ''))
-      .catch(() => setContent('(내용을 불러오지 못했습니다)'))
+      .catch(() => setContent('(내용을 불러오지 못했어요)'))
   }, [open, content, fetchDetail, item.id])
 
   const replies = commentsData?.items ?? []
@@ -110,7 +110,7 @@ export function InquiryPage() {
       setDone(true)
       void loadMine()
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : '문의 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      setFormError(err instanceof Error ? err.message : '문의 등록에 실패했어요. 잠시 후 다시 시도해 주세요.')
     }
   }
 

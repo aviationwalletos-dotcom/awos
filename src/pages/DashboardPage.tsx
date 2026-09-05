@@ -103,7 +103,7 @@ export function DashboardPage() {
               <Reveal>
                 <h2 className="font-display text-2xl font-extrabold text-ink">구성원 현황</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  가입한 전체 회원이 상태 공유 절차 없이 바로 표시됩니다.
+                  가입한 전체 회원이 상태 공유 절차 없이 바로 표시돼요.
                 </p>
               </Reveal>
               <div className="mt-4 rounded-card border border-white/10 bg-navy p-6">
@@ -121,7 +121,7 @@ export function DashboardPage() {
                   교관 승인 관리
                 </h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  비행 기록에 교관 전자서명을 하려는 신청자를 검토하고 승인/대기 상태를 관리합니다.
+                  비행 기록에 교관 전자서명을 하려는 신청자를 검토하고 승인/대기 상태를 관리해요.
                 </p>
               </Reveal>
 
@@ -140,7 +140,7 @@ export function DashboardPage() {
                   비행경력증명서 승인
                 </h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  엑셀 파일이 없는 회원이 제출한 비행경력증명서 인증 요청(첨부 사진 포함)을 검토하고 승인/반려합니다.
+                  엑셀 파일이 없는 회원이 제출한 비행경력증명서 인증 요청(첨부 사진 포함)을 검토하고 승인/반려해요.
                 </p>
               </Reveal>
 
@@ -157,7 +157,7 @@ export function DashboardPage() {
               <Reveal>
                 <h2 className="font-display text-2xl font-extrabold text-ink">자격증 · 항공신체검사 요청함</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  회원이 사진과 함께 보낸 자격증·항공신체검사 인증 요청을 확인하고 승인/반려합니다.
+                  회원이 사진과 함께 보낸 자격증·항공신체검사 인증 요청을 확인하고 승인/반려해요.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {([['all', '전체'], ['license', '자격증'], ['medical', '항공신체검사']] as const).map(([value, label]) => (
@@ -187,7 +187,7 @@ export function DashboardPage() {
               <Reveal>
                 <h2 className="font-display text-2xl font-extrabold text-ink">문의함</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  회원이 남긴 문의를 확인하고 답변을 등록하세요. 답변은 해당 회원의 문의하기 페이지에 표시됩니다.
+                  회원이 남긴 문의를 확인하고 답변을 등록하세요. 답변은 해당 회원의 문의하기 페이지에 표시돼요.
                 </p>
               </Reveal>
               <div className="mt-8">

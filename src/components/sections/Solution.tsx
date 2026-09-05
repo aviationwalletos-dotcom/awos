@@ -33,7 +33,7 @@ export function Solution() {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-slate-300">
                 면허·항공신체검사·법정교육 등 자격 만료를 카드로 확인하고, 최근 이착륙 커런시 현황을 점검하며,
-                비행 날짜·구간·기종·블록타임을 직접 입력해 나만의 비행 이력을 관리합니다.
+                비행 날짜·구간·기종·블록타임을 직접 입력해 나만의 비행 이력을 관리해요.
               </p>
               <ul className="mt-6 space-y-3 text-sm text-slate-300">
                 <li>면허·항공신체검사·법정교육 상태를 카드형으로 시각화</li>
@@ -56,7 +56,7 @@ export function Solution() {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-slate-300">
                 회원이 공유한 비행 적합성 상태를 Red/Green 신호로 모아 결격 인원을 즉시 식별하고, 역할·기종·상태별로
-                필터링해 인력별 비행시간과 자격 현황을 점검하며, 교관 승인 요청까지 한 화면에서 관리합니다.
+                필터링해 인력별 비행시간과 자격 현황을 점검하며, 교관 승인 요청까지 한 화면에서 관리해요.
               </p>
               <ul className="mt-6 space-y-3 text-sm text-slate-300">
                 <li>소속 인력 전체의 자격 상태를 Red/Green으로 실시간 조망</li>
@@ -69,7 +69,7 @@ export function Solution() {
 
         <Reveal className="mt-20">
           <h3 className="text-center text-lg font-semibold text-slate-200">
-            민감한 자격 정보를 다루는 만큼, 신뢰를 최우선으로 설계했습니다
+            민감한 자격 정보를 다루는 만큼, 신뢰를 최우선으로 설계했어요
           </h3>
         </Reveal>
 

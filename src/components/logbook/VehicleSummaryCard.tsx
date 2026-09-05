@@ -1,4 +1,4 @@
-// 로그북 첫 화면(초경량 구분)의 오른쪽 칸 — 내 기체 요약. 등록·삭제는 "기록 입력·가져오기" 탭의 내 기체에서.
+// 로그북 첫 화면(초경량 구분)의 오른쪽 칸 — 내 기체 요약. 등록·삭제는 "기록 입력" 탭의 내 기체에서.
 import { Plane } from 'lucide-react'
 
 import { vehicleKindLabel } from '../../lib/tracks'

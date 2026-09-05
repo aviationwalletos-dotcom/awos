@@ -25,7 +25,7 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   await student.locator('#blockTime').fill('0.8')
   await student.locator('#notes').fill(MARKER)
   await student.getByTestId('entry-submit').click()
-  await expect(student.getByText(/비행기록이 추가되었습니다/)).toBeVisible()
+  await expect(student.getByText(/비행기록이 추가/)).toBeVisible()
 
   // 학생: 상세 열고 교관 지정 → 요청
   await openTab(student, /비행기록/)
@@ -42,7 +42,7 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   }
   await expect(select.locator('option:not([disabled])').first()).toBeAttached({ timeout: 15_000 })
   await dialog.getByTestId('signature-request-send').click()
-  await expect(dialog.getByText(/서명 요청을 보냈습니다/)).toBeVisible()
+  await expect(dialog.getByText(/서명 요청을 보냈/)).toBeVisible()
   await dialog.getByRole('button', { name: /닫기/ }).first().click()
 
   // 교관: 서명함에서 카드 찾고 서명

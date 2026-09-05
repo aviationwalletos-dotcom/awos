@@ -167,7 +167,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
         <legend className={sectionTitleClass}>기체(機體) 정보</legend>
         {vehicles.length === 0 ? (
           <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-            등록된 기체가 없어요. 위 "내 기체"에서 먼저 등록하면 종류·형식·신고번호·인증검사일이 기록에 자동으로 붙습니다.
+            등록된 기체가 없어요. 위 "내 기체"에서 먼저 등록하면 종류·형식·신고번호·인증검사일이 기록에 자동으로 붙어요.
           </p>
         ) : (
           <div className="mt-2">
@@ -179,7 +179,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
             {errors.vehicle && <p className="mt-1 text-xs text-rose-400">{errors.vehicle}</p>}
             {!inspectionOk && (
               <p className="mt-2 rounded-control border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-200">
-                이 날짜엔 이 기체의 안전성인증이 만료된 상태예요. 기록은 저장되지만 <span className="font-semibold">경력 합산과 증명서에서 제외</span>됩니다(기재요령 주의사항 2).
+                이 날짜엔 이 기체의 안전성인증이 만료된 상태예요. 기록은 저장되지만 <span className="font-semibold">경력 합산과 증명서에서 제외</span>돼요(기재요령 주의사항 2).
               </p>
             )}
           </div>
@@ -238,7 +238,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
             <input id="ul-min" type="number"
               inputMode="decimal" min="0" step="1" value={minutes} onChange={(e) => setMinutes(e.target.value)} className={inputClass} />
             <p className="mt-1 text-[11px] text-slate-500">
-              {totalMin > 0 ? `→ ${minutesToHours(totalMin).toFixed(1)}시간으로 저장(둘째자리 버림)` : '시각을 넣으면 자동 계산돼요. 직접 넣어도 됩니다.'}
+              {totalMin > 0 ? `→ ${minutesToHours(totalMin).toFixed(1)}시간으로 저장(둘째자리 버림)` : '시각을 넣으면 자동 계산돼요. 직접 넣어도 돼요.'}
               {autoMinutes !== null && String(autoMinutes) !== minutes && (
                 <button type="button" onClick={applyAuto} className="ml-2 text-sky underline">시각 기준 {autoMinutes}분 적용</button>
               )}
@@ -287,7 +287,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
           </div>
         </div>
         <p className={`mt-1 text-[11px] ${dutyTotal > 0 && dutyTotal !== totalMin ? 'text-amber-300' : 'text-slate-500'}`}>
-          소계 {dutyTotal}분{dutyTotal > 0 && dutyTotal !== totalMin ? ` — 비행시간 ${totalMin}분과 달라요. 로그기록지에서는 보통 같아야 합니다.` : ''}
+          소계 {dutyTotal}분{dutyTotal > 0 && dutyTotal !== totalMin ? ` — 비행시간 ${totalMin}분과 달라요. 로그기록지에서는 보통 같아야 해요.` : ''}
         </p>
       </fieldset>
 
@@ -306,7 +306,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
           <div>
             <label htmlFor="ul-lic" className={labelClass}>지도조종자 자격번호</label>
             <input id="ul-lic" name="instructorLicenceNo" defaultValue={initialValues?.instructorLicenceNo} placeholder="예: 91-XXXXXX" className={inputClass} />
-            <p className="mt-1 text-[11px] text-slate-500">성명·서명은 저장 후 "교관 서명 요청"으로 받습니다.</p>
+            <p className="mt-1 text-[11px] text-slate-500">성명·서명은 저장 후 "교관 서명 요청"으로 받아요.</p>
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="ul-notes" className={labelClass}>비고 (선택)</label>

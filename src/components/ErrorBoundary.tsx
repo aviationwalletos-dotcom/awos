@@ -24,7 +24,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return (
       <div role="alert" className="mx-auto max-w-xl px-6 py-24 text-center">
         <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">문제가 생겼어요</p>
-        <h1 className="mt-2 font-display text-2xl font-extrabold text-white">화면을 그리는 중 오류가 발생했습니다</h1>
+        <h1 className="mt-2 font-display text-2xl font-extrabold text-white">화면을 그리는 중 오류가 발생했어요</h1>
         <p className="mt-3 text-sm text-slate-400">
           기록은 이 브라우저에 그대로 남아 있어요. 새로고침하면 대부분 해결되고, 반복되면 문의함으로 아래 내용을 보내주세요.
         </p>

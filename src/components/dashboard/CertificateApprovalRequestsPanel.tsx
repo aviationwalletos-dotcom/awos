@@ -16,9 +16,9 @@ export function CertificateApprovalRequestsPanel({ categoryFilter = 'all' }: { c
     <ApprovalQueuePanel
       kinds={KINDS_BY_FILTER[categoryFilter]}
       title="자격증 승인 관리"
-      description="회원이 사진과 함께 보낸 자격증·항공신체검사 인증 요청입니다. 첨부를 확인한 뒤 승인/반려하세요. 판정 뒤에는 되돌릴 수 없어요."
+      description="회원이 사진과 함께 보낸 자격증·항공신체검사 인증 요청이에요. 첨부를 확인한 뒤 승인/반려하세요. 판정 뒤에는 되돌릴 수 없어요."
       icon={FileCheck2}
-      emptyTitle="해당하는 인증 요청이 없습니다"
+      emptyTitle="해당하는 인증 요청이 없어요"
       showAttachment
     />
   )

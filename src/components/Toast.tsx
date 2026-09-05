@@ -1,4 +1,4 @@
-// 짧은 확인 알림("추가되었습니다" 등). 화면 하단 중앙에 2.5초 떠 있다가 사라진다.
+// 짧은 확인 알림("추가됐어요" 등). 화면 하단 중앙에 2.5초 떠 있다가 사라진다.
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 

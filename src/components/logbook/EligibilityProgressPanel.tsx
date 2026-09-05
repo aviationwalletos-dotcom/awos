@@ -103,7 +103,7 @@ export function EligibilityProgressPanel({ track, entries, certificates, vehicle
         {hasUas && (
           <p className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
             무인비행장치 응시경력은 <span className="font-semibold">교육기관(전문·사설)의 지도조종자가 확인하고 대표가 증명한 비행경력증명서</span>만 인정돼요.
-            지정 훈련용 기체 또는 사용사업 신고 기체로 비행하고, 출결관리시스템으로 확인된 시간이어야 합니다(운영세칙 제9조·제10조·별표 2 비고). 아래는 앱 기록으로 센 참고 진척도예요.
+            지정 훈련용 기체 또는 사용사업 신고 기체로 비행하고, 출결관리시스템으로 확인된 시간이어야 해요(운영세칙 제9조·제10조·별표 2 비고). 아래는 앱 기록으로 센 참고 진척도예요.
           </p>
         )}
         <div className="space-y-3">
@@ -124,7 +124,7 @@ export function EligibilityProgressPanel({ track, entries, certificates, vehicle
       {hasUas && (
         <p className="mb-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
           무인비행장치 응시경력은 <span className="font-semibold">교육기관(전문·사설)의 지도조종자가 확인하고 대표가 증명한 비행경력증명서</span>만 인정돼요.
-          지정 훈련용 기체 또는 사용사업 신고 기체로 비행하고, 출결관리시스템으로 확인된 시간이어야 합니다(운영세칙 제9조·제10조·별표 2 비고).
+          지정 훈련용 기체 또는 사용사업 신고 기체로 비행하고, 출결관리시스템으로 확인된 시간이어야 해요(운영세칙 제9조·제10조·별표 2 비고).
           아래는 앱 기록으로 센 참고 진척도예요.
         </p>
       )}
@@ -133,7 +133,7 @@ export function EligibilityProgressPanel({ track, entries, certificates, vehicle
           <Card key={c.id} card={c} />
         ))}
       </div>
-      <p className="mt-3 text-[11px] text-slate-500">참고 판정이며, 최종 응시자격은 공단(TS)이 심사합니다.</p>
+      <p className="mt-3 text-[11px] text-slate-500">참고 판정이며, 최종 응시자격은 공단(TS)이 심사해요.</p>
     </Collapsible>
   )
 }

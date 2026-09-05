@@ -24,8 +24,8 @@ export function Features() {
             기능 명세
           </h2>
           <p className="mt-4 max-w-2xl text-slate-400">
-            항공안전법 시행규칙 별지 비행경력증명서 서식의 항목 구조를 기준으로 설계했습니다.
-            해외 로그북 애플리케이션은 FAA 서식을 기준으로 하므로 국내 증명서 발급 시 항목을 재정리해야 합니다.
+            항공안전법 시행규칙 별지 비행경력증명서 서식의 항목 구조를 기준으로 설계했어요.
+            해외 로그북 애플리케이션은 FAA 서식을 기준으로 하므로 국내 증명서 발급 시 항목을 재정리해야 해요.
           </p>
         </Reveal>
 
@@ -56,7 +56,7 @@ export function Features() {
 
         <Reveal>
           <p className="mt-8 text-xs leading-relaxed text-slate-500">
-            조종사 · 훈련생 전용으로 설계되었습니다.
+            조종사 · 훈련생 전용으로 설계됐어요.
           </p>
         </Reveal>
       </div>

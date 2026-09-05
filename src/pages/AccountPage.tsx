@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { Button } from '../components/Button'
 import { InfoTip } from '../components/InfoTip'
+import { AccountSection } from '../components/account/AccountSection'
 import { InstitutionSelect } from '../components/InstitutionSelect'
 import { INDIVIDUAL_ROLE_LABEL } from '../lib/baas/types'
 import { InstructorApprovalSection } from '../components/account/InstructorApprovalSection'
@@ -125,7 +126,7 @@ export function AccountPage() {
       setEmailRegisterState('sent')
     } catch (err) {
       setEmailRegisterState('error')
-      setEmailRegisterError(err instanceof Error ? err.message : '등록에 실패했습니다.')
+      setEmailRegisterError(err instanceof Error ? err.message : '등록에 실패했어요.')
     }
   }
   const [linkTarget, setLinkTarget] = useState<OAuthProvider | null>(null)
@@ -142,12 +143,12 @@ export function AccountPage() {
     try {
       await startLinkProvider(linkTarget)
     } catch (err) {
-      setLinkError(err instanceof Error ? err.message : '계정 연결에 실패했습니다.')
+      setLinkError(err instanceof Error ? err.message : '계정 연결에 실패했어요.')
     }
   }
   const [deleteError, setDeleteError] = useState<string | null>(null)
   // 탈퇴 재확인 — 이메일 로그인이 있으면 비밀번호, 소셜 전용이면 확인 문구. 실수로 누르는 것을 막는다.
-  const DELETE_PHRASE = '탈퇴합니다'
+  const DELETE_PHRASE = '탈퇴해요'
   const hasPasswordLogin = Boolean(linkedProviders?.includes('email'))
   const [deletePassword, setDeletePassword] = useState('')
   const [deletePhrase, setDeletePhrase] = useState('')
@@ -176,12 +177,12 @@ export function AccountPage() {
       }
       // 2) 삭제
       const client = await getFreshDataClient()
-      if (!client) throw new Error('로그인 정보를 찾을 수 없습니다. 다시 로그인 후 시도해 주세요.')
+      if (!client) throw new Error('로그인 정보를 찾을 수 없어요. 다시 로그인 후 시도해 주세요.')
       const { error } = await client.rpc('delete_my_account')
       if (error) {
         throw new Error(
           error.message.includes('delete_my_account')
-            ? '탈퇴 기능이 아직 서버에 설정되지 않았습니다(schema7 SQL 실행 필요).'
+            ? '탈퇴 기능이 아직 서버에 설정되지 않았어요(schema7 SQL 실행 필요).'
             : error.message,
         )
       }
@@ -196,7 +197,7 @@ export function AccountPage() {
       await logout()
       window.location.href = '/'
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : '탈퇴 처리에 실패했습니다.')
+      setDeleteError(err instanceof Error ? err.message : '탈퇴 처리에 실패했어요.')
       setDeleteStep('confirm')
     }
   }
@@ -322,11 +323,11 @@ export function AccountPage() {
       return
     }
     if (newPassword.length < 8) {
-      setFormError('새 비밀번호는 8자 이상이어야 합니다.')
+      setFormError('새 비밀번호는 8자 이상이어야 해요.')
       return
     }
     if (newPassword !== newPasswordConfirm) {
-      setFormError('새 비밀번호가 일치하지 않습니다.')
+      setFormError('새 비밀번호가 일치하지 않아요.')
       return
     }
 
@@ -345,7 +346,7 @@ export function AccountPage() {
       <div className="min-h-screen bg-navy-dark font-body text-white">
         <PageHeader />
         <main className="mx-auto max-w-2xl px-6 py-24 text-center text-slate-400">
-          계정 정보를 불러오는 중입니다...
+          계정 정보를 불러오는 중이에요...
         </main>
       </div>
     )
@@ -358,7 +359,7 @@ export function AccountPage() {
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <UserCircle2 className="mx-auto h-10 w-10 text-slate-400" aria-hidden="true" />
           <h1 className="mt-4 font-display text-xl font-extrabold">
-            로그인이 필요합니다
+            로그인이 필요해요
           </h1>
           <p className="mt-2 text-sm text-slate-400">
             계정정보를 확인하려면 먼저 로그인해주세요.
@@ -442,7 +443,7 @@ export function AccountPage() {
                 {needsEmailRegister && (
                   <div className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
                     {emailRegisterState === 'sent' ? (
-                      <>확인 메일을 <span className="font-semibold">{authEmails?.identityEmail}</span>로 보냈어요. 메일의 링크를 누르면 이 주소가 계정 이메일로 등록됩니다.</>
+                      <>확인 메일을 <span className="font-semibold">{authEmails?.identityEmail}</span>로 보냈어요. 메일의 링크를 누르면 이 주소가 계정 이메일로 등록돼요.</>
                     ) : (
                       <>
                         이 계정은 이메일 없이 가입되어 소셜 로그인이 준 이메일이 아직 계정에 등록되지 않았어요. 등록하면 이메일 로그인 연결·안내 메일 수신이 가능해요.
@@ -515,7 +516,7 @@ export function AccountPage() {
 
             {affiliationSaved && (
               <p role="status" className="mt-3 rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                소속 기관이 저장되었습니다. ({effectiveAffiliation})
+                소속 기관이 저장됐어요. ({effectiveAffiliation})
               </p>
             )}
 
@@ -565,7 +566,7 @@ export function AccountPage() {
 
                 {tracksSaved && (
                   <p role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                    자격 구분이 저장되었습니다. ({selectedTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')})
+                    자격 구분이 저장됐어요. ({selectedTracks.map((t) => PILOT_TRACK_LABEL[t]).join(' · ')})
                   </p>
                 )}
 
@@ -575,12 +576,10 @@ export function AccountPage() {
               </form>
             </div>
 
-            <div className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
-              <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
-                <User className="h-4 w-4 text-sky" aria-hidden="true" />
-                생년월일 · 국적 · 운항형태
-                <InfoTip label="설명 보기">항공신체검사 유효기간은 연령으로 갈려요(별표 8: 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월). 운항형태는 커런시 기준(180일 / 90일+야간)과 1종 신체검사 6개월 예외를 가려요.</InfoTip>
-              </h2>
+            <AccountSection id="account-birth" title="생년월일 · 국적 · 운항형태" icon={User} status={birthDate ? `${birthDate}${operationType ? " · " + operationType : ""}` : "미설정"}>
+              <p className="text-xs text-slate-400">
+                항공신체검사 유효기간은 연령으로 갈려요(별표 8). 운항형태는 커런시 기준(180일 / 90일+야간)과 1종 신체검사 6개월 예외를 가려요.
+              </p>
               <form onSubmit={handleSaveBirth} className="mt-5 flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
@@ -628,14 +627,14 @@ export function AccountPage() {
                 </div>
                 {birthSaved && (
                   <p role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                    저장되었습니다.
+                    저장됐어요.
                   </p>
                 )}
                 <Button type="submit" size="md" tone="brand" className="self-start">
                   저장
                 </Button>
               </form>
-            </div>
+            </AccountSection>
             </>
           )}
 
@@ -646,23 +645,19 @@ export function AccountPage() {
               <Info className="h-3.5 w-3.5 shrink-0 text-sky" aria-hidden="true" />
               {isApprovedInstructor ? (
                 <>
-                  교관 승인이 완료되었습니다. 서명 요청함은{' '}
+                  교관 승인이 완료됐어요. 서명 요청함은{' '}
                   <Link to="/logbook" className="font-semibold text-sky underline-offset-2 hover:underline">
                     AWOS &gt; 서명 요청함
                   </Link>{' '}
-                  탭에서 확인할 수 있습니다.
+                  탭에서 확인할 수 있어요.
                 </>
               ) : (
-                '승인이 완료되면 AWOS 페이지에 서명 요청함 탭이 나타납니다.'
+                '승인이 완료되면 AWOS 페이지에 서명 요청함 탭이 나타나요.'
               )}
             </p>
           )}
 
-          <div className="mt-8 rounded-card border border-white/10 bg-white/5 p-cardpad">
-            <h2 className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
-              <KeyRound className="h-4 w-4 text-sky" aria-hidden="true" />
-              비밀번호 변경
-            </h2>
+          <AccountSection id="account-password" title="비밀번호 변경" icon={KeyRound} status={hasPasswordLogin ? undefined : "이메일 로그인 연결 후 사용"}>
             <p className="mt-1 text-xs text-slate-400">
               소셜(구글·카카오)로만 로그인하는 계정은 아래 "로그인 방법 연결"에서 이메일 로그인을 먼저 연결하세요.
             </p>
@@ -675,7 +670,7 @@ export function AccountPage() {
               )}
               {isSuccess && !formError && !changeError && (
                 <p role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                  비밀번호가 변경되었습니다.
+                  비밀번호가 변경됐어요.
                 </p>
               )}
 
@@ -726,14 +721,13 @@ export function AccountPage() {
                 비밀번호 변경
               </Button>
             </form>
-          </div>
+          </AccountSection>
         </div>
 
-        <section className="mx-auto mt-12 max-w-3xl px-6">
-          <div className="rounded-card border border-white/10 bg-white/5 p-6">
-            <h2 className="font-display text-lg font-extrabold text-ink">로그인 방법 연결</h2>
+        <section className="mx-auto mt-6 max-w-3xl px-6">
+          <AccountSection id="account-links" title="로그인 방법 연결" icon={KeyRound} className="!mt-0" status={linkedProviders ? `연결됨 ${linkedProviders.length}개` : undefined}>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              이 계정에 구글·카카오 로그인을 연결해두면, 어떤 방법으로 로그인해도 <span className="font-semibold text-slate-200">같은 계정·같은 기록</span>으로 들어옵니다.
+              이 계정에 구글·카카오 로그인을 연결해두면, 어떤 방법으로 로그인해도 <span className="font-semibold text-slate-200">같은 계정·같은 기록</span>으로 들어와요.
             </p>
             {justLinked && (
               <p className="mt-3 rounded-control border border-go/30 bg-go/10 px-3 py-2 text-sm font-semibold text-go">연결이 완료됐어요!</p>
@@ -769,7 +763,7 @@ export function AccountPage() {
               <div className="mt-4 rounded-control border border-white/10 bg-navy p-4">
                 <p className="text-sm font-semibold text-ink">이메일 로그인 연결</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  이 계정의 이메일({account.user_id || authEmails?.identityEmail || '—'})과 아래 비밀번호로도 로그인할 수 있게 돼요. 구글·카카오 로그인은 그대로 유지됩니다.
+                  이 계정의 이메일({account.user_id || authEmails?.identityEmail || '—'})과 아래 비밀번호로도 로그인할 수 있게 돼요. 구글·카카오 로그인은 그대로 유지돼요.
                   {needsEmailRegister && ' (카카오로만 가입한 계정은 위의 "계정 이메일로 등록"을 먼저 마쳐야 해요.)'}
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -785,7 +779,7 @@ export function AccountPage() {
                 </div>
               </div>
             )}
-          </div>
+          </AccountSection>
         </section>
 
         {linkTarget && (
@@ -795,7 +789,7 @@ export function AccountPage() {
                 {linkTarget === 'google' ? '구글' : '카카오'} 계정을 연결할까요?
               </h3>
               <ul className="mt-3 space-y-1.5 text-sm text-slate-300">
-                <li>· 연결 후 {linkTarget === 'google' ? '구글' : '카카오'}로 로그인하면 <span className="font-semibold text-ink">지금 이 계정</span>으로 들어옵니다.</li>
+                <li>· 연결 후 {linkTarget === 'google' ? '구글' : '카카오'}로 로그인하면 <span className="font-semibold text-ink">지금 이 계정</span>으로 들어와요.</li>
                 <li>· 기록·자격증은 이 계정의 것이 그대로 유지돼요.</li>
                 <li>· 그 소셜 계정으로 이미 따로 가입돼 있었다면 연결이 거부될 수 있어요 — 그 경우 그쪽 계정을 먼저 탈퇴해 주세요.</li>
               </ul>
@@ -808,11 +802,10 @@ export function AccountPage() {
           </div>
         )}
 
-        <section className="mx-auto mt-12 max-w-3xl px-6 pb-16">
-          <div className="rounded-card border border-rose-500/25 bg-rose-500/5 p-6">
-            <h2 className="font-display text-lg font-extrabold text-rose-300">회원 탈퇴</h2>
+        <section className="mx-auto mt-6 max-w-3xl px-6 pb-16">
+          <AccountSection id="account-delete" title="회원 탈퇴" tone="danger" className="!mt-0">
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              탈퇴하면 계정과 함께 비행기록·자격증·서명 요청 등 모든 데이터가 <span className="font-semibold text-rose-300">즉시 영구 삭제</span>되며 복구할 수 없습니다.
+              탈퇴하면 계정과 함께 비행기록·자격증·서명 요청 등 모든 데이터가 <span className="font-semibold text-rose-300">즉시 영구 삭제</span>되며 복구할 수 없어요.
               필요한 기록은 탈퇴 전에 백업해 주세요.
             </p>
             {deleteStep === 'idle' && (
@@ -826,7 +819,7 @@ export function AccountPage() {
             {(deleteStep === 'confirm' || deleteStep === 'working') && (
               <div className="mt-4 rounded-control border border-rose-400/30 bg-navy p-4">
                 <p className="text-sm font-semibold text-ink">정말 탈퇴하시겠어요?</p>
-                <p className="mt-1 text-xs text-slate-400">이 작업은 되돌릴 수 없습니다. 본인 확인 후 진행돼요.</p>
+                <p className="mt-1 text-xs text-slate-400">이 작업은 되돌릴 수 없어요. 본인 확인 후 진행돼요.</p>
 
                 <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-slate-300">
                   <input type="checkbox"
@@ -873,7 +866,7 @@ export function AccountPage() {
                     disabled={deleteStep === 'working' || !canConfirmDelete}
                     className="rounded-control bg-rose-500/90 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-500 disabled:opacity-60"
                   >
-                    {deleteStep === 'working' ? '삭제 중…' : '네, 영구 삭제합니다'}
+                    {deleteStep === 'working' ? '삭제 중…' : '네, 영구 삭제해요'}
                   </button>
                   <button type="button"
                     onClick={() => { setDeleteStep('idle'); setDeleteError(null) }}
@@ -885,7 +878,7 @@ export function AccountPage() {
                 </div>
               </div>
             )}
-          </div>
+          </AccountSection>
         </section>
       </main>
     </div>

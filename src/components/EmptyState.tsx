@@ -28,8 +28,8 @@ const SURFACE_CLASSES: Record<EmptyStateSurface, { box: string; icon: string; ti
 }
 
 /**
- * 데이터가 아직 없을 때 보여주는 공용 빈 상태 안내입니다. 아이콘 + 제목 + (선택) 설명으로
- * 구성하며, 각 화면 맥락(밝은 카드/어두운 카드)에 맞춰 대비를 유지합니다.
+ * 데이터가 아직 없을 때 보여주는 공용 빈 상태 안내예요. 아이콘 + 제목 + (선택) 설명으로
+ * 구성하며, 각 화면 맥락(밝은 카드/어두운 카드)에 맞춰 대비를 유지해요.
  */
 export function EmptyState({ icon: Icon, title, description, surface = 'light', className = '' }: EmptyStateProps) {
   const classes = SURFACE_CLASSES[surface]

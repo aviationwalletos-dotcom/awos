@@ -26,7 +26,7 @@ export async function login(page: Page, role: keyof typeof creds) {
 export async function openTab(page: Page, name: RegExp) {
   await page.getByRole('tab', { name }).click()
   // 기록 입력 탭의 입력 폼은 기본 접힘 — 테스트는 바로 채우므로 펼쳐 둔다
-  if (name.test('기록 입력·가져오기')) {
+  if (name.test('기록 입력')) {
     const toggle = page.getByTestId('new-entry-toggle')
     if (await appears(toggle, 5_000)) {
       if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()

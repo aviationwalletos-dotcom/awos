@@ -106,7 +106,7 @@ export function QuickEntryForm({ onSubmit }: QuickEntryFormProps) {
     const blockTime = Number(blockTimeText)
 
     if (!date || !dep || !arr || !type) {
-      setError('날짜·출발·도착·기종은 필수입니다.')
+      setError('날짜·출발·도착·기종은 필수예요.')
       return
     }
     if (!Number.isFinite(blockTime) || blockTime <= 0) {
