@@ -18,6 +18,7 @@ import type { PilotTrack } from "../lib/tracks";
 import { useLogbookPageModel } from "./logbook/useLogbookPageModel";
 import { MyRecordsTab } from "./logbook/tabs/MyRecordsTab";
 import { CertificatesTab } from "./logbook/tabs/CertificatesTab";
+import { EligibilityTab } from "./logbook/tabs/EligibilityTab";
 import { CurrencyTab } from "./logbook/tabs/CurrencyTab";
 import { InputTab } from "./logbook/tabs/InputTab";
 import { WorkLogTab } from "./logbook/tabs/WorkLogTab";
@@ -194,14 +195,17 @@ export function LogbookPage() {
                       entries={trackEntries}
                       certificates={certificates}
                       vehicles={vehicles}
-                      onOpenDetail={() =>
-                        document
-                          .getElementById("elig-section")
-                          ?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "start",
-                          })
-                      }
+                      onOpenDetail={() => {
+                        // 상세는 "응시경력" 탭으로 이동(2026-09-05 탭 분리)
+                        setActiveTab("eligibility");
+                        window.setTimeout(
+                          () =>
+                            document
+                              .getElementById("elig-section")
+                              ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                          80,
+                        );
+                      }}
                     />
                     {isDrone && (
                       <VehicleSummaryCard
@@ -257,6 +261,7 @@ export function LogbookPage() {
         {activeTab === "myRecords" && <MyRecordsTab m={model} />}
 
         {activeTab === "certificates" && <CertificatesTab m={model} />}
+        {activeTab === "eligibility" && <EligibilityTab m={model} />}
 
         {activeTab === "currency" && isPilotLike && <CurrencyTab m={model} />}
 

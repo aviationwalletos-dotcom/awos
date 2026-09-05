@@ -17,6 +17,7 @@ import {
   Radar,
   Radio,
   ShieldCheck,
+  Target,
 } from "lucide-react";
 import { buildEntrySuggestions } from "../../components/logbook/EntryForm";
 import { matchesFilter } from "../../components/logbook/EntryFilterBar";
@@ -62,6 +63,7 @@ import type { Certificate, CertificateInput } from "../../types/certificate";
 export type TabKey =
   | "myRecords"
   | "certificates"
+  | "eligibility"
   | "currency"
   | "logbook"
   | "signatureInbox"
@@ -92,6 +94,8 @@ export const DRONE_TABS: TabDef[] = [
   { key: "myRecords", label: "비행기록", icon: ListChecks },
   { key: "logbook", label: "기록 입력·가져오기", icon: PlaneTakeoff },
   { key: "certificates", label: "자격증", icon: ShieldCheck },
+  // 응시경력 진척도는 내용이 길어 자격증 다음 탭으로 분리(2026-09-05)
+  { key: "eligibility", label: "응시경력", icon: Target },
 ];
 
 // v1.1 — 경량항공기 조종사용 탭. 야간비행 금지(규칙 제311조)라 커런시 탭은 두지 않는다(응시경력은 비행기록 탭에서).
