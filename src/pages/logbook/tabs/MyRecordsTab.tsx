@@ -78,13 +78,13 @@ export function MyRecordsTab({ m }: { m: LogbookModel }) {
                   }}
                   onStartNew={() => {
                     setActiveTab("logbook");
-                    window.setTimeout(
-                      () =>
-                        document
-                          .getElementById("new-entry")
-                          ?.scrollIntoView({ behavior: "smooth" }),
-                      80,
-                    );
+                    window.setTimeout(() => {
+                      // 입력 폼은 기본 접힘 — "새 기록 시작" 으로 왔을 때는 펼쳐서 보여준다
+                      window.dispatchEvent(new CustomEvent("awos:open-new-entry"));
+                      document
+                        .getElementById("new-entry")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }, 80);
                   }}
                 />
               </Reveal>

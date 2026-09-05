@@ -1,5 +1,5 @@
 import { type Browser, expect, test } from '@playwright/test'
-import { deleteEntriesByMarker, login, openTab, today } from './helpers'
+import { appears, deleteEntriesByMarker, login, openTab, today } from './helpers'
 
 // 실행마다 고유한 표식 — 이전 실행이 남긴 요청 카드와 섞이지 않게(카드는 이 문구가 든 메모로 찾는다)
 const MARKER = `E2E-SIGN-${Date.now().toString(36)}`
@@ -38,7 +38,7 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   // 소속 필터로 교관이 안 보이면 전체 보기
   if ((await select.locator('option:not([disabled])').count()) === 0) {
     const showAll = dialog.getByRole('button', { name: /전체 보기/ })
-    if (await showAll.isVisible().catch(() => false)) await showAll.click()
+    if (await appears(showAll, 3_000)) await showAll.click()
   }
   await expect(select.locator('option:not([disabled])').first()).toBeAttached({ timeout: 15_000 })
   await dialog.getByTestId('signature-request-send').click()
@@ -77,11 +77,13 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   instructor.on('pageerror', (err) => consoleLog.push(`pageerror: ${err.message}`.slice(0, 200)))
   await login(instructor, 'instructor')
   // 탭은 교관 승인 조회가 끝난 뒤 붙는다 — 넉넉히 기다리고, 안 보이면 한 번 새로고침해 재확인
+  // [교훈] 예전엔 isVisible({ timeout }) 으로 기다린다고 믿었지만 즉시 판정이라, 승인 조회(0.3초)보다 먼저
+  // "탭 없음"으로 실패했다. appears() 는 진짜로 기다린다.
   let inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
-  if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
+  if (!(await appears(inboxTab, 30_000))) {
     await instructor.goto('/logbook')
     inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
-    if (!(await inboxTab.isVisible({ timeout: 30_000 }).catch(() => false))) {
+    if (!(await appears(inboxTab, 30_000))) {
       // 무엇이 보였는지 그대로 남긴다(계정 착오·라우팅 문제·탭 누락을 한 번에 구분)
       const tabNames = await instructor.getByRole('tab').allInnerTexts().catch(() => [] as string[])
       const email = process.env.E2E_INSTRUCTOR_EMAIL ?? '(미설정)'

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { login, openTab, tinyPng } from './helpers'
+import { appears, login, openTab, tinyPng } from './helpers'
 
 test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ page }) => {
   await login(page, 'student')
@@ -36,7 +36,7 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
 
   // 폼 검증에 막히면 토스트를 90초 기다리다 "timeout"만 남는다. 막힌 이유를 실패 메시지로 보여준다.
   const fieldError = page.locator('[id$="-error"]').first()
-  if (await fieldError.isVisible({ timeout: 1_500 }).catch(() => false)) {
+  if (await appears(fieldError, 1_500)) {
     throw new Error(`자격증 폼 검증에 막혔습니다: ${(await fieldError.innerText()).trim()}`)
   }
 

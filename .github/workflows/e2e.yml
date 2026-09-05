@@ -38,7 +38,8 @@ jobs:
             if [ "$deployed" = "$GITHUB_SHA" ]; then echo "배포 반영 확인"; exit 0; fi
             sleep 10
           done
-          echo "::warning::400초 동안 사이트 커밋이 테스트 커밋과 일치하지 않았어요. 이전 배포본으로 테스트할 수 있어요."
+          echo "::error::400초 동안 사이트 커밋이 테스트 커밋과 일치하지 않았어요. Netlify 배포가 실패했거나 아직 진행 중이에요. Netlify → Deploys 를 확인한 뒤 다시 실행하세요."
+          exit 1
       - name: 러너 → Supabase 연결 진단 (IPv4/IPv6)
         run: |
           echo "IPv4:"; curl -4 -sS -m 10 -o /dev/null -w '%{http_code} %{time_total}s\n' https://vflyqnbdquaanpkvuinz.supabase.co/auth/v1/health || echo "IPv4 실패"
