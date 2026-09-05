@@ -25,6 +25,21 @@ export function pickSignedFields(entry: LogbookEntry | LogbookEntryInput): Recor
     nightLandings: entry.nightLandings ?? null,
     notes: entry.notes ?? null,
     twoPilotAircraft: entry.twoPilotAircraft ?? null,
+    nightTakeoffs: entry.nightTakeoffs ?? null,
+    // 구분·기종(경량/초경량)·시뮬레이터
+    vehicleClass: entry.vehicleClass ?? null,
+    vehicleKind: entry.vehicleKind ?? null,
+    simDevice: entry.simDevice ?? null,
+    // 초경량 로그기록지(별지 제2호) 항목 — 빠지면 초경량 서명은 시간·아워미터를 바꿔도 못 잡는다
+    vehicleId: entry.vehicleId ?? null,
+    flightCount: entry.flightCount ?? null,
+    takeoffTime: entry.takeoffTime ?? null,
+    landingTime: entry.landingTime ?? null,
+    hourMeterStart: entry.hourMeterStart ?? null,
+    hourMeterEnd: entry.hourMeterEnd ?? null,
+    flightPurpose: entry.flightPurpose ?? null,
+    instructorLicenceNo: entry.instructorLicenceNo ?? null,
+    traineeName: entry.traineeName ?? null,
   }
 }
 
@@ -61,10 +76,20 @@ export async function buildSignedSnapshot(entry: LogbookEntry | LogbookEntryInpu
   return { version: 1, fields, hash: await sha256Hex(canonicalJson(fields)), capturedAt: new Date().toISOString() }
 }
 
-/** 현재 기록이 서명 당시 내용과 같은지(해시 비교) */
+/**
+ * 현재 기록이 서명 당시 내용과 같은지.
+ * 스냅샷에 든 항목만 비교한다(나중에 서명 대상 항목이 늘어나도 예전 서명이 "불일치"로 오판되지 않게).
+ * 저장된 스냅샷 자체의 해시도 확인해 스냅샷 변조를 잡는다.
+ */
 export async function matchesSnapshot(entry: LogbookEntry | LogbookEntryInput, snapshot: SignedSnapshot | null | undefined): Promise<boolean | null> {
-  if (!snapshot?.hash) return null
-  return (await sha256Hex(canonicalJson(pickSignedFields(entry)))) === snapshot.hash
+  if (!snapshot?.hash || !snapshot.fields) return null
+  const storedHash = await sha256Hex(canonicalJson(snapshot.fields))
+  if (storedHash !== snapshot.hash) return false
+  const current = pickSignedFields(entry) as Record<string, unknown>
+  for (const [k, v] of Object.entries(snapshot.fields)) {
+    if (JSON.stringify(v ?? null) !== JSON.stringify(current[k] ?? null)) return false
+  }
+  return true
 }
 
 /** 사람이 읽는 라벨(상세 화면 "서명 당시 내용" 표) */
@@ -86,6 +111,19 @@ export const SIGNED_FIELD_LABEL: Record<string, string> = {
   nightLandings: '야간 이착륙',
   notes: '메모',
   twoPilotAircraft: '2인 조종 항공기',
+  nightTakeoffs: '야간 이륙',
+  vehicleClass: '구분',
+  vehicleKind: '종류',
+  simDevice: '시뮬레이터 장치',
+  vehicleId: '기체',
+  flightCount: '비행 횟수',
+  takeoffTime: '이륙 시각',
+  landingTime: '착륙 시각',
+  hourMeterStart: '아워미터(이륙)',
+  hourMeterEnd: '아워미터(착륙)',
+  flightPurpose: '비행 목적/훈련 내용',
+  instructorLicenceNo: '지도조종자 자격번호',
+  traineeName: '교육생 성명',
 }
 
 export function snapshotFromPayload(payload: Record<string, unknown> | null | undefined): SignedSnapshot | null {

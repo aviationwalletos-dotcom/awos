@@ -32,3 +32,16 @@ describe('서명 시점 스냅샷·해시', () => {
     expect(await matchesSnapshot({ ...base, blockTime: 1.5 }, snap)).toBe(false)
   })
 })
+
+describe('스냅샷 항목이 늘어난 뒤에도 예전 서명은 일치로 본다', () => {
+  it('예전 스냅샷(항목 일부)과 현재 기록의 공통 항목이 같으면 true', async () => {
+    const old = { version: 1 as const, fields: { date: '2026-09-05', blockTime: 1.2 }, hash: '', capturedAt: '' }
+    old.hash = await (await import('./snapshot')).sha256Hex((await import('./snapshot')).canonicalJson(old.fields))
+    expect(await matchesSnapshot({ ...base }, old)).toBe(true)
+    expect(await matchesSnapshot({ ...base, blockTime: 2 }, old)).toBe(false)
+  })
+  it('스냅샷이 변조되면(해시 불일치) false', async () => {
+    const snap = await buildSignedSnapshot(base)
+    expect(await matchesSnapshot(base, { ...snap, fields: { ...snap.fields, blockTime: 9 } })).toBe(false)
+  })
+})
