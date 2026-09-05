@@ -45,6 +45,19 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   // 교관: 서명함에서 카드 찾고 서명
   const instructorCtx = await browser.newContext()
   const instructor = await instructorCtx.newPage()
+  // 진단: 승인/서명 관련 요청의 HTTP 상태와 콘솔 오류를 모아 실패 메시지에 붙인다
+  const netLog: string[] = []
+  const consoleLog: string[] = []
+  instructor.on('response', (res) => {
+    const url = res.url()
+    if (/approval_requests|\/rpc\/|account\/info|\/auth\/v1\/token/.test(url)) {
+      netLog.push(`${res.status()} ${res.request().method()} ${url.replace(/^https?:\/\/[^/]+/, '')}`.slice(0, 160))
+    }
+  })
+  instructor.on('console', (msg) => {
+    if (msg.type() === 'error' || msg.type() === 'warning') consoleLog.push(`${msg.type()}: ${msg.text()}`.slice(0, 200))
+  })
+  instructor.on('pageerror', (err) => consoleLog.push(`pageerror: ${err.message}`.slice(0, 200)))
   await login(instructor, 'instructor')
   // 탭은 교관 승인 조회가 끝난 뒤 붙는다 — 넉넉히 기다리고, 안 보이면 한 번 새로고침해 재확인
   let inboxTab = instructor.getByRole('tab', { name: /서명 요청함/ })
@@ -55,9 +68,12 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
       // 무엇이 보였는지 그대로 남긴다(계정 착오·라우팅 문제·탭 누락을 한 번에 구분)
       const tabNames = await instructor.getByRole('tab').allInnerTexts().catch(() => [] as string[])
       const email = process.env.E2E_INSTRUCTOR_EMAIL ?? '(미설정)'
+      const bodyText = (await instructor.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 300)
       throw new Error(
-        `교관 계정(${email})에 "서명 요청함" 탭이 없습니다 — 현재 주소: ${instructor.url()} / 보이는 탭: [${tabNames.map((t) => t.trim()).join(', ')}]. ` +
-          '이 계정이 항공기 교관으로 승인돼 있는지(계정정보 → 교관 승인 신청 카드) 확인해 주세요.',
+        `교관 계정(${email})에 "서명 요청함" 탭이 없습니다 — 현재 주소: ${instructor.url()} / 보이는 탭: [${tabNames.map((t) => t.trim()).join(', ')}]\n` +
+          `화면 텍스트: ${bodyText}\n` +
+          `네트워크(최근 12건):\n${netLog.slice(-12).join('\n')}\n` +
+          `콘솔(최근 8건):\n${consoleLog.slice(-8).join('\n')}`,
       )
     }
   }
