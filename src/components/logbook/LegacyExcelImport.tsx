@@ -10,6 +10,7 @@ import type {
 
 import { Button } from '../Button'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
+import { importWithReload } from '../../lib/lazyImport'
 
 // SheetJS(xlsx)는 무겁고(수백 KB) 엑셀 가져오기를 실제로 사용할 때만 필요하므로, 파일 파싱 시점에
 // 동적 import()로 지연 로드한다. 이렇게 하면 앱 첫 로딩 번들에서 xlsx가 빠져(별도 청크로 분리),
@@ -365,7 +366,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
     try {
       // 엑셀 라이브러리를 이 시점에 동적 로드한다(앱 첫 로딩 번들에서 분리). 네트워크 지연으로
       // 실패할 수 있으므로 실패 시 사용자에게 안내한다.
-      const XLSX = await import('xlsx')
+      const XLSX = await importWithReload('xlsx', () => import('xlsx'))
       const buffer = await file.arrayBuffer()
       const workbook = XLSX.read(buffer, { type: 'array', cellDates: true })
       const firstSheetName = workbook.SheetNames[0]

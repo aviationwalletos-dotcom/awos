@@ -17,6 +17,7 @@ import {
   saveUltralightCertificatePdf,
 } from "../../../lib/pdf";
 import type { LogbookModel } from "../useLogbookPageModel";
+import { describeImportError } from "../../../lib/lazyImport";
 
 export function MyRecordsTab({ m }: { m: LogbookModel }) {
   const {
@@ -249,7 +250,7 @@ export function MyRecordsTab({ m }: { m: LogbookModel }) {
                       .then(() => showToast("PDF가 준비됐어요."))
                       .catch((err) =>
                         showToast(
-                          `PDF 생성 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
+                          `PDF 생성 실패: ${describeImportError(err)}`,
                         ),
                       );
                   }}

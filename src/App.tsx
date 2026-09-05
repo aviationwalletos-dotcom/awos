@@ -6,20 +6,21 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { Nav } from './components/Nav'
 import { Footer } from './components/Footer'
 import { RequireUserType } from './components/RequireUserType'
+import { importWithReload } from './lib/lazyImport'
 import { Hero } from './components/sections/Hero'
 import { Problem } from './components/sections/Problem'
 import { Features } from './components/sections/Features'
 import { FinalCta } from './components/sections/FinalCta'
-const LogbookPage = lazy(() => import('./pages/LogbookPage').then((m) => ({ default: m.LogbookPage })))
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+const LogbookPage = lazy(() => importWithReload('LogbookPage', () => import('./pages/LogbookPage')).then((m) => ({ default: m.LogbookPage })))
+const DashboardPage = lazy(() => importWithReload('DashboardPage', () => import('./pages/DashboardPage')).then((m) => ({ default: m.DashboardPage })))
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
-const InquiryPage = lazy(() => import('./pages/InquiryPage').then((m) => ({ default: m.InquiryPage })))
+const InquiryPage = lazy(() => importWithReload('InquiryPage', () => import('./pages/InquiryPage')).then((m) => ({ default: m.InquiryPage })))
 import { LoginPage } from './pages/LoginPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { SignupPage } from './pages/SignupPage'
-const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })))
+const AccountPage = lazy(() => importWithReload('AccountPage', () => import('./pages/AccountPage')).then((m) => ({ default: m.AccountPage })))
 import { AuthProvider } from './contexts/AuthContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ConfirmProvider } from './components/ConfirmDialog'
