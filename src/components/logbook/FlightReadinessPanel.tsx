@@ -193,30 +193,38 @@ export function FlightReadinessPanel({
             자격증·비행 기록을 등록하면 실시간 GO/NO-GO 판정이 표시돼요.
           </p>
         ) : (
-          <div className="mt-3 flex items-center gap-3">
-            <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 ${
-                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/100/10 text-rose-400'
-              }`}
-            >
-              {summary.overallGo ? (
-                <CircleCheck className="h-6 w-6" aria-hidden="true" />
-              ) : (
-                <TriangleAlert className="h-6 w-6" aria-hidden="true" />
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className={`font-display text-base font-extrabold tracking-tight ${
-                  summary.overallGo ? 'text-go' : 'text-rose-400'
+          <div className="mt-3">
+            {/* 폰: 원형 배지 + GO 문구를 한 줄에, 그 아래 2×2 칩(폭 전체) — 칩 라벨이 두 줄로 꺾이지 않는다.
+                sm 이상: 원형 배지 왼쪽, 칩은 가로 나열(원래 배치) */}
+            <div className="flex items-center gap-3 sm:items-start">
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-4 sm:h-14 sm:w-14 ${
+                  summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/100/10 text-rose-400'
                 }`}
               >
-                {summary.overallGo ? 'GO-TO-FLY' : 'NO-GO'}
-              </p>
-              {/* 폰에서는 세로 4줄 대신 2×2 — 갤럭시 S25 기준 카드가 한 화면에 들어온다(2026-09-06) */}
-              <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
-                {summary.states.map((state) => (
-                  <ReadinessStateChip key={state.key} state={state} compact />
-                ))}
+                {summary.overallGo ? (
+                  <CircleCheck className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+                ) : (
+                  <TriangleAlert className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className={`font-display text-base font-extrabold tracking-tight ${
+                    summary.overallGo ? 'text-go' : 'text-rose-400'
+                  }`}
+                >
+                  {summary.overallGo ? 'GO-TO-FLY' : 'NO-GO'}
+                </p>
+                <div className="mt-1.5 hidden flex-wrap gap-1.5 sm:flex">
+                  {summary.states.map((state) => (
+                    <ReadinessStateChip key={state.key} state={state} compact />
+                  ))}
+                </div>
               </div>
+            </div>
+            <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:hidden">
+              {summary.states.map((state) => (
+                <ReadinessStateChip key={state.key} state={state} compact />
+              ))}
             </div>
           </div>
         )}
@@ -294,14 +302,14 @@ export function FlightReadinessPanel({
 function ReadinessStateChip({ state, compact = false }: { state: ReadinessState; compact?: boolean }) {
   const Icon = STATE_ICON[state.key]
   return (
-    <span className={`inline-flex items-center gap-2 rounded-control border font-bold ${compact ? 'px-3 py-1.5 text-[13px]' : 'px-4 py-2 text-sm'} ${
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-control border font-bold ${compact ? 'min-w-0 px-2.5 py-1.5 text-[13px]' : 'gap-2 px-4 py-2 text-sm'} ${
         state.met ? 'border-go/25 bg-go/10 text-go' : 'border-white/10 bg-white/[0.03] text-slate-400'
       }`}
       title={state.label}
     >
-      <Icon className={compact ? 'h-4 w-4 shrink-0' : 'h-5 w-5'} aria-hidden={true} />
-      {state.label}
-      <span className={`ml-0.5 rounded-control px-1 text-[10px] font-bold ${
+      <Icon className={compact ? 'h-4 w-4 shrink-0' : 'h-5 w-5 shrink-0'} aria-hidden={true} />
+      <span className="truncate">{state.label}</span>
+      <span className={`ml-auto shrink-0 rounded-control px-1 text-[10px] font-bold ${
           state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
         }`}
       >

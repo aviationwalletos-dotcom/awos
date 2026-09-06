@@ -6,6 +6,7 @@
 
 import { Info } from 'lucide-react'
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 interface InfoTipProps {
   /** 풍선 안 내용(문장 또는 짧은 목록) */
@@ -30,7 +31,8 @@ export function InfoTip({ children, label = '설명 보기', size = 'sm', side =
   useEffect(() => {
     if (!open) return
     const onDoc = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
+      const t = e.target as Node
+      if (!rootRef.current?.contains(t) && !tipRef.current?.contains(t)) {
         setOpen(false)
         setPinned(false)
       }
@@ -113,16 +115,21 @@ export function InfoTip({ children, label = '설명 보기', size = 'sm', side =
         <Info className={iconClass} aria-hidden="true" />
         {hint && <span className="text-[11px] font-medium">{hint}</span>}
       </button>
-      {open && (
-        <span id={id}
-          ref={tipRef}
-          role="tooltip"
-          style={pos ? { left: pos.left, top: pos.top } : { left: -9999, top: 0 }}
-          className="fixed z-[60] w-[min(calc(100vw-16px),320px)] rounded-control border border-white/15 bg-panel px-3 py-2.5 text-left text-xs font-normal leading-relaxed text-slate-200 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.8)]"
-        >
-          {children}
-        </span>
-      )}
+      {/* 풍선은 body 에 포털로 띄운다 — 부모에 transform(Reveal 애니메이션 등)이 있으면 fixed 좌표가 어긋나
+          엉뚱한 곳에 뜨거나 화면 밖으로 나가던 문제(2026-09-06) */}
+      {open &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <span id={id}
+            ref={tipRef}
+            role="tooltip"
+            style={pos ? { left: pos.left, top: pos.top } : { left: -9999, top: 0 }}
+            className="fixed z-[60] w-[min(calc(100vw-16px),320px)] rounded-control border border-white/15 bg-panel px-3 py-2.5 text-left text-xs font-normal leading-relaxed text-slate-200 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.8)]"
+          >
+            {children}
+          </span>,
+          document.body,
+        )}
     </span>
   )
 }

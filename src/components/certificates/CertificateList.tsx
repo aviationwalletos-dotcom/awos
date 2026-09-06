@@ -87,16 +87,17 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
             >
               <span className={`h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${wallet.gradient}`} aria-hidden="true" />
               <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span className="truncate text-sm font-bold text-ink">{cert.name}</span>
+                {/* 한 줄 고정: 이름이 길면 말줄임(…)하고 인증 배지는 항상 같은 줄 오른쪽에 — 배지가 둘째 줄로 내려가면 줄맞춤이 깨진다 */}
+                <span className="flex items-center gap-x-2">
+                  <span className="min-w-0 truncate text-sm font-bold text-ink">{cert.name}</span>
                   {cert.approvalStatus === 'approved' && (
-                    <span className="rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
+                    <span className="shrink-0 rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
                   )}
                   {cert.approvalStatus === 'pending' && (
-                    <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
+                    <span className="shrink-0 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
                   )}
                   {cert.approvalStatus === 'rejected' && (
-                    <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>
+                    <span className="shrink-0 rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>
                   )}
                   {cert.category === '무선통신사' && isCommEducationDue(cert.issuedDate) && cert.approvalStatus !== 'approved' && (
                     <span className="rounded bg-orange-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-orange-300">교육 확인 필요</span>
