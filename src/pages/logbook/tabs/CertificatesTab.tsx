@@ -30,9 +30,27 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
         <section className="bg-panel py-[clamp(24px,4vw,48px)]">
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
-              <h2 className="font-display text-2xl font-extrabold text-ink">
-                내 자격증 목록
-              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="font-display text-2xl font-extrabold text-ink">
+                  내 자격증 목록
+                </h2>
+                {/* 새 사용자가 등록 버튼을 못 찾던 문제 — 목록 제목 옆에서 바로 등록 폼으로(2026-09-07) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCertFormOpen(true);
+                    window.setTimeout(
+                      () => document.getElementById("cert-form")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                      60,
+                    );
+                  }}
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-control bg-brand px-3 text-sm font-bold text-white hover:bg-brand-hover
+                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  자격증 등록
+                </button>
+              </div>
               {certificates.some(
                 (c) =>
                   c.category === "조종교육증명" || c.name.includes("교육증명"),
@@ -69,9 +87,8 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
         <section className="bg-surface py-[clamp(24px,4vw,48px)]">
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
-              {/* 역할별 "자격 템플릿" 안내 카드는 정보량이 적어 제거(2026-09-05). 역할 색상은 등록 폼 칩에 그대로 쓰인다. */}
-              <TsIntegrationCard />
-              <div className="mt-8 flex flex-wrap items-center gap-3">
+              {/* 역할별 "자격 템플릿" 안내 카드는 정보량이 적어 제거(2026-09-05). TS 연동 카드는 폼 아래로(2026-09-07). */}
+              <div className="flex flex-wrap items-center gap-3">
                 <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
                   자격증 등록
                   <InfoTip size="md" label="자격증 등록 안내">
@@ -118,6 +135,9 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                   commercialSinglePilot={operationType === "commercial"}
                   existingCertificates={certificates}
                 />
+              </div>
+              <div className="mt-8">
+                <TsIntegrationCard />
               </div>
             </Reveal>
           </div>

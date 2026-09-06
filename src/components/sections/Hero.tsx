@@ -144,7 +144,7 @@ export function Hero() {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Check className="h-4 w-4 text-go" aria-hidden="true" />
-              가입 없이 둘러보기
+              이메일·카카오로 간편 가입
             </span>
           </p>
         </div>

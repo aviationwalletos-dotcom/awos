@@ -231,9 +231,9 @@ export function SignupPage() {
             <h1 className="mt-6 font-display font-extrabold"
               style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.03em', lineHeight: 1.05, textWrap: 'balance' } as React.CSSProperties}
             >
-              사용자 유형을 선택하고
+              30초면
               <br />
-              가입하세요
+              로그북이 준비돼요
             </h1>
             <p className="mt-4 text-sm text-slate-400" style={{ textWrap: 'pretty' } as React.CSSProperties}>
               가입 후 바로 비행기록을 시작할 수 있어요.
@@ -405,7 +405,7 @@ export function SignupPage() {
             </div>
 
             <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading} loading={isLoading}>
-              {userType === 'individual' ? '개인 사용자로 가입하기' : '기관 사용자로 가입하기'}
+              {userType === 'individual' ? '가입하기' : '기관 사용자로 가입하기'}
             </Button>
 
             <p className="text-center text-xs text-slate-400">

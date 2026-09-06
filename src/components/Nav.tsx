@@ -145,14 +145,6 @@ export function Nav() {
           </li>
           <li>
           </li>
-          <li className="pt-2">
-            <a href="#contact"
-              onClick={() => setOpen(false)}
-              className="block rounded-control bg-sky px-4 py-3 text-center text-sm font-semibold text-navy"
-            >
-              도입 문의하기
-            </a>
-          </li>
         </ul>
       )}
     </header>

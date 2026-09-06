@@ -1,20 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  CheckSquare,
-  ChevronLeft,
-  ChevronRight,
-  CloudOff,
-  FileCheck2,
-  FileDown,
-  ListChecks,
-  PlaneLanding,
-  PlaneTakeoff,
-  Printer,
-  ShieldCheck,
-  Square,
-  Trash2,
-  X,
-} from 'lucide-react'
+import { CheckSquare, ChevronLeft, ChevronRight, CloudOff, FileCheck2, FileDown, ListChecks, PlaneLanding, PlaneTakeoff, Printer, RefreshCw, ShieldCheck, Square, Trash2, X } from 'lucide-react'
 
 import { Button } from '../Button'
 import { MoreMenu } from '../MoreMenu'
@@ -70,6 +55,10 @@ interface EntryListProps {
   onPrint: () => void
   /** PDF 버튼 라벨(기본 'PDF 저장') */
   printLabel?: string
+  /** 서버와 다시 동기화 — ⋯ 메뉴에 들어간다(사용자가 매번 볼 필요 없는 기술 동작) */
+  onResync?: () => void
+  resyncDisabled?: boolean
+  resyncLabel?: string
 }
 
 export function EntryList({
@@ -81,6 +70,9 @@ export function EntryList({
   onDeleteAll,
   onExportCsv,
   onPrint,
+  onResync,
+  resyncDisabled = false,
+  resyncLabel,
   printLabel = 'PDF 저장',
 }: EntryListProps) {
   const [selectMode, setSelectMode] = useState(false)
@@ -219,6 +211,18 @@ export function EntryList({
                 disabled: totalAccountEntryCount === 0,
                 title: '계정의 모든 비행기록을 CSV 파일로 저장해요 (필터와 무관)',
               },
+              ...(onResync
+                ? [
+                    {
+                      key: 'resync',
+                      label: resyncLabel ?? (pendingSyncCount > 0 ? `${pendingSyncCount}건 서버 동기화` : '서버와 다시 동기화'),
+                      icon: <RefreshCw className="h-4 w-4" aria-hidden="true" />,
+                      onSelect: onResync,
+                      disabled: resyncDisabled,
+                      title: '이 기기의 기록과 서버 기록을 다시 맞춰요',
+                    },
+                  ]
+                : []),
               {
                 key: 'deleteAll',
                 label: '전체 삭제',
@@ -302,7 +306,7 @@ export function EntryList({
         <EmptyState
           icon={PlaneTakeoff}
           title="조건에 맞는 비행 기록이 없어요"
-          description="위 입력 폼으로 첫 기록을 추가하거나 필터를 변경해 보세요."
+          description="기록 입력 탭에서 첫 기록을 추가하거나 필터를 바꿔 보세요."
         />
       ) : (
         <>

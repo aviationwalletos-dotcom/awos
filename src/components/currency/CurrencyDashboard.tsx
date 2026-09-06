@@ -25,12 +25,18 @@ function formatDate(dateStr: string): string {
 
 // ── 배지 ─────────────────────────────────────────────────────────────────
 
-type BadgeTone = 'met' | 'unmet' | 'exempt'
+type BadgeTone = 'met' | 'unmet' | 'exempt' | 'partial'
 
 function StatusBadge({ tone, label }: { tone: BadgeTone; label: string }) {
   const toneClass =
-    tone === 'met' ? 'bg-go/10 text-go' : tone === 'exempt' ? 'bg-sky/10 text-[#00D4FF]' : 'bg-rose-500/100/15 text-rose-300'
-  const Icon = tone === 'met' ? CircleCheck : tone === 'exempt' ? CircleDashed : CircleAlert
+    tone === 'met'
+      ? 'bg-go/10 text-go'
+      : tone === 'exempt'
+        ? 'bg-sky/10 text-[#00D4FF]'
+        : tone === 'partial'
+          ? 'bg-amber-400/15 text-amber-200'
+          : 'bg-rose-500/100/15 text-rose-300'
+  const Icon = tone === 'met' ? CircleCheck : tone === 'exempt' ? CircleDashed : tone === 'partial' ? CircleDashed : CircleAlert
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-control px-2.5 py-1 text-xs font-bold ${toneClass}`}
@@ -248,8 +254,26 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             title="최근 비행경험(일반 및 야간 비행)"
             summary={
               <>
-                <StatusBadge tone={recency.baseMet ? 'met' : 'unmet'} label={recency.baseMet ? '일반 충족' : '일반 미달'} />
-                <StatusBadge tone={recency.nightMet ? 'met' : 'unmet'} label={recency.nightMet ? '야간 충족' : '야간 미달'} />
+                {/* 등급별(단발/다발/회전익) 판정이 갈리면 "일부 충족" — 8.2.2 는 동일 등급 요건(실시간 적합성 카드와 같은 기준) */}
+                {(() => {
+                  const cls = recency.byClass
+                  const generalMet = cls.length > 0 ? cls.some((r) => r.baseMet) : recency.baseMet
+                  const generalPartial = generalMet && cls.some((r) => !r.baseMet)
+                  const nightMet = cls.length > 0 ? cls.some((r) => r.nightMet) : recency.nightMet
+                  const nightPartial = nightMet && cls.some((r) => !r.nightMet)
+                  return (
+                    <>
+                      <StatusBadge
+                        tone={generalMet ? (generalPartial ? 'partial' : 'met') : 'unmet'}
+                        label={generalMet ? (generalPartial ? '일반 일부 충족' : '일반 충족') : '일반 미달'}
+                      />
+                      <StatusBadge
+                        tone={nightMet ? (nightPartial ? 'partial' : 'met') : 'unmet'}
+                        label={nightMet ? (nightPartial ? '야간 일부 충족' : '야간 충족') : '야간 미달'}
+                      />
+                    </>
+                  )
+                })()}
               </>
             }
           >

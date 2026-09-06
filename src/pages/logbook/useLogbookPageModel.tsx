@@ -72,13 +72,15 @@ export type TabKey =
 export type TabDef = {
   key: TabKey;
   label: string;
+  /** 폰(탭 5개를 한 줄에 나눠 쓸 때)용 짧은 이름. 접근성 이름은 label 그대로 */
+  short?: string;
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 };
 
 // 조종사(및 역할 미설정 계정 폴백)용 기본 탭 구성. 절대 변경하지 않아요.
 export const PILOT_TABS: TabDef[] = [
-  { key: "myRecords", label: "비행기록", icon: ListChecks },
-  { key: "logbook", label: "기록 입력", icon: PlaneTakeoff },
+  { key: "myRecords", label: "비행기록", short: "기록", icon: ListChecks },
+  { key: "logbook", label: "기록 입력", short: "입력", icon: PlaneTakeoff },
   { key: "certificates", label: "자격증", icon: ShieldCheck },
   { key: "currency", label: "커런시", icon: Gauge },
 ];
@@ -86,13 +88,14 @@ export const PILOT_TABS: TabDef[] = [
 export const SIGNATURE_INBOX_TAB: TabDef = {
   key: "signatureInbox",
   label: "서명 요청함",
+  short: "서명함",
   icon: Inbox,
 };
 
 // 초경량 조종자용 탭 구성: 비행기록 구조는 재사용하되 커런시/실시간 적합성 등 조종사 전용 개념은 제외해요.
 export const DRONE_TABS: TabDef[] = [
-  { key: "myRecords", label: "비행기록", icon: ListChecks },
-  { key: "logbook", label: "기록 입력", icon: PlaneTakeoff },
+  { key: "myRecords", label: "비행기록", short: "기록", icon: ListChecks },
+  { key: "logbook", label: "기록 입력", short: "입력", icon: PlaneTakeoff },
   { key: "certificates", label: "자격증", icon: ShieldCheck },
   // 응시경력 진척도는 내용이 길어 자격증 다음 탭으로 분리(2026-09-05)
   { key: "eligibility", label: "응시경력", icon: Target },

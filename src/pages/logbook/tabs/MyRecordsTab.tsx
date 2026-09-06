@@ -1,7 +1,5 @@
 // MyRecordsTab — LogbookPage 탭. 모델은 useLogbookPageModel 에서 받는다.
 import React from "react";
-import { RefreshCw } from "lucide-react";
-import { Button } from "../../../components/Button";
 import { Reveal } from "../../../components/Reveal";
 import { EntryFilterBar } from "../../../components/logbook/EntryFilterBar";
 import { EntryList } from "../../../components/logbook/EntryList";
@@ -112,24 +110,10 @@ export function MyRecordsTab({ m }: { m: LogbookModel }) {
                 <h2 className="font-display text-2xl font-extrabold text-ink">
                   내 비행 기록
                 </h2>
-                <div className="flex flex-col items-end gap-1">
-                  <Button
-                    variant="outline"
-                    tone="neutral"
-                    size="sm"
-                    loading={isResyncing}
-                    disabled={isResyncing || resyncCooldownSecondsLeft > 0}
-                    onClick={handleResyncFromServer}
-                  >
-                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                    {!isResyncing && resyncCooldownSecondsLeft > 0
-                      ? `서버와 다시 동기화 (${resyncCooldownSecondsLeft}초 후 다시 시도 가능)`
-                      : "서버와 다시 동기화"}
-                  </Button>
-                  {resyncMessage && (
-                    <p className="text-xs text-slate-400">{resyncMessage}</p>
-                  )}
-                </div>
+                {/* "서버와 다시 동기화"는 목록 ⋯ 메뉴로 이동(2026-09-07). 결과 메시지만 여기 표시 */}
+                {resyncMessage && (
+                  <p className="text-xs text-slate-400">{resyncMessage}</p>
+                )}
               </div>
               <div className="mt-6">
                 <EntryFilterBar
@@ -157,6 +141,15 @@ export function MyRecordsTab({ m }: { m: LogbookModel }) {
                     if (trackEntries.length === entries.length) clearAll();
                     else deleteEntries(ids);
                   }}
+                  onResync={handleResyncFromServer}
+                  resyncDisabled={isResyncing || resyncCooldownSecondsLeft > 0}
+                  resyncLabel={
+                    isResyncing
+                      ? "동기화 중…"
+                      : resyncCooldownSecondsLeft > 0
+                        ? `서버와 다시 동기화 (${resyncCooldownSecondsLeft}초 후)`
+                        : undefined
+                  }
                   onExportCsv={() =>
                     void downloadLogbookCsv(trackEntries).catch((err) =>
                       showToast(`CSV 저장 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`),

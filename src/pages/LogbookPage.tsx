@@ -1,7 +1,8 @@
 // LogbookPage — 레이아웃·히어로·탭 라우팅만. 상태는 useLogbookPageModel, 각 탭은 ./logbook/tabs/*
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, NotebookPen } from "lucide-react";
+import { ArrowLeft, LogOut, NotebookPen, UserCircle2 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 import { Footer } from "../components/Footer";
 import { EntryDetailDialog } from "../components/logbook/EntryDetailDialog";
 import { AutoSyncEntryDecisions } from "../components/logbook/AutoSyncEntryDecisions";
@@ -26,6 +27,7 @@ import { SignatureInboxTab } from "./logbook/tabs/SignatureInboxTab";
 
 export function LogbookPage() {
   const model = useLogbookPageModel();
+  const { logout } = useAuth();
   const {
     TABS,
     account,
@@ -82,9 +84,31 @@ export function LogbookPage() {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             홈으로
           </Link>
-          <p className="font-display text-base font-extrabold tracking-tight text-white">
-            Aviation Wallet <span className="text-sky">OS</span>
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="hidden font-display text-base font-extrabold tracking-tight text-white sm:block">
+              Aviation Wallet <span className="text-sky">OS</span>
+            </p>
+            {/* 계정정보·로그아웃을 로그북 안에서 바로 — 예전엔 랜딩으로 나가야 보였다(2026-09-07) */}
+            <Link
+              to="/account"
+              aria-label="계정정보"
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-control border border-white/15 px-3 text-xs font-semibold text-slate-200 hover:bg-white/5
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              <UserCircle2 className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">계정</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              aria-label="로그아웃"
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-control border border-white/15 px-3 text-xs font-semibold text-slate-300 hover:bg-white/5
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">로그아웃</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -228,27 +252,34 @@ export function LogbookPage() {
           className="sticky z-30 border-b border-white/10 bg-navy/95 backdrop-blur"
         >
           <div className="mx-auto max-w-4xl px-6">
+            {/* 폰: 탭을 같은 폭으로 나눠 한 줄에 전부(아이콘 위·라벨 아래) — 가로 스크롤 때는 4·5번째 탭이 있는 줄도 몰랐다(2026-09-07).
+                sm 이상: 기존처럼 가로 나열 */}
             <div
               role="tablist"
               aria-label="AWOS 기능 선택"
-              className="-mx-6 flex gap-2 overflow-x-auto px-6 py-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
+              className="grid grid-flow-col auto-cols-fr gap-1.5 py-2 sm:flex sm:flex-wrap sm:gap-2"
             >
-              {TABS.map(({ key, label, icon: Icon }) => {
+              {TABS.map(({ key, label, short, icon: Icon }) => {
                 const isActive = activeTab === key;
                 return (
                   <button
                     key={key}
                     type="button"
                     role="tab"
+                    aria-label={label}
+                    title={label}
                     aria-selected={isActive}
                     data-state={isActive ? "active" : "idle"}
                     onClick={() => setActiveTab(key)}
-                    className={`inline-flex min-h-[44px] items-center gap-2 rounded-control border px-4 py-2 text-sm font-semibold transition-colors
+                    className={`flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-control border px-1 py-1.5 text-[11px] font-semibold leading-tight transition-colors
+                      sm:min-h-[44px] sm:flex-row sm:gap-2 sm:px-4 sm:py-2 sm:text-sm
                       focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
                       ${isActive ? "border-sky bg-sky/10 text-[#00D4FF]" : "border-white/10 bg-panel text-slate-400 hover:bg-white/[0.06]"}`}
                   >
-                    <Icon className="h-4 w-4" aria-hidden={true} />
-                    {label}
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden={true} />
+                    {/* 폰(탭 5개, 칸당 ~65px)에서는 짧은 이름, sm 이상은 원래 이름. 접근성 이름은 aria-label 로 원래 이름 유지 */}
+                    <span className="truncate sm:hidden">{short ?? label}</span>
+                    <span className="hidden truncate sm:inline">{label}</span>
                   </button>
                 );
               })}
