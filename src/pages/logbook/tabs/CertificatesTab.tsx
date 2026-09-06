@@ -1,5 +1,6 @@
 // CertificatesTab — LogbookPage 탭. 모델은 useLogbookPageModel 에서 받는다.
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../../components/Reveal";
 import { CertificateApprovalStatusWatcher } from "../../../components/certificates/CertificateApprovalStatusWatcher";
@@ -10,6 +11,7 @@ import type { LogbookModel } from "../useLogbookPageModel";
 import { InfoTip } from "../../../components/InfoTip";
 
 export function CertificatesTab({ m }: { m: LogbookModel }) {
+  const [isCertFormOpen, setIsCertFormOpen] = useState(false);
   const {
     activeTrack,
     birthDate,
@@ -69,13 +71,38 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
             <Reveal>
               {/* 역할별 "자격 템플릿" 안내 카드는 정보량이 적어 제거(2026-09-05). 역할 색상은 등록 폼 칩에 그대로 쓰인다. */}
               <TsIntegrationCard />
-              <h2 className="mt-8 flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
-                자격증 등록
-                <InfoTip size="md" label="자격증 등록 안내">
-                  면허·항공신체검사·법정교육 등을 등록하면 만료가 가까워질 때 카드에 경고가 떠요. 사진을 첨부해 관리자 인증을 받으면 "인증됨" 표시가 붙어요.
-                </InfoTip>
-              </h2>
-              <div className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
+                  자격증 등록
+                  <InfoTip size="md" label="자격증 등록 안내">
+                    면허·항공신체검사·법정교육 등을 등록하면 만료가 가까워질 때 카드에 경고가 떠요. 사진을 첨부해 관리자 인증을 받으면 "인증됨" 표시가 붙어요.
+                  </InfoTip>
+                </h2>
+                {/* 기록 입력처럼 기본은 접어 두고 필요할 때 펼친다(2026-09-07). 접어도 폼은 유지되어 입력값이 남는다 */}
+                <button
+                  type="button"
+                  onClick={() => setIsCertFormOpen((v) => !v)}
+                  aria-expanded={isCertFormOpen}
+                  aria-controls="cert-form"
+                  data-testid="cert-form-toggle"
+                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-control px-4 py-2 text-sm font-bold transition-colors
+                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
+                    ${isCertFormOpen ? "border border-white/15 text-slate-300 hover:bg-white/5" : "bg-brand text-white hover:bg-brand-hover"}`}
+                >
+                  {isCertFormOpen ? (
+                    <>
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      접기
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      자격증 등록
+                    </>
+                  )}
+                </button>
+              </div>
+              <div id="cert-form" hidden={!isCertFormOpen} className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
                 <CertificateForm
                   mode="create"
                   onSubmit={(input, options) => {

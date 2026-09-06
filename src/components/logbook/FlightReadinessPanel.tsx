@@ -176,6 +176,10 @@ export function FlightReadinessPanel({
     </div>
   )
 
+  // 폰용: 칩을 탭하면 아래에 등급별 내역 표시
+  const [detailKey, setDetailKey] = useState<ReadinessStateKey | null>(null)
+  const detailState = detailKey ? summary.states.find((st) => st.key === detailKey) ?? null : null
+
   if (compact) {
     return (
       <div
@@ -223,9 +227,25 @@ export function FlightReadinessPanel({
             </div>
             <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:hidden">
               {summary.states.map((state) => (
-                <ReadinessStateChip key={state.key} state={state} compact />
+                <ReadinessStateChip key={state.key} state={state} compact
+                  active={detailKey === state.key}
+                  onToggle={() => setDetailKey((k) => (k === state.key ? null : state.key))}
+                />
               ))}
             </div>
+            {/* 폰: 칩을 탭하면 등급별 내역·사유를 한 줄로(칩 자체는 한 줄 유지) */}
+            {detailState && (
+              <p className="mt-2 rounded-control border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-300 sm:hidden">
+                <span className="font-semibold text-slate-100">{detailState.label}</span>
+                {detailState.byClass && detailState.byClass.length > 0
+                  ? `: ${detailState.byClass.map((c) => `${c.label} ${c.met ? '가능' : '제한'}`).join(' · ')}`
+                  : detailState.met
+                    ? ': 요건 충족'
+                    : detailState.reasons[0]
+                      ? `: ${detailState.reasons[0]}`
+                      : ''}
+              </p>
+            )}
           </div>
         )}
 
@@ -299,23 +319,31 @@ export function FlightReadinessPanel({
   )
 }
 
-function ReadinessStateChip({ state, compact = false }: { state: ReadinessState; compact?: boolean }) {
+function ReadinessStateChip({ state, compact = false, active = false, onToggle }: { state: ReadinessState; compact?: boolean; active?: boolean; onToggle?: () => void }) {
   const Icon = STATE_ICON[state.key]
+  const Tag: 'button' | 'span' = onToggle ? 'button' : 'span'
   return (
-    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-control border font-bold ${compact ? 'min-w-0 px-2.5 py-1.5 text-[13px]' : 'gap-2 px-4 py-2 text-sm'} ${
-        state.met ? 'border-go/25 bg-go/10 text-go' : 'border-white/10 bg-white/[0.03] text-slate-400'
+    <Tag
+      {...(onToggle ? { type: 'button' as const, onClick: onToggle, 'aria-pressed': active } : {})}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-control border font-bold ${compact ? 'min-w-0 px-2.5 py-1.5 text-[13px]' : 'gap-2 px-4 py-2 text-sm'} ${active ? 'ring-2 ring-sky/50' : ''} ${
+        state.met && !state.partial
+          ? 'border-go/25 bg-go/10 text-go'
+          : state.met
+            ? 'border-amber-400/30 bg-amber-400/10 text-amber-200'
+            : 'border-white/10 bg-white/[0.03] text-slate-400'
       }`}
-      title={state.label}
+      // 등급별 판정이 갈리면(예: 단발 가능 · 다발 제한) 배지에 "일부"로 표시하고 상세는 title 로
+      title={state.byClass && state.byClass.length > 1 ? `${state.label} — ${state.byClass.map((c) => `${c.label} ${c.met ? '가능' : '제한'}`).join(' · ')}` : state.label}
     >
       <Icon className={compact ? 'h-4 w-4 shrink-0' : 'h-5 w-5 shrink-0'} aria-hidden={true} />
       <span className="truncate">{state.label}</span>
       <span className={`ml-auto shrink-0 rounded-control px-1 text-[10px] font-bold ${
-          state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
+          state.met && !state.partial ? 'bg-go/15 text-go' : state.met ? 'bg-amber-400/20 text-amber-200' : 'bg-rose-500/100/15 text-rose-300'
         }`}
       >
-        {state.met ? '가능' : '제한'}
+        {state.met && !state.partial ? '가능' : state.met ? '일부' : '제한'}
       </span>
-    </span>
+    </Tag>
   )
 }
 
@@ -335,13 +363,27 @@ function ReadinessStateCard({ state }: { state: ReadinessState }) {
           </span>
         </div>
         <span className={`inline-flex shrink-0 items-center rounded-control px-2 py-0.5 text-sm font-bold ${
-            state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
+            state.met && !state.partial ? 'bg-go/15 text-go' : state.met ? 'bg-amber-400/20 text-amber-200' : 'bg-rose-500/100/15 text-rose-300'
           }`}
         >
-          {state.met ? '가능' : '제한'}
+          {state.met && !state.partial ? '가능' : state.met ? '일부' : '제한'}
         </span>
       </div>
-      {!state.met && state.reasons.length > 0 && (
+      {/* 등급별(단발/다발/회전익) 판정 — 8.2.2 "동일 등급" 요건. 하나만 되면 위 배지는 가능/일부, 여기서 어느 등급이 안 되는지 본다 */}
+      {state.byClass && state.byClass.length > 1 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {state.byClass.map((c) => (
+            <span key={c.label}
+              className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-xs font-semibold ${
+                c.met ? 'border-go/25 bg-go/10 text-go' : 'border-rose-400/30 bg-rose-500/10 text-rose-300'
+              }`}
+            >
+              {c.label} {c.met ? '가능' : '제한'}
+            </span>
+          ))}
+        </div>
+      )}
+      {state.reasons.length > 0 && (
         <ul className="mt-2 space-y-1 text-sm text-slate-400">
           {state.reasons.map((reason, i) => (
             <li key={i} className="flex gap-1.5">

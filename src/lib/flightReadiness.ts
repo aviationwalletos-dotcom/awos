@@ -4,7 +4,7 @@
 // UI(배지 문구, 색상 등)는 각 컴포넌트에 남기고, 이 파일은 순수 계산만 담당합니다.
 
 import type { LogbookEntry } from '../types/logbook'
-import { inferAircraftClass } from './aircraftClass'
+import { AIRCRAFT_CLASS_LABEL, inferAircraftClass } from './aircraftClass'
 import type { AircraftClass } from './aircraftClass'
 import type { Certificate, CertificateStatus } from '../types/certificate'
 import { getCertificateStatus } from '../types/certificate'
@@ -252,6 +252,12 @@ export interface ReadinessState {
   met: boolean
   /** 미충족 시 부족한 조건 사유 목록(충족 시 빈 배열) */
   reasons: string[]
+  /**
+   * 등급별 판정(일반·야간). 8.2.2 는 "동일 등급"이 요건이므로 단발·다발·회전익을 따로 본다.
+   * 하나라도 충족이면 met=true 지만, 안 되는 등급이 있으면 partial=true 로 표시해 오해를 막는다.
+   */
+  byClass?: Array<{ label: string; met: boolean }>
+  partial?: boolean
 }
 
 export interface FlightReadinessSummary {
@@ -281,20 +287,39 @@ export function computeReadinessStates(
   const hasInstructorCertificate = certificates.some((c) => c.category === '조종교육증명')
   const instructorRecencyMet = instructor.met || instructor.isNewInstructorGrace
 
-  // 1) 일반 비행 가능
+  // 1) 일반 비행 가능 — 등급별(단발/다발/회전익)로 본다. 최근 24개월 안에 탄 등급이 둘 이상이면 각 등급을 따로 판정하고,
+  //    하나라도 되면 "가능"이되 안 되는 등급이 있으면 partial(일부)로 표시한다(운항기술기준 8.2.2 "동일 등급").
+  const classRows = recency.byClass
+  const useClasses = classRows.length > 0
   const generalReasons: string[] = []
   if (!medicalValid) generalReasons.push('유효한 항공신체검사(제1종 또는 제2종)가 없습니다')
-  if (!recency.baseMet) {
+  const generalByClass = useClasses
+    ? classRows.map((r) => ({ label: AIRCRAFT_CLASS_LABEL[r.aircraftClass], met: r.baseMet, landings: r.landingCount }))
+    : []
+  const generalRecencyMet = useClasses ? generalByClass.some((c) => c.met) : recency.baseMet
+  if (!generalRecencyMet) {
     generalReasons.push(`최근 ${recency.windowDays}일 이착륙 ${recency.landingCount}/3회로 기준 미달입니다(운항기술기준 8.2.2)`)
   }
-  const generalMet = medicalValid && recency.baseMet
+  for (const c of generalByClass) {
+    if (!c.met) generalReasons.push(`${c.label}: 최근 ${recency.windowDays}일 이착륙 ${c.landings}/3회 — 이 등급은 제한`)
+  }
+  const generalMet = medicalValid && generalRecencyMet
+  const generalPartial = generalMet && generalByClass.some((c) => !c.met)
 
-  // 2) 야간 비행 가능
-  const nightReasons = [...generalReasons]
-  if (generalMet && !recency.nightMet) {
+  // 2) 야간 비행 가능 — 마찬가지로 등급별
+  const nightReasons: string[] = generalReasons.filter((r) => !r.includes('이 등급은 제한'))
+  const nightByClass = useClasses
+    ? classRows.map((r) => ({ label: AIRCRAFT_CLASS_LABEL[r.aircraftClass], met: r.nightMet, nightLandings: r.nightLandingCount }))
+    : []
+  const nightRecencyMet = useClasses ? nightByClass.some((c) => c.met) : recency.nightMet
+  if (generalMet && !nightRecencyMet) {
     nightReasons.push(recency.nightRequired ? `최근 ${recency.windowDays}일 야간 이착륙이 1회 이상 없습니다(8.2.2 가항)` : `최근 ${recency.windowDays}일 야간 이착륙이 없습니다(일반 운항은 법정 요건이 아닌 참고치)`)
   }
-  const nightMetOverall = generalMet && recency.nightMet
+  for (const c of nightByClass) {
+    if (!c.met) nightReasons.push(`${c.label}: 최근 ${recency.windowDays}일 야간 이착륙 ${c.nightLandings}회 — 이 등급은 야간 제한`)
+  }
+  const nightMetOverall = generalMet && nightRecencyMet
+  const nightPartial = nightMetOverall && nightByClass.some((c) => !c.met)
 
   // 3) 계기비행(PIC IFR) 가능
   const ifrReasons = [...generalReasons]
@@ -314,8 +339,23 @@ export function computeReadinessStates(
   const instructorMetOverall = generalMet && instructorRecencyMet && hasInstructorCertificate && class1Valid
 
   const states: ReadinessState[] = [
-    { key: 'general', label: '일반 비행', met: generalMet, reasons: generalMet ? [] : generalReasons },
-    { key: 'night', label: '야간 비행', met: nightMetOverall, reasons: nightMetOverall ? [] : nightReasons },
+    {
+      key: 'general',
+      label: '일반 비행',
+      met: generalMet,
+      partial: generalPartial,
+      byClass: generalByClass.map(({ label, met }) => ({ label, met })),
+      // 일부 등급이 제한이면 충족 상태여도 그 등급 사유를 남긴다
+      reasons: generalMet ? generalReasons.filter((r) => r.includes('이 등급은 제한')) : generalReasons,
+    },
+    {
+      key: 'night',
+      label: '야간 비행',
+      met: nightMetOverall,
+      partial: nightPartial,
+      byClass: nightByClass.map(({ label, met }) => ({ label, met })),
+      reasons: nightMetOverall ? nightReasons.filter((r) => r.includes('야간 제한')) : nightReasons,
+    },
     { key: 'ifr', label: '계기비행', met: ifrMetOverall, reasons: ifrMetOverall ? [] : ifrReasons },
     {
       key: 'instructor',

@@ -37,3 +37,22 @@ describe('최근 비행경험 — 운항기술기준 8.2.2', () => {
     expect(r.recency.byClass.find((c) => c.aircraftClass === 'MEL')?.baseMet).toBe(true)
   })
 })
+
+describe('실시간 비행 적합성 — 등급별 판정 반영', () => {
+  it('다발은 되고 단발은 안 되면 "가능"이 아니라 "일부"로 표시하고 단발 제한 사유를 남긴다', async () => {
+    const { computeReadinessStates } = await import('./flightReadiness')
+    const medical = { id: 'm', category: '항공신체검사', name: '제2종', issuer: '', issuedDate: d(30), expiryDate: d(-300), createdAt: 0, updatedAt: 0 } as never
+    // 최근 180일: DA42(다발) 이착륙 3회, C172S(단발) 이착륙 1회
+    const r = computeFlightReadiness(
+      [e({ dayLandings: 3, aircraftType: 'DA42' }), e({ dayLandings: 1, aircraftType: 'C172S' })],
+      [medical],
+      { operationType: 'general' },
+    )
+    const states = computeReadinessStates(r, [medical]).states
+    const general = states.find((s) => s.key === 'general')!
+    expect(general.met).toBe(true)
+    expect(general.partial).toBe(true)
+    expect(general.byClass?.map((c) => `${c.label}:${c.met}`)).toEqual(expect.arrayContaining(['육상다발:true', '육상단발:false']))
+    expect(general.reasons.join(' ')).toContain('육상단발')
+  })
+})

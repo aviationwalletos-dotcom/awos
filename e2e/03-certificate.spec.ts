@@ -25,6 +25,11 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
     await expect(stale).toHaveCount(0, { timeout: 10_000 }).catch(() => undefined)
   }
 
+  // 등록 폼은 기본 접힘 — 펼친다
+  const formToggle = page.getByTestId('cert-form-toggle')
+  if (await appears(formToggle, 5_000)) {
+    if ((await formToggle.getAttribute('aria-expanded')) !== 'true') await formToggle.click()
+  }
   await page.locator('#category').selectOption({ label: '항공신체검사' })
   // 항공신체검사는 발급기관 자동값이 없다(지정 의료기관마다 달라서 비워 둔다) — 직접 채워야 제출된다.
   // 이번 실행에서만 쓰는 고유 발급기관명 — 예전 실행이 남긴 자격증과 섞이지 않게 이걸로 찾는다

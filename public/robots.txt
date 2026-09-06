@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+# 로그인 뒤에만 의미 있는 화면은 검색에 안 실리게
+Disallow: /logbook
+Disallow: /account
+Disallow: /dashboard
+Disallow: /auth/
+
+Sitemap: https://aviationwallet.com/sitemap.xml
