@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.aviationwallet.awos",
+    "sha256_cert_fingerprints": ["C0:5F:6D:6D:E2:AF:60:C1:2E:FC:27:7D:AF:55:11:28:9F:DF:FA:43:A5:65:E6:86:D4:70:C9:58:05:06:B3:8F"]
+  }
+}]
