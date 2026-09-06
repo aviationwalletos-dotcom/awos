@@ -5,7 +5,7 @@
 // 폰에서 회색 설명이 본문보다 많아 산만해지는 걸 줄이기 위해 도입(2026-09-06).
 
 import { Info } from 'lucide-react'
-import React, { useEffect, useId, useRef, useState } from 'react'
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 
 interface InfoTipProps {
   /** 풍선 안 내용(문장 또는 짧은 목록) */
@@ -51,6 +51,44 @@ export function InfoTip({ children, label = '설명 보기', size = 'sm', side =
 
   const iconClass = size === 'md' ? 'h-4 w-4' : 'h-3.5 w-3.5'
 
+  // [폰 화면 잘림 방지] 풍선을 화면 좌표(fixed)로 두고, 아이콘 위치를 재서 화면 안(좌우 8px 여백)에 들어오게 자리를 잡는다.
+  // 아이콘이 화면 왼쪽 가장자리에 있을 때 가운데 정렬 풍선이 왼쪽으로 잘려 나가던 문제(2026-09-06).
+  // 스크롤/회전하면 위치가 어긋나므로 닫는다.
+  const tipRef = useRef<HTMLSpanElement>(null)
+  const [pos, setPos] = useState<{ left: number; top: number; above: boolean } | null>(null)
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null)
+      return
+    }
+    const place = () => {
+      const anchor = rootRef.current?.getBoundingClientRect()
+      const tip = tipRef.current?.getBoundingClientRect()
+      if (!anchor || !tip) return
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const margin = 8
+      const width = tip.width
+      let left = anchor.left + anchor.width / 2 - width / 2
+      left = Math.max(margin, Math.min(left, vw - width - margin))
+      const preferAbove = side === 'top' || anchor.bottom + tip.height + 12 > vh
+      const above = preferAbove && anchor.top - tip.height - 6 > margin
+      const top = above ? anchor.top - tip.height - 6 : anchor.bottom + 6
+      setPos({ left, top, above })
+    }
+    place()
+    const close = () => {
+      setOpen(false)
+      setPinned(false)
+    }
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', close, { passive: true, capture: true })
+    return () => {
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', close, { capture: true } as EventListenerOptions)
+    }
+  }, [open, side])
+
   return (
     <span ref={rootRef} className={`relative inline-flex items-center align-middle ${className}`}>
       <button type="button"
@@ -77,9 +115,10 @@ export function InfoTip({ children, label = '설명 보기', size = 'sm', side =
       </button>
       {open && (
         <span id={id}
+          ref={tipRef}
           role="tooltip"
-          className={`absolute left-1/2 z-40 w-[min(78vw,320px)] -translate-x-1/2 rounded-control border border-white/15 bg-panel px-3 py-2.5 text-left text-xs leading-relaxed text-slate-200 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.8)]
-            ${side === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
+          style={pos ? { left: pos.left, top: pos.top } : { left: -9999, top: 0 }}
+          className="fixed z-[60] w-[min(calc(100vw-16px),320px)] rounded-control border border-white/15 bg-panel px-3 py-2.5 text-left text-xs font-normal leading-relaxed text-slate-200 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.8)]"
         >
           {children}
         </span>

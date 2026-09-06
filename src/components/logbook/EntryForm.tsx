@@ -8,7 +8,6 @@ import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types
 
 import { Button } from '../Button'
 import { localToday } from '../../lib/ui/localDate'
-import { Minus, Plus } from 'lucide-react'
 import { InfoTip } from '../InfoTip'
 
 interface FieldErrors {
@@ -222,9 +221,7 @@ export function EntryForm({
   const isUnmanned = vehicleClass === 'ultralight' && isUnmannedKind(vehicleKind)
 
   const isSimKind = entryKind === 'sim'
-  // 빠른 입력: 처음엔 기본 정보·출발/도착·블록타임만 보이고, 범주·자격·조건·이착륙 상세는 접어 둔다.
-  // 학생 기록의 대부분은 4~5칸이면 나머지가 역할에 따라 자동으로 채워진다. 수정 모드는 펼쳐서 시작.
-  const [showDetails, setShowDetails] = useState<boolean>(Boolean(initialValues))
+
   const presets = getEntryPresets(entryKind)
   const historyTypes = suggestions?.aircraftTypes?.filter((v) => (isSimKind ? /ftd/i.test(v) : !/ftd/i.test(v)))
   const historyRegs = suggestions?.registrations?.filter((v) => (isSimKind ? /ftd|multi|mento|frasca/i.test(v) : !/ftd|multi|mento|frasca/i.test(v)))
@@ -287,9 +284,7 @@ export function EntryForm({
     }
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
-      setShowDetails(true)
-      // 접혀 있던 상세 섹션이 펼쳐진 뒤(다음 프레임) 첫 오류로 스크롤해야 hidden 요소를 건너뛰지 않는다
-      window.setTimeout(() => scrollToFirstError(formRef.current), 0)
+      scrollToFirstError(formRef.current)
       return
     }
 
@@ -612,74 +607,8 @@ export function EntryForm({
 
       <hr className="border-white/[0.08]" />
 
-      <hr className="border-white/[0.08]" />
-
-      {/* 블록타임 · 비고 */}
-      {entryKind === 'flight' && (<>
-
-      <fieldset>
-        <legend className={sectionTitleClass}>블록타임 · 비고</legend>
-        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="blockTime" className={labelClass}>
-              블록타임(시간)
-            </label>
-            <input id="blockTime"
-              name="blockTime"
-              onChange={handleTotalInput}
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min="0.1"
-              defaultValue={initialValues?.blockTime}
-              placeholder="예: 1.5"
-              className={numberInputClass}
-              aria-invalid={Boolean(errors.blockTime)}
-              aria-describedby={errors.blockTime ? 'blockTime-error' : undefined}
-            />
-            {errors.blockTime && (
-              <p id="blockTime-error" className="mt-1.5 text-xs text-rose-600">
-                {errors.blockTime}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mt-5">
-          <label htmlFor="notes" className={labelClass}>
-            비고 (선택)
-          </label>
-          <textarea id="notes"
-            name="notes"
-            rows={3}
-            defaultValue={initialValues?.notes}
-            placeholder="특이사항, 기동, 훈련과목, 단독비행 승인 등을 남겨 주세요."
-            className={inputClass}
-          />
-        </div>
-      </fieldset>
-      </>)}
 
 
-      {entryKind === 'flight' && (
-        <button type="button"
-          onClick={() => setShowDetails((v) => !v)}
-          aria-expanded={showDetails}
-          aria-controls="entry-details"
-          data-testid="entry-details-toggle"
-          className={`flex w-full items-center justify-between gap-3 rounded-control border px-4 py-3 text-left text-sm font-semibold transition-colors
-            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-            ${showDetails ? 'border-white/15 text-slate-200 hover:bg-white/5' : 'border-sky/40 bg-sky/10 text-sky hover:bg-sky/15'}`}
-        >
-          <span className="inline-flex items-center gap-2">
-            {showDetails ? <Minus className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
-            {showDetails ? '상세 시간 입력 접기' : '상세 시간 입력'}
-          </span>
-          <span className="text-xs font-normal text-slate-400">범주·자격·조건·이착륙 — 비워 두면 역할에 따라 자동</span>
-        </button>
-      )}
-
-      {/* 상세 섹션(3·4·6·7)은 접어도 unmount 하지 않는다 — 자동 채움 값이 그대로 제출되어야 하므로 hidden 만 쓴다 */}
-      <div id="entry-details" hidden={!showDetails && entryKind === 'flight'}>
       {/* 3. 항공기 범주/등급별 시간 */}
       {entryKind === 'flight' && (<>
 
@@ -1035,7 +964,53 @@ export function EntryForm({
         </div>
       </fieldset>
       </>)}
-      </div>
+
+      <hr className="border-white/[0.08]" />
+
+      {/* 블록타임 · 비고 */}
+      {entryKind === 'flight' && (<>
+
+      <fieldset>
+        <legend className={sectionTitleClass}>블록타임 · 비고</legend>
+        <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="blockTime" className={labelClass}>
+              블록타임(시간)
+            </label>
+            <input id="blockTime"
+              name="blockTime"
+              onChange={handleTotalInput}
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              min="0.1"
+              defaultValue={initialValues?.blockTime}
+              placeholder="예: 1.5"
+              className={numberInputClass}
+              aria-invalid={Boolean(errors.blockTime)}
+              aria-describedby={errors.blockTime ? 'blockTime-error' : undefined}
+            />
+            {errors.blockTime && (
+              <p id="blockTime-error" className="mt-1.5 text-xs text-rose-600">
+                {errors.blockTime}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="mt-5">
+          <label htmlFor="notes" className={labelClass}>
+            비고 (선택)
+          </label>
+          <textarea id="notes"
+            name="notes"
+            rows={3}
+            defaultValue={initialValues?.notes}
+            placeholder="특이사항, 기동, 훈련과목, 단독비행 승인 등을 남겨 주세요."
+            className={inputClass}
+          />
+        </div>
+      </fieldset>
+      </>)}
 
 
       

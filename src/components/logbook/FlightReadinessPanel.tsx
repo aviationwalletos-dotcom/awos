@@ -211,9 +211,10 @@ export function FlightReadinessPanel({
               >
                 {summary.overallGo ? 'GO-TO-FLY' : 'NO-GO'}
               </p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {/* 폰에서는 세로 4줄 대신 2×2 — 갤럭시 S25 기준 카드가 한 화면에 들어온다(2026-09-06) */}
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
                 {summary.states.map((state) => (
-                  <ReadinessStateChip key={state.key} state={state} />
+                  <ReadinessStateChip key={state.key} state={state} compact />
                 ))}
               </div>
             </div>
@@ -290,15 +291,15 @@ export function FlightReadinessPanel({
   )
 }
 
-function ReadinessStateChip({ state }: { state: ReadinessState }) {
+function ReadinessStateChip({ state, compact = false }: { state: ReadinessState; compact?: boolean }) {
   const Icon = STATE_ICON[state.key]
   return (
-    <span className={`inline-flex items-center gap-2 rounded-control border px-4 py-2 text-sm font-bold ${
+    <span className={`inline-flex items-center gap-2 rounded-control border font-bold ${compact ? 'px-3 py-1.5 text-[13px]' : 'px-4 py-2 text-sm'} ${
         state.met ? 'border-go/25 bg-go/10 text-go' : 'border-white/10 bg-white/[0.03] text-slate-400'
       }`}
       title={state.label}
     >
-      <Icon className="h-5 w-5" aria-hidden={true} />
+      <Icon className={compact ? 'h-4 w-4 shrink-0' : 'h-5 w-5'} aria-hidden={true} />
       {state.label}
       <span className={`ml-0.5 rounded-control px-1 text-[10px] font-bold ${
           state.met ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
