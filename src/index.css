@@ -125,7 +125,9 @@ p {
 
 .reveal.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  /* translateY(0) 도 transform 이라 자식의 position: fixed 기준점을 화면이 아닌 이 요소로 바꿔 버린다
+     (풍선·토스트·모달이 엉뚱한 자리에 뜨던 원인). none 으로 두면 애니메이션 후 기준점이 정상으로 돌아온다. */
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

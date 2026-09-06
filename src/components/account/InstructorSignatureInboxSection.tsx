@@ -96,8 +96,8 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
   return (
     <div className="rounded-control border border-white/10 bg-navy px-4 py-4" data-testid="signature-request-card">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">{request.title}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-white">{request.title}</p>
           <p className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-400">
             요청일: {formatDateTime(request.created_at)} · 요청자: {request.requester_name}
           </p>

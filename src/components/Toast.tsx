@@ -1,5 +1,6 @@
 // 짧은 확인 알림("추가됐어요" 등). 화면 하단 중앙에 2.5초 떠 있다가 사라진다.
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { CheckCircle2 } from 'lucide-react'
 
 export function useToast(): { toast: React.ReactNode; showToast: (message: string) => void } {
@@ -14,7 +15,8 @@ export function useToast(): { toast: React.ReactNode; showToast: (message: strin
 
   useEffect(() => () => { if (timerRef.current) window.clearTimeout(timerRef.current) }, [])
 
-  const toast = message ? (
+  // body 에 포털 — 어느 컴포넌트 안에서 써도 화면 하단 중앙에 뜬다(부모 transform 영향 제거)
+  const toastNode = message ? (
     <div
       role="status"
       aria-live="polite"
@@ -27,6 +29,7 @@ export function useToast(): { toast: React.ReactNode; showToast: (message: strin
       </div>
     </div>
   ) : null
+  const toast = toastNode && typeof document !== 'undefined' ? createPortal(toastNode, document.body) : toastNode
 
   return { toast, showToast }
 }

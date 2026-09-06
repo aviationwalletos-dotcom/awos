@@ -101,9 +101,9 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
 
   return (
     <li className="rounded-control border border-white/10 bg-white/[0.04] p-4" data-testid="approval-row">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">{item.title}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-white">{item.title}</p>
           <p className="mt-1 text-xs text-slate-400">
             {item.requester_name}
             {item.requester_email ? ` (${item.requester_email})` : ''} · {formatDateTime(item.created_at)}
