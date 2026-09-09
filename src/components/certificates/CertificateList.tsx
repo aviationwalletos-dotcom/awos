@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ChevronDown, ChevronUp, OctagonAlert, Shield, ShieldCheck, ShieldX, TriangleAlert } from 'lucide-react'
 
 import { isCommEducationDue } from '../../data/certificateOptions'
@@ -33,13 +33,15 @@ const STATUS_ICON: Record<CertificateStatus, React.ComponentType<{ className?: s
 }
 
 interface CertificateListProps {
+  /** 방금 등록한 자격증 — 강조 표시하고, 접힌 목록이라면 펼친다 */
+  highlightId?: string
   certificates: Certificate[]
   onSelect: (certificate: Certificate) => void
   /** 로그인한 사용자의 역할 강조색(hover 테두리)에 사용할 Tailwind 클래스. 미지정 시 기본 sky 색상 사용 */
   accentHoverBorderClass?: string
 }
 
-export function CertificateList({ certificates, onSelect, accentHoverBorderClass }: CertificateListProps) {
+export function CertificateList({ certificates, onSelect, accentHoverBorderClass, highlightId }: CertificateListProps) {
   const sortedCertificates = [...certificates].sort((a, b) => {
     // 만료일 있는 유효 자격(임박순) → 만료 개념 없는 자격 → 만료된 자격 순으로 정렬
     const rank = (c: Certificate) => {
@@ -68,6 +70,11 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
   const COLLAPSED_COUNT = 3
   const [isExpanded, setIsExpanded] = useState(false)
   const hiddenCount = Math.max(0, sortedCertificates.length - COLLAPSED_COUNT)
+  // 방금 등록한 카드가 접힌 범위 밖이면 목록을 펼쳐서 보여준다
+  const highlightHidden = Boolean(highlightId) && sortedCertificates.findIndex((c) => c.id === highlightId) >= COLLAPSED_COUNT
+  useEffect(() => {
+    if (highlightHidden) setIsExpanded(true)
+  }, [highlightHidden])
   const visibleCertificates = isExpanded || hiddenCount === 0 ? sortedCertificates : sortedCertificates.slice(0, COLLAPSED_COUNT)
 
   return (
@@ -79,11 +86,13 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
         const Icon = STATUS_ICON[status]
         const wallet = CATEGORY_WALLET_STYLE[cert.category] ?? CATEGORY_WALLET_STYLE['기타 자격']
         return (
-          <li key={cert.id}>
+          <li key={cert.id} id={`cert-item-${cert.id}`}>
             <button type="button"
               onClick={() => onSelect(cert)}
               data-testid="cert-item"
-              className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky sm:px-4"
+              className={`flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky sm:px-4 ${
+                highlightId === cert.id ? 'bg-go/10 ring-2 ring-inset ring-go/50' : ''
+              }`}
             >
               <span className={`h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${wallet.gradient}`} aria-hidden="true" />
               <span className="min-w-0 flex-1">

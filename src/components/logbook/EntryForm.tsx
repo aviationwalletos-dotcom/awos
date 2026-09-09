@@ -9,6 +9,7 @@ import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types
 import { Button } from '../Button'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
+import { DateField } from '../DateField'
 
 interface FieldErrors {
   date?: string
@@ -483,9 +484,8 @@ export function EntryForm({
             <label htmlFor="date" className={labelClass}>
               비행 날짜
             </label>
-            <input id="date"
+            <DateField id="date"
               name="date"
-              type="date"
               defaultValue={initialValues?.date ?? (mode === 'create' ? localToday() : undefined)}
               className={inputClass}
               aria-invalid={Boolean(errors.date)}
@@ -914,7 +914,12 @@ export function EntryForm({
       {entryKind === 'flight' && (<>
 
       <fieldset>
-        <legend className={sectionTitleClass}>접근/이착륙 횟수 (선택)</legend>
+        <legend className={`${sectionTitleClass} inline-flex items-center gap-1`}>
+          접근/착륙 횟수 (선택)
+          <InfoTip label="착륙 횟수 안내">
+            착륙 횟수만 적어요(이륙은 같은 수로 봐요). ASA 로그북의 Landings 값을 그대로 옮기면 돼요. 커런시(8.2.2)는 "이륙 및 착륙 3회"라 착륙 수로 판정해요.
+          </InfoTip>
+        </legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div>
             <label htmlFor="instrumentApproaches" className={labelClass}>
@@ -933,7 +938,7 @@ export function EntryForm({
           </div>
           <div>
             <label htmlFor="dayLandings" className={labelClass}>
-              주간 이착륙 횟수
+              주간 착륙 횟수
             </label>
             <input id="dayLandings"
               name="dayLandings"
@@ -948,7 +953,7 @@ export function EntryForm({
           </div>
           <div>
             <label htmlFor="nightLandings" className={labelClass}>
-              야간 이착륙 횟수
+              야간 착륙 횟수
             </label>
             <input id="nightLandings"
               name="nightLandings"

@@ -28,6 +28,7 @@ import { useInstructorApprovalStatus } from '../hooks/baas/useInstructorApproval
 import { useOrganizationAffiliationOverride } from '../hooks/useOrganizationAffiliationOverride'
 
 import type { IndividualRole } from '../lib/baas/types'
+import { DateField } from '../components/DateField'
 
 
 function formatDateTime(value: string | null): string {
@@ -43,12 +44,12 @@ function PageHeader() {
   return (
     <header className="border-b border-white/10">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/"
+        <Link to="/logbook"
           className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-sky
             focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          홈으로
+          로그북으로
         </Link>
         <p className="font-display text-base font-extrabold tracking-tight text-white">
           Aviation Wallet <span className="text-sky">OS</span>
@@ -399,7 +400,7 @@ export function AccountPage() {
           {isSetupMode && (
             <div className="mt-5 rounded-card border border-sky/30 bg-sky/10 p-4 text-sm leading-relaxed text-slate-200">
               👋 환영해요! 소셜 계정으로 가입이 완료됐어요. 아래에서 <span className="font-semibold text-sky">역할</span>과{' '}
-              <span className="font-semibold text-sky">소속 기관</span>을 설정하면 로그북 준비 끝 — 설정 후 위의 "AWOS 시작하기"를 눌러주세요.
+              <span className="font-semibold text-sky">소속 기관</span>을 설정하면 로그북 준비 끝 — 다 채운 뒤 <span className="font-semibold text-sky">맨 아래 "AWOS 시작하기"</span>를 눌러주세요.
               <p className="mt-2 text-xs text-slate-400">
                 이미 이메일로 가입한 적이 있다면? 이 계정 대신 <span className="font-semibold text-slate-200">기존 계정으로 로그인한 뒤</span> 아래 "로그인 방법 연결"에서 소셜 계정을 붙이면 기록이 한 계정에 모여요.
               </p>
@@ -593,10 +594,10 @@ export function AccountPage() {
                   </div>
                   <div>
                     <label htmlFor="birth-date" className="mb-1.5 block text-sm font-medium text-ink">생년월일</label>
-                    <input id="birth-date"
-                      type="date"
+                    <DateField id="birth-date"
                       value={birthInput}
-                      onChange={(e) => { setBirthInput(e.target.value); setBirthSaved(false) }}
+                      onChange={(v) => { setBirthInput(v); setBirthSaved(false) }}
+                      placeholder="예: 19990101"
                       className="w-full rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                     />
                   </div>
@@ -802,6 +803,16 @@ export function AccountPage() {
           </div>
         )}
 
+        {isSetupMode && (
+          <section className="mx-auto mt-6 max-w-3xl px-6">
+            {/* 가입 직후: 정보를 아래로 채워 내려온 뒤 눌러야 하는데 버튼이 위에만 있어 불편했다(지훈 피드백) */}
+            <Link to="/logbook"
+              className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-control bg-sky px-5 text-base font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              AWOS 시작하기 →
+            </Link>
+          </section>
+        )}
         <section className="mx-auto mt-6 max-w-3xl px-6 pb-16">
           <AccountSection id="account-delete" title="회원 탈퇴" tone="danger" className="!mt-0">
             <p className="mt-2 text-sm leading-relaxed text-slate-400">

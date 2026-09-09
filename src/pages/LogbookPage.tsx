@@ -78,11 +78,13 @@ export function LogbookPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
             to="/"
+            title="AWOS 소개 페이지"
             className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-sky
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            홈으로
+            <span className="hidden sm:inline">소개 페이지</span>
+            <span className="sm:hidden">소개</span>
           </Link>
           <div className="flex items-center gap-2">
             <p className="hidden font-display text-base font-extrabold tracking-tight text-white sm:block">

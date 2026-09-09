@@ -1,5 +1,5 @@
-import { AlertTriangle, Camera, FileCheck2, Info } from 'lucide-react'
-import React, { useState } from 'react'
+import { AlertTriangle, Camera, Info } from 'lucide-react'
+import React, { useRef, useState } from 'react'
 
 import { Button } from '../Button'
 import {
@@ -17,6 +17,9 @@ import { useUploadBoardFile } from '../../hooks/baas/useUploadBoardFile'
 import { buildFlightExperienceCertificateContent } from '../../lib/flightExperienceCertificateSync'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import type { LogbookEntryInput } from '../../types/logbook'
+import { AiReadPanel } from '../AiReadPanel'
+import { DateField } from '../DateField'
+import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocument'
 
 interface FieldErrors {
   date?: string
@@ -45,6 +48,39 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   const myAffiliation = affiliationOverride ?? (account?.data?.organization_affiliation as string | undefined)
 
   const { uploadFile } = useUploadBoardFile()
+  // 날짜는 AI 읽기로 채워질 수 있어 상태로 둔다(나머지 칸은 폼 값을 직접 채운다)
+  const [aiDate, setAiDate] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
+
+  // AI 가 읽은 값을 폼에 채운다(uncontrolled input 은 이름으로, 날짜는 상태로). 채운 항목의 한글 이름을 돌려준다.
+  const FIELD_LABEL: Record<string, string> = {
+    issuer: '발급 기관', blockTime: '총 비행시간', singleEngineLand: '육상단발', multiEngineLand: '육상다발', rotorcraftHelicopter: '회전익',
+    dualReceived: '교육 받은 시간', picTime: 'PIC', sicTime: 'SIC', flightInstructorTime: '교관 시간', groundTrainerTime: '시뮬레이터',
+    conditionDay: '주간', conditionNight: '야간', crossCountry: '크로스컨트리', actualInstrument: '실계기', simulatedInstrument: '모의계기',
+    instrumentApproaches: '계기접근', dayLandings: '주간 착륙', nightLandings: '야간 착륙', date: '날짜',
+  }
+  const FIELD_TO_INPUT: Record<string, string> = { issuer: 'certificateIssuer', dualReceived: 'dualReceived', picTime: 'picTime', sicTime: 'sicTime', flightInstructorTime: 'flightInstructorTime' }
+  function applyAiResult(result: ReadDocumentResult): string[] {
+    const form = formRef.current
+    if (!form) return []
+    const filled: string[] = []
+    const f = result.fields
+    if (typeof f.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(f.date)) {
+      setAiDate(f.date)
+      filled.push(FIELD_LABEL.date)
+    }
+    const values: Record<string, string | number | null | undefined> = {}
+    for (const [k, v] of Object.entries(f)) {
+      if (k === 'date' || v === null || v === undefined) continue
+      values[FIELD_TO_INPUT[k] ?? k] = v as string | number
+    }
+    const names = fillFormFields(form, values)
+    for (const n of names) {
+      const key = Object.entries(FIELD_TO_INPUT).find(([, v]) => v === n)?.[0] ?? n
+      filled.push(FIELD_LABEL[key] ?? n)
+    }
+    return filled
+  }
 
   const [errors, setErrors] = useState<FieldErrors>({})
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
@@ -90,8 +126,9 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     const blockTime = Number(blockTimeRaw)
     const dayLandingsRaw = String(form.get('dayLandings') || '').trim()
     const nightLandingsRaw = String(form.get('nightLandings') || '').trim()
-    const dayLandings = dayLandingsRaw ? Number(dayLandingsRaw) : 0
-    const nightLandings = nightLandingsRaw ? Number(nightLandingsRaw) : 0
+    // 빈칸은 0이 아니라 "기재 없음" — 해외 증명서(AG·Part 61 타임빌딩)는 착륙 횟수가 없어 커런시 계산에서 제외해야 한다
+    const dayLandings = dayLandingsRaw ? Number(dayLandingsRaw) : undefined
+    const nightLandings = nightLandingsRaw ? Number(nightLandingsRaw) : undefined
 
     if (!date) nextErrors.date = '기준일을 입력해 주세요.'
     if (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0) {
@@ -129,8 +166,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       simulatedInstrument: numOrUndef(form.get('simulatedInstrument')),
     }
     const instrumentApproaches = numOrUndef(form.get('instrumentApproaches'))
-    const normalizedDayLandings = Number.isFinite(dayLandings) && dayLandings > 0 ? dayLandings : 0
-    const normalizedNightLandings = Number.isFinite(nightLandings) && nightLandings > 0 ? nightLandings : 0
+    const normalizedDayLandings = dayLandings !== undefined && Number.isFinite(dayLandings) && dayLandings >= 0 ? dayLandings : undefined
+    const normalizedNightLandings = nightLandings !== undefined && Number.isFinite(nightLandings) && nightLandings >= 0 ? nightLandings : undefined
 
     setIsSubmitting(true)
     setSyncNotice(null)
@@ -231,16 +268,47 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="space-y-8">
-      <div className="flex items-start gap-3 rounded-control border border-white/10 bg-surface p-4">
-        <FileCheck2 className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-        <p className="text-xs text-slate-400">
-          이 폼은 "비행 1건"이 아니라, 비행경력증명서에 적힌 <strong>누적 비행경력 총합</strong>을 항목별로 옮겨 적는
-          용도예요. 출발/도착지나 기종처럼 개별 비행에만 해당하는 값은 입력하지 않아요. 저장하면 관리자에게 실제
-          인증 요청을 제출하는 "인증 대기중" 상태의 비행기록 1건으로 등록되며, 관리자가 원본과 대조해 승인/반려하면 자동으로
-          반영돼요.
+    <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
+      <p className="text-xs text-slate-400">
+        비행경력증명서의 <strong className="text-slate-200">누적 총합</strong>을 옮겨 적는 폼이에요(개별 비행 아님). 저장하면 "인증 대기중" 기록 1건이 되고, 관리자가 원본과 대조해 승인하면 공식 시간에 들어가요.
+      </p>
+
+      {/* 0. 증명서 사진 — 먼저 올리면 AI 가 아래 칸을 채워 준다 */}
+      <fieldset>
+        <legend className={sectionTitleClass}>비행경력증명서 사진 (먼저 올리면 AI 가 칸을 채워요)</legend>
+        <p className={sectionHintClass}>
+          이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
+          담당자가 확인할 수 있어요(선택 입력).
         </p>
-      </div>
+        <label htmlFor="cert-image"
+          className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm font-medium text-ink
+            hover:bg-white/[0.06] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky"
+        >
+          <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
+          사진 선택
+        </label>
+        <input id="cert-image" type="file" accept="image/*,application/pdf,.pdf" onChange={handleImageChange} className="sr-only" />
+        {imageError && (
+          <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-600">
+            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+            {imageError}
+          </p>
+        )}
+        {imageFile && !imageDataUrl && (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-control border border-white/15 bg-white/[0.05] px-3 py-2 text-sm text-slate-300">
+            📄 {imageFile.name} <span className="text-xs text-slate-500">(PDF 첨부됨)</span>
+          </p>
+        )}
+        {imageDataUrl && (
+          <img src={imageDataUrl}
+            alt="첨부한 비행경력증명서 사진 미리보기"
+            className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
+          />
+        )}
+        <AiReadPanel kind="flight_experience" file={imageFile} onApply={applyAiResult} className="mt-3" />
+      </fieldset>
+
+      <hr className="border-white/[0.08]" />
 
       {/* 1. 기준 정보 */}
       <fieldset>
@@ -250,9 +318,10 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             <label htmlFor="cert-date" className={labelClass}>
               기준일 (증명서 발급일 등)
             </label>
-            <input id="cert-date"
+            <DateField id="cert-date"
               name="date"
-              type="date"
+              value={aiDate}
+              onChange={setAiDate}
               className={inputClass}
               aria-invalid={Boolean(errors.date)}
               aria-describedby={errors.date ? 'cert-date-error' : undefined}
@@ -475,41 +544,6 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         </div>
       </fieldset>
 
-      <hr className="border-white/[0.08]" />
-
-      {/* 8. 증명서 사진 */}
-      <fieldset>
-        <legend className={sectionTitleClass}>8. 비행경력증명서 사진</legend>
-        <p className={sectionHintClass}>
-          이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
-          담당자가 확인할 수 있어요(선택 입력).
-        </p>
-        <label htmlFor="cert-image"
-          className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border border-white/10 bg-panel px-4 py-2.5 text-sm font-medium text-ink
-            hover:bg-white/[0.06] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky"
-        >
-          <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
-          사진 선택
-        </label>
-        <input id="cert-image" type="file" accept="image/*,application/pdf,.pdf" onChange={handleImageChange} className="sr-only" />
-        {imageError && (
-          <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-600">
-            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-            {imageError}
-          </p>
-        )}
-        {imageFile && !imageDataUrl && (
-          <p className="mt-3 inline-flex items-center gap-2 rounded-control border border-white/15 bg-white/[0.05] px-3 py-2 text-sm text-slate-300">
-            📄 {imageFile.name} <span className="text-xs text-slate-500">(PDF 첨부됨)</span>
-          </p>
-        )}
-        {imageDataUrl && (
-          <img src={imageDataUrl}
-            alt="첨부한 비행경력증명서 사진 미리보기"
-            className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
-          />
-        )}
-      </fieldset>
 
       <div className="flex items-start gap-3 rounded-control border border-sky/30 bg-sky/10 px-4 py-3">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky" aria-hidden="true" />

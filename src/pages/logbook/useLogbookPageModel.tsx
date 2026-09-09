@@ -273,9 +273,9 @@ export function useLogbookPageModel() {
   async function handleCreateCertificate(
     input: CertificateInput,
     approvalFile?: File,
-  ) {
+  ): Promise<Certificate | null> {
     const created = addCertificate({ ...input, approvalStatus: "pending" });
-    if (!created || !account) return;
+    if (!created || !account) return created ?? null;
     try {
       const request = await submitCertificateApprovalRequest({
         certificate: created,
@@ -298,6 +298,7 @@ export function useLogbookPageModel() {
     } catch (err) {
       console.warn("[자격증 인증 요청 실패]", err);
     }
+    return created;
   }
   const [filterKind, setFilterKind] = useState<LogbookFilterKind>("all");
   const [filterValue, setFilterValue] = useState<string | null>(null);

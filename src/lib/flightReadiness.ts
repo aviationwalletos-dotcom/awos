@@ -85,6 +85,8 @@ export interface RecencyReadiness {
   nightMet: boolean
   /** v1.1 — 적용된 기간(일). 일반 180 / 여객·2인조종·운송사업 90 (운항기술기준 8.2.2) */
   windowDays: number
+  /** 착륙 횟수 기재가 없어(해외 증명서 등) 판정에서 제외한 기록 수 */
+  unknownLandingCount: number
   /** 야간 1회 요건이 법정으로 붙는지(8.2.2 가항 = 여객·2인조종·운송사업만). 일반 운항은 참고치 */
   nightRequired: boolean
   /** 8.2.2 "동일 등급 항공기 형식" — 최근 비행에 나타난 등급별 판정 */
@@ -180,6 +182,8 @@ export function computeFlightReadiness(
   const recencyRecent = entries.filter((e) => isWithinWindow(e.date, recencyStart, today))
   const landingCount = recencyRecent.reduce((sum, e) => sum + (e.dayLandings ?? 0) + (e.nightLandings ?? 0), 0)
   const nightLandingCount = recencyRecent.reduce((sum, e) => sum + (e.nightLandings ?? 0), 0)
+  // 착륙 횟수 "기재 없음"(undefined) 기록 — 해외 증명서(AG·Part 61 타임빌딩)처럼 착륙 수가 없는 이월 기록. 0 으로 세지 않고 제외한 뒤 건수를 알린다.
+  const unknownLandingCount = recencyRecent.filter((e) => e.dayLandings === undefined && e.nightLandings === undefined).length
   const baseMet = landingCount >= 3
   const nightMet = baseMet && (!nightRequired || nightLandingCount >= 1)
   // 등급별(8.2.2 "동일 등급") — 최근 24개월 안에 비행한 등급마다 따로 센다. 등급 미기재 기록은 모든 등급에 합산(보수적)
@@ -201,6 +205,7 @@ export function computeFlightReadiness(
     baseMet,
     nightMet,
     windowDays,
+    unknownLandingCount,
     nightRequired,
     byClass,
   }
@@ -299,6 +304,9 @@ export function computeReadinessStates(
   const generalRecencyMet = useClasses ? generalByClass.some((c) => c.met) : recency.baseMet
   if (!generalRecencyMet) {
     generalReasons.push(`최근 ${recency.windowDays}일 이착륙 ${recency.landingCount}/3회로 기준 미달입니다(운항기술기준 8.2.2)`)
+    if (recency.unknownLandingCount > 0) {
+      generalReasons.push(`착륙 횟수가 기재되지 않은 기록 ${recency.unknownLandingCount}건(해외 증명서 등)은 판정에서 제외했어요`)
+    }
   }
   for (const c of generalByClass) {
     if (!c.met) generalReasons.push(`${c.label}: 최근 ${recency.windowDays}일 이착륙 ${c.landings}/3회 — 이 등급은 제한`)

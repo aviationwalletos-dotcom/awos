@@ -33,7 +33,7 @@ export function LegacyImportSection({ onAddEntries }: LegacyImportSectionProps) 
         <InfoTip label="두 방법의 차이">
           <span className="font-semibold text-slate-100">엑셀로 가져오기</span>는 바로 기록에 들어가지만 기관(학교) 검토는 거치지 않아요.
           <br />
-          <span className="font-semibold text-slate-100">비행경력증명서로 가져오기</span>는 증명서 사진을 첨부해 기관 담당자가 승인·반려해요. 공식 총 비행시간에 넣으려면 이쪽이에요.
+          <span className="font-semibold text-slate-100">비행경력증명서로 가져오기</span>는 증명서 사진을 올리면 AI 가 칸을 채워 주고, 확인 후 저장하면 기관 담당자가 원본과 대조해 승인·반려해요. 공식 총 비행시간에 넣으려면 이쪽이에요.
         </InfoTip>
       </div>
       <div role="tablist" aria-label="종이 로그북 가져오기 방법 선택" className="mb-6 flex flex-wrap gap-2">

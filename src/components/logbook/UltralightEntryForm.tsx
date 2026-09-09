@@ -14,6 +14,7 @@ import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
 import { isInspectionValidOn, vehicleDisplayName } from '../../types/vehicle'
 import type { Vehicle } from '../../types/vehicle'
 import { localToday } from '../../lib/ui/localDate'
+import { DateField } from '../DateField'
 
 const inputClass =
   'w-full rounded-control border border-white/10 bg-panel px-3 py-2.5 text-sm text-ink placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky'
@@ -192,7 +193,7 @@ export function UltralightEntryForm({ mode, initialValues, vehicles, onSubmit, o
         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="ul-date" className={labelClass}>연월일</label>
-            <input id="ul-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+            <DateField id="ul-date" value={date} onChange={setDate} className={inputClass} />
             {errors.date && <p className="mt-1 text-xs text-rose-400">{errors.date}</p>}
           </div>
           <div>

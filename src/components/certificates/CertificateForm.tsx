@@ -30,6 +30,9 @@ import { PILOT_TRACK_LABEL } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
+import { AiReadPanel } from '../AiReadPanel'
+import { DateField, isCompleteDate } from '../DateField'
+import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocument'
 
 interface FieldErrors {
   name?: string
@@ -167,6 +170,35 @@ export function CertificateForm({
     Boolean(initialValues) && !inferSubTypeFromName(initialValues?.category, initialValues?.name).key,
   )
   const [issuerValue, setIssuerValue] = useState(initialValues?.issuer ?? '')
+  // AI 읽기로 채워지는 날짜(DateField 는 defaultValue 가 바뀌면 값을 갱신한다)
+  const [aiIssuedDate, setAiIssuedDate] = useState<string | undefined>(undefined)
+  const [aiExpiryDate, setAiExpiryDate] = useState<string | undefined>(undefined)
+
+  function applyAiResult(result: ReadDocumentResult): string[] {
+    const form = formRef.current
+    if (!form) return []
+    const filled: string[] = []
+    const f = result.fields
+    const isDate = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+    if (isDate(f.issuedDate)) {
+      setAiIssuedDate(f.issuedDate)
+      autofillExpiry(f.issuedDate)
+      filled.push('발급일')
+    }
+    if (isDate(f.expiryDate)) {
+      setAiExpiryDate(f.expiryDate)
+      filled.push('만료일')
+    }
+    if (typeof f.issuer === 'string' && f.issuer.trim()) {
+      setIssuerTouched(true)
+      setIssuerValue(f.issuer.trim())
+      filled.push('발급기관')
+    }
+    const names = fillFormFields(form, { licenceNumber: f.licenceNumber ?? null, limitations: f.limitations ?? null })
+    if (names.includes('licenceNumber')) filled.push('자격번호')
+    if (names.includes('limitations')) filled.push('제한사항')
+    return filled
+  }
   const [issuerTouched, setIssuerTouched] = useState(Boolean(initialValues))
   const [category, setCategory] = useState<CertificateCategory>(
     initialValues?.category && categories.includes(initialValues.category) ? initialValues.category : categories[0],
@@ -328,6 +360,24 @@ export function CertificateForm({
 
   return (
     <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <span className={labelClass}>자격증 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 자격번호·발급일을 채워요</span>
+          <input type="file"
+            data-testid="cert-photo"
+            accept="image/*,application/pdf,.pdf"
+            onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
+            className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
+          />
+          {mode === 'create' && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
+          <p className="mt-1.5 text-xs text-slate-400">
+            {mode === 'create'
+              ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'
+              : '수정 시에는 첨부하지 않아도 돼요. 재인증은 상세 화면에서 요청하세요.'}
+          </p>
+          {errors.approvalFile && (
+            <p className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
+          )}
+        </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
@@ -542,16 +592,16 @@ export function CertificateForm({
           <label htmlFor="issuedDate" className={labelClass}>
             발급일
           </label>
-          <input id="issuedDate"
+          <DateField id="issuedDate"
             name="issuedDate"
-            type="date"
-            defaultValue={initialValues?.issuedDate}
+            defaultValue={aiIssuedDate ?? initialValues?.issuedDate}
             className={inputClass}
             aria-invalid={Boolean(errors.issuedDate)}
             aria-describedby={errors.issuedDate ? 'issuedDate-error' : undefined}
-          
-              onChange={(e) => autofillExpiry(e.target.value)}
-            />
+            onChange={(v) => {
+              if (isCompleteDate(v)) autofillExpiry(v)
+            }}
+          />
           {errors.issuedDate && (
             <p id="issuedDate-error" className="mt-1.5 text-xs text-rose-600">
               {errors.issuedDate}
@@ -564,10 +614,9 @@ export function CertificateForm({
             <label htmlFor="expiryDate" className={labelClass}>
               만료일{expiryRequirement === 'optional' ? ' (선택)' : ''}
             </label>
-            <input id="expiryDate"
+            <DateField id="expiryDate"
               name="expiryDate"
-              type="date"
-              defaultValue={initialValues?.expiryDate}
+              defaultValue={aiExpiryDate ?? initialValues?.expiryDate}
               className={inputClass}
               aria-invalid={Boolean(errors.expiryDate)}
               aria-describedby={errors.expiryDate ? 'expiryDate-error' : undefined}
@@ -619,23 +668,6 @@ export function CertificateForm({
         />
       </div>
 
-        <div>
-          <span className={labelClass}>자격증 사진 (이미지 또는 PDF)</span>
-          <input type="file"
-            data-testid="cert-photo"
-            accept="image/*,application/pdf,.pdf"
-            onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
-            className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
-          />
-          <p className="mt-1.5 text-xs text-slate-400">
-            {mode === 'create'
-              ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'
-              : '수정 시에는 첨부하지 않아도 돼요. 재인증은 상세 화면에서 요청하세요.'}
-          </p>
-          {errors.approvalFile && (
-            <p className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
-          )}
-        </div>
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" size="md" data-testid="cert-submit">

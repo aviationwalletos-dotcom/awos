@@ -321,6 +321,11 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             <p className="mt-4 text-sm text-slate-400">
               최근 {recency.windowDays}일 이내 비행 기록 <span className="font-mono-data tabular-nums font-semibold text-ink">{recency.recentCount}</span>건 기준
             </p>
+            {recency.unknownLandingCount > 0 && (
+              <p className="mt-1 text-xs text-amber-300">
+                착륙 횟수가 없는 기록 {recency.unknownLandingCount}건(해외 증명서 등)은 판정에서 제외했어요.
+              </p>
+            )}
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="rounded-card border border-white/10 bg-panel p-cardpad">
                 <div className="flex items-center justify-between gap-2">

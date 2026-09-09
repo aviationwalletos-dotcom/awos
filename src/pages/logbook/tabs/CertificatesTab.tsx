@@ -12,6 +12,7 @@ import { InfoTip } from "../../../components/InfoTip";
 
 export function CertificatesTab({ m }: { m: LogbookModel }) {
   const [isCertFormOpen, setIsCertFormOpen] = useState(false);
+  const [lastAdded, setLastAdded] = useState<{ id: string; name: string; withPhoto: boolean } | null>(null);
   const {
     activeTrack,
     birthDate,
@@ -30,6 +31,15 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
         <section className="bg-panel py-[clamp(24px,4vw,48px)]">
           <div className="mx-auto max-w-4xl px-6">
             <Reveal>
+              {lastAdded && (
+                <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-control border border-go/30 bg-go/10 px-4 py-3 text-sm text-go">
+                  <span>
+                    <span className="font-semibold">{lastAdded.name}</span> 등록됐어요.
+                    {lastAdded.withPhoto ? " 관리자 인증 요청도 보냈어요 — 확인되면 카드에 \"인증됨\"이 붙어요." : " 사진을 첨부하면 관리자 인증을 받을 수 있어요."}
+                  </span>
+                  <button type="button" onClick={() => setLastAdded(null)} className="text-xs font-semibold underline underline-offset-2">닫기</button>
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="font-display text-2xl font-extrabold text-ink">
                   내 자격증 목록
@@ -72,6 +82,7 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                 )}
               <div className="mt-6">
                 <CertificateList
+                  highlightId={lastAdded?.id}
                   certificates={certificates}
                   onSelect={setSelectedCertificate}
                   accentHoverBorderClass={roleContent?.hoverBorderClass}
@@ -123,10 +134,19 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                 <CertificateForm
                   mode="create"
                   onSubmit={(input, options) => {
+                    // 등록 뒤 폼이 비워져 "정보가 사라진 것처럼" 보이던 문제(지훈 피드백):
+                    // 폼을 접고, 새 카드로 스크롤·강조하고, 인증 대기 안내 배너를 남긴다
                     void handleCreateCertificate(
                       { ...input, track: input.track ?? activeTrack },
                       options?.approvalFile,
-                    );
+                    ).then((created) => {
+                      if (!created) return;
+                      setIsCertFormOpen(false);
+                      setLastAdded({ id: created.id, name: created.name, withPhoto: Boolean(options?.approvalFile) });
+                      window.setTimeout(() => {
+                        document.getElementById(`cert-item-${created.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }, 120);
+                    });
                     showToast("자격증이 추가됐어요.");
                   }}
                   roleTemplate={roleContent}

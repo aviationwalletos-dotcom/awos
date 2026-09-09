@@ -93,10 +93,13 @@ export function EntryDetailDialog({
   // 기록의 자격 구분에 맞는 교관만 — 초경량 기록은 지도조종자, 경량은 경량 교관, 항공기는 항공기 교관(시행규칙 제77조·운영세칙 제9조)
   const entryTrackKey = entry ? entryTrack(entry) : 'aircraft'
   const trackInstructors = useMemo(() => approvedInstructors.filter((i) => i.tracks.includes(entryTrackKey)), [approvedInstructors, entryTrackKey])
+  const [instructorQuery, setInstructorQuery] = useState('')
   const visibleInstructors = useMemo(() => {
-    if (showAllAffiliations || !hasMyAffiliation) return trackInstructors
-    return trackInstructors.filter((instructor) => instructor.affiliation === myAffiliation)
-  }, [trackInstructors, showAllAffiliations, hasMyAffiliation, myAffiliation])
+    const base = showAllAffiliations || !hasMyAffiliation ? trackInstructors : trackInstructors.filter((instructor) => instructor.affiliation === myAffiliation)
+    const q = instructorQuery.trim().toLowerCase()
+    if (!q) return base
+    return base.filter((i) => i.name.toLowerCase().includes(q) || (i.affiliation ?? '').toLowerCase().includes(q))
+  }, [trackInstructors, showAllAffiliations, hasMyAffiliation, myAffiliation, instructorQuery])
 
   // 서명 요청은 반드시 특정 교관을 지정해야 하므로, 선택 가능한 목록이 바뀌면
   // 현재 선택값이 더 이상 유효하지 않을 때 목록의 첫 번째 교관을 자동으로 선택해둔다.
@@ -620,7 +623,10 @@ export function EntryDetailDialog({
                 <div>
                       <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">계기접근 / 주간 / 야간 이착륙</dt>
                       <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
-                        {entry.instrumentApproaches ?? 0}회 · {entry.dayLandings ?? 0}회 / {entry.nightLandings ?? 0}회
+                        {entry.instrumentApproaches ?? 0}회 ·{' '}
+                        {entry.dayLandings === undefined && entry.nightLandings === undefined
+                          ? '착륙 기재 없음'
+                          : `${entry.dayLandings ?? 0}회 / ${entry.nightLandings ?? 0}회`}
                       </dd>
                     </div>
                     <div>
@@ -816,6 +822,16 @@ export function EntryDetailDialog({
                             </button>
                           )}
                         </div>
+                        {/* 교관이 수십 명이면 목록에서 찾기 어렵다 → 이름·소속으로 추리기(영진 피드백) */}
+                        <input
+                          type="search"
+                          value={instructorQuery}
+                          onChange={(e) => setInstructorQuery(e.target.value)}
+                          placeholder="교관 이름·소속으로 검색"
+                          aria-label="교관 검색"
+                          className="mb-2 w-full rounded-control border border-white/10 bg-panel px-3 py-2 text-sm text-ink placeholder:text-slate-500
+                            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                        />
                         <select id="target-instructor"
                           value={selectedInstructorUserId}
                           onChange={(e) => setSelectedInstructorUserId(e.target.value)}
