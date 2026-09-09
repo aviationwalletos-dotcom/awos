@@ -210,7 +210,6 @@ export const FEATURE_SPECS: FeatureSpec[] = [
       '자격증명 및 항공신체검사 유효기간 추적',
       '만료 D-day 표시 및 갱신 알림',
       '비행 가능 여부(GO / NO-GO) 판정',
-      '한국교통안전공단(TS) 자격 연동 — 준비 중',
     ],
   },
   {

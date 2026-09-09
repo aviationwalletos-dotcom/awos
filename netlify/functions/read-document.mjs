@@ -48,6 +48,16 @@ const SCHEMAS = {
       ratings: '한정사항 문자열(예: 비행기 육상단발). 없으면 null',
       limitations: '제한사항 문자열. 없으면 null',
       medicalClass: '항공신체검사 종류(1, 2, 3) 정수. 해당 없으면 null',
+      // ── 조종사 자격증명서 한 장에서 같이 등록할 수 있는 항목들(한정사항·특기사항에서 읽는다) ──
+      licenceCode: "조종사 자격증명 종류 코드: 'PPL'(자가용) | 'CPL'(사업용) | 'ATPL'(운송용) | 'MPL'(부조종사). 조종사 자격증명서가 아니면 null",
+      classRatings:
+        "한정사항(XII. RATINGS)에 적힌 종류/등급을 빠짐없이 배열로. 각 항목은 {\"category\":\"AIRPLANE\"|\"HELICOPTER\",\"class\":\"SEL\"|\"MEL\"|\"SES\"|\"MES\"|null}. 육상단발=SEL, 육상다발=MEL, 수상단발=SES, 수상다발=MES, 헬리콥터는 class null. 계기비행증명·조종교육증명은 여기 넣지 말 것. 없으면 []",
+      instrumentRatings: "계기비행증명(INSTRUMENT RATING)이 있으면 종류 배열 [\"AIRPLANE\"|\"HELICOPTER\"]. 없으면 []",
+      flightInstructorRatings:
+        "조종교육증명(FLIGHT INSTRUCTOR RATING)이 있으면 배열. 각 항목 {\"grade\":\"BASIC\"|\"SENIOR\",\"category\":\"AIRPLANE\"|\"HELICOPTER\"}. 초급/JUNIOR=BASIC, 선임/SENIOR=SENIOR. 등급 표기가 없으면 BASIC. 없으면 []",
+      eptaLevel: '특기사항(REMARKS)의 ENGLISH PROFICIENCY LEVEL 정수(4, 5, 6). 없으면 null',
+      eptaValidUntil: "ENGLISH PROFICIENCY 의 'VALID UNTIL' 날짜 YYYY-MM-DD. 없으면 null (LEVEL 6 는 만료가 없을 수 있음)",
+      holderBirthDate: '소지자 생년월일(IVa. DATE OF BIRTH) YYYY-MM-DD. 없으면 null',
     },
   },
 }
@@ -126,7 +136,7 @@ ${fieldLines}
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({ model: MODEL, max_tokens: schema.rows ? 6000 : 1200, messages: [{ role: 'user', content }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: schema.rows ? 6000 : 1600, messages: [{ role: 'user', content }] }),
     })
     if (!r.ok) {
       const t = await r.text().catch(() => '')

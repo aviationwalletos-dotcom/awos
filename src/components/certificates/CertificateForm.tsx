@@ -30,6 +30,7 @@ import type { PilotTrack } from '../../lib/tracks'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
 import { AiReadPanel } from '../AiReadPanel'
+import { type CertificateSuggestion, buildCertificateSuggestions } from '../../lib/certificateSuggestions'
 import { DateField, isCompleteDate } from '../DateField'
 import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocument'
 
@@ -44,7 +45,7 @@ interface FieldErrors {
 interface CertificateFormProps {
   mode: 'create' | 'edit'
   initialValues?: Certificate
-  onSubmit: (input: CertificateInput, options?: { approvalFile?: File }) => void
+  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; extras?: CertificateInput[] }) => void
   onCancel?: () => void
   /** 로그인한 사용자의 역할에 해당하는 자격 템플릿(빠른 추가 칩)과 강조 색상 */
   roleTemplate?: RoleContent
@@ -172,6 +173,8 @@ export function CertificateForm({
   // AI 읽기로 채워지는 날짜(DateField 는 defaultValue 가 바뀌면 값을 갱신한다)
   const [aiIssuedDate, setAiIssuedDate] = useState<string | undefined>(undefined)
   const [aiExpiryDate, setAiExpiryDate] = useState<string | undefined>(undefined)
+  // 자격증명서 한 장에서 같이 찾은 자격(한정·계기·교관·EPTA). 사용자가 체크한 것만 본체와 함께 등록된다.
+  const [aiExtras, setAiExtras] = useState<(CertificateSuggestion & { checked: boolean })[]>([])
 
   function applyAiResult(result: ReadDocumentResult): string[] {
     const form = formRef.current
@@ -179,6 +182,24 @@ export function CertificateForm({
     const filled: string[] = []
     const f = result.fields
     const isDate = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+
+    // 조종사 자격증명서면 종류(PPL/CPL/ATPL)·종류/등급 한정을 본체 폼에 먼저 맞추고, 나머지는 체크 목록으로
+    setAiExtras([])
+    if (mode === 'create' && typeof f.licenceCode === 'string') {
+      const suggestions = buildCertificateSuggestions(f, existingCertificates, track, isDate(f.issuedDate) ? f.issuedDate : '')
+      const primary = suggestions.find((s) => s.kind === 'licence')
+      if (primary) {
+        if (category !== '조종사 자격증명') handleCategoryChange('조종사 자격증명')
+        setNameTouched(false)
+        setSubKey(f.licenceCode)
+        setAircraftCategory(primary.input.aircraftCategory ?? 'AIRPLANE')
+        setClassRating(primary.input.classRating ?? (primary.input.aircraftCategory === 'HELICOPTER' ? '' : 'SEL'))
+        filled.push('자격 종류·등급')
+        const extras = suggestions.filter((s) => s.kind !== 'licence').map((s) => ({ ...s, checked: !s.duplicate }))
+        setAiExtras(extras)
+      }
+    }
+
     if (isDate(f.issuedDate)) {
       setAiIssuedDate(f.issuedDate)
       autofillExpiry(f.issuedDate)
@@ -193,7 +214,8 @@ export function CertificateForm({
       setIssuerValue(f.issuer.trim())
       filled.push('발급기관')
     }
-    const names = fillFormFields(form, { licenceNumber: f.licenceNumber ?? null, limitations: f.limitations ?? null })
+    const str = (v: unknown): string | null => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : null)
+    const names = fillFormFields(form, { licenceNumber: str(f.licenceNumber), limitations: str(f.limitations) })
     if (names.includes('licenceNumber')) filled.push('자격번호')
     if (names.includes('limitations')) filled.push('제한사항')
     return filled
@@ -346,11 +368,18 @@ export function CertificateForm({
         expiryDate,
         notes: String(form.get('notes') || '').trim() || undefined,
       },
-      { approvalFile: approvalFile ?? undefined },
+      {
+        approvalFile: approvalFile ?? undefined,
+        // 같이 찾은 자격 중 체크된 것. 발급일이 비어 있으면 본체 발급일을 따른다(같은 증서에 인쇄돼 있으므로).
+        extras: isLicenceCategory
+          ? aiExtras.filter((x) => x.checked).map((x) => ({ ...x.input, issuedDate: x.input.issuedDate || issuedDate, track: initialValues?.track ?? track }))
+          : undefined,
+      },
     )
 
     if (mode === 'create') {
       e.currentTarget.reset()
+      setAiExtras([])
       setNameValue('')
       handleCategoryChange(categories[0])
       setIssuerValue(DEFAULT_ISSUER_BY_CATEGORY[categories[0]] ?? '')
@@ -368,6 +397,36 @@ export function CertificateForm({
             className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
           />
           {mode === 'create' && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
+          {mode === 'create' && isLicenceCategory && aiExtras.length > 0 && (
+            <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">
+              <p className="text-sm font-semibold text-ink">
+                이 사진에서 같이 찾은 자격 {aiExtras.filter((x) => x.checked).length}개
+                <InfoTip label="같이 찾은 자격 안내">
+                  자격증명서의 한정사항·특기사항에서 읽었어요. 체크한 것은 자격증명과 함께 등록되고, 같은 사진으로 인증 요청이 가요.
+                  항공영어 만료일은 증서의 VALID UNTIL 값을 그대로 쓰고, 없으면 시행규칙 제99조③(4등급 3년·5등급 6년·6등급 영구)으로 계산해요.
+                </InfoTip>
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {aiExtras.map((x, i) => (
+                  <li key={x.key}>
+                    <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={x.checked}
+                        onChange={(e) => setAiExtras((prev) => prev.map((p, j) => (j === i ? { ...p, checked: e.target.checked } : p)))}
+                        className="mt-0.5 h-4 w-4 accent-[#00D4FF]"
+                      />
+                      <span>
+                        {x.label}
+                        {x.detail && <span className="ml-1.5 text-xs text-slate-400">{x.detail}</span>}
+                        {x.duplicate && <span className="ml-1.5 text-xs text-amber-400">이미 등록됨</span>}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <p className="mt-1.5 text-xs text-slate-400">
             {mode === 'create'
               ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'

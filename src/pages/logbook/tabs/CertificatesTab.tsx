@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { Reveal } from "../../../components/Reveal";
 import { CertificateApprovalStatusWatcher } from "../../../components/certificates/CertificateApprovalStatusWatcher";
 import { CertificateForm } from "../../../components/certificates/CertificateForm";
-import { TsIntegrationCard } from "../../../components/certificates/TsIntegrationCard";
 import { CertificateList } from "../../../components/certificates/CertificateList";
 import type { LogbookModel } from "../useLogbookPageModel";
 import { InfoTip } from "../../../components/InfoTip";
@@ -104,9 +103,9 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
               {/* 역할별 "자격 템플릿" 안내 카드는 정보량이 적어 제거(2026-09-05). TS 연동 카드는 폼 아래로(2026-09-07). */}
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="flex items-center gap-1.5 font-display text-2xl font-extrabold text-ink">
-                  자격증 등록
-                  <InfoTip size="md" label="자격증 등록 안내">
-                    면허·항공신체검사·법정교육 등을 등록하면 만료가 가까워질 때 카드에 경고가 떠요. 사진을 첨부해 관리자 인증을 받으면 "인증됨" 표시가 붙어요.
+                  자격증 · 한정 등록
+                  <InfoTip size="md" label="자격증 · 한정 등록 안내">
+                    자격증명·한정·계기·교관·신체검사·항공영어 등을 등록하면 만료가 가까워질 때 카드에 경고가 떠요. 자격증 사진 한 장을 올리면 AI 가 한정사항까지 읽어 같이 등록할 수 있어요. 관리자 인증을 받으면 "인증됨" 표시가 붙어요.
                   </InfoTip>
                 </h2>
                 {/* 등록 버튼은 목록 제목 옆 하나뿐. 여기선 펼쳐진 폼을 접는 버튼만 보인다(중복 버튼 제거, 2026-09-09) */}
@@ -131,18 +130,31 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                   onSubmit={(input, options) => {
                     // 등록 뒤 폼이 비워져 "정보가 사라진 것처럼" 보이던 문제(지훈 피드백):
                     // 폼을 접고, 새 카드로 스크롤·강조하고, 인증 대기 안내 배너를 남긴다
+                    const extras = options?.extras ?? [];
                     void handleCreateCertificate(
                       { ...input, track: input.track ?? activeTrack },
                       options?.approvalFile,
-                    ).then((created) => {
+                    ).then(async (created) => {
                       if (!created) return;
+                      // 자격증 사진 한 장에서 같이 찾은 한정·계기·교관·항공영어도 같은 사진으로 각각 등록·인증 요청해요.
+                      // '한정'은 방금 만든 자격증명에 붙여서 카드 안에 같이 보이게 해요.
+                      for (const extra of extras) {
+                        await handleCreateCertificate(
+                          {
+                            ...extra,
+                            track: extra.track ?? activeTrack,
+                            linkedCertificateId: extra.category === "한정" ? created.id : extra.linkedCertificateId,
+                          },
+                          options?.approvalFile,
+                        );
+                      }
                       setIsCertFormOpen(false);
                       setLastAdded({ id: created.id, name: created.name, withPhoto: Boolean(options?.approvalFile) });
                       window.setTimeout(() => {
                         document.getElementById(`cert-item-${created.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                       }, 120);
                     });
-                    showToast("자격증이 추가됐어요.");
+                    showToast(extras.length > 0 ? `자격증 ${extras.length + 1}개가 추가됐어요.` : "자격증이 추가됐어요.");
                   }}
                   roleTemplate={roleContent}
                   track={activeTrack}
@@ -151,9 +163,8 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                   existingCertificates={certificates}
                 />
               </div>
-              <div className="mt-8">
-                <TsIntegrationCard />
-              </div>
+              {/* TS 연동 카드는 뺐어요(2026-09-10). 공단과 협의된 게 없는데 "연동 준비 중"이라고 쓰면 공단 이름을 앞세운 것처럼 보여요.
+                  K-EPL 생성원 협의가 진행되면 그때 정확한 문구로 다시 넣어요. 컴포넌트는 남겨 둠. */}
             </Reveal>
           </div>
         </section>

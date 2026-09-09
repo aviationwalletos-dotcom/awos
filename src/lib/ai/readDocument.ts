@@ -6,7 +6,7 @@ import { getAuthedAccessToken } from '../baas/supabaseTransport'
 export type ReadDocumentKind = 'flight_experience' | 'licence'
 
 export interface ReadDocumentResult {
-  fields: Record<string, string | number | null>
+  fields: Record<string, unknown>
   notes: string[]
   confidence: 'high' | 'medium' | 'low'
 }
