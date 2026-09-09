@@ -1,7 +1,7 @@
 // LogbookPage — 레이아웃·히어로·탭 라우팅만. 상태는 useLogbookPageModel, 각 탭은 ./logbook/tabs/*
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, LogOut, NotebookPen, UserCircle2 } from "lucide-react";
+import { LogOut, NotebookPen, UserCircle2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Footer } from "../components/Footer";
 import { EntryDetailDialog } from "../components/logbook/EntryDetailDialog";
@@ -75,21 +75,22 @@ export function LogbookPage() {
         ref={headerRef}
         className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            to="/"
-            title="AWOS 소개 페이지"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-sky
+        <div className="mx-auto flex max-w-7xl items-center justify-between py-4 pl-6 pr-6 sm:pr-10">
+          {/* 로고가 곧 홈 버튼 — 누르면 로그북 첫 화면(기록 탭 맨 위)으로 돌아와요.
+              로그인한 뒤에는 소개 페이지로 나갈 일이 없어서 "소개 페이지" 링크를 없앴어요(2026-09-10). */}
+          <button
+            type="button"
+            title="로그북 첫 화면으로"
+            onClick={() => {
+              setActiveTab("myRecords");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="font-display text-base font-extrabold tracking-tight text-white transition-opacity hover:opacity-80
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            <span className="hidden sm:inline">소개 페이지</span>
-            <span className="sm:hidden">소개</span>
-          </Link>
+            Aviation Wallet <span className="text-sky">OS</span>
+          </button>
           <div className="flex items-center gap-2">
-            <p className="hidden font-display text-base font-extrabold tracking-tight text-white sm:block">
-              Aviation Wallet <span className="text-sky">OS</span>
-            </p>
             {/* 계정정보·로그아웃을 로그북 안에서 바로 — 예전엔 랜딩으로 나가야 보였다(2026-09-07) */}
             <Link
               to="/account"

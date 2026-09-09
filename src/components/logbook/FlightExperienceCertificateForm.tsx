@@ -79,8 +79,34 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       const key = Object.entries(FIELD_TO_INPUT).find(([, v]) => v === n)?.[0] ?? n
       filled.push(FIELD_LABEL[key] ?? n)
     }
+    setFormTick((t) => t + 1)
     return filled
   }
+
+  // 폼이 uncontrolled 라서, 칸이 바뀔 때마다 다시 그려야 아래 "주간 시간" 제안을 갱신할 수 있어요.
+  const [formTick, setFormTick] = useState(0)
+
+  function readFormNumber(name: string): number | undefined {
+    const el = formRef.current?.elements.namedItem(name) as HTMLInputElement | null
+    const raw = el?.value.trim()
+    if (!raw) return undefined
+    const n = Number(raw)
+    return Number.isFinite(n) && n >= 0 ? n : undefined
+  }
+
+  // 증명서에는 야간 시간만 적히고 주간은 생략되는 경우가 많아요(나머지가 전부 주간이니까요).
+  // 계산은 앱이 하고 넣을지는 사용자가 정해요 — "AI 는 문서에 없는 값을 만들지 않는다"는 정책은 그대로예요.
+  // 관리자도 이 값이 계산된 값이라는 걸 알 수 있어야 하므로, 자동으로 채우지 않아요.
+  const dayHint = (() => {
+    void formTick // 이 값이 바뀔 때 다시 계산돼요
+    if (readFormNumber('conditionDay') !== undefined) return null
+    const total = readFormNumber('blockTime')
+    const night = readFormNumber('conditionNight')
+    if (total === undefined || night === undefined) return null
+    const day = Math.round((total - night) * 10) / 10
+    if (day <= 0) return null
+    return { total, night, day }
+  })()
 
   const [errors, setErrors] = useState<FieldErrors>({})
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
@@ -268,7 +294,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   }
 
   return (
-    <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-8">
+    <form ref={formRef} noValidate onSubmit={handleSubmit} onInput={() => setFormTick((t) => t + 1)} className="space-y-8">
       <p className="text-xs text-slate-400">
         비행경력증명서의 <strong className="text-slate-200">누적 총합</strong>을 옮겨 적는 폼이에요(개별 비행 아님). 저장하면 "인증 대기중" 기록 1건이 되고, 관리자가 원본과 대조해 승인하면 공식 시간에 들어가요.
       </p>
@@ -454,6 +480,20 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             </label>
             <input id="cert-conditionDay" name="conditionDay" type="number"
               inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
+            {dayHint && (
+              <button type="button"
+                onClick={() => {
+                  const el = formRef.current?.elements.namedItem('conditionDay') as HTMLInputElement | null
+                  if (!el) return
+                  el.value = String(dayHint.day)
+                  setFormTick((t) => t + 1)
+                }}
+                className="mt-1.5 w-full rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-left text-xs font-medium text-sky
+                  transition-colors hover:bg-sky/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+              >
+                총 {dayHint.total} − 야간 {dayHint.night} = <span className="font-semibold">{dayHint.day}</span> 넣기
+              </button>
+            )}
           </div>
           <div>
             <label htmlFor="cert-conditionNight" className={labelClass}>

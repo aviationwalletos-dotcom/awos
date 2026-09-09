@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2, Info, KeyRound, LogOut, MapPin, User, UserCircle2 } from 'lucide-react'
+import { Building2, Info, KeyRound, LogOut, MapPin, User, UserCircle2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -40,20 +40,18 @@ function formatDateTime(value: string | null): string {
   }
 }
 
-function PageHeader() {
+// 로고가 곧 홈 버튼 — 누르면 홈으로 돌아가요. 관리자 계정은 로그북이 없으므로 대시보드가 홈이에요.
+function PageHeader({ homePath }: { homePath: string }) {
   return (
     <header className="border-b border-white/10">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/logbook"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-sky
+      <div className="mx-auto flex max-w-7xl items-center justify-between py-4 pl-6 pr-6 sm:pr-10">
+        <Link to={homePath}
+          title={homePath === '/dashboard' ? '대시보드로' : '로그북으로'}
+          className="font-display text-base font-extrabold tracking-tight text-white transition-opacity hover:opacity-80
             focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          로그북으로
-        </Link>
-        <p className="font-display text-base font-extrabold tracking-tight text-white">
           Aviation Wallet <span className="text-sky">OS</span>
-        </p>
+        </Link>
       </div>
     </header>
   )
@@ -345,7 +343,7 @@ export function AccountPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-navy-dark font-body text-white">
-        <PageHeader />
+        <PageHeader homePath={userType === 'organization' ? '/dashboard' : '/logbook'} />
         <main className="mx-auto max-w-2xl px-6 py-24 text-center text-slate-400">
           계정 정보를 불러오는 중이에요...
         </main>
@@ -356,7 +354,7 @@ export function AccountPage() {
   if (!isAuthenticated || !account) {
     return (
       <div className="min-h-screen bg-navy-dark font-body text-white">
-        <PageHeader />
+        <PageHeader homePath={userType === 'organization' ? '/dashboard' : '/logbook'} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <UserCircle2 className="mx-auto h-10 w-10 text-slate-400" aria-hidden="true" />
           <h1 className="mt-4 font-display text-xl font-extrabold">
@@ -373,12 +371,16 @@ export function AccountPage() {
     )
   }
 
-  const TypeIcon = userType === 'organization' ? Building2 : User
+  // 관리자(기관) 계정은 로그북 화면이 없어요 — 홈은 대시보드예요. (버그: 관리자에게도 "로그북으로"가 보였음, 2026-09-10)
+  const isOrg = userType === 'organization'
+  const homePath = isOrg ? '/dashboard' : '/logbook'
+  const homeLabel = isSetupMode ? 'AWOS 시작하기 →' : isOrg ? '대시보드로 →' : '로그북으로 →'
+  const TypeIcon = isOrg ? Building2 : User
   const individualRoleLabel = effectiveIndividualRole ? INDIVIDUAL_ROLE_LABEL[effectiveIndividualRole] : '미설정'
 
   return (
     <div className="min-h-screen bg-navy-dark font-body text-white">
-      <PageHeader />
+      <PageHeader homePath={homePath} />
 
       <main className="relative overflow-hidden py-[clamp(64px,8vw,120px)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.14),transparent_55%)]" />
@@ -391,10 +393,10 @@ export function AccountPage() {
             <h1 className="font-display font-extrabold" style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem)', letterSpacing: '-0.03em' }}>
               내 계정
             </h1>
-            <Link to="/logbook"
+            <Link to={homePath}
               className="inline-flex items-center gap-2 rounded-control bg-sky px-5 py-2.5 text-sm font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
             >
-              AWOS 시작하기 →
+              {homeLabel}
             </Link>
           </div>
           {isSetupMode && (
@@ -658,72 +660,75 @@ export function AccountPage() {
             </p>
           )}
 
-          <AccountSection id="account-password" title="비밀번호 변경" icon={KeyRound} status={hasPasswordLogin ? undefined : "이메일 로그인 연결 후 사용"}>
-            <p className="mt-1 text-xs text-slate-400">
-              소셜(구글·카카오)로만 로그인하는 계정은 아래 "로그인 방법 연결"에서 이메일 로그인을 먼저 연결하세요.
-            </p>
-
-            <form onSubmit={handleChangePassword} noValidate className="mt-5 flex flex-col gap-4">
-              {(formError || changeError) && (
-                <p role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
-                  {formError || changeError}
-                </p>
-              )}
-              {isSuccess && !formError && !changeError && (
-                <p role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
-                  비밀번호가 변경됐어요.
-                </p>
-              )}
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="current-password" className="text-xs font-semibold text-slate-300">
-                  현재 비밀번호
-                </label>
-                <input id="current-password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="new-password" className="text-xs font-semibold text-slate-300">
-                  새 비밀번호
-                </label>
-                <input id="new-password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="8자 이상 입력하세요"
-                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="new-password-confirm" className="text-xs font-semibold text-slate-300">
-                  새 비밀번호 확인
-                </label>
-                <input id="new-password-confirm"
-                  type="password"
-                  autoComplete="new-password"
-                  value={newPasswordConfirm}
-                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                  className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
-                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-                />
-              </div>
-
-              <Button type="submit" size="md" className="mt-2" disabled={isChangingPassword} loading={isChangingPassword}>
-                비밀번호 변경
-              </Button>
-            </form>
-          </AccountSection>
         </div>
+
+        <section className="mx-auto mt-6 max-w-3xl px-6">
+        <AccountSection id="account-password" className="!mt-0" title="비밀번호 변경" icon={KeyRound} status={hasPasswordLogin ? undefined : "이메일 로그인 연결 후 사용"}>
+          <p className="mt-1 text-xs text-slate-400">
+            소셜(구글·카카오)로만 로그인하는 계정은 아래 "로그인 방법 연결"에서 이메일 로그인을 먼저 연결하세요.
+          </p>
+
+          <form onSubmit={handleChangePassword} noValidate className="mt-5 flex flex-col gap-4">
+            {(formError || changeError) && (
+              <p role="alert" className="rounded-control border border-rose-500/30 bg-rose-500/100/10 px-3 py-2 text-xs font-medium text-rose-300">
+                {formError || changeError}
+              </p>
+            )}
+            {isSuccess && !formError && !changeError && (
+              <p role="status" className="rounded-control border border-go/30 bg-go/10 px-3 py-2 text-xs font-medium text-go">
+                비밀번호가 변경됐어요.
+              </p>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="current-password" className="text-xs font-semibold text-slate-300">
+                현재 비밀번호
+              </label>
+              <input id="current-password"
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="new-password" className="text-xs font-semibold text-slate-300">
+                새 비밀번호
+              </label>
+              <input id="new-password"
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="8자 이상 입력하세요"
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="new-password-confirm" className="text-xs font-semibold text-slate-300">
+                새 비밀번호 확인
+              </label>
+              <input id="new-password-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={newPasswordConfirm}
+                onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                className="rounded-control border border-white/15 bg-navy px-4 py-3 text-sm text-white placeholder:text-slate-400
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+              />
+            </div>
+
+            <Button type="submit" size="md" className="mt-2" disabled={isChangingPassword} loading={isChangingPassword}>
+              비밀번호 변경
+            </Button>
+          </form>
+        </AccountSection>
+        </section>
 
         <section className="mx-auto mt-6 max-w-3xl px-6">
           <AccountSection id="account-links" title="로그인 방법 연결" icon={KeyRound} className="!mt-0" status={linkedProviders ? `연결됨 ${linkedProviders.length}개` : undefined}>
@@ -803,16 +808,14 @@ export function AccountPage() {
           </div>
         )}
 
-        {isSetupMode && (
-          <section className="mx-auto mt-6 max-w-3xl px-6">
-            {/* 가입 직후: 정보를 아래로 채워 내려온 뒤 눌러야 하는데 버튼이 위에만 있어 불편했다(지훈 피드백) */}
-            <Link to="/logbook"
-              className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-control bg-sky px-5 text-base font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-            >
-              AWOS 시작하기 →
-            </Link>
-          </section>
-        )}
+        {/* 정보를 아래로 채워 내려온 뒤 돌아갈 버튼 — 가입 직후는 "AWOS 시작하기", 기존 계정은 "로그북으로"(지훈 피드백) */}
+        <section className="mx-auto mt-6 max-w-3xl px-6">
+          <Link to={homePath}
+            className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-control bg-sky px-5 text-base font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+          >
+            {homeLabel}
+          </Link>
+        </section>
         <section className="mx-auto mt-6 max-w-3xl px-6 pb-16">
           <AccountSection id="account-delete" title="회원 탈퇴" tone="danger" className="!mt-0">
             <p className="mt-2 text-sm leading-relaxed text-slate-400">

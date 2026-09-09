@@ -12,6 +12,14 @@ import { Button } from '../Button'
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import { importWithReload } from '../../lib/lazyImport'
 import { InfoTip } from '../InfoTip'
+import type { DateOrder, TimeUnit } from '../../lib/legacyImportParse'
+import {
+  detectDateOrder,
+  detectTimeUnit,
+  parseCountValue,
+  parseDateValue,
+  parseDurationValue,
+} from '../../lib/legacyImportParse'
 
 // SheetJS(xlsx)는 무겁고(수백 KB) 엑셀 가져오기를 실제로 사용할 때만 필요하므로, 파일 파싱 시점에
 // 동적 import()로 지연 로드한다. 이렇게 하면 앱 첫 로딩 번들에서 xlsx가 빠져(별도 청크로 분리),
@@ -149,50 +157,10 @@ function guessField(header: string): MappableField {
   return 'ignore'
 }
 
-const MONTH_ABBR: Record<string, number> = {
-  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
-  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
-}
-
-function parseDateValue(raw: string): string | null {
-  const s = String(raw ?? '').trim()
-  if (!s) return null
-  const iso = s.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/)
-  if (iso) {
-    const [, y, m, d] = iso
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
-  }
-  const mdy = s.match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{4})$/)
-  if (mdy) {
-    const [, m, d, y] = mdy
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
-  }
-  // 실제 조종사 로그북 엑셀 내보내기에서 흔한 "01 Jul 25" / "01 Jul 2025" 형식(일 월(약어) 연도).
-  // 브라우저별 Date 파서 편차를 피하기 위해 명시적으로 처리해요.
-  const dMonY = s.match(/^(\d{1,2})[\s.-]+([A-Za-z]{3,9})[\s.,-]+(\d{2}|\d{4})$/)
-  if (dMonY) {
-    const [, d, monRaw, yRaw] = dMonY
-    const month = MONTH_ABBR[monRaw.slice(0, 3).toLowerCase()]
-    if (month) {
-      const year = yRaw.length === 2 ? 2000 + Number(yRaw) : Number(yRaw)
-      return `${year}-${String(month).padStart(2, '0')}-${d.padStart(2, '0')}`
-    }
-  }
-  const parsed = new Date(s)
-  if (!Number.isNaN(parsed.getTime())) {
-    const y = parsed.getFullYear()
-    const m = String(parsed.getMonth() + 1).padStart(2, '0')
-    const d = String(parsed.getDate()).padStart(2, '0')
-    return `${y}-${m}-${d}`
-  }
-  return null
-}
-
+// 날짜·시간 칸 파싱 규칙은 src/lib/legacyImportParse.ts 로 옮겼어요(단위 테스트 대상).
+// 여기서는 열 자동 보정에 쓸 "이 칸에 숫자가 있나" 판정만 남겨요. 1:30 같은 표기도 숫자로 세야 해요.
 function parseNumberValue(raw: string): number | undefined {
-  const s = String(raw ?? '').trim().replace(/,/g, '')
-  if (!s) return undefined
-  const n = Number(s)
-  return Number.isFinite(n) ? n : undefined
+  return parseDurationValue(raw)
 }
 
 // 실제 조종사 로그북 엑셀 서식은 헤더가 첫 행이 아니거나(예: 기관명/기간 등 안내 행이 앞에 있음),
@@ -261,6 +229,14 @@ function detectHeaderLayout(rows: string[][]): HeaderLayout {
 // 바로 오른쪽 열에 표기되어 있어(예: "S/E" 라벨은 오른쪽 칸에 있지만 실제 값은 왼쪽 칸에 있음),
 // 자동 매핑된 열이 항상 비어 있고 바로 왼쪽의 매핑되지 않은 열에 실제 숫자 값이 있다면
 // 매핑을 왼쪽 열로 보정해요. 날짜/텍스트 필드에는 적용하지 않아요.
+// 분 단위 감지를 적용할 "시간" 열. 착륙·계기접근 같은 횟수 열은 여기 들어가면 안 돼요.
+const TIME_FIELDS = new Set<MappableField>([
+  'blockTime', 'singleEngineTime', 'multiEngineTime', 'crossCountryTime',
+  'conditionDayTime', 'conditionNightTime', 'actualInstrumentTime',
+  'simulatedInstrumentTime', 'groundTrainerTime', 'picTime', 'sicTime',
+  'dualReceivedTime', 'flightInstructorTime',
+])
+
 const NUMERIC_SHIFT_CANDIDATE_FIELDS = new Set<MappableField>([
   'blockTime', 'dayLandings', 'nightLandings', 'singleEngineTime', 'multiEngineTime',
   'crossCountryTime', 'conditionDayTime', 'conditionNightTime', 'actualInstrumentTime',
@@ -349,6 +325,11 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
   // 가져오기를 눌러 확정한 뒤에도 화면에서 계속 검토할 수 있도록 상태를 유지해요.
   const [hasImported, setHasImported] = useState(false)
   const [statusFilter, setStatusFilter] = useState<RowStatusFilter>('all')
+  // 날짜 순서·시간 단위는 파일을 열 때 추정해 두고, 아래 "읽기 방식"에서 사용자가 바꿀 수 있어요.
+  const [dateOrder, setDateOrder] = useState<DateOrder>('mdy')
+  const [dateOrderAmbiguous, setDateOrderAmbiguous] = useState(false)
+  const [timeUnit, setTimeUnit] = useState<TimeUnit>('hours')
+  const [detectedTimeUnit, setDetectedTimeUnit] = useState<TimeUnit>('hours')
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -362,6 +343,10 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
     setMapping({})
     setHasImported(false)
     setStatusFilter('all')
+    setDateOrder('mdy')
+    setDateOrderAmbiguous(false)
+    setTimeUnit('hours')
+    setDetectedTimeUnit('hours')
     setFileName(file.name)
 
     try {
@@ -399,9 +384,25 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       })
       const correctedMapping = correctShiftedNumericHeaders(initialMapping, body)
 
+      // 날짜 열: 월/일 순서를 파일 전체로 판정해요(행마다 다르게 읽으면 안 되니까요).
+      const dateColumn = Object.entries(correctedMapping).find(([, f]) => f === 'date')?.[0]
+      const dateGuess = dateColumn
+        ? detectDateOrder(body.map((row) => row[Number(dateColumn)] ?? ''))
+        : { order: 'mdy' as DateOrder, ambiguous: false }
+
+      // 시간 열: 분 단위로 적힌 파일인지 판정해요(시간 열 값을 모아서 한 번에).
+      const timeValues = Object.entries(correctedMapping)
+        .filter(([, f]) => TIME_FIELDS.has(f))
+        .flatMap(([idxStr]) => body.map((row) => row[Number(idxStr)] ?? ''))
+      const unitGuess = detectTimeUnit(timeValues)
+
       setHeaderRow(header)
       setDataRows(body)
       setMapping(correctedMapping)
+      setDateOrder(dateGuess.order)
+      setDateOrderAmbiguous(dateGuess.ambiguous)
+      setTimeUnit(unitGuess)
+      setDetectedTimeUnit(unitGuess)
     } catch {
       setParseError('파일을 읽는 중 오류가 발생했어요. 엑셀(.xlsx/.xls) 또는 CSV 형식인지 확인 후 다시 시도해 주세요.')
     } finally {
@@ -451,10 +452,10 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       const rawDayLandings = dayLandingsIdx !== null ? row[dayLandingsIdx] : ''
       const rawNightLandings = nightLandingsIdx !== null ? row[nightLandingsIdx] : ''
 
-      const date = parseDateValue(rawDate)
-      const blockTime = parseNumberValue(rawBlockTime)
-      const dayLandings = parseNumberValue(rawDayLandings) ?? 0
-      const nightLandings = parseNumberValue(rawNightLandings) ?? 0
+      const date = parseDateValue(rawDate, dateOrder)
+      const blockTime = parseDurationValue(rawBlockTime, timeUnit)
+      const dayLandings = parseCountValue(rawDayLandings) ?? 0
+      const nightLandings = parseCountValue(rawNightLandings) ?? 0
 
       // 울진 등 실제 로그북 엑셀의 하단에는 '합계'·'서명'·빈 줄 같은 요약 행이 붙는다.
       // 날짜도 기종도 구간도 없는 행은 비행기록이 아니라 서식의 일부이므로 오류로 세지 않고
@@ -462,21 +463,21 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       const isFooterOrBlankRow = !date && !aircraftType && !departure && !arrival
       if (isFooterOrBlankRow) return []
 
-      const singleEngineLand = singleEngineIdx !== null ? parseNumberValue(row[singleEngineIdx]) : undefined
-      const multiEngineLand = multiEngineIdx !== null ? parseNumberValue(row[multiEngineIdx]) : undefined
-      const crossCountry = crossCountryIdx !== null ? parseNumberValue(row[crossCountryIdx]) : undefined
-      const conditionDay = conditionDayIdx !== null ? parseNumberValue(row[conditionDayIdx]) : undefined
-      const conditionNight = conditionNightIdx !== null ? parseNumberValue(row[conditionNightIdx]) : undefined
-      const actualInstrument = actualInstrumentIdx !== null ? parseNumberValue(row[actualInstrumentIdx]) : undefined
+      const singleEngineLand = singleEngineIdx !== null ? parseDurationValue(row[singleEngineIdx], timeUnit) : undefined
+      const multiEngineLand = multiEngineIdx !== null ? parseDurationValue(row[multiEngineIdx], timeUnit) : undefined
+      const crossCountry = crossCountryIdx !== null ? parseDurationValue(row[crossCountryIdx], timeUnit) : undefined
+      const conditionDay = conditionDayIdx !== null ? parseDurationValue(row[conditionDayIdx], timeUnit) : undefined
+      const conditionNight = conditionNightIdx !== null ? parseDurationValue(row[conditionNightIdx], timeUnit) : undefined
+      const actualInstrument = actualInstrumentIdx !== null ? parseDurationValue(row[actualInstrumentIdx], timeUnit) : undefined
       const simulatedInstrument =
-        simulatedInstrumentIdx !== null ? parseNumberValue(row[simulatedInstrumentIdx]) : undefined
-      const groundTrainerTime = groundTrainerIdx !== null ? parseNumberValue(row[groundTrainerIdx]) : undefined
-      const picTime = picTimeIdx !== null ? parseNumberValue(row[picTimeIdx]) : undefined
-      const sicTime = sicTimeIdx !== null ? parseNumberValue(row[sicTimeIdx]) : undefined
-      const dualReceived = dualReceivedIdx !== null ? parseNumberValue(row[dualReceivedIdx]) : undefined
-      const flightInstructor = flightInstructorIdx !== null ? parseNumberValue(row[flightInstructorIdx]) : undefined
+        simulatedInstrumentIdx !== null ? parseDurationValue(row[simulatedInstrumentIdx], timeUnit) : undefined
+      const groundTrainerTime = groundTrainerIdx !== null ? parseDurationValue(row[groundTrainerIdx], timeUnit) : undefined
+      const picTime = picTimeIdx !== null ? parseDurationValue(row[picTimeIdx], timeUnit) : undefined
+      const sicTime = sicTimeIdx !== null ? parseDurationValue(row[sicTimeIdx], timeUnit) : undefined
+      const dualReceived = dualReceivedIdx !== null ? parseDurationValue(row[dualReceivedIdx], timeUnit) : undefined
+      const flightInstructor = flightInstructorIdx !== null ? parseDurationValue(row[flightInstructorIdx], timeUnit) : undefined
       const instrumentApproaches =
-        instrumentApproachesIdx !== null ? parseNumberValue(row[instrumentApproachesIdx]) : undefined
+        instrumentApproachesIdx !== null ? parseCountValue(row[instrumentApproachesIdx]) : undefined
 
       const categoryHours: CategoryHours | undefined =
         singleEngineLand !== undefined || multiEngineLand !== undefined
@@ -553,12 +554,16 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
         reason: valid ? undefined : `형식 오류(${missing.join(', ')})`,
         input,
         display: {
-          date: rawDate || '-',
+          date: date && date !== rawDate.trim() ? `${rawDate} → ${date}` : (rawDate || '-'),
           departure: isSimulatorRow ? (departure || 'FTD') : (departure || '-'),
           arrival: isSimulatorRow ? (arrival || 'FTD') : (arrival || '-'),
           aircraftType: aircraftType || '-',
           aircraftIdentification: aircraftIdentification || '-',
-          blockTime: isSimulatorRow ? '-' : (rawBlockTime || '-'),
+          blockTime: isSimulatorRow
+            ? '-'
+            : blockTime !== undefined && String(blockTime) !== rawBlockTime.trim()
+              ? `${rawBlockTime} → ${blockTime}`
+              : (rawBlockTime || '-'),
           dayLandings: rawDayLandings || '기재 없음',
           nightLandings: rawNightLandings || '기재 없음',
           picTime: picTime !== undefined ? String(picTime) : '-',
@@ -568,7 +573,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
         },
       }]
     })
-  }, [dataRows, mapping, fileName])
+  }, [dataRows, mapping, fileName, dateOrder, timeUnit])
 
   const validRows = previewRows.filter((r) => r.valid)
   const invalidRows = previewRows.filter((r) => !r.valid)
@@ -633,7 +638,60 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
 
       {headerRow.length > 0 && (
         <>
-          <div className="mt-6 overflow-x-auto rounded-control border border-white/10">
+          <div className="mt-6 rounded-control border border-white/10 bg-surface/60 px-4 py-3">
+            <p className="mb-2 flex items-center gap-1 text-sm font-medium text-ink">
+              읽기 방식
+              <InfoTip label="읽기 방식 설명">
+                파일을 훑어서 자동으로 골랐어요. 미리보기 날짜나 시간이 이상하면 여기서 바꿔 보세요.
+              </InfoTip>
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
+              <div>
+                <label htmlFor="legacyDateOrder" className="mb-1 block text-xs text-slate-400">
+                  날짜 순서
+                </label>
+                <select
+                  id="legacyDateOrder"
+                  value={dateOrder}
+                  onChange={(e) => setDateOrder(e.target.value as DateOrder)}
+                  className="rounded-control border border-white/10 bg-base px-3 py-1.5 text-sm text-ink"
+                >
+                  <option value="mdy">월/일/년 (미국식)</option>
+                  <option value="dmy">일/월/년</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="legacyTimeUnit" className="mb-1 block text-xs text-slate-400">
+                  시간 단위
+                </label>
+                <select
+                  id="legacyTimeUnit"
+                  value={timeUnit}
+                  onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
+                  className="rounded-control border border-white/10 bg-base px-3 py-1.5 text-sm text-ink"
+                >
+                  <option value="hours">시간 (1.5)</option>
+                  <option value="minutes">분 (90)</option>
+                </select>
+              </div>
+            </div>
+            {dateOrderAmbiguous && (
+              <p className="mt-2 text-xs text-amber-400">
+                날짜가 3/4/2025처럼 적혀 있어 월과 일을 구분할 수 없어요. 미국식(3월 4일)으로 읽었어요.
+              </p>
+            )}
+            {detectedTimeUnit === 'minutes' && (
+              <p className="mt-2 text-xs text-slate-400">
+                시간 칸이 25 이상 정수뿐이라 분으로 읽었어요. 90 → 1.5시간.
+              </p>
+            )}
+            <p className="mt-2 text-xs text-slate-400">
+              1:30 · 1시간 30분 · 90분처럼 단위가 적혀 있으면 위 설정과 상관없이 그대로 읽어요.
+              착륙·계기접근 횟수는 시간 단위를 적용하지 않아요.
+            </p>
+          </div>
+
+          <div className="mt-4 overflow-x-auto rounded-control border border-white/10">
             <table className="w-full min-w-[520px] text-left text-sm">
               <caption className="sr-only">엑셀 컬럼과 비행 기록 필드 매핑</caption>
               <thead className="bg-surface">

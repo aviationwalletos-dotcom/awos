@@ -1,16 +1,18 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileCheck2, Inbox, ShieldCheck, Users } from 'lucide-react'
+import { BookOpenCheck, FileCheck2, Inbox, LogOut, ShieldCheck, UserCircle2, Users } from 'lucide-react'
 
 import { Footer } from '../components/Footer'
+import { useAuth } from '../contexts/AuthContext'
 import { Reveal } from '../components/Reveal'
 import { CertificateApprovalRequestsPanel } from '../components/dashboard/CertificateApprovalRequestsPanel'
 import { FlightExperienceCertificateApprovalPanel } from '../components/dashboard/FlightExperienceCertificateApprovalPanel'
 import { InquiryAdminPanel } from '../components/dashboard/InquiryAdminPanel'
 import { InstructorApprovalPanel } from '../components/dashboard/InstructorApprovalPanel'
 import { MemberDirectoryPanel } from '../components/dashboard/MemberDirectoryPanel'
+import { RegulationPanel } from '../components/dashboard/RegulationPanel'
 
-type DashboardTabKey = 'goNoGo' | 'personnel' | 'instructorApproval' | 'certificateApproval' | 'certApprovals' | 'inquiries'
+type DashboardTabKey = 'goNoGo' | 'personnel' | 'instructorApproval' | 'certificateApproval' | 'certApprovals' | 'inquiries' | 'regulations'
 
 type DashboardTabDef = {
   key: DashboardTabKey
@@ -23,6 +25,7 @@ const DASHBOARD_TABS: DashboardTabDef[] = [
   { key: 'instructorApproval', label: '교관 승인 관리', icon: ShieldCheck },
   { key: 'certificateApproval', label: '비행경력증명서 승인', icon: FileCheck2 },  { key: 'certApprovals', label: '자격증·신체검사 요청함', icon: ShieldCheck },
   { key: 'inquiries', label: '문의함', icon: Inbox },
+  { key: 'regulations', label: '법령 관리', icon: BookOpenCheck },
 ]
 
 export function DashboardPage() {
@@ -38,6 +41,7 @@ export function DashboardPage() {
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+  const { logout } = useAuth()
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('personnel')
   const [certApprovalCategory, setCertApprovalCategory] = useState<'all' | 'license' | 'medical'>('all')
 
@@ -45,17 +49,39 @@ export function DashboardPage() {
   return (
     <div className="min-h-screen bg-surface font-body text-ink">
       <header ref={headerRef} className="sticky top-0 z-50 border-b border-white/10 bg-navy/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-sky
+        <div className="mx-auto flex max-w-7xl items-center justify-between py-4 pl-6 pr-6 sm:pr-10">
+          {/* 로고가 곧 홈 버튼 — 관리자의 홈은 대시보드 첫 화면이에요. 로그인한 뒤에는 소개 페이지로 나갈 일이 없어요(2026-09-10). */}
+          <button
+            type="button"
+            title="대시보드 첫 화면으로"
+            onClick={() => {
+              setActiveTab('personnel')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            className="font-display text-base font-extrabold tracking-tight text-white transition-opacity hover:opacity-80
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky rounded"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            홈으로
-          </Link>
-          <p className="font-display text-base font-extrabold tracking-tight text-white">
             Aviation Wallet <span className="text-sky">OS</span>
-          </p>
+          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/account"
+              aria-label="계정정보"
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-control border border-white/15 px-3 text-xs font-semibold text-slate-200 hover:bg-white/5
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              <UserCircle2 className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">계정</span>
+            </Link>
+            <button type="button"
+              onClick={() => void logout()}
+              aria-label="로그아웃"
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-control border border-white/15 px-3 text-xs font-semibold text-slate-300 hover:bg-white/5
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">로그아웃</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -181,6 +207,13 @@ export function DashboardPage() {
           </section>
         )}
 
+        {activeTab === 'regulations' && (
+          <section className="bg-panel py-[clamp(16px,2.5vw,32px)]">
+            <div className="mx-auto max-w-4xl px-6">
+              <RegulationPanel />
+            </div>
+          </section>
+        )}
         {activeTab === 'inquiries' && (
           <section className="bg-panel py-[clamp(16px,2.5vw,32px)]">
             <div className="mx-auto max-w-4xl px-6">
