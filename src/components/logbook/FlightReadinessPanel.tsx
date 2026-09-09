@@ -312,8 +312,7 @@ export function FlightReadinessPanel({
       {shareControl}
 
       <p className="mt-6 text-xs text-slate-400">
-        이 판정은 등록된 자격증·비행 기록을 바탕으로 한 참고용 자동 계산이며, 실제 법적 판단은 소속 기관/관련 규정을
-        통해 확인해야 해요. 자세한 산출 근거는 아래 "커런시 관리" 탭에서 확인할 수 있어요.
+        등록된 자격증·비행 기록으로 계산한 참고용 판정이에요. 근거는 "커런시" 탭에서 볼 수 있어요.
       </p>
     </div>
   )

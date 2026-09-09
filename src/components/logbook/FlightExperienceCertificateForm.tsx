@@ -1,4 +1,4 @@
-import { AlertTriangle, Camera, Info } from 'lucide-react'
+import { AlertTriangle, Camera } from 'lucide-react'
 import React, { useRef, useState } from 'react'
 
 import { Button } from '../Button'
@@ -38,7 +38,7 @@ interface SyncNotice {
 /**
  * 엑셀 로그북 파일이 없는 사용자를 위한 대안 이관 방법이에요. "특정 비행 1건"이 아니라 발급받은
  * 비행경력증명서에 적힌 "누적 비행경력 총합"을 항목별로 입력받고, 증명서 사진을 함께 첨부해
- * 비행기록 1건으로 저장해요. 제출 시 "비행경력증명서" 게시판(동적 게시판)에 실제 기관 인증
+ * 비행기록 1건으로 저장해요. 제출 시 approval_requests에 실제 기관 인증
  * 요청 게시글을 생성해(사진은 정식 첨부파일로 업로드) 소속 기관 계정의 실제 검토를 받을 수
  * 있으며, 요청 제출에 실패한 경우에만 본인이 직접 확인 완료로 표시하는 로컬 폴백이 남아 있어요.
  */
@@ -258,7 +258,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         : {
             tone: 'warning',
             message:
-              '기록은 이 브라우저에 저장되었지만, 관리자 인증 요청 제출에는 실패했어요(네트워크 오류 등). 상세 화면에서 "학교/교관에게 확인받았어요" 버튼으로 자기 확인할 수 있어요.',
+              '기록은 저장됐지만 관리자 인증 요청 전송에 실패했어요(네트워크 오류 등). 상세 화면에서 "인증 요청 다시 보내기"를 눌러 주세요.',
           },
     )
     } finally {
@@ -545,14 +545,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       </fieldset>
 
 
-      <div className="flex items-start gap-3 rounded-control border border-sky/30 bg-sky/10 px-4 py-3">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky" aria-hidden="true" />
-        <p className="text-xs font-medium text-[#00D4FF]">
-          저장하면 "인증 대기중" 상태로 표시되며, 동시에 소속 기관이 실제로 검토·승인/반려할 수 있도록 "비행경력증명서"
-          게시판에 인증 요청도 함께 제출돼요. 상세 화면에서 승인/반려 결과가 자동으로 반영돼요. 요청 제출 자체에
-          실패한 경우에만 본인이 직접 "학교/교관에게 확인받았어요" 버튼으로 확인 처리할 수 있어요.
-        </p>
-      </div>
+
 
       {submitted && syncNotice && (
         <p role="status"

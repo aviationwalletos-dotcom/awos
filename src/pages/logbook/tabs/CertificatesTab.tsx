@@ -47,6 +47,9 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                 {/* 새 사용자가 등록 버튼을 못 찾던 문제 — 목록 제목 옆에서 바로 등록 폼으로(2026-09-07) */}
                 <button
                   type="button"
+                  data-testid={isCertFormOpen ? undefined : "cert-form-toggle"}
+                  aria-expanded={isCertFormOpen}
+                  aria-controls="cert-form"
                   onClick={() => {
                     setIsCertFormOpen(true);
                     window.setTimeout(
@@ -106,29 +109,21 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                     면허·항공신체검사·법정교육 등을 등록하면 만료가 가까워질 때 카드에 경고가 떠요. 사진을 첨부해 관리자 인증을 받으면 "인증됨" 표시가 붙어요.
                   </InfoTip>
                 </h2>
-                {/* 기록 입력처럼 기본은 접어 두고 필요할 때 펼친다(2026-09-07). 접어도 폼은 유지되어 입력값이 남는다 */}
-                <button
-                  type="button"
-                  onClick={() => setIsCertFormOpen((v) => !v)}
-                  aria-expanded={isCertFormOpen}
-                  aria-controls="cert-form"
-                  data-testid="cert-form-toggle"
-                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-control px-4 py-2 text-sm font-bold transition-colors
-                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky
-                    ${isCertFormOpen ? "border border-white/15 text-slate-300 hover:bg-white/5" : "bg-brand text-white hover:bg-brand-hover"}`}
-                >
-                  {isCertFormOpen ? (
-                    <>
-                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                      접기
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                      자격증 등록
-                    </>
-                  )}
-                </button>
+                {/* 등록 버튼은 목록 제목 옆 하나뿐. 여기선 펼쳐진 폼을 접는 버튼만 보인다(중복 버튼 제거, 2026-09-09) */}
+                {isCertFormOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCertFormOpen(false)}
+                    aria-expanded={isCertFormOpen}
+                    aria-controls="cert-form"
+                    data-testid="cert-form-toggle"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-control border border-white/15 px-4 py-2 text-sm font-bold text-slate-300 hover:bg-white/5
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  >
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    접기
+                  </button>
+                )}
               </div>
               <div id="cert-form" hidden={!isCertFormOpen} className="mt-6 rounded-card border border-white/10 bg-panel p-cardpad shadow-sm">
                 <CertificateForm

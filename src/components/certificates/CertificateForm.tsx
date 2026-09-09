@@ -26,7 +26,6 @@ import {
 } from '../../data/certificateOptions'
 import type { CertificateSubType } from '../../data/certificateOptions'
 import type { RoleContent } from '../../data/content'
-import { PILOT_TRACK_LABEL } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
@@ -381,9 +380,8 @@ export function CertificateForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="category" className={`${labelClass} inline-flex items-center gap-1`}>
+          <label htmlFor="category" className={labelClass}>
             구분
-            <InfoTip label="구분 안내">{PILOT_TRACK_LABEL[track]} 자격으로 등록돼요. 계기비행증명·조종교육증명·한정도 여기서 골라요.</InfoTip>
           </label>
           <select id="category"
             name="category"
@@ -495,7 +493,7 @@ export function CertificateForm({
               <div>
                 <label htmlFor="lic-cls" className={`${labelClass} inline-flex items-center gap-1`}>
                   등급 한정
-                  <InfoTip label="한정 안내">나중에 추가로 딴 등급·형식 한정은 구분을 "한정 추가"로 따로 등록하세요. 카드에는 자격증명과 함께 보여요.</InfoTip>
+                  <InfoTip label="한정 안내">나중에 딴 등급·형식 한정은 구분 "한정 추가"로 따로 등록해요.</InfoTip>
                 </label>
                 <select id="lic-cls" value={classRating} onChange={(e) => setClassRating(e.target.value as 'SEL' | 'MEL' | 'SES' | 'MES')} className={inputClass}>
                   <option value="SEL">육상단발(SEL)</option>
@@ -535,7 +533,7 @@ export function CertificateForm({
         <label htmlFor="name" className={`${labelClass} inline-flex items-center gap-1`}>
           자격/면허 명칭
           {!isFreeText && (
-            <InfoTip label="명칭 안내">위 구분/세부 종류 선택에 따라 자동으로 정해져요. 정확한 인식을 위해 직접 고칠 수 없어요.</InfoTip>
+            <InfoTip label="명칭 안내">구분·세부 종류로 자동으로 정해져요.</InfoTip>
           )}
         </label>
         {isFreeText ? (

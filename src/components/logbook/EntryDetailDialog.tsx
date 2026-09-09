@@ -1,4 +1,4 @@
-import { Camera, CheckCircle2, Clock3, Pencil, RefreshCw, Send, ShieldCheck, Trash2, X } from 'lucide-react'
+import { Camera, Clock3, Pencil, RefreshCw, Send, ShieldCheck, Trash2, X } from 'lucide-react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cancelApprovalRequest, createApprovalRequest } from '../../lib/approvals/api'
@@ -293,9 +293,37 @@ export function EntryDetailDialog({
     onUpdate(entry.id, { ...toLogbookEntryInput(entry), signatureRequestPostId: undefined })
   }
 
-  function handleConfirmCertificate() {
-    if (!entry) return
-    onUpdate(entry.id, { ...toLogbookEntryInput(entry), certificateApprovalStatus: 'confirmed' })
+  // 인증 요청 전송이 실패한 이월 기록 — 관리자 확인 없이 본인이 "확인됨"으로 바꾸는 길은 없다(정책). 요청을 다시 보낸다.
+  const [isResendingCertificate, setIsResendingCertificate] = useState(false)
+  const [resendCertificateError, setResendCertificateError] = useState<string | null>(null)
+  async function handleResendCertificateRequest() {
+    if (!entry || !account) return
+    setIsResendingCertificate(true)
+    setResendCertificateError(null)
+    try {
+      const attachment = entry.certificateImageDataUrl && !entry.certificateImageDataUrl.startsWith('data:') ? entry.certificateImageDataUrl : null
+      const request = await createApprovalRequest({
+        kind: 'flight_experience',
+        requesterName: account.name || account.user_id,
+        requesterEmail: account.user_id,
+        subjectId: `fec-${entry.date}-${Date.now().toString(36)}`,
+        affiliation: myAffiliation?.trim() || null,
+        title: `비행경력증명서 — ${account.name || account.user_id} (${entry.date})`,
+        summary: [
+          `발급 기관: ${entry.certificateIssuer ?? '-'}`,
+          `총 비행시간: ${entry.blockTime}시간`,
+          entry.dayLandings === undefined && entry.nightLandings === undefined ? '착륙 횟수: 기재 없음' : `착륙: 주간 ${entry.dayLandings ?? 0} / 야간 ${entry.nightLandings ?? 0}`,
+          '(상세 화면에서 재전송된 요청)',
+        ].join('\n'),
+        payload: { date: entry.date, issuer: entry.certificateIssuer ?? null, blockTime: entry.blockTime },
+        attachmentPath: attachment,
+      })
+      onUpdate(entry.id, { ...toLogbookEntryInput(entry), certificateRequestPostId: request.id, certificateApprovalStatus: 'pending' })
+    } catch (err) {
+      setResendCertificateError(err instanceof Error ? err.message : '인증 요청을 보내지 못했어요.')
+    } finally {
+      setIsResendingCertificate(false)
+    }
   }
 
   function handleCancelSignature() {
@@ -448,14 +476,14 @@ export function EntryDetailDialog({
                   ) : (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs text-slate-400">
-                        이 기록은 관리자에게 인증 요청이 제출되지 않았어요(제출 당시 네트워크 오류 등). 아직 인증
-                        대기중이라 공식 총 비행시간 합계에서 제외되고 "미인증 비행경력증명서(참고용)"에만
-                        표시돼요. 아래에서 본인이 직접 확인 완료로 표시할 수 있어요(실제 기관 승인이 아닙니다).
+                        관리자 인증 요청이 전송되지 않은 기록이에요(전송 당시 네트워크 오류 등). 인증되기 전까지는 공식 총
+                        비행시간에서 제외되고 참고용으로만 보여요. 아래 버튼으로 요청을 다시 보내면 관리자가 증명서와 대조해 승인해요.
                       </p>
-                      <Button type="button" variant="outline" tone="brand" size="sm" onClick={handleConfirmCertificate}>
-                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        학교/교관에게 확인받았어요
+                      <Button type="button" variant="outline" tone="brand" size="sm" loading={isResendingCertificate} disabled={isResendingCertificate} onClick={() => void handleResendCertificateRequest()}>
+                        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                        인증 요청 다시 보내기
                       </Button>
+                      {resendCertificateError && <p role="alert" className="text-xs text-rose-300">{resendCertificateError}</p>}
                     </div>
                   )}
                 </div>
@@ -685,7 +713,7 @@ export function EntryDetailDialog({
                         확정 일시: {formatCertifiedAt(entry.pilotCertification.certifiedAt)}
                       </p>
                     )}
-                    <p className="text-[11px] text-slate-500">본인 서명은 시행규칙 제77조의 경력 증명이 아니라 v45부터 입력을 받지 않아요. 예전에 붙은 서명만 표시해요.</p>
+                    <p className="text-[11px] text-slate-500">본인 서명은 경력 증명이 아니라(시행규칙 제77조) 더 이상 받지 않아요. 예전에 붙은 서명만 보여요.</p>
                   </div>
                 </div>
               )}
@@ -779,7 +807,7 @@ export function EntryDetailDialog({
                     </div>
                     {signatureRequest === null && !isCheckingSignature && (
                       <p className="text-[11px] text-slate-500">
-                        요청이 서버에 없으면(예전 방식으로 보낸 요청) "요청 취소" 뒤 다시 보내 주세요.
+                        오래 응답이 없으면 "요청 취소" 뒤 다시 보내 주세요.
                       </p>
                     )}
                   </div>
@@ -792,7 +820,7 @@ export function EntryDetailDialog({
                       </p>
                     )}
                     <p className="text-xs text-slate-400">
-                      교관에게 서명을 요청하면, 승인된 교관이 서명 요청함에서 확인 후 서명을 완료할 수 있어요. 교관 로그인을 기다릴 필요가 없어요.
+                      승인된 교관이 서명 요청함에서 서명하면 여기에 자동으로 반영돼요.
                     </p>
 
                     {isLoadingInstructors ? (

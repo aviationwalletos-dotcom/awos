@@ -51,9 +51,6 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
       {operationType === 'commercial' ? (
         <p className="mt-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-200">
           운송사업은 승무원 편성에 따라 한도가 달라요. 아래는 1인 조종 기준 참고치예요.
-          <InfoTip className="ml-1" label="승무시간 한도 기준 설명">
-            여객·2인조종·운송사업은 승무원 편성(1인/2인/3인 이상)과 편조에 따라 한도가 달라요(시행규칙 별표 18). 아래는 1인 조종 기준 참고치라 정확하지 않을 수 있어요. 회사 운항규정을 우선하세요.
-          </InfoTip>
         </p>
       ) : null}
 
@@ -89,15 +86,11 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
 function DutyTimeDisclaimer({ compact = false, operationType }: { compact?: boolean; operationType?: string }) {
   return (
     <span className={`${compact ? 'ml-1' : 'ml-1.5'} inline-flex align-middle`}>
-      <InfoTip label="승무시간 계산 기준·주의" side="top">
-        {operationType !== 'commercial' && (
-          <>
-            한도(8h/35h/100h/1,000h)는 항공운송·항공기사용사업 종사자 기준(시행규칙 별표 18)이에요. 자가용·훈련비행에는 법정 한도가 아닌 참고치예요.
-            <br />
-            <br />
-          </>
-        )}
-        이 계산은 항공안전법상 승무시간 제한 규정을 참고한 자동 계산이며, 실제 법적 판단은 소속 기관·관련 규정을 통해 확인해야 해요.
+      <InfoTip label="승무시간 한도 근거">
+        시행규칙 별표 18의 한도(8h/35h/100h/1,000h)로 계산해요.
+        {operationType === 'commercial'
+          ? ' 운송사업은 승무원 편성에 따라 달라지니 회사 운항규정을 우선하세요.'
+          : ' 자가용·훈련 비행에는 법정 한도가 아니지만, 훈련원 규정으로 적용하는 곳이 있어요.'}
       </InfoTip>
     </span>
   )

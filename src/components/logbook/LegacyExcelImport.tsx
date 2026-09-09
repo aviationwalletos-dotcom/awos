@@ -601,7 +601,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       <label htmlFor="legacyExcelFile" className="mb-1.5 flex items-center gap-1 text-sm font-medium text-ink">
         엑셀/CSV 파일 선택
         <InfoTip label="엑셀 가져오기 설명">
-          .xlsx/.xls/.csv 파일의 첫 번째 시트를 읽어 컬럼을 자동으로 맞춰요. 매핑을 확인·수정한 뒤 미리보기를 보고 가져오기를 누르면 확정돼요. 파일은 이 브라우저 안에서만 처리돼요.
+          첫 번째 시트를 읽어 열을 자동으로 맞춰요. 틀리면 아래에서 열마다 항목을 골라 고칠 수 있어요.
         </InfoTip>
       </label>
       <input id="legacyExcelFile"

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { getEntryPresets, mergePresetChips } from '../../data/entryPresets'
 import { scrollToFirstError } from '../../lib/ui/scrollToFirstError'
-import { PILOT_TRACK_LABEL, entryTrack, isUnmannedKind, vehicleKindsForTrack } from '../../lib/tracks'
+import { entryTrack, isUnmannedKind, vehicleKindsForTrack } from '../../lib/tracks'
 import type { PilotTrack } from '../../lib/tracks'
 import { FLIGHT_CATEGORIES, SIM_DEVICE_LABEL } from '../../types/logbook'
 import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types/logbook'
@@ -362,8 +362,8 @@ export function EntryForm({
           <label htmlFor="vehicleKind" className={`${labelClass} inline-flex items-center gap-1`}>
             종류
             <InfoTip label="종류 안내">
-              {PILOT_TRACK_LABEL[vehicleClass]} 기록이에요. 종류는 자격 한정 단위라 응시경력 계산에 쓰여요. 경량·초경량은 야간 시간이 저장되지 않아요.
-              {isUnmanned ? ' 무인비행장치 기록은 참고·보조 자료이고, 응시·등록용 경력은 지도조종자 확인과 교육기관 증명으로만 인정돼요.' : ''}
+              종류는 응시경력 계산에 쓰여요. 경량·초경량은 야간 시간을 따로 저장하지 않아요.
+              {isUnmanned ? ' 무인비행장치 기록은 참고용이에요(응시 경력은 지도조종자 확인·교육기관 증명으로만 인정).' : ''}
             </InfoTip>
           </label>
           <select
@@ -419,7 +419,7 @@ export function EntryForm({
         </p>
         {entryRole === 'student' && hasLicence && (
           <p className="mt-2 text-[11px] text-slate-400">
-            자가용 조종사 자격을 이미 보유해서, 교육 비행이라도 기장 자격으로 탑승한 것으로 봐요. 그래서 PIC와 교육 받은 시간에 함께 기록돼요(계기비행증명·사업용 연습).
+            자가용 자격 보유자는 교육 비행도 기장으로 봐요. 그래서 PIC와 교육 받은 시간에 함께 기록돼요.
           </p>
         )}
         {entryRole === 'student' && !hasLicence && (
@@ -463,9 +463,7 @@ export function EntryForm({
             <label htmlFor="simDevice" className={`${labelClass} inline-flex items-center gap-1`}>
               모의비행훈련장치 구분
               <InfoTip label="시뮬레이터 기록 안내">
-                시뮬레이터 기록은 <span className="font-semibold text-slate-100">시뮬레이터 시간만 필수</span>예요. 모의계기·계기접근·비고는 선택이고, 출발/도착지와 비행시간 칸은 자동으로 처리돼요.
-                <br />
-                별표 4 인정 상한은 장치별로 달라요(예: 운송용 FFS 100 / FTD 25 / BATD 5, FTD+BATD 합산 25). 울진 FTD는 지방항공청 지정 장치예요.
+                시뮬레이터 시간만 필수예요. 출발/도착지·비행시간은 자동으로 처리돼요. 응시경력에 인정되는 상한은 장치(FFS/FTD/BATD)마다 달라요(별표 4).
               </InfoTip>
             </label>
             <select id="simDevice" name="simDevice" value={simDevice} onChange={(e) => setSimDevice(e.target.value as SimDeviceKind)} className={inputClass}>

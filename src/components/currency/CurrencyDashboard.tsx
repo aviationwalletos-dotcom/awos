@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { CircleAlert, CircleCheck, CircleDashed, GraduationCap, HeartPulse, Info, Moon, Radar, Sun, TriangleAlert } from 'lucide-react'
+import { CircleAlert, CircleCheck, CircleDashed, GraduationCap, HeartPulse, Moon, Radar, Sun, TriangleAlert } from 'lucide-react'
 
 import type { LogbookEntry } from '../../types/logbook'
 import type { Certificate, CertificateStatus } from '../../types/certificate'
@@ -233,13 +233,9 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
         </p>
       </Collapsible>
 
-      <div className="mt-10 flex items-start gap-2 rounded-control border border-white/10 bg-white/[0.05] p-4 text-sm text-slate-400">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-        <p>
-          이 화면은 <strong>항공안전법상 조종사 최근 비행경험 규정</strong>을 참고해 자동 계산한 참고용
-          정보이며, 실제 법적 판단은 소속 기관/관련 규정을 통해 확인해야 해요.
-        </p>
-      </div>
+      <p className="mt-10 text-xs text-slate-400">
+        운항기술기준·시행규칙을 참고해 자동 계산한 참고용 정보예요. 최종 판단은 관련 규정과 공단 심사 기준을 따르세요.
+      </p>
 
       {entries.length === 0 ? (
         <div className="mt-6 rounded-card border border-dashed border-white/15 bg-panel p-cardpad text-center text-sm text-slate-400">
