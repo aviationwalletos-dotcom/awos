@@ -112,6 +112,80 @@ async function fetchArticleViaApi(oc, query, target, article) {
   }
 }
 
+/**
+ * 별표 — "법령 별표·서식 목록 조회" API(target=licbyl)로 해당 별표를 찾고,
+ * 파일 링크(PDF/HWP)가 있으면 파일 바이트를 해시한다(별표 본문이 바뀌면 파일이 바뀐다).
+ * 필드명은 첫 실행에서 debug 로 확인한다.
+ */
+async function fetchAnnexViaApi(oc, query, article) {
+  const n = article.replace(/^별표/, '').trim()
+  const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=licbyl&type=JSON&query=${encodeURIComponent(query)}&display=100`
+  const r = await fetch(url, { headers: HEADERS, redirect: 'follow' })
+  const text = await r.text()
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    return { ok: false, note: `별표 목록 응답이 JSON 아님(HTTP ${r.status}): ${stripHtml(text).slice(0, 100)}`, url }
+  }
+  const err = data?.Response?.msg || data?.msg
+  const root = data?.licBylSearch || data?.LicBylSearch || data?.licbylSearch || data?.LawSearch || data
+  const rows = collectRows(root)
+  if (rows.length === 0) return { ok: false, note: `별표 목록 비어 있음${err ? ` · ${err}` : ''}`, url, debug: `keys=${Object.keys(data).join(',')}` }
+  const norm = (v) => String(v ?? '').replace(/\s/g, '')
+  const wantLaw = norm(query)
+  // 별표번호 필드 후보: 별표번호 / 별표서식번호 ; 종류: 별표 / 서식
+  const hit = rows.find((row) => {
+    const vals = Object.entries(row)
+    const num = vals.find(([k]) => /번호/.test(k) && !/일련/.test(k))?.[1]
+    const kind = vals.find(([k]) => /종류|구분/.test(k))?.[1]
+    const law = vals.find(([k]) => /법령명/.test(k))?.[1]
+    const numOk = norm(num) === n || norm(num) === `별표${n}` || norm(num).replace(/^0+/, '') === n
+    const kindOk = !kind || /별표/.test(String(kind))
+    const lawOk = !law || norm(law).includes(wantLaw) || wantLaw.includes(norm(law))
+    return numOk && kindOk && lawOk
+  })
+  if (!hit) {
+    const sample = rows[0] ? Object.keys(rows[0]).join(',') : ''
+    return { ok: false, note: `별표 ${n} 을 목록에서 못 찾음(${rows.length}건)`, url, debug: `row keys=${sample}` }
+  }
+  const fileLink = Object.entries(hit).find(([k, v]) => /파일링크|PDF|링크/.test(k) && typeof v === 'string' && /\//.test(v))?.[1]
+  let hash
+  let note
+  if (fileLink) {
+    const fileUrl = fileLink.startsWith('http') ? fileLink : `https://www.law.go.kr${fileLink}`
+    try {
+      const fr = await fetch(fileUrl, { headers: HEADERS, redirect: 'follow' })
+      const buf = Buffer.from(await fr.arrayBuffer())
+      if (fr.ok && buf.length > 1000) {
+        hash = createHash('sha256').update(buf).digest('hex')
+        note = `파일 ${(buf.length / 1024).toFixed(0)}KB 해시`
+      }
+    } catch {
+      // 파일을 못 받으면 아래 메타데이터 해시로
+    }
+  }
+  if (!hash) {
+    hash = sha(JSON.stringify(hit))
+    note = '파일 없음 — 목록 항목(제목·일련번호 등) 해시'
+  }
+  const title = Object.entries(hit).find(([k]) => /별표명|제목|서식명/.test(k))?.[1] ?? ''
+  return { ok: true, found: true, hash, excerpt: `${title} · ${note}`.slice(0, 160), revisionTags: [], length: 0, url, debug: `keys=${Object.keys(hit).join(',')}` }
+}
+
+function collectRows(node, out = []) {
+  if (!node || typeof node !== 'object') return out
+  if (Array.isArray(node)) {
+    node.forEach((n) => {
+      if (n && typeof n === 'object' && !Array.isArray(n) && Object.keys(n).some((k) => /번호|별표|서식/.test(k))) out.push(n)
+      else collectRows(n, out)
+    })
+    return out
+  }
+  Object.values(node).forEach((v) => collectRows(v, out))
+  return out
+}
+
 async function fetchAnnexViaPage(slug, article) {
   const n = article.replace(/^별표/, '')
   const url = `https://www.law.go.kr/법령별표서식/(${encodeURIComponent(slug)},${encodeURIComponent('별표' + n)})`
@@ -150,7 +224,11 @@ export default async (req) => {
       continue
     }
     try {
-      if (/^별표/.test(article)) results.push({ id, ...(await fetchAnnexViaPage(slug || query.replace(/\s/g, ''), article)) })
+      if (/^별표/.test(article)) {
+        // 목록 API 우선, 실패하면 공개 페이지(대부분 JS 렌더링이라 안 되지만 남겨 둠)
+        const viaApi = await fetchAnnexViaApi(oc, query, article)
+        results.push({ id, ...(viaApi.ok ? viaApi : { ...(await fetchAnnexViaPage(slug || query.replace(/\s/g, ''), article)), note: `${viaApi.note ?? ''}${viaApi.debug ? ` [${viaApi.debug}]` : ''}` }) })
+      }
       else results.push({ id, ...(await fetchArticleViaApi(oc, query, target, article)) })
     } catch (e) {
       results.push({ id, ok: false, note: `요청 실패: ${e?.message ?? e}` })

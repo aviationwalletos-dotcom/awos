@@ -255,8 +255,9 @@ export function RegulationPanel() {
                           tone = 'border-amber-400/40 text-amber-300'
                           label = `읽기 실패 · ${cur.note ?? ''}`
                         } else if (cur && cur.ok && !cur.found) {
-                          tone = 'border-amber-400/40 text-amber-300'
-                          label = `읽었지만 조문 표기 확인 필요 · ${cur.debug ?? ''}`
+                          // 시행 전 조문(예: 제39조의4, 2026-11-13 시행)은 현행 본문에 없어 조문 번호가 안 잡혀요. 해시는 저장돼요.
+                          tone = 'border-white/20 text-slate-300'
+                          label = saved ? (saved === cur.hash ? '변경 없음(시행 전 조문)' : '변경됨(시행 전 조문)') : '기준 없음 — 시행 전 조문일 수 있음'
                         } else if (cur && cur.ok) {
                           if (!saved) {
                             tone = 'border-sky/40 text-sky'
