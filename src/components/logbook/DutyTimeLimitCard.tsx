@@ -15,7 +15,7 @@ interface DutyTimeLimitCardProps {
 }
 
 /**
- * 항공안전법상 조종사 누적 승무시간 법정 한도(하루 8h / 7일 35h / 30일 100h / 365일 1,000h)를
+ * 시행규칙 별표 18 기장 1명 편성 기준 누적 승무시간 한도(24시간 8h / 28일 100h / 365일 1,000h)를
  * 계산해 "지금 비행해도 괜찮은지"와 "오늘 몇 시간 더 비행 가능한지"만 간단히 보여주는 카드.
  */
 export function DutyTimeLimitCard({ entries, compact = false, operationType = 'general' }: DutyTimeLimitCardProps) {
@@ -25,8 +25,7 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
   const remainingHours = useMemo(() => {
     const remainders = [
       limits.today8h.limit - limits.today8h.used,
-      limits.last7d35h.limit - limits.last7d35h.used,
-      limits.last30d100h.limit - limits.last30d100h.used,
+      limits.last28d100h.limit - limits.last28d100h.used,
       limits.last365d1000h.limit - limits.last365d1000h.used,
     ]
     const min = Math.min(...remainders)
@@ -87,7 +86,7 @@ function DutyTimeDisclaimer({ compact = false, operationType }: { compact?: bool
   return (
     <span className={`${compact ? 'ml-1' : 'ml-1.5'} inline-flex align-middle`}>
       <InfoTip label="승무시간 한도 근거">
-        시행규칙 별표 18의 한도(8h/35h/100h/1,000h)로 계산해요.
+        시행규칙 별표 18(기장 1명 편성)의 한도로 계산해요: 24시간 8h · 28일 100h · 365일 1,000h.
         {operationType === 'commercial'
           ? ' 운송사업은 승무원 편성에 따라 달라지니 회사 운항규정을 우선하세요.'
           : ' 자가용·훈련 비행에는 법정 한도가 아니지만, 훈련원 규정으로 적용하는 곳이 있어요.'}

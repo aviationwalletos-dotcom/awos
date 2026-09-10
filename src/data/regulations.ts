@@ -34,19 +34,21 @@ export const REGULATIONS: RegulationRef[] = [
   {
     id: 'aviation-safety-act',
     name: '항공안전법',
-    articles: '제34조·제35조·제37조·제44조(자격증명·한정·계기비행증명·조종교육증명)',
-    appliedVersion: '2026년 시행 기준',
+    articles: '제34조·제35조·제37조·제44조(자격증명·한정·계기비행증명·조종교육증명)·제76조②(자격증명서·신체검사증명서 소지 의무)·제56조③(사업자 승무시간 기록 15개월 보관)',
+    appliedVersion: '법률 제21268호 (시행 2026-07-01)',
+    appliedEffectiveDate: '2026-07-01',
     features: ['자격증 카드 [REF] 표기', '자격증 구분'],
     usedIn: ['src/components/logbook/MyCertificateStatusCard.tsx', 'src/types/certificate.ts'],
     lawGoKrQuery: '항공안전법',
     manualUrl: 'https://www.law.go.kr/법령/항공안전법',
-    valuesSummary: '조문 번호 표기만. 수치 계산 없음.',
+    valuesSummary: '조문 번호 표기만. 수치 계산 없음. [2026-09-10 원문 대조 완료] ※ 2026-11-13 시행 개정: 소지 의무가 제76조②(삭제)→제39조의4(신설)로 이동, 제44조②3호 신설(계기·교관 응시자 조종연습). 그날 이후 화면·문서의 "제76조②"를 "제39조의4"로 바꿀 것.',
   },
   {
     id: 'aviation-safety-rules',
     name: '항공안전법 시행규칙',
     articles: '제77조(비행경력 증명자)·제78조(SIC 1/2)·제99조③(항공영어 등급 유효기간)·제121조(최근 비행경험)·제125조(교관)·별표 4(응시경력·시뮬레이터 인정 상한)·별표 8(신체검사 유효기간)·별표 18(승무시간 한도)·별지 제36호(비행경력증명서)',
-    appliedVersion: '2026년 시행 기준',
+    appliedVersion: '국토교통부령 제1601호 (시행 2026-07-01)',
+    appliedEffectiveDate: '2026-07-01',
     features: ['교관 전자서명', '응시경력 진척도', '항공신체검사 만료 계산', '승무시간 한도', '비행경력증명서 PDF', '커런시(교관)'],
     usedIn: [
       'src/lib/flightReadiness.ts',
@@ -59,20 +61,22 @@ export const REGULATIONS: RegulationRef[] = [
     lawGoKrQuery: '항공안전법 시행규칙',
     manualUrl: 'https://www.law.go.kr/법령/항공안전법시행규칙',
     valuesSummary:
-      '신체검사(별표 8): 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월, 1종 12개월(상업 40세 이상 6개월). 승무시간(별표 18): 8h/35h/100h/1,000h. SIC 1/2(제78조). 항공영어 4등급 3년·5등급 6년·6등급 영구(제99조③).',
+      '신체검사(별표 8, 개정 2025-12-05): 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월, 1종 12개월(운송·사용사업 60세 이상, 1인 조종 여객운송 40세 이상은 6개월 — 앱은 "상업" 40세 이상을 6개월로 보수 적용), 만료는 그 달 말일. 승무시간(별표 18, 개정 2019-09-23, 기장 1명 편성): 24시간 8h·28일 100h·365일 1,000h, 휴식 10h/12h, 7일마다 30h. SIC 1/2(제78조). 항공영어 4등급 3년·5등급 6년·6등급 영구(제99조③). 응시경력(별표 4, 개정 2025-12-05): PPL 40/35h, CPL 200/150h 등 rules.ts. [2026-09-10 원문 대조 완료: 본문 조문·별표 4·8·18 전부 확인. 별표 18의 "7일 35h"는 근거 없어 삭제, 30일→28일 정정]',
   },
   {
     id: 'flight-ops-standards',
     name: '운항기술기준 (국토교통부 고시)',
-    articles: '8.1.7.6(비행기록부 소지)·8.2.2(최근 비행경험 180일/90일+야간, 동일 등급)·8.2.3(계기비행 경험 6개월·접근 6회)·정의 43(크로스컨트리)',
-    appliedVersion: '고시 제2026-154호',
+    articles: '8.1.7.6(비행기록부 소지·기재 항목)·8.2.2(최근 비행경험 180일/90일+야간, 동일 등급)·8.2.3(계기비행 경험 6개월·접근 6회·계기비행 6시간, 심사 후 6개월 인정)·8.2.4(자격회복)·정의 43(크로스컨트리)',
+    appliedVersion: '고시 제2026-154호 (개정 2026-03-25)',
+    appliedEffectiveDate: '2026-03-25',
     features: ['커런시 현황', '실시간 비행 적합성', '크로스컨트리 정의'],
     usedIn: ['src/lib/flightReadiness.ts', 'src/components/currency/CurrencyDashboard.tsx', 'src/components/logbook/EntryForm.tsx'],
     // 고시는 행정규칙이라 target=admrul 로 찾는다. 정식 명칭은 "고정익항공기를 위한 운항기술기준".
     lawGoKrQuery: '고정익항공기를 위한 운항기술기준',
     lawGoKrTarget: 'admrul',
-    manualUrl: 'https://www.law.go.kr/행정규칙/운항기술기준',
-    valuesSummary: '일반 180일 이착륙 3회 / 여객·2인조종·운송사업 90일 + 야간 1회 / 계기 6개월 접근 6회 / 동일 등급 판정.',
+    // 한글주소는 정식 명칭(띄어쓰기 없이). "운항기술기준"만으로는 못 찾는다(2026-09-10 확인).
+    manualUrl: 'https://www.law.go.kr/행정규칙/고정익항공기를위한운항기술기준',
+    valuesSummary: '일반 180일 이착륙 3회 / 여객·2인조종·운송사업 90일 + 야간 1회 / 계기 6개월 접근 6회 + 6시간 / 동일 등급 판정. [2026-09-10 원문 대조 완료: 8.1.7.6·8.2.2·8.2.3 일치] 미구현: 8.2.4 마(2인조종 부조종사 12개월 3회 이착륙) — 범위 밖.',
   },
   {
     id: 'ultralight-rules',
@@ -92,6 +96,8 @@ export const REGULATIONS: RegulationRef[] = [
     features: ['경량항공기 응시경력 진척도'],
     usedIn: ['src/lib/eligibility/'],
     lawGoKrQuery: '항공안전법 시행규칙',
+    // 별표 4 는 시행규칙 페이지에서 "별표/서식" 탭으로. DRF 본문 링크는 권한이 따로 필요해 공개 주소를 쓴다.
+    manualUrl: 'https://www.law.go.kr/법령/항공안전법시행규칙',
     valuesSummary: '경량항공기는 법정 커런시 없음. 응시경력 시간 요건만.',
   },
 ]
