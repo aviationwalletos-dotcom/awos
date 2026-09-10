@@ -131,64 +131,64 @@ async function fetchAnnexViaApi(oc, query, article, keyword) {
     return { ok: false, note: `별표 목록 응답이 JSON 아님(HTTP ${r.status}): ${stripHtml(text).slice(0, 100)}`, url }
   }
   const err = data?.Response?.msg || data?.msg
-  const root = data?.licBylSearch || data?.LicBylSearch || data?.licbylSearch || data?.LawSearch || data
-  const rows = collectRows(root)
+  // 응답(2026-09-10 확인): { licBylSearch: { resultMsg, licbyl: [...] | {...}, totalCnt, ... } }
+  // 행 필드: 관련법령명, 관련법령ID, 소관부처명, 공포번호, 별표서식파일링크, 법령종류, 제개정구분명, id, 별표일련번호,
+  //          별표법령상세링크, 별표종류, 별표번호, 별표서식PDF파일링크, 별표명, 관련법령일련번호, 공포일자
+  const root = data?.licBylSearch || data?.LicBylSearch || {}
+  const raw = root.licbyl ?? root.licByl ?? []
+  const rows = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : []
   if (rows.length === 0) {
-    const total = root?.totalCnt ?? data?.licBylSearch?.totalCnt ?? '?'
-    return { ok: false, note: `별표 목록 비어 있음(검색어 "${q}", totalCnt ${total})${err ? ` · ${err}` : ''}`, url, debug: `keys=${Object.keys(data).join(',')} root=${Object.keys(root || {}).join(',')}` }
+    return { ok: false, note: `별표 목록 비어 있음(검색어 "${q}", totalCnt ${root?.totalCnt ?? '?'})${err ? ` · ${err}` : ''}`, url, debug: `root=${Object.keys(root).join(',')}` }
   }
   const norm = (v) => String(v ?? '').replace(/\s/g, '')
   const wantLaw = norm(query)
-  // 별표번호 필드 후보: 별표번호 / 별표서식번호 ; 종류: 별표 / 서식
-  const hit = rows.find((row) => {
-    const vals = Object.entries(row)
-    const num = vals.find(([k]) => /번호/.test(k) && !/일련/.test(k))?.[1]
-    const kind = vals.find(([k]) => /종류|구분/.test(k))?.[1]
-    const law = vals.find(([k]) => /법령명/.test(k))?.[1]
-    const numOk = norm(num) === n || norm(num) === `별표${n}` || norm(num).replace(/^0+/, '') === n
-    const kindOk = !kind || /별표/.test(String(kind))
-    const lawOk = !law || norm(law).includes(wantLaw) || wantLaw.includes(norm(law))
-    return numOk && kindOk && lawOk
+  // 별표번호는 "8", "08", "별표 8", "28의2" 등으로 올 수 있다 → 숫자·'의' 만 남겨 비교
+  const numKey = (v) => norm(v).replace(/^별표/, '').replace(/^0+(?=\d)/, '')
+  const candidates = rows.filter((row) => {
+    const lawOk = norm(row['관련법령명']).includes(wantLaw) || wantLaw.includes(norm(row['관련법령명']))
+    const kindOk = !row['별표종류'] || /별표/.test(String(row['별표종류']))
+    return lawOk && kindOk && numKey(row['별표번호']) === n
   })
-  if (!hit) {
-    const sample = rows[0] ? Object.keys(rows[0]).join(',') : ''
-    return { ok: false, note: `별표 ${n} 을 목록에서 못 찾음(${rows.length}건)`, url, debug: `row keys=${sample}` }
+  if (candidates.length === 0) {
+    const seen = rows.slice(0, 5).map((r) => `${r['관련법령명']}/${r['별표종류']}/${r['별표번호']}`).join(' | ')
+    return { ok: false, note: `별표 ${n} 을 목록에서 못 찾음(${rows.length}건)`, url, debug: `보인 것: ${seen}` }
   }
-  const fileLink = Object.entries(hit).find(([k, v]) => /파일링크|PDF|링크/.test(k) && typeof v === 'string' && /\//.test(v))?.[1]
+  // 같은 별표가 여러 공포 버전으로 오면 공포일자가 가장 최근인 것
+  const hit = candidates.slice().sort((a, b) => String(b['공포일자'] || '').localeCompare(String(a['공포일자'] || '')))[0]
+  const pdfLink = hit['별표서식PDF파일링크'] || hit['별표서식파일링크'] || ''
   let hash
   let note
-  if (fileLink) {
-    const fileUrl = fileLink.startsWith('http') ? fileLink : `https://www.law.go.kr${fileLink}`
+  if (pdfLink) {
+    const fileUrl = String(pdfLink).startsWith('http') ? String(pdfLink) : `https://www.law.go.kr${pdfLink}`
     try {
       const fr = await fetch(fileUrl, { headers: HEADERS, redirect: 'follow' })
       const buf = Buffer.from(await fr.arrayBuffer())
       if (fr.ok && buf.length > 1000) {
         hash = createHash('sha256').update(buf).digest('hex')
         note = `파일 ${(buf.length / 1024).toFixed(0)}KB 해시`
+      } else {
+        note = `파일 응답 ${fr.status}, ${buf.length}B`
       }
-    } catch {
-      // 파일을 못 받으면 아래 메타데이터 해시로
+    } catch (e) {
+      note = `파일 못 받음: ${e?.message ?? e}`
     }
   }
   if (!hash) {
-    hash = sha(JSON.stringify(hit))
-    note = '파일 없음 — 목록 항목(제목·일련번호 등) 해시'
+    // 파일을 못 받으면 별표 메타(일련번호·공포일자·제개정구분)로 — 개정되면 일련번호가 바뀐다
+    hash = sha(`${hit['별표일련번호']}|${hit['공포일자']}|${hit['공포번호']}|${hit['제개정구분명']}|${hit['별표명']}`)
+    note = `${note ? note + ' → ' : ''}목록 항목(일련번호·공포일자) 해시`
   }
-  const title = Object.entries(hit).find(([k]) => /별표명|제목|서식명/.test(k))?.[1] ?? ''
-  return { ok: true, found: true, hash, excerpt: `${title} · ${note}`.slice(0, 160), revisionTags: [], length: 0, url, debug: `keys=${Object.keys(hit).join(',')}` }
-}
-
-function collectRows(node, out = []) {
-  if (!node || typeof node !== 'object') return out
-  if (Array.isArray(node)) {
-    node.forEach((n) => {
-      if (n && typeof n === 'object' && !Array.isArray(n) && Object.keys(n).some((k) => /번호|별표|서식/.test(k))) out.push(n)
-      else collectRows(n, out)
-    })
-    return out
+  const tag = hit['공포일자'] ? `공포 ${String(hit['공포일자']).replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')}` : ''
+  return {
+    ok: true,
+    found: true,
+    hash,
+    excerpt: `${hit['별표명'] ?? ''} · ${note}`.slice(0, 160),
+    revisionTags: tag ? [tag] : [],
+    length: 0,
+    url,
+    debug: `${hit['제개정구분명'] ?? ''} ${hit['공포번호'] ?? ''}`,
   }
-  Object.values(node).forEach((v) => collectRows(v, out))
-  return out
 }
 
 async function fetchAnnexViaPage(slug, article) {

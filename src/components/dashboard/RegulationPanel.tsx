@@ -4,13 +4,15 @@
 //  2) "확인함": 관리자가 직접 확인했음을 기록(시각·이름·메모) — 세칙·고시처럼 API 로 못 잡는 것도 여기 남긴다
 // 법령이 바뀌면 "코드 위치"를 보고 고친 뒤, regulations.ts 의 appliedVersion 도 같이 올린다.
 
-import { BookOpenCheck, CheckCircle2, ExternalLink, Loader2, RefreshCw, TriangleAlert } from 'lucide-react'
+import { BookOpenCheck, CheckCircle2, ClipboardCopy, ExternalLink, Loader2, RefreshCw, TriangleAlert } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
 import { REGULATIONS, type RegulationRef } from '../../data/regulations'
 import { useAuth } from '../../contexts/AuthContext'
 import { getAuthedAccessToken, getFreshDataClient } from '../../lib/baas/supabaseTransport'
 import { Button } from '../Button'
+// 법령 개정 대응 매뉴얼 — 새 Claude 채팅에 그대로 붙여 넣는 문서. 저장소 docs/ 가 원본.
+import amendmentManual from '../../../docs/법령개정-대응매뉴얼.md?raw'
 
 interface CheckRecord {
   regulation_id: string
@@ -66,6 +68,19 @@ export function RegulationPanel() {
   const [isChecking, setIsChecking] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopyManual() {
+    try {
+      await navigator.clipboard.writeText(amendmentManual)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // 클립보드 권한이 없으면 새 창으로 열어 직접 복사하게
+      const blob = new Blob([amendmentManual], { type: 'text/plain;charset=utf-8' })
+      window.open(URL.createObjectURL(blob), '_blank')
+    }
+  }
 
   async function loadRecords() {
     const client = await getFreshDataClient()
@@ -189,14 +204,23 @@ export function RegulationPanel() {
           <BookOpenCheck className="h-4 w-4 text-sky" aria-hidden="true" />
           법령 관리
         </h2>
-        <Button type="button" size="sm" tone="brand" loading={isChecking} disabled={isChecking} onClick={() => void handleCheckLatest()}>
-          {isChecking ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <RefreshCw className="h-4 w-4" aria-hidden="true" />}
-          최신 여부 한 번에 확인
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" size="sm" tone="neutral" onClick={() => void handleCopyManual()}>
+            <ClipboardCopy className="h-4 w-4" aria-hidden="true" />
+            {copied ? '복사했어요' : '개정 대응 매뉴얼 복사'}
+          </Button>
+          <Button type="button" size="sm" tone="brand" loading={isChecking} disabled={isChecking} onClick={() => void handleCheckLatest()}>
+            {isChecking ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <RefreshCw className="h-4 w-4" aria-hidden="true" />}
+            최신 여부 한 번에 확인
+          </Button>
+        </div>
       </div>
       <p className="mt-2 text-xs text-slate-400">
         앱이 계산에 쓰는 법령과 코드가 따르는 버전이에요. "최신 여부 확인"은 국가법령정보센터에서 현재 시행일을 받아와 대조해요(법률·규칙만 자동, 고시·세칙은 링크로 직접).
         개정이 확인되면 "코드 위치"의 값을 고치고 적용 버전을 올린 뒤 "확인함"을 남기세요.
+        <span className="block mt-1 text-slate-500">
+          빨간 "변경됨" 칩이 뜨면: <span className="text-slate-300">매뉴얼 복사</span> → 새 Claude 채팅 첫 메시지에 붙여넣기 → 바뀐 조문 이름 + 개정 원문 PDF + 최신 zip 첨부. 그 Claude 가 코드를 고쳐 줘요.
+        </span>
       </p>
       {apiError && (
         <p role="alert" className="mt-3 flex items-center gap-1.5 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
