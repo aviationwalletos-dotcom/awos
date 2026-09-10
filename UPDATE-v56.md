@@ -168,3 +168,12 @@ CPL 사진을 올리고 "사진에서 읽어오기"를 누르면 자격증명서
 
 ## 검증
 `tsc` · `eslint` 통과 · `vitest` 99건 · `vite build` 통과 · `playwright --list` 17건. 삭제할 파일 없음.
+
+---
+
+# UPDATE v1.6b — 법령 API: http 로 호출 · 운항기술기준은 행정규칙(admrul)로 검색 (2026-09-10)
+- https 로 부르면 법령정보센터가 리다이렉트하며 검색어를 떨어뜨려 "필수 입력값이 존재하지 않습니다"가 왔음 → http 우선, 실패 시 https.
+- 운항기술기준(국토교통부 고시)은 행정규칙이라 `target=admrul` 로 찾음. 응답 필드가 다름(AdmRulSearch.admrul / 행정규칙명 / 발령일자 / 행정규칙상세링크).
+  `regulations.ts` 에 `lawGoKrTarget: 'admrul'`, 검색어 "고정익항공기를 위한 운항기술기준".
+- 공단 운영세칙(초경량)은 법령정보센터에 없음 → 배지에 "공단 내부 규정 — API 범위 밖" 표시, 링크로 수동.
+파일: `check-regulations.mjs`, `RegulationPanel.tsx`, `regulations.ts`. 삭제 없음.

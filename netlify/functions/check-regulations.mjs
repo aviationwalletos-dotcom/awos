@@ -31,13 +31,16 @@ export default async (req) => {
   } catch {
     return json(400, { error: '요청 형식 오류' })
   }
-  const queries = Array.isArray(body?.queries) ? body.queries.slice(0, 10).map(String) : []
+  // 문자열(구형) 또는 { query, target } 둘 다 받는다. target: law(법령) | admrul(행정규칙=고시·훈령)
+  const queries = Array.isArray(body?.queries)
+    ? body.queries.slice(0, 10).map((q) => (typeof q === 'string' ? { query: q, target: 'law' } : { query: String(q?.query ?? ''), target: q?.target === 'admrul' ? 'admrul' : 'law' }))
+    : []
   const results = []
-  for (const query of queries) {
+  for (const { query, target } of queries) {
     try {
       // http 로 부른다. 공식 가이드가 http 이고, https 로 부르면 리다이렉트되며 검색어가 떨어져
       // "필수 입력값이 존재하지 않습니다"가 돌아온다(2026-09-10 확인). 서버 함수에서 나가는 요청이라 브라우저 혼합콘텐츠 문제는 없다.
-      const params = `OC=${encodeURIComponent(oc)}&target=law&type=JSON&query=${encodeURIComponent(query)}&display=5`
+      const params = `OC=${encodeURIComponent(oc)}&target=${target}&type=JSON&query=${encodeURIComponent(query)}&display=5`
       let r = await fetch(`http://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers: { accept: 'application/json' }, redirect: 'follow' })
       let text = await r.text()
       // 혹시 http 가 막히면 https 로 한 번 더
@@ -56,27 +59,36 @@ export default async (req) => {
         continue
       }
       // 형식은 JSON 인데 결과 목록이 없으면 그 사실을 남긴다(검색어 불일치·권한 문제 구분용)
-      if (data && !data.LawSearch) {
-        results.push({ query, found: false, note: `응답에 LawSearch 없음: ${JSON.stringify(data).slice(0, 120)}` })
+      if (data && !data.LawSearch && !data.AdmRulSearch) {
+        results.push({ query, found: false, note: `응답에 검색 결과 없음: ${JSON.stringify(data).slice(0, 120)}` })
         continue
       }
-      const list = data?.LawSearch?.law
+      // 법령은 LawSearch.law / 법령명한글 / 시행일자·공포일자·법령상세링크,
+      // 행정규칙은 AdmRulSearch.admrul / 행정규칙명 / 시행일자·발령일자·행정규칙상세링크 로 필드가 다르다.
+      const isAdm = target === 'admrul'
+      const root = isAdm ? data?.AdmRulSearch : data?.LawSearch
+      const list = isAdm ? root?.admrul : root?.law
       const laws = Array.isArray(list) ? list : list ? [list] : []
-      // 이름이 정확히 같은 것 우선, 없으면 첫 결과
-      const exact = laws.find((l) => String(l['법령명한글'] || '').replace(/\s/g, '') === query.replace(/\s/g, ''))
-      const law = exact || laws[0]
+      const nameKey = isAdm ? '행정규칙명' : '법령명한글'
+      const promKey = isAdm ? '발령일자' : '공포일자'
+      const linkKey = isAdm ? '행정규칙상세링크' : '법령상세링크'
+      // 이름이 정확히 같은 것 우선, 없으면 검색어를 포함하는 첫 결과
+      const norm = (v) => String(v || '').replace(/\s/g, '')
+      const exact = laws.find((l) => norm(l[nameKey]) === norm(query))
+      const partial = laws.find((l) => norm(l[nameKey]).includes(norm(query)))
+      const law = exact || partial || laws[0]
       if (!law) {
-        results.push({ query, found: false, note: `검색 결과 0건(totalCnt ${data?.LawSearch?.totalCnt ?? '?'})` })
+        results.push({ query, found: false, note: `검색 결과 0건(totalCnt ${root?.totalCnt ?? '?'})` })
         continue
       }
       results.push({
         query,
         found: true,
-        lawName: law['법령명한글'],
+        lawName: law[nameKey],
         effectiveDate: String(law['시행일자'] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
-        promulgationDate: String(law['공포일자'] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
+        promulgationDate: String(law[promKey] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
         revisionType: law['제개정구분명'] || null,
-        link: law['법령상세링크'] ? `https://www.law.go.kr${law['법령상세링크']}` : null,
+        link: law[linkKey] ? `https://www.law.go.kr${law[linkKey]}` : null,
       })
     } catch (e) {
       results.push({ query, found: false, note: '조회 실패' })

@@ -65,7 +65,16 @@ export function RegulationPanel() {
     setApiError(null)
     try {
       const token = getAuthedAccessToken()
-      const queries = Array.from(new Set(REGULATIONS.map((r) => r.lawGoKrQuery).filter((q): q is string => Boolean(q))))
+      const seen = new Set<string>()
+      const queries: { query: string; target: 'law' | 'admrul' }[] = []
+      for (const r of REGULATIONS) {
+        if (!r.lawGoKrQuery) continue
+        const target = r.lawGoKrTarget ?? 'law'
+        const key = `${target}:${r.lawGoKrQuery}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        queries.push({ query: r.lawGoKrQuery, target })
+      }
       const res = await fetch('/api/check-regulations', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token ?? ''}` },
@@ -121,6 +130,7 @@ export function RegulationPanel() {
     if (apiRow && !apiRow.found) {
       return { tone: 'unknown', text: `API 에서 못 찾음 — 링크로 직접 확인${apiRow.note ? ` · ${apiRow.note}` : ''}` }
     }
+    if (!reg.lawGoKrQuery) return { tone: 'unknown', text: '공단 내부 규정 — API 범위 밖, 링크로 직접 확인' }
     return { tone: 'unknown', text: '아직 확인 안 함' }
   }
 

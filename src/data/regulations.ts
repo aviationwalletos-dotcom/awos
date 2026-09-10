@@ -22,6 +22,8 @@ export interface RegulationRef {
   usedIn: string[]
   /** 국가법령정보센터 검색어(자동 확인용). 없으면 수동 확인만 */
   lawGoKrQuery?: string
+  /** 검색 대상. law = 법령(법·시행령·시행규칙), admrul = 행정규칙(고시·훈령). 기본 law */
+  lawGoKrTarget?: 'law' | 'admrul'
   /** 직접 열어 볼 링크 */
   manualUrl?: string
   /** 조문 값이 코드에 하드코딩된 요약(대조용) */
@@ -66,6 +68,9 @@ export const REGULATIONS: RegulationRef[] = [
     appliedVersion: '고시 제2026-154호',
     features: ['커런시 현황', '실시간 비행 적합성', '크로스컨트리 정의'],
     usedIn: ['src/lib/flightReadiness.ts', 'src/components/currency/CurrencyDashboard.tsx', 'src/components/logbook/EntryForm.tsx'],
+    // 고시는 행정규칙이라 target=admrul 로 찾는다. 정식 명칭은 "고정익항공기를 위한 운항기술기준".
+    lawGoKrQuery: '고정익항공기를 위한 운항기술기준',
+    lawGoKrTarget: 'admrul',
     manualUrl: 'https://www.law.go.kr/행정규칙/운항기술기준',
     valuesSummary: '일반 180일 이착륙 3회 / 여객·2인조종·운송사업 90일 + 야간 1회 / 계기 6개월 접근 6회 / 동일 등급 판정.',
   },
