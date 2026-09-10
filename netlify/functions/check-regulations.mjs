@@ -35,9 +35,16 @@ export default async (req) => {
   const results = []
   for (const query of queries) {
     try {
-      const u = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=law&type=JSON&query=${encodeURIComponent(query)}&display=5`
-      const r = await fetch(u, { headers: { accept: 'application/json' } })
-      const text = await r.text()
+      // http 로 부른다. 공식 가이드가 http 이고, https 로 부르면 리다이렉트되며 검색어가 떨어져
+      // "필수 입력값이 존재하지 않습니다"가 돌아온다(2026-09-10 확인). 서버 함수에서 나가는 요청이라 브라우저 혼합콘텐츠 문제는 없다.
+      const params = `OC=${encodeURIComponent(oc)}&target=law&type=JSON&query=${encodeURIComponent(query)}&display=5`
+      let r = await fetch(`http://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers: { accept: 'application/json' }, redirect: 'follow' })
+      let text = await r.text()
+      // 혹시 http 가 막히면 https 로 한 번 더
+      if (!r.ok || /필수\s*입력/.test(text)) {
+        r = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers: { accept: 'application/json' }, redirect: 'follow' })
+        text = await r.text()
+      }
       let data
       try {
         data = JSON.parse(text)
