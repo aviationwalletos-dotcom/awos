@@ -117,9 +117,11 @@ async function fetchArticleViaApi(oc, query, target, article) {
  * 파일 링크(PDF/HWP)가 있으면 파일 바이트를 해시한다(별표 본문이 바뀌면 파일이 바뀐다).
  * 필드명은 첫 실행에서 debug 로 확인한다.
  */
-async function fetchAnnexViaApi(oc, query, article) {
+async function fetchAnnexViaApi(oc, query, article, keyword) {
   const n = article.replace(/^별표/, '').trim()
-  const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=licbyl&type=JSON&query=${encodeURIComponent(query)}&display=100`
+  // 별표 목록 API 는 별표 제목으로 검색한다(법령명으로 검색하면 0건, 2026-09-10 확인). 검색어가 없으면 법령명으로.
+  const q = keyword || query
+  const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=licbyl&type=JSON&query=${encodeURIComponent(q)}&display=100`
   const r = await fetch(url, { headers: HEADERS, redirect: 'follow' })
   const text = await r.text()
   let data
@@ -131,7 +133,10 @@ async function fetchAnnexViaApi(oc, query, article) {
   const err = data?.Response?.msg || data?.msg
   const root = data?.licBylSearch || data?.LicBylSearch || data?.licbylSearch || data?.LawSearch || data
   const rows = collectRows(root)
-  if (rows.length === 0) return { ok: false, note: `별표 목록 비어 있음${err ? ` · ${err}` : ''}`, url, debug: `keys=${Object.keys(data).join(',')}` }
+  if (rows.length === 0) {
+    const total = root?.totalCnt ?? data?.licBylSearch?.totalCnt ?? '?'
+    return { ok: false, note: `별표 목록 비어 있음(검색어 "${q}", totalCnt ${total})${err ? ` · ${err}` : ''}`, url, debug: `keys=${Object.keys(data).join(',')} root=${Object.keys(root || {}).join(',')}` }
+  }
   const norm = (v) => String(v ?? '').replace(/\s/g, '')
   const wantLaw = norm(query)
   // 별표번호 필드 후보: 별표번호 / 별표서식번호 ; 종류: 별표 / 서식
@@ -226,7 +231,7 @@ export default async (req) => {
     try {
       if (/^별표/.test(article)) {
         // 목록 API 우선, 실패하면 공개 페이지(대부분 JS 렌더링이라 안 되지만 남겨 둠)
-        const viaApi = await fetchAnnexViaApi(oc, query, article)
+        const viaApi = await fetchAnnexViaApi(oc, query, article, String(it?.keyword ?? ''))
         results.push({ id, ...(viaApi.ok ? viaApi : { ...(await fetchAnnexViaPage(slug || query.replace(/\s/g, ''), article)), note: `${viaApi.note ?? ''}${viaApi.debug ? ` [${viaApi.debug}]` : ''}` }) })
       }
       else results.push({ id, ...(await fetchArticleViaApi(oc, query, target, article)) })

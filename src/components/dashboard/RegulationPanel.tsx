@@ -38,6 +38,8 @@ interface ArticleResult {
 interface ApiResult {
   query: string
   found: boolean
+  /** 시행 예정(아직 시행 전) 개정판 — 시행일 법령 목록에서 오늘 이후 시행일만 */
+  upcoming?: { effectiveDate: string; promulgationDate?: string; revisionType?: string | null }[]
   lawName?: string
   effectiveDate?: string
   promulgationDate?: string
@@ -111,6 +113,7 @@ export function RegulationPanel() {
           target: r.lawGoKrTarget ?? 'law',
           slug: r.hangulSlug ?? '',
           article,
+          keyword: r.annexKeywords?.[article] ?? '',
         })),
       )
       if (items.length > 0) {
@@ -239,6 +242,12 @@ export function RegulationPanel() {
                   <dt className="text-slate-500">코드 위치(개정 시 고칠 곳)</dt>
                   <dd className="font-mono-data text-[11px] text-slate-300">{reg.usedIn.join(' · ')}</dd>
                 </div>
+                {apiRow?.upcoming && apiRow.upcoming.length > 0 && (
+                  <div className="sm:col-span-2 rounded-control border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                    시행 예정 개정: {apiRow.upcoming.map((u) => `${u.effectiveDate} 시행${u.revisionType ? ` (${u.revisionType})` : ''}`).join(' · ')}
+                    <span className="ml-1 text-amber-200/70">— 시행일 전에 우리가 쓰는 조문이 바뀌는지 신구법 비교로 확인하세요.</span>
+                  </div>
+                )}
                 {reg.watchArticles && reg.watchArticles.length > 0 && (
                   <div className="sm:col-span-2">
                     <dt className="text-slate-500">

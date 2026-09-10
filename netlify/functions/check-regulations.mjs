@@ -94,9 +94,31 @@ export default async (req) => {
         results.push({ query, found: false, note: `검색 결과 0건(totalCnt ${root?.totalCnt ?? '?'})` })
         continue
       }
+      // 시행 예정 개정판 — 시행일 법령 목록(target=eflaw). 법령(law)만. 실패해도 본 결과는 그대로.
+      let upcoming = []
+      if (!isAdm) {
+        try {
+          const todayKst = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '')
+          const pe = `OC=${encodeURIComponent(oc)}&target=eflaw&type=JSON&query=${encodeURIComponent(query)}&display=20`
+          const re = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?${pe}`, { headers, redirect: 'follow' })
+          const te = await re.text()
+          const de = JSON.parse(te)
+          const rootE = de?.LawSearch || de?.EfLawSearch || de?.eflawSearch || {}
+          const listE = rootE.law || rootE.eflaw || []
+          const arrE = Array.isArray(listE) ? listE : listE ? [listE] : []
+          upcoming = arrE
+            .filter((l) => norm(l[nameKey] || l['법령명']) === norm(query))
+            .map((l) => ({ effectiveDate: String(l['시행일자'] || ''), promulgationDate: String(l['공포일자'] || ''), revisionType: l['제개정구분명'] || null }))
+            .filter((u) => /^\d{8}$/.test(u.effectiveDate) && u.effectiveDate > todayKst)
+            .map((u) => ({ ...u, effectiveDate: u.effectiveDate.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'), promulgationDate: u.promulgationDate.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') }))
+        } catch {
+          upcoming = []
+        }
+      }
       results.push({
         query,
         found: true,
+        upcoming,
         lawName: law[nameKey],
         effectiveDate: String(law['시행일자'] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
         promulgationDate: String(law[promKey] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
