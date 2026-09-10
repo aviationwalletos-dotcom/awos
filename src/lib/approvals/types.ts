@@ -44,6 +44,8 @@ export interface ApprovalRequest {
   summary: string | null
   payload: Record<string, unknown>
   attachment_path: string | null
+  /** 첨부 전체(schema21). 비어 있으면 attachment_path 하나로 본다 */
+  attachment_paths?: string[] | null
   status: ApprovalStatus
   decided_by: string | null
   decided_by_name: string | null
@@ -66,6 +68,7 @@ export interface CreateApprovalRequestInput {
   summary?: string | null
   payload?: Record<string, unknown>
   attachmentPath?: string | null
+  attachmentPaths?: string[]
 }
 
 /** 승인된 교관 1명(서명 대상 선택·판정 집합용) */
@@ -75,4 +78,10 @@ export interface ApprovedInstructor {
   track: PilotTrack
   affiliation: string | null
   approvedAt: string | null
+}
+
+/** 첨부 목록 — 새 컬럼이 있으면 그것, 없으면 예전 단일 첨부 */
+export function attachmentsOf(r: Pick<ApprovalRequest, 'attachment_path' | 'attachment_paths'>): string[] {
+  if (r.attachment_paths && r.attachment_paths.length > 0) return r.attachment_paths
+  return r.attachment_path ? [r.attachment_path] : []
 }

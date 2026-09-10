@@ -17,7 +17,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
 import { decideApprovalRequest } from '../../lib/approvals/api'
 import { useApprovalRequests } from '../../lib/approvals/hooks'
-import { type ApprovalKind, type ApprovalRequest, type ApprovalStatus, TRACK_LABEL } from '../../lib/approvals/types'
+import { type ApprovalKind, type ApprovalRequest, type ApprovalStatus, TRACK_LABEL, attachmentsOf } from '../../lib/approvals/types'
 import { clearAttachmentCache, getCachedAttachmentUrl, setCachedAttachmentUrl } from '../../lib/baas/approvalAttachmentCache'
 import { createSignedBoardFileUrl } from '../../lib/baas/supabaseTransport'
 import { InfoTip } from '../InfoTip'
@@ -53,27 +53,32 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
   const [rejectOpen, setRejectOpen] = useState(false)
   const [note, setNote] = useState('')
 
-  // 첨부: 눌렀을 때만
+  // 첨부: 눌렀을 때만. 여러 장(앞·뒷면, 증명서 여러 쪽)은 순서대로 전부 보여준다(schema21).
+  const attachments = useMemo(() => attachmentsOf(item), [item])
   const [photoOpen, setPhotoOpen] = useState(false)
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [photoLoaded, setPhotoLoaded] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!photoOpen || !item.attachment_path) return
-    const cached = getCachedAttachmentUrl(item.id)
-    if (cached !== undefined) {
-      setPhotoUrl(cached)
-      setPhotoLoaded(true)
-      return
-    }
+    if (!photoOpen || attachments.length === 0) return
     let cancelled = false
     void (async () => {
       try {
-        const url = (await createSignedBoardFileUrl(item.attachment_path!)) ?? item.attachment_path
+        const urls: string[] = []
+        for (let i = 0; i < attachments.length; i += 1) {
+          const key = `${item.id}:${i}`
+          const cached = getCachedAttachmentUrl(key)
+          if (cached !== undefined) {
+            urls.push(cached)
+            continue
+          }
+          const url = (await createSignedBoardFileUrl(attachments[i])) ?? attachments[i]
+          setCachedAttachmentUrl(key, url)
+          urls.push(url)
+        }
         if (cancelled) return
-        setCachedAttachmentUrl(item.id, url)
-        setPhotoUrl(url)
+        setPhotoUrls(urls)
         setPhotoLoaded(true)
       } catch (err) {
         if (!cancelled) setPhotoError(err instanceof Error ? err.message : '첨부를 불러오지 못했어요.')
@@ -82,7 +87,7 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
     return () => {
       cancelled = true
     }
-  }, [photoOpen, item.id, item.attachment_path])
+  }, [photoOpen, item.id, attachments])
 
   async function decide(decision: 'approved' | 'rejected') {
     setIsSubmitting(true)
@@ -139,16 +144,16 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
       {item.summary && <p className="mt-3 whitespace-pre-wrap text-sm text-slate-300">{item.summary}</p>}
       {renderExtra?.(item)}
 
-      {showAttachment && item.attachment_path && !photoOpen && (
+      {showAttachment && attachments.length > 0 && !photoOpen && (
         <button type="button"
           onClick={() => setPhotoOpen(true)}
           className="mt-3 inline-flex items-center gap-1.5 rounded-control border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
         >
           <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
-          첨부 보기
+          첨부 보기{attachments.length > 1 ? ` (${attachments.length}장)` : ''}
         </button>
       )}
-      {showAttachment && !item.attachment_path && <p className="mt-3 text-xs text-slate-500">첨부된 파일이 없어요.</p>}
+      {showAttachment && attachments.length === 0 && <p className="mt-3 text-xs text-slate-500">첨부된 파일이 없어요.</p>}
       {photoOpen && !photoLoaded && !photoError && (
         <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
           <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -156,16 +161,22 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
         </p>
       )}
       {photoError && <p role="alert" className="mt-3 text-xs font-medium text-rose-300">{photoError}</p>}
-      {photoUrl && (
-        /\.pdf(\?|$)/i.test(photoUrl) ? (
-          <a href={photoUrl} target="_blank" rel="noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-control border border-sky/40 bg-sky/10 px-3 py-2 text-sm font-semibold text-sky"
-          >
-            첨부 PDF 열기 ↗
-          </a>
-        ) : (
-          <img src={photoUrl} alt="첨부 사진" className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain" />
-        )
+      {photoUrls.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-3">
+          {photoUrls.map((url, i) =>
+            /\.pdf(\?|$)/i.test(url) ? (
+              <a key={url} href={url} target="_blank" rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-control border border-sky/40 bg-sky/10 px-3 py-2 text-sm font-semibold text-sky"
+              >
+                첨부 {photoUrls.length > 1 ? `${i + 1} ` : ''}PDF 열기 ↗
+              </a>
+            ) : (
+              <a key={url} href={url} target="_blank" rel="noreferrer" title="새 창에서 크게 보기">
+                <img src={url} alt={`첨부 사진 ${i + 1}`} className="max-h-64 w-auto max-w-sm rounded-control border border-white/10 object-contain" />
+              </a>
+            ),
+          )}
+        </div>
       )}
 
       {item.status !== 'pending' && item.decided_at && (

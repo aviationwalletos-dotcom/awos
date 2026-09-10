@@ -17,6 +17,8 @@ export interface SubmitCertificateApprovalOptions {
   account: AccountResponse
   affiliation?: string | null
   file?: File | null
+  /** 여러 장(앞·뒷면). 있으면 file 보다 우선 */
+  files?: File[] | null
   /** useUploadBoardFile().uploadFile — 훅이라 여기서 직접 부를 수 없어 주입받는다 */
   uploadFile: (file: Blob, options: { filename: string; contentType: string }) => Promise<UploadedAttachment>
   /** 교관 확인(Endorsement): 서명할 교관. 이 구분은 관리자가 아니라 교관이 서명한다 */
@@ -29,12 +31,14 @@ export function certificateApprovalKind(certificate: Pick<Certificate, 'category
 }
 
 export async function submitCertificateApprovalRequest(options: SubmitCertificateApprovalOptions): Promise<ApprovalRequest> {
-  const { certificate, account, affiliation, file, uploadFile } = options
-  let attachmentPath: string | null = null
-  if (file) {
-    const uploaded = await uploadFile(file, { filename: file.name, contentType: file.type || 'image/jpeg' })
-    attachmentPath = uploaded.cdnUrl
+  const { certificate, account, affiliation, file, files, uploadFile } = options
+  const list = files && files.length > 0 ? files : file ? [file] : []
+  const attachmentPaths: string[] = []
+  for (const f of list) {
+    const uploaded = await uploadFile(f, { filename: f.name, contentType: f.type || (f.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg') })
+    attachmentPaths.push(uploaded.cdnUrl)
   }
+  const attachmentPath: string | null = attachmentPaths[0] ?? null
   const kind = certificateApprovalKind(certificate)
 
   // 교관 확인(Endorsement): 교관에게 서명 요청. 서명 대상(확인 종류·세부·날짜·학생)을 스냅샷+해시로 고정한다(비행 서명과 같은 증거 구조).
@@ -61,6 +65,7 @@ export async function submitCertificateApprovalRequest(options: SubmitCertificat
       summary: `${account.name || account.user_id} 학생의 "${certificate.name}" 확인 요청이에요. 아래 내용을 확인하고 서명해 주세요.\n확인일: ${certificate.issuedDate}${certificate.notes ? `\n세부: ${certificate.notes}` : ''}`,
       payload: { signedSnapshot, category: certificate.category, name: certificate.name },
       attachmentPath,
+      attachmentPaths,
     })
   }
 
@@ -81,5 +86,6 @@ export async function submitCertificateApprovalRequest(options: SubmitCertificat
       expiryDate: certificate.expiryDate ?? null,
     },
     attachmentPath,
+    attachmentPaths,
   })
 }

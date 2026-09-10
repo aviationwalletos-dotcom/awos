@@ -37,7 +37,7 @@ const SCHEMAS = {
     },
   },
   licence: {
-    description: '조종사 자격증명서 / 항공신체검사증명서 / 조종교육증명 등 자격 증서',
+    description: '조종사 자격증명서 / 항공신체검사증명서 / 무선통신사 자격증 / 조종연습허가서 / 항공영어구술능력증명서 등 자격 증서',
     fields: {
       name: '자격 명칭(예: 자가용 조종사, Private Pilot, 제1종 항공신체검사증명). 모르면 null',
       licenceNumber: '자격번호(예: 12-015238). 모르면 null',
@@ -46,6 +46,8 @@ const SCHEMAS = {
       issuedDate: '발급일 YYYY-MM-DD. 모르면 null',
       expiryDate: '만료일/유효기간 YYYY-MM-DD. 없으면 null',
       ratings: '한정사항 문자열(예: 비행기 육상단발). 없으면 null',
+      medicalClass: "항공신체검사증명서면 종류: '제1종' | '제2종' | '제3종'. 신체검사증명서가 아니면 null",
+      documentKind: "문서 종류: 'licence'(조종사 자격증명서) | 'medical'(항공신체검사증명서) | 'radio'(무선통신사 자격증) | 'permit'(조종연습허가서) | 'epta'(항공영어구술능력증명서) | 'other'",
       limitations: '제한사항 문자열. 없으면 null',
       medicalClass: '항공신체검사 종류(1, 2, 3) 정수. 해당 없으면 null',
       // ── 조종사 자격증명서 한 장에서 같이 등록할 수 있는 항목들(한정사항·특기사항에서 읽는다) ──

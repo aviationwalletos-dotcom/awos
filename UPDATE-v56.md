@@ -382,3 +382,22 @@ CPL 카드에 "비행기/육상단발"이 있는데도 커런시에 "한정 없�
 
 ## 검증
 tsc · eslint 통과 · vitest 99 · build 통과 · playwright --list 20. 삭제할 파일 없음.
+
+---
+
+# UPDATE v2.3 — 첨부 여러 장 (2026-09-10)
+- 자격증 폼·비행경력증명서 폼: 파일 선택 `multiple`(최대 5장). 목록에 "앞면(AI 읽기) · 파일명 / 2장 · 파일명". 첫 장을 AI 가 읽음.
+- 서버: `schema21-attachments.sql` — `approval_requests.attachment_paths text[]`. `attachment_path` 는 첫 장(예전 화면 호환).
+- `createApprovalRequest`: `attachmentPaths` 받음. `attachmentsOf(request)` 헬퍼(새 컬럼 없으면 단일 첨부).
+- 관리자 큐: "첨부 보기 (N장)" → 사진 여러 장 나란히(클릭하면 새 창 크게), PDF 는 "첨부 N PDF 열기".
+- 한정·계기 등 "같이 찾은 자격"도 같은 사진들로 요청.
+파일: `schema21`, `approvals/types.ts`, `approvals/api.ts`, `approvals/certificateRequests.ts`, `useLogbookPageModel.tsx`, `CertificatesTab.tsx`, `CertificateForm.tsx`, `FlightExperienceCertificateForm.tsx`, `ApprovalQueuePanel.tsx`.
+검증: tsc · eslint 통과 · vitest 99 · build 통과 · playwright --list 20. 삭제 없음.
+
+---
+
+# UPDATE v2.3a — 신체검사·무선통신사·조종연습허가서·항공영어도 AI 읽기 (2026-09-10)
+- AI 버튼이 보이는 구분: 조종사 자격증명, **항공신체검사, 무선통신사, 조종연습허가서, 항공영어구술능력증명**, 경량·초경량 자격증명. (법정교육·운전면허·기타·교관 확인은 사진만)
+- 신체검사: AI 가 종류(제1·2·3종)를 읽어 세부 종류에 맞추고, 그 종류로 유효기간 자동 계산(별표 8). 증명서에 적힌 유효기간이 있으면 그걸 우선.
+- 함수 스키마에 `medicalClass`, `documentKind` 추가.
+파일: `read-document.mjs`, `CertificateForm.tsx`. 삭제 없음.

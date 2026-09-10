@@ -46,7 +46,7 @@ interface FieldErrors {
 interface CertificateFormProps {
   mode: 'create' | 'edit'
   initialValues?: Certificate
-  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; extras?: CertificateInput[]; targetInstructor?: { userId: string; name: string } | null }) => void
+  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; approvalFiles?: File[]; extras?: CertificateInput[]; targetInstructor?: { userId: string; name: string } | null }) => void
   onCancel?: () => void
   /** 로그인한 사용자의 역할에 해당하는 자격 템플릿(빠른 추가 칩)과 강조 색상 */
   roleTemplate?: RoleContent
@@ -202,9 +202,21 @@ export function CertificateForm({
       }
     }
 
+    // 신체검사증명서: 종류(1·2·3종)를 세부 종류에 맞춘다 → 유효기간 자동 계산도 그 종류로
+    let aiMedicalKey: string | undefined
+    if (mode === 'create' && category === '항공신체검사' && typeof f.medicalClass === 'string') {
+      const cls = f.medicalClass.includes('1') ? 'CLASS1' : f.medicalClass.includes('2') ? 'CLASS2' : f.medicalClass.includes('3') ? 'CLASS3' : ''
+      if (cls) {
+        setNameTouched(false)
+        setSubKey(cls)
+        aiMedicalKey = cls
+        filled.push('신체검사 종류')
+      }
+    }
     if (isDate(f.issuedDate)) {
       setAiIssuedDate(f.issuedDate)
-      autofillExpiry(f.issuedDate)
+      // 방금 고른 종류로 유효기간을 계산해요(setSubKey 는 아직 반영 전이라 키를 직접 넘김)
+      autofillExpiry(f.issuedDate, aiMedicalKey)
       filled.push('발급일')
     }
     if (isDate(f.expiryDate)) {
@@ -250,7 +262,9 @@ export function CertificateForm({
   // 자격번호가 있는 구분(실물 증서의 III. SERIAL NO.)
   const hasLicenceNumber =
     category === '조종사 자격증명' || category === '경량항공기 조종사 자격증명' || category === '초경량비행장치 조종자증명' || category === '지도조종자'
-  const [approvalFile, setApprovalFile] = useState<File | null>(null)
+  // 첨부 여러 장(앞·뒷면). approvalFile 은 첫 장(AI 읽기·호환용)
+  const [approvalFiles, setApprovalFiles] = useState<File[]>([])
+  const approvalFile = approvalFiles[0] ?? null
   // 교관 확인(Endorsement): 서명할 교관. 승인된 교관 목록에서 고른다(비행 서명과 같은 절차).
   const { instructors: approvedInstructors, isLoading: isLoadingInstructors } = useApprovedInstructors()
   const [endorserUserId, setEndorserUserId] = useState('')
@@ -316,7 +330,7 @@ export function CertificateForm({
     const first = SUBTYPES_BY_CATEGORY[next]?.[0]
     setSubKey(first?.key ?? '')
     setSubDetail('')
-    setApprovalFile(null)
+    setApprovalFiles([])
     setNameValue(first ? buildName(next, first, '') : '')
   }
 
@@ -397,6 +411,7 @@ export function CertificateForm({
       },
       {
         approvalFile: approvalFile ?? undefined,
+        approvalFiles: approvalFiles.length > 0 ? approvalFiles : undefined,
         targetInstructor: category === '교관 확인'
           ? (() => {
               const t = approvedInstructors.find((i) => i.userId === endorserUserId)
@@ -419,8 +434,10 @@ export function CertificateForm({
     }
   }
 
-  // AI 읽기는 조종사 자격증명서(한정·계기·교관·항공영어가 같이 적힌 것) 전용. 법정교육·신체검사·무선 등은 서식이 제각각이라 사진만 올린다(2026-09-10).
-  const aiReadable = mode === 'create' && isLicenceCategory
+  // AI 읽기가 되는 구분: 정해진 서식이 있는 증서. 조종사 자격증명(한정·계기·교관·항공영어까지), 신체검사(종류·유효기간),
+  // 무선통신사·조종연습허가서·항공영어(번호·발급일·만료일). 법정교육·운전면허·기타·교관 확인은 서식이 제각각이라 사진만.
+  const AI_READABLE_CATEGORIES: CertificateCategory[] = ['조종사 자격증명', '항공신체검사', '무선통신사', '조종연습허가서', '항공영어구술능력증명', '경량항공기 조종사 자격증명', '초경량비행장치 조종자증명']
+  const aiReadable = mode === 'create' && AI_READABLE_CATEGORIES.includes(category)
   const isEndorsement = category === '교관 확인'
 
   return (
@@ -430,15 +447,30 @@ export function CertificateForm({
             {isEndorsement
               ? '교관 확인(Endorsement) 사진 (선택) — 종이 로그북에 이미 받은 확인이 있으면 그 페이지'
               : aiReadable
-                ? '자격증 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요'
+                ? isLicenceCategory
+                  ? '자격증 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요'
+                  : category === '항공신체검사'
+                    ? '증명서 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 종류(1·2·3종)·발급일·유효기간·발급기관을 읽어요'
+                    : '증서 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 번호·발급일·만료일·발급기관을 읽어요'
                 : '사진 (이미지 또는 PDF) — 관리자가 이 사진과 대조해 인증해요'}
           </span>
           <input type="file"
             data-testid="cert-photo"
             accept="image/*,application/pdf,.pdf"
-            onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
+            multiple
+            onChange={(e) => setApprovalFiles(Array.from(e.target.files ?? []).slice(0, 5))}
             className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
           />
+          {approvalFiles.length > 0 && (
+            <ul className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-slate-400">
+              {approvalFiles.map((f, i) => (
+                <li key={`${f.name}-${i}`} className="rounded border border-white/10 px-2 py-0.5">
+                  {i === 0 ? '앞면(AI 읽기) · ' : `${i + 1}장 · `}{f.name}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-1 text-[11px] text-slate-500">여러 장을 한 번에 고를 수 있어요(최대 5장). 앞면을 첫 번째로 고르면 AI 가 그걸 읽어요.</p>
           {aiReadable && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
           {mode === 'create' && isLicenceCategory && aiExtras.length > 0 && (
             <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">

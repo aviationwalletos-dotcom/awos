@@ -113,21 +113,26 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   const [errors, setErrors] = useState<FieldErrors>({})
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  // 여러 쪽(증명서가 두 장 이상). 첫 장은 imageFile(AI 읽기·미리보기), 전체는 여기
+  const [extraFiles, setExtraFiles] = useState<File[]>([])
   const [imageError, setImageError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [syncNotice, setSyncNotice] = useState<SyncNotice | null>(null)
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const all = Array.from(e.target.files ?? []).slice(0, 5)
+    const file = all[0]
     if (!file) return
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-    if (!file.type.startsWith('image/') && !isPdf) {
+    const bad = all.find((f) => !f.type.startsWith('image/') && !(f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')))
+    if (bad) {
       setImageError('이미지 또는 PDF 파일만 첨부할 수 있어요.')
       return
     }
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
     setImageError(null)
     setImageFile(file)
+    setExtraFiles(all.slice(1))
     if (isPdf) {
       // PDF는 <img> 미리보기가 불가능하므로 데이터URL을 만들지 않는다(파일명 배지로 표시).
       setImageDataUrl(null)
@@ -217,13 +222,17 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
     // 1. 사진이 있으면 저장소에 올려 첨부 경로를 확보한다.
     let attachmentPath: string | undefined
+    const attachmentPaths: string[] = []
     if (imageFile) {
       try {
-        const uploaded = await uploadFile(imageFile, {
-          filename: imageFile.name,
-          contentType: imageFile.type || (imageFile.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-        })
-        attachmentPath = uploaded.cdnUrl
+        for (const f of [imageFile, ...extraFiles]) {
+          const uploaded = await uploadFile(f, {
+            filename: f.name,
+            contentType: f.type || (f.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+          })
+          attachmentPaths.push(uploaded.cdnUrl)
+        }
+        attachmentPath = attachmentPaths[0]
       } catch (err) {
         // 예전엔 여기서 조용히 넘어가 "첨부 없음" 요청이 생겼어요. 증명서 없이는 관리자가 승인할 수 없으니 제출을 멈춰요.
         console.warn('[비행경력증명서 사진 업로드 실패]', err)
@@ -260,6 +269,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           }),
           payload: { date, issuer, blockTime },
           attachmentPath: attachmentPath ?? null,
+          attachmentPaths,
         })
         certificateRequestPostId = request.id
       } catch (err) {
@@ -333,7 +343,15 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           <Camera className="h-4 w-4 text-slate-400" aria-hidden="true" />
           사진 선택
         </label>
-        <input id="cert-image" type="file" accept="image/*,application/pdf,.pdf" onChange={handleImageChange} className="sr-only" />
+        <input id="cert-image" type="file" accept="image/*,application/pdf,.pdf" multiple onChange={handleImageChange} className="sr-only" />
+        <p className="mt-1.5 text-[11px] text-slate-500">여러 장을 한 번에 고를 수 있어요(최대 5장). 첫 장을 AI 가 읽어요.</p>
+        {extraFiles.length > 0 && (
+          <ul className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-slate-400">
+            {extraFiles.map((f, i) => (
+              <li key={`${f.name}-${i}`} className="rounded border border-white/10 px-2 py-0.5">{i + 2}장 · {f.name}</li>
+            ))}
+          </ul>
+        )}
         {(imageError || errors.image) && (
           <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-600">
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />

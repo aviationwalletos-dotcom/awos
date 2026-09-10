@@ -82,7 +82,8 @@ export async function createApprovalRequest(input: CreateApprovalRequestInput): 
     title: input.title,
     summary: input.summary ?? null,
     payload: input.payload ?? {},
-    attachment_path: input.attachmentPath ?? null,
+    attachment_path: input.attachmentPath ?? input.attachmentPaths?.[0] ?? null,
+    attachment_paths: input.attachmentPaths ?? (input.attachmentPath ? [input.attachmentPath] : []),
     status: 'pending' as const,
   }
   const { data, error } = await client.from(TABLE).insert(row).select('*').single()

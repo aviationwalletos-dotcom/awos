@@ -134,7 +134,7 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                     void handleCreateCertificate(
                       { ...input, track: input.track ?? activeTrack },
                       options?.approvalFile,
-                      { targetInstructor: options?.targetInstructor ?? null },
+                      { targetInstructor: options?.targetInstructor ?? null, approvalFiles: options?.approvalFiles },
                     ).then(async (created) => {
                       if (!created) return;
                       // 자격증 사진 한 장에서 같이 찾은 한정·계기·교관·항공영어도 같은 사진으로 각각 등록·인증 요청해요.
@@ -147,6 +147,7 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                             linkedCertificateId: extra.category === "한정" ? created.id : extra.linkedCertificateId,
                           },
                           options?.approvalFile,
+                          { approvalFiles: options?.approvalFiles },
                         );
                       }
                       setIsCertFormOpen(false);
