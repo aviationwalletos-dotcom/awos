@@ -196,9 +196,10 @@ export function RegulationPanel() {
                 </div>
               </dl>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {(apiRow?.link || reg.manualUrl) && (
+                {/* 사람이 보는 링크는 공개 주소(manualUrl)로. API 가 주는 lawService.do 링크는 "본문 조회 API" 권한이 따로 필요해 로그인 화면이 뜬다(2026-09-10). */}
+                {(reg.manualUrl || apiRow?.link) && (
                   <a
-                    href={apiRow?.link || reg.manualUrl}
+                    href={reg.manualUrl || apiRow?.link}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex min-h-[36px] items-center gap-1.5 rounded-control border border-white/15 px-3 text-xs font-semibold text-slate-200 hover:bg-white/5"
