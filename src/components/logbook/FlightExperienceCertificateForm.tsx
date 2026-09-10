@@ -25,6 +25,7 @@ interface FieldErrors {
   date?: string
   blockTime?: string
   image?: string
+  conditionDay?: string
 }
 
 interface FlightExperienceCertificateFormProps {
@@ -163,9 +164,21 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     if (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0) {
       nextErrors.blockTime = '총 블록타임을 0보다 큰 숫자로 입력해 주세요.'
     }
+    // 주간이 비어 있는데 총·야간이 있으면(= 계산 버튼이 떠 있는 상태) 그냥 넘어가지 않아요.
+    // 증명서의 주간 열이 비면 별지 36호 산정이 틀어져요. 버튼을 누르거나 직접 넣어야 해요(2026-09-10).
+    if (dayHint) {
+      nextErrors.conditionDay = `주간 시간이 비어 있어요. 아래 "총 ${dayHint.total} − 야간 ${dayHint.night} = ${dayHint.day} 넣기"를 누르거나 직접 입력해 주세요.`
+    }
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
+      // 첫 오류 칸으로 올라가서 보여줘요(폼이 길어서 아래 오류를 못 보고 지나치기 쉬워요)
+      const firstId = nextErrors.date ? 'cert-date' : nextErrors.image ? 'cert-image' : nextErrors.blockTime ? 'cert-blockTime' : 'cert-conditionDay'
+      window.setTimeout(() => {
+        const el = document.getElementById(firstId)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        if (el instanceof HTMLInputElement && el.type !== 'file') el.focus({ preventScroll: true })
+      }, 50)
       return
     }
     setErrors({})
@@ -486,7 +499,15 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
               주간(시간)
             </label>
             <input id="cert-conditionDay" name="conditionDay" type="number"
-              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass}
+              aria-invalid={Boolean(errors.conditionDay)}
+              aria-describedby={errors.conditionDay ? 'cert-conditionDay-error' : undefined} />
+            {errors.conditionDay && (
+              <p id="cert-conditionDay-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-rose-600">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                {errors.conditionDay}
+              </p>
+            )}
             {dayHint && (
               <button type="button"
                 onClick={() => {
@@ -494,6 +515,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
                   if (!el) return
                   el.value = String(dayHint.day)
                   setFormTick((t) => t + 1)
+                  setErrors((prev) => ({ ...prev, conditionDay: undefined }))
                 }}
                 className="mt-1.5 w-full rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-left text-xs font-medium text-sky
                   transition-colors hover:bg-sky/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
