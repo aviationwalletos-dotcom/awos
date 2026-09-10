@@ -1,5 +1,5 @@
 // 관리자 문의함 — 회원 문의 목록을 확인하고 답변을 남긴다(답변은 문의하기 페이지의 본인에게 표시).
-import { ChevronDown, Inbox } from 'lucide-react'
+import { ChevronDown, Inbox, Search } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
 import { Button } from '../Button'
@@ -109,6 +109,9 @@ function InquiryRow({ item }: { item: BoardPostListItem }) {
 export function InquiryAdminPanel() {
   const { refetch, isLoading, error } = useInquiryBoardPosts({ enabled: false })
   const [items, setItems] = useState<BoardPostListItem[]>([])
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 5
 
   useEffect(() => {
     void refetch().then((res) => {
@@ -125,11 +128,37 @@ export function InquiryAdminPanel() {
   if (items.length === 0) {
     return <EmptyState icon={Inbox} title="접수된 문의가 없어요" description="회원이 문의하기 페이지에서 문의를 남기면 여기에 표시돼요." />
   }
+  const q = query.trim().toLowerCase()
+  const filtered = q ? items.filter((it) => `${it.title} ${it.author_name ?? ''}`.toLowerCase().includes(q)) : items
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
   return (
-    <ul className="space-y-3">
-      {items.map((item) => (
-        <InquiryRow key={item.id} item={item} />
-      ))}
-    </ul>
+    <div>
+      <div className="relative mb-4 max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+        <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1) }} placeholder="제목·이름으로 검색" aria-label="문의 검색"
+          className="w-full rounded-control border border-white/15 bg-navy py-2 pl-9 pr-3 text-sm text-ink placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky" />
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-slate-400">검색 결과가 없어요.</p>
+      ) : (
+        <ul className="space-y-3">
+          {pageItems.map((item) => (
+            <InquiryRow key={item.id} item={item} />
+          ))}
+        </ul>
+      )}
+      {pageCount > 1 && (
+        <nav className="mt-4 flex items-center justify-between text-xs text-slate-400" aria-label="페이지">
+          <span>{(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}건</span>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage <= 1} className="rounded-control border border-white/15 px-3 py-1.5 font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-40">이전</button>
+            <span className="px-2">{safePage} / {pageCount}</span>
+            <button type="button" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={safePage >= pageCount} className="rounded-control border border-white/15 px-3 py-1.5 font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-40">다음</button>
+          </div>
+        </nav>
+      )}
+    </div>
   )
 }

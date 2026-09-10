@@ -6,7 +6,7 @@
 //  - 첨부 사진은 "첨부 보기"를 눌렀을 때만 서명 URL 을 발급한다.
 //  - 판정은 decide_approval_request RPC. 판정 뒤에는 바꿀 수 없다(불변) — 버튼도 사라진다.
 
-import { AlertTriangle, Building2, CheckCircle2, Clock3, Image as ImageIcon, Info, type LucideIcon, XCircle } from 'lucide-react'
+import { AlertTriangle, Building2, CheckCircle2, Clock3, Image as ImageIcon, Info, type LucideIcon, Search, XCircle } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -243,6 +243,10 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
 
   const [filter, setFilter] = useState<StatusFilter>('pending')
   const [showAllAffiliations, setShowAllAffiliations] = useState(false)
+  // 검색(이름·이메일·제목·요약)과 5건씩 페이지 — 승인된 항목이 쌓이면 스크롤이 길어져서(2026-09-10)
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 5
 
   const status: ApprovalStatus | ApprovalStatus[] | undefined =
     filter === 'all' ? ['pending', 'approved', 'rejected'] : filter
@@ -253,8 +257,26 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
     let list = data ?? []
     if (filterItems) list = list.filter(filterItems)
     if (isScopedToMyAffiliation) list = list.filter((it) => (it.affiliation ?? '').trim() === (myAffiliation ?? '').trim())
+    const q = query.trim().toLowerCase()
+    if (q) {
+      list = list.filter((it) =>
+        [it.requester_name, it.requester_email ?? '', it.title ?? '', it.summary ?? '', it.affiliation ?? '']
+          .join(' ')
+          .toLowerCase()
+          .includes(q),
+      )
+    }
     return list
-  }, [data, filterItems, isScopedToMyAffiliation, myAffiliation])
+  }, [data, filterItems, isScopedToMyAffiliation, myAffiliation, query])
+
+  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const pageItems = items.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  // 필터·검색이 바뀌면 1페이지로
+  useEffect(() => {
+    setPage(1)
+  }, [filter, query, showAllAffiliations])
 
   async function handleDecided() {
     clearAttachmentCache()
@@ -291,6 +313,18 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
         <InfoTip label="이 탭의 설명">{description}</InfoTip>
         <span className="sr-only">{description}</span>
       </p>
+
+      <div className="mt-4 relative max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="이름·이메일·항목으로 검색"
+          aria-label="요청 검색"
+          className="w-full rounded-control border border-white/15 bg-navy py-2 pl-9 pr-3 text-sm text-ink placeholder:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+        />
+      </div>
 
       {myAffiliation ? (
         <label className="mt-4 flex min-h-[44px] w-fit cursor-pointer items-center gap-2 rounded-control border border-white/15 px-3 py-2 text-xs font-semibold text-slate-300">
@@ -331,11 +365,53 @@ export function ApprovalQueuePanel({ kinds, title, description, icon: Icon, empt
       ) : items.length === 0 ? (
         <EmptyState className="mt-6" surface="dark" icon={Icon} title={emptyTitle} description="필터를 변경해 다른 상태의 요청을 확인해 보세요." />
       ) : (
-        <ul className="mt-6 space-y-3">
-          {items.map((item) => (
-            <RequestRow key={item.id} item={item} showAttachment={showAttachment} onDecided={handleDecided} renderExtra={renderExtra} />
-          ))}
-        </ul>
+        <>
+          <ul className="mt-6 space-y-3">
+            {pageItems.map((item) => (
+              <RequestRow key={item.id} item={item} showAttachment={showAttachment} onDecided={handleDecided} renderExtra={renderExtra} />
+            ))}
+          </ul>
+          {pageCount > 1 && (
+            <nav className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400" aria-label="페이지">
+              <span>
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, items.length)} / {items.length}건
+              </span>
+              <div className="flex items-center gap-1">
+                <button type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage <= 1}
+                  className="rounded-control border border-white/15 px-3 py-1.5 font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-40"
+                >
+                  이전
+                </button>
+                {Array.from({ length: pageCount }, (_, i) => i + 1)
+                  .filter((n) => n === 1 || n === pageCount || Math.abs(n - safePage) <= 1)
+                  .reduce<number[]>((acc, n) => (acc.length && n - acc[acc.length - 1] > 1 ? [...acc, -1, n] : [...acc, n]), [])
+                  .map((n, idx) =>
+                    n === -1 ? (
+                      <span key={`gap-${idx}`} className="px-1">…</span>
+                    ) : (
+                      <button key={n}
+                        type="button"
+                        onClick={() => setPage(n)}
+                        aria-current={n === safePage ? 'page' : undefined}
+                        className={`min-w-[32px] rounded-control px-2 py-1.5 font-semibold ${n === safePage ? 'bg-sky text-navy' : 'border border-white/15 text-slate-300 hover:bg-white/5'}`}
+                      >
+                        {n}
+                      </button>
+                    ),
+                  )}
+                <button type="button"
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                  disabled={safePage >= pageCount}
+                  className="rounded-control border border-white/15 px-3 py-1.5 font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-40"
+                >
+                  다음
+                </button>
+              </div>
+            </nav>
+          )}
+        </>
       )}
     </div>
   )

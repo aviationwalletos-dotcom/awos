@@ -204,13 +204,29 @@ export function computeFlightReadiness(
   // 등급별(8.2.2 "동일 등급") — 최근 24개월 안에 비행한 등급마다 따로 센다. 등급 미기재 기록은 모든 등급에 합산(보수적)
   const classWindow = daysAgo(today, 730)
   const classesFlown = [...new Set(entries.filter((e) => isWithinWindow(e.date, classWindow, today)).map(inferAircraftClass))].filter((c): c is Exclude<AircraftClass, 'unknown'> => c !== 'unknown')
-  // 한정 보유 — 승인된 "한정" 카드의 등급. 하나도 없으면 판정 보류(null), 있으면 등급별로 확인(제36조·제37조).
-  const ratingCards = certificates.filter((c) => c.category === '한정' && c.approvalStatus === 'approved' && getCertificateStatus(c.expiryDate) !== 'expired')
+  // 한정 보유 — 마스터 카드(MyCertificateStatusCard.ratingLine)와 같은 규칙으로 센다(제36조·제37조):
+  //   · 조종사 자격증명 카드 자체에 적힌 종류·등급(CPL · 비행기 · 육상단발)
+  //   · '한정' 카드의 종류·등급 필드, 필드가 없으면 이름("육상단발" 등)
+  //   · 반려된 것과 만료된 것은 제외. 승인 대기는 보유로 친다(대조 전이라도 "한정 없음"이라고 하면 틀린 안내가 된다).
+  //   하나도 없으면 판정 보류(null).
+  const classOf = (c: Certificate): AircraftClass | null => {
+    if (c.aircraftCategory === 'HELICOPTER') return 'ROTOR'
+    if (c.classRating === 'MEL' || c.classRating === 'MES') return 'MEL'
+    if (c.classRating === 'SEL' || c.classRating === 'SES') return 'SEL'
+    if (c.category === '한정') {
+      if (/육상다발|수상다발/.test(c.name)) return 'MEL'
+      if (/육상단발|수상단발/.test(c.name)) return 'SEL'
+      if (/헬리콥터|회전익/.test(c.name)) return 'ROTOR'
+    }
+    return null
+  }
+  const ratingCards = certificates.filter(
+    (c) => (c.category === '한정' || c.category === '조종사 자격증명') && c.approvalStatus !== 'rejected' && getCertificateStatus(c.expiryDate) !== 'expired' && classOf(c) !== null,
+  )
   const heldClasses = new Set<AircraftClass>()
   for (const c of ratingCards) {
-    if (c.aircraftCategory === 'HELICOPTER') heldClasses.add('ROTOR')
-    else if (c.classRating === 'MEL' || c.classRating === 'MES') heldClasses.add('MEL')
-    else if (c.classRating === 'SEL' || c.classRating === 'SES') heldClasses.add('SEL')
+    const cls = classOf(c)
+    if (cls) heldClasses.add(cls)
   }
   const recoveryHint = '회복하려면 조종교육증명을 받은 교관과 같은 등급 항공기(또는 모의비행장치)로 2시간 이상, 이착륙 3회 이상 비행교육을 받으세요(운항기술기준 8.2.4 가).'
   const byClass: RecencyByClass[] = classesFlown.map((cls) => {
