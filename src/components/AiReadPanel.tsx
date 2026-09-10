@@ -31,7 +31,7 @@ function readConsent(): boolean {
 export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanelProps) {
   const [isReading, setIsReading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [summary, setSummary] = useState<{ filled: string[]; notes: string[]; confidence: ReadDocumentResult['confidence'] } | null>(null)
+  const [summary, setSummary] = useState<{ filled: string[]; notes: string[]; confidence: ReadDocumentResult['confidence']; quota?: ReadDocumentResult['quota'] } | null>(null)
   const [consented, setConsented] = useState(readConsent)
 
   function handleConsent(checked: boolean) {
@@ -52,7 +52,7 @@ export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanel
     try {
       const result = await readDocumentWithAi(kind, file)
       const filled = onApply(result)
-      setSummary({ filled, notes: result.notes, confidence: result.confidence })
+      setSummary({ filled, notes: result.notes, confidence: result.confidence, quota: result.quota })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'AI 읽기에 실패했어요.')
     } finally {
@@ -107,7 +107,10 @@ export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanel
               ))}
             </ul>
           )}
-          <p className="mt-1.5 text-[11px] text-amber-200/70">AI 가 읽은 값은 틀릴 수 있어요. 원본과 대조한 뒤 저장하세요. 문서에 없는 항목은 비워 둡니다(0으로 채우지 않아요).</p>
+          <p className="mt-1.5 text-[11px] text-amber-200/70">
+            AI 가 읽은 값은 틀릴 수 있어요. 원본과 대조한 뒤 저장하세요. 문서에 없는 항목은 비워 둡니다(0으로 채우지 않아요).
+            {summary.quota?.enforced && summary.quota.used !== null ? ` · 오늘 ${summary.quota.used}/${summary.quota.limit}회 사용` : ''}
+          </p>
         </div>
       )}
     </div>

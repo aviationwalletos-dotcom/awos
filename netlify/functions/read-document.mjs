@@ -79,6 +79,29 @@ async function verifyUser(req) {
   return u && u.id ? u : null
 }
 
+const DAILY_LIMIT = 10
+
+// 하루 한도(계정당). schema18 의 consume_ai_quota() 를 사용자 JWT 로 호출한다(RLS 안에서 본인 것만).
+// 함수가 아직 없으면(SQL 미실행) 막지 않고 통과시킨다 — 기능이 멈추는 것보다 낫다.
+async function consumeQuota(token) {
+  const url = process.env.SUPABASE_URL
+  const anon = process.env.SUPABASE_ANON_KEY
+  if (!url || !anon) return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
+  try {
+    const r = await fetch(`${url}/rest/v1/rpc/consume_ai_quota`, {
+      method: 'POST',
+      headers: { apikey: anon, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ p_limit: DAILY_LIMIT }),
+    })
+    if (r.status === 404) return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
+    if (!r.ok) return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
+    const data = await r.json()
+    return { allowed: data?.allowed !== false, used: data?.used ?? null, limit: data?.limit ?? DAILY_LIMIT, enforced: true }
+  } catch {
+    return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
+  }
+}
+
 export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'POST only' })
   if (!process.env.ANTHROPIC_API_KEY) return json(503, { error: 'AI 읽기 기능이 아직 설정되지 않았어요(ANTHROPIC_API_KEY 없음).' })
@@ -101,6 +124,12 @@ export default async (req) => {
   if (image.length * 0.75 > MAX_IMAGE_BYTES) return json(413, { error: '이미지가 너무 커요(5MB 이하).' })
   const isPdf = mediaType === 'application/pdf'
 
+  const token = (req.headers.get('authorization') || '').slice(7)
+  const quota = await consumeQuota(token)
+  if (!quota.allowed) {
+    return json(429, { error: `AI 읽기는 하루 ${quota.limit}회까지예요. 오늘은 다 썼어요. 내일 다시 하거나 직접 입력해 주세요.`, quota })
+  }
+
   const fieldLines = Object.entries(schema.fields).map(([k, v]) => `- ${k}: ${v}`).join('\n')
   const prompt = schema.rows
     ? `당신은 항공 문서를 읽어 구조화하는 보조자입니다. 첨부된 문서는 "${schema.description}"입니다.
@@ -110,12 +139,16 @@ export default async (req) => {
 필드:
 ${fieldLines}
 
+notes 작성 규칙: 조종사가 읽는 문장입니다. 필드 이름(singleEngineLand, expiryDate 같은 영어 코드), "null", JSON 용어를 쓰지 마세요. 화면에 보이는 한국어 칸 이름(예: 육상단발, 만료일, 착륙 횟수)으로 말하고, 한 문장씩 짧게 쓰세요. 예: "착륙 횟수가 문서에 없어 비워 뒀어요." / "항공영어 유효기간은 있지만 자격증 자체의 만료일은 없어 비워 뒀어요."
+
 응답은 JSON 객체 하나만, 다른 텍스트 없이:
 {"rows": [{...}, ...], "notes": ["읽기 어려웠던 행/칸이나 주의할 점을 한국어로 0~5개"], "confidence": "high|medium|low"}`
     : `당신은 항공 문서를 읽어 구조화하는 보조자입니다. 첨부된 문서는 "${schema.description}"입니다.
 아래 필드를 JSON 으로 추출하세요. 문서에 없는 값은 반드시 null 로 두고 절대 추정하지 마세요. 숫자는 숫자형으로, 날짜는 YYYY-MM-DD 로.
 필드:
 ${fieldLines}
+
+notes 작성 규칙: 조종사가 읽는 문장입니다. 필드 이름(singleEngineLand, expiryDate 같은 영어 코드), "null", JSON 용어를 쓰지 마세요. 화면에 보이는 한국어 칸 이름(예: 육상단발, 만료일, 착륙 횟수)으로 말하고, 한 문장씩 짧게 쓰세요. 예: "착륙 횟수가 문서에 없어 비워 뒀어요." / "항공영어 유효기간은 있지만 자격증 자체의 만료일은 없어 비워 뒀어요."
 
 응답은 JSON 객체 하나만, 다른 텍스트 없이:
 {"fields": {...}, "notes": ["읽기 어려웠던 부분이나 주의할 점을 한국어로 0~3개"], "confidence": "high|medium|low"}`
@@ -162,6 +195,7 @@ ${fieldLines}
         rows,
         notes: Array.isArray(parsed.notes) ? parsed.notes.slice(0, 5).map(String) : [],
         confidence: ['high', 'medium', 'low'].includes(parsed.confidence) ? parsed.confidence : 'medium',
+        quota,
       })
     }
     const fields = parsed.fields && typeof parsed.fields === 'object' ? parsed.fields : {}
@@ -173,6 +207,7 @@ ${fieldLines}
       fields: safe,
       notes: Array.isArray(parsed.notes) ? parsed.notes.slice(0, 3).map(String) : [],
       confidence: ['high', 'medium', 'low'].includes(parsed.confidence) ? parsed.confidence : 'medium',
+      quota,
     })
   } catch {
     return json(502, { error: 'AI 응답을 해석하지 못했어요. 사진을 더 선명하게 찍어 다시 시도해 주세요.' })

@@ -167,6 +167,8 @@ interface AuthCtx {
   userId: string
   email: string
   packed: string
+  /** auth.users.last_sign_in_at — 계정 화면 "최근 로그인"에 쓴다 */
+  lastSignInAt?: string | null
 }
 
 /**
@@ -190,7 +192,7 @@ async function resolveAuth(init: RequestInit | undefined): Promise<AuthCtx | nul
   const authClient = makeAuthClient()
   const { data: userData } = await authClient.auth.getUser(access)
   if (userData?.user) {
-    return { client: dataClientFor(access), userId: userData.user.id, email: emailOf(userData.user), packed }
+    return { client: dataClientFor(access), userId: userData.user.id, email: emailOf(userData.user), packed, lastSignInAt: userData.user.last_sign_in_at ?? null }
   }
 
   // access 만료 → refresh로 조용히 갱신 시도
@@ -203,7 +205,7 @@ async function resolveAuth(init: RequestInit | undefined): Promise<AuthCtx | nul
       if (getStoredAccessToken() === packed) setStoredAccessToken(newPacked)
       const { data: u2 } = await authClient.auth.getUser(session.access_token)
       if (u2?.user) {
-        return { client: dataClientFor(session.access_token), userId: u2.user.id, email: emailOf(u2.user), packed: newPacked }
+        return { client: dataClientFor(session.access_token), userId: u2.user.id, email: emailOf(u2.user), packed: newPacked, lastSignInAt: u2.user.last_sign_in_at ?? null }
       }
     }
   }
@@ -536,7 +538,7 @@ async function accountResponseFor(ctx: AuthCtx): Promise<Record<string, unknown>
     name: profile?.name ?? ctx.email.split('@')[0],
     phone: profile?.phone ?? '',
     is_profile_completed: true,
-    last_logged_at: null,
+    last_logged_at: ctx.lastSignInAt ?? null,
     created_at: profile?.created_at ?? new Date().toISOString(),
     data: {
       user_type: profile?.user_type ?? 'individual',

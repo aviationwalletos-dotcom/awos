@@ -1,4 +1,4 @@
-import { Building2, Info, KeyRound, LogOut, MapPin, User, UserCircle2 } from 'lucide-react'
+import { Building2, Download, Info, KeyRound, LogOut, MapPin, User, UserCircle2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -30,13 +30,16 @@ import { useOrganizationAffiliationOverride } from '../hooks/useOrganizationAffi
 import type { IndividualRole } from '../lib/baas/types'
 import { DateField } from '../components/DateField'
 import { useLogbookEntries } from '../hooks/useLogbookEntries'
+import { useCertificates } from '../hooks/useCertificates'
 import { downloadLogbookCsv } from '../lib/logbookCsv'
+import { downloadFullExport } from '../lib/fullExport'
 
 
 function formatDateTime(value: string | null): string {
   if (!value) return '-'
   try {
-    return new Date(value).toLocaleString('ko-KR')
+    // 초 단위는 노이즈라 뺀다: "2026. 9. 2. 오후 5:30"
+    return new Date(value).toLocaleString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })
   } catch {
     return value
   }
@@ -64,6 +67,19 @@ export function AccountPage() {
   const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut, refetchAccount } = useAuth()
   // 탈퇴 전 CSV 백업용. 비행기록이 0건이면 백업 단계는 건너뛴다.
   const { entries: myEntries } = useLogbookEntries(account)
+  const { certificates: myCertificates } = useCertificates(account)
+  const [exportState, setExportState] = useState<'idle' | 'working' | 'done' | 'failed'>('idle')
+
+  async function handleFullExport() {
+    if (!account) return
+    setExportState('working')
+    try {
+      await downloadFullExport(account, myEntries, myCertificates)
+      setExportState('done')
+    } catch {
+      setExportState('failed')
+    }
+  }
   // 탈퇴 흐름: idle → backup(비행기록 CSV 저장 권유) → confirm(본인 확인) → working
   const [deleteStep, setDeleteStep] = useState<'idle' | 'backup' | 'confirm' | 'working'>('idle')
   const [backupState, setBackupState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle')
@@ -837,6 +853,26 @@ export function AccountPage() {
           >
             {homeLabel}
           </Link>
+        </section>
+        <section className="mx-auto mt-6 max-w-3xl px-6">
+          <AccountSection id="account-export" title="내 데이터 내보내기" icon={Download} className="!mt-0" status={`기록 ${myEntries.length}건 · 자격증 ${myCertificates.length}개`}>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              비행기록, 자격증, 서명·인증 요청과 그 결과(서명자·일시·스냅샷·해시)를 JSON 한 파일로 받아요.
+              내 데이터는 언제든 통째로 들고 나갈 수 있어요. 로그북만 엑셀로 받으려면 로그북 탭의 "CSV 백업"을 쓰세요.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button type="button"
+                onClick={() => void handleFullExport()}
+                disabled={exportState === 'working'}
+                className="inline-flex items-center gap-2 rounded-control border border-white/15 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06] disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exportState === 'working' ? '만드는 중…' : 'JSON 으로 내보내기'}
+              </button>
+              {exportState === 'done' && <span className="text-xs text-go">받았어요.</span>}
+              {exportState === 'failed' && <span className="text-xs text-rose-300">실패했어요. 잠시 후 다시 시도해 주세요.</span>}
+            </div>
+          </AccountSection>
         </section>
         <section className="mx-auto mt-6 max-w-3xl px-6 pb-16">
           <AccountSection id="account-delete" title="회원 탈퇴" tone="danger" className="!mt-0">

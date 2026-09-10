@@ -177,3 +177,17 @@ CPL 사진을 올리고 "사진에서 읽어오기"를 누르면 자격증명서
   `regulations.ts` 에 `lawGoKrTarget: 'admrul'`, 검색어 "고정익항공기를 위한 운항기술기준".
 - 공단 운영세칙(초경량)은 법령정보센터에 없음 → 배지에 "공단 내부 규정 — API 범위 밖" 표시, 링크로 수동.
 파일: `check-regulations.mjs`, `RegulationPanel.tsx`, `regulations.ts`. 삭제 없음.
+
+---
+
+# UPDATE v1.7 — 피드백 반영 1·2·3·6·7 (2026-09-10)
+
+1. **AI 안내문에서 코드 이름 제거** — 프롬프트에 notes 작성 규칙 추가(필드 이름·null·JSON 용어 금지, 화면의 한국어 칸 이름으로). `read-document.mjs`
+2. **자격증 중복 등록 차단** — 같은 구분에서 자격번호가 같거나(번호 있을 때), 이름·종류·등급이 모두 같으면(번호 없을 때) 저장 막고 안내. `CertificateForm.tsx`
+   · E2E 참고: 03-certificate 는 끝에 삭제하므로 영향 없음. 중간에 실패해 남으면 다음 실행에서 중복 오류가 날 수 있음 → 계정 재생성으로 해결.
+3. **AI 읽기 하루 10회/계정** — `supabase/schema18-ai-quota.sql`(실행 필요): `ai_usage` 테이블 + `consume_ai_quota()`. 함수가 AI 호출 전에 소비, 초과 시 429 "하루 10회까지". 결과 패널에 "오늘 3/10회 사용" 표시. SQL 미실행이면 한도 없이 통과(기능 중단 방지).
+6. **계정 화면 "최근 로그인"** — `auth.users.last_sign_in_at` 로 채움. 날짜 표기에서 초 제거.
+7. **내 데이터 전체 내보내기(JSON)** — 계정 화면에 새 섹션. 로그북·자격증·내가 낸 서명/인증 요청과 결과(서명자·일시·스냅샷·해시)·계정 요약. `src/lib/fullExport.ts`
+
+## 검증
+`tsc` · `eslint` 통과 · `vitest` 99건 · `vite build` 통과 · `playwright --list` 17건. 삭제할 파일 없음.

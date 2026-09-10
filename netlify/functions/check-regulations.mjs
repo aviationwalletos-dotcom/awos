@@ -22,8 +22,13 @@ export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'POST only' })
   const user = await verifyUser(req)
   if (!user) return json(401, { error: '로그인이 필요해요.' })
-  const oc = process.env.LAW_GO_KR_OC
+  // OC = 법령정보센터 마이페이지 "API인증키관리"에서 발급한 인증값(이메일 아이디가 아님, 2026-09-10 확인).
+  // 실수로 이메일 전체를 넣었으면 @ 앞만 쓰고, 앞뒤 공백은 지운다.
+  const ocRaw = (process.env.LAW_GO_KR_OC || '').trim()
+  const oc = ocRaw.includes('@') ? ocRaw.split('@')[0] : ocRaw
   if (!oc) return json(503, { error: '자동 확인이 설정되지 않았어요(LAW_GO_KR_OC 없음). 각 항목의 링크로 직접 확인하세요.' })
+  // 진단용: 값 자체는 노출하지 않고 앞 2글자와 길이만
+  const ocHint = `OC ${oc.slice(0, 2)}…(${oc.length}자${ocRaw.includes('@') ? ', 이메일에서 @ 앞만 사용' : ''})`
 
   let body
   try {
@@ -41,11 +46,19 @@ export default async (req) => {
       // http 로 부른다. 공식 가이드가 http 이고, https 로 부르면 리다이렉트되며 검색어가 떨어져
       // "필수 입력값이 존재하지 않습니다"가 돌아온다(2026-09-10 확인). 서버 함수에서 나가는 요청이라 브라우저 혼합콘텐츠 문제는 없다.
       const params = `OC=${encodeURIComponent(oc)}&target=${target}&type=JSON&query=${encodeURIComponent(query)}&display=5`
-      let r = await fetch(`http://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers: { accept: 'application/json' }, redirect: 'follow' })
+      // OPEN API 신청 시 등록한 도메인(aviationwallet.com)에서 온 요청으로 보이게 Referer 를 붙인다.
+      // 법령정보센터는 등록 도메인 기준으로 OC 를 검증하는 것으로 보인다(주소창 직접 호출은 "필수입력요소 검증 실패", 2026-09-10).
+      const headers = {
+        accept: 'application/json',
+        referer: 'https://aviationwallet.com/',
+        origin: 'https://aviationwallet.com',
+        'user-agent': 'Mozilla/5.0 (compatible; AWOS/1.0; +https://aviationwallet.com)',
+      }
+      let r = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers, redirect: 'follow' })
       let text = await r.text()
-      // 혹시 http 가 막히면 https 로 한 번 더
-      if (!r.ok || /필수\s*입력/.test(text)) {
-        r = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers: { accept: 'application/json' }, redirect: 'follow' })
+      // 혹시 https 가 막히면 http 로 한 번 더
+      if (!r.ok) {
+        r = await fetch(`http://www.law.go.kr/DRF/lawSearch.do?${params}`, { headers, redirect: 'follow' })
         text = await r.text()
       }
       let data
@@ -55,12 +68,12 @@ export default async (req) => {
         // 법령정보센터는 OC 가 미승인이거나 틀리면 JSON 대신 HTML 안내 페이지를 돌려준다.
         // 무엇이 왔는지 앞부분을 같이 보내야 관리자 화면에서 원인을 알 수 있다.
         const head = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)
-        results.push({ query, found: false, note: `JSON 이 아닌 응답(HTTP ${r.status}). OC 미승인·오타 가능성. 응답 앞부분: ${head || '(비어 있음)'}` })
+        results.push({ query, found: false, note: `${ocHint} · JSON 이 아닌 응답(HTTP ${r.status}). 응답 앞부분: ${head || '(비어 있음)'}` })
         continue
       }
       // 형식은 JSON 인데 결과 목록이 없으면 그 사실을 남긴다(검색어 불일치·권한 문제 구분용)
       if (data && !data.LawSearch && !data.AdmRulSearch) {
-        results.push({ query, found: false, note: `응답에 검색 결과 없음: ${JSON.stringify(data).slice(0, 120)}` })
+        results.push({ query, found: false, note: `${ocHint} · 응답: ${JSON.stringify(data).slice(0, 120)}` })
         continue
       }
       // 법령은 LawSearch.law / 법령명한글 / 시행일자·공포일자·법령상세링크,

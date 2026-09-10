@@ -9,6 +9,8 @@ export interface ReadDocumentResult {
   fields: Record<string, unknown>
   notes: string[]
   confidence: 'high' | 'medium' | 'low'
+  /** 오늘 사용 횟수/한도. 서버에 한도가 아직 안 걸려 있으면 enforced=false */
+  quota?: { used: number | null; limit: number; enforced: boolean }
 }
 
 async function fileToBase64(file: Blob): Promise<string> {
@@ -58,7 +60,7 @@ export async function readDocumentWithAi(kind: ReadDocumentKind, file: File): Pr
   })
   const data = (await res.json().catch(() => ({}))) as Partial<ReadDocumentResult> & { error?: string }
   if (!res.ok) throw new Error(data.error || `AI 읽기에 실패했어요(${res.status}).`)
-  return { fields: data.fields ?? {}, notes: data.notes ?? [], confidence: data.confidence ?? 'medium' }
+  return { fields: data.fields ?? {}, notes: data.notes ?? [], confidence: data.confidence ?? 'medium', quota: data.quota }
 }
 
 /** 폼(uncontrolled)의 input 값을 이름으로 채운다. 값이 null/undefined 면 건드리지 않는다. 채운 이름 목록을 돌려준다. */

@@ -344,6 +344,27 @@ export function CertificateForm({
     if (expiryRequirement === 'required' && !expiryDateRaw) nextErrors.expiryDate = '만료일을 입력해 주세요.'
     if (mode === 'create' && !approvalFile) nextErrors.approvalFile = '자격증 사진(이미지 또는 PDF)을 첨부해 주세요.'
 
+    // 같은 자격증이 두 번 등록되는 것을 막아요(목록에 CPL 이 2개 뜨던 문제, 2026-09-10).
+    // 자격번호가 있으면 번호가 같을 때, 없으면 이름·구분·종류·등급이 모두 같을 때 중복으로 봐요.
+    if (mode === 'create') {
+      const licenceNumber = hasLicenceNumber ? String(form.get('licenceNumber') || '').trim() : ''
+      const norm = (v: string | undefined) => (v ?? '').replace(/\s/g, '').toLowerCase()
+      const dup = existingCertificates.find((c) => {
+        if (c.category !== category) return false
+        if (licenceNumber && c.licenceNumber) return norm(c.licenceNumber) === norm(licenceNumber)
+        return (
+          norm(c.name) === norm(name) &&
+          (c.aircraftCategory ?? '') === ((isLicenceCategory || isRatingCategory) && aircraftCategory ? aircraftCategory : '') &&
+          (c.classRating ?? '') === ((isLicenceCategory || isRatingCategory) && aircraftCategory === 'AIRPLANE' && classRating ? classRating : '')
+        )
+      })
+      if (dup) {
+        nextErrors.name = dup.licenceNumber
+          ? `같은 자격번호(${dup.licenceNumber})로 이미 등록돼 있어요. 목록에서 "${dup.name}"을 확인해 주세요.`
+          : `"${dup.name}"이 이미 등록돼 있어요. 다시 등록하는 대신 목록에서 수정해 주세요.`
+      }
+    }
+
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
 
