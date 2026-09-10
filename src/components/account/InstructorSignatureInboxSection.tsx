@@ -100,6 +100,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
           <p className="truncate text-sm font-semibold text-white">{request.title}</p>
           <p className="mt-0.5 font-mono-data text-xs tabular-nums text-slate-400">
             요청일: {formatDateTime(request.created_at)} · 요청자: {request.requester_name}
+            {request.requester_deleted_at ? <span className="ml-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">탈퇴한 사용자</span> : null}
           </p>
           {request.track && (
             <span className="mt-1.5 inline-flex items-center rounded-control border border-white/15 px-2 py-0.5 text-[11px] font-semibold text-slate-300">

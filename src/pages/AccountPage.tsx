@@ -29,6 +29,8 @@ import { useOrganizationAffiliationOverride } from '../hooks/useOrganizationAffi
 
 import type { IndividualRole } from '../lib/baas/types'
 import { DateField } from '../components/DateField'
+import { useLogbookEntries } from '../hooks/useLogbookEntries'
+import { downloadLogbookCsv } from '../lib/logbookCsv'
 
 
 function formatDateTime(value: string | null): string {
@@ -60,7 +62,11 @@ function PageHeader({ homePath }: { homePath: string }) {
 export function AccountPage() {
   const navigate = useNavigate()
   const { account, isLoading, isAuthenticated, userType, logout, isLoggingOut, refetchAccount } = useAuth()
-  const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'working'>('idle')
+  // 탈퇴 전 CSV 백업용. 비행기록이 0건이면 백업 단계는 건너뛴다.
+  const { entries: myEntries } = useLogbookEntries(account)
+  // 탈퇴 흐름: idle → backup(비행기록 CSV 저장 권유) → confirm(본인 확인) → working
+  const [deleteStep, setDeleteStep] = useState<'idle' | 'backup' | 'confirm' | 'working'>('idle')
+  const [backupState, setBackupState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle')
   // 한 번이라도 계정정보를 본 계정은 다음 소셜 로그인부터 환영 화면을 건너뛴다(AuthCallbackPage 참조)
   useEffect(() => {
     if (!account?.id) return
@@ -154,6 +160,22 @@ export function AccountPage() {
   const [deleteAcknowledged, setDeleteAcknowledged] = useState(false)
   const canConfirmDelete = deleteAcknowledged && (hasPasswordLogin ? deletePassword.length > 0 : deletePhrase.trim() === DELETE_PHRASE)
 
+  function startDeleteFlow() {
+    setDeleteError(null)
+    setBackupState('idle')
+    setDeleteStep(myEntries.length > 0 ? 'backup' : 'confirm')
+  }
+
+  async function handleBackupCsv() {
+    setBackupState('saving')
+    try {
+      await downloadLogbookCsv(myEntries)
+      setBackupState('saved')
+    } catch {
+      setBackupState('failed')
+    }
+  }
+
   async function handleDeleteAccount() {
     setDeleteError(null)
     if (!deleteAcknowledged) {
@@ -181,7 +203,7 @@ export function AccountPage() {
       if (error) {
         throw new Error(
           error.message.includes('delete_my_account')
-            ? '탈퇴 기능이 아직 서버에 설정되지 않았어요(schema7 SQL 실행 필요).'
+            ? '탈퇴 기능이 아직 서버에 설정되지 않았어요(schema17 SQL 실행 필요).'
             : error.message,
         )
       }
@@ -819,16 +841,45 @@ export function AccountPage() {
         <section className="mx-auto mt-6 max-w-3xl px-6 pb-16">
           <AccountSection id="account-delete" title="회원 탈퇴" tone="danger" className="!mt-0">
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              탈퇴하면 계정과 함께 비행기록·자격증·서명 요청 등 모든 데이터가 <span className="font-semibold text-rose-300">즉시 영구 삭제</span>되며 복구할 수 없어요.
-              필요한 기록은 탈퇴 전에 백업해 주세요.
+              탈퇴하면 계정, 비행기록, 자격증과 사진이 <span className="font-semibold text-rose-300">즉시 영구 삭제</span>되며 복구할 수 없어요.
+              다른 사람의 로그북에 남은 서명 기록(이름·날짜·서명 이미지)은 종이 로그북과 같이 그대로 남아요.
             </p>
             {deleteStep === 'idle' && (
               <button type="button"
-                onClick={() => setDeleteStep('confirm')}
+                onClick={startDeleteFlow}
                 className="mt-4 rounded-control border border-rose-400/40 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/10"
               >
                 회원 탈퇴 진행하기
               </button>
+            )}
+            {deleteStep === 'backup' && (
+              <div className="mt-4 rounded-control border border-amber-400/30 bg-navy p-4">
+                <p className="text-sm font-semibold text-ink">탈퇴하기 전에 비행기록 {myEntries.length}건을 CSV로 저장할까요?</p>
+                <p className="mt-1 text-xs text-slate-400">탈퇴하면 기록을 다시 받을 수 없어요. 엑셀에서 열리는 파일이에요.</p>
+                {backupState === 'saved' && <p className="mt-2 text-xs text-go">저장했어요. 파일이 잘 받아졌는지 확인한 뒤 계속하세요.</p>}
+                {backupState === 'failed' && <p className="mt-2 text-xs text-rose-300">저장에 실패했어요. 로그북 탭의 "CSV 백업"으로 다시 시도해 보세요.</p>}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button"
+                    onClick={() => void handleBackupCsv()}
+                    disabled={backupState === 'saving'}
+                    className="rounded-control bg-sky px-4 py-2 text-sm font-bold text-navy transition hover:brightness-110 disabled:opacity-60"
+                  >
+                    {backupState === 'saving' ? '저장 중…' : backupState === 'saved' ? '다시 저장' : 'CSV로 저장하기'}
+                  </button>
+                  <button type="button"
+                    onClick={() => setDeleteStep('confirm')}
+                    className="rounded-control border border-rose-400/40 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/10"
+                  >
+                    {backupState === 'saved' ? '저장했어요, 탈퇴 계속' : '저장 없이 계속'}
+                  </button>
+                  <button type="button"
+                    onClick={() => setDeleteStep('idle')}
+                    className="rounded-control border border-white/15 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
             )}
             {(deleteStep === 'confirm' || deleteStep === 'working') && (
               <div className="mt-4 rounded-control border border-rose-400/30 bg-navy p-4">
@@ -841,7 +892,7 @@ export function AccountPage() {
                     onChange={(e) => setDeleteAcknowledged(e.target.checked)}
                     className="mt-0.5 h-4 w-4 accent-rose-400"
                   />
-                  <span>비행기록·자격증·서명 요청 등 모든 데이터가 즉시 영구 삭제되고 복구할 수 없다는 것을 이해했어요.</span>
+                  <span>계정·비행기록·자격증·사진이 즉시 영구 삭제되고 복구할 수 없다는 것, 다른 사람 로그북 속 내 서명 기록은 남는다는 것을 이해했어요.</span>
                 </label>
 
                 {hasPasswordLogin ? (

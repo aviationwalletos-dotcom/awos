@@ -122,3 +122,49 @@ CPL 사진을 올리고 "사진에서 읽어오기"를 누르면 자격증명서
 
 ## 삭제할 파일
 없음.
+
+---
+
+# UPDATE v1.5a — 법령 API 실패 원인 표시 (2026-09-10)
+
+법령 관리 탭의 "API 에서 못 찾음"이 원인을 안 보여줬어요. 서버 함수는 `note`로 이유를 돌려주는데 화면이 버리고 있었어요.
+- 함수: JSON 이 아닌 응답이면 HTTP 상태와 응답 앞 120자를 note 에 담음(OC 미승인이면 HTML 안내 페이지가 옴). 검색 0건이면 totalCnt 표시.
+- 화면: 배지에 note 를 같이 표시.
+→ "최신 여부 한 번에 확인"을 다시 누르면 배지에 원인이 보여요.
+
+파일: `netlify/functions/check-regulations.mjs`, `src/components/dashboard/RegulationPanel.tsx`. 삭제할 파일 없음.
+
+---
+
+# UPDATE v1.6 — 탈퇴해도 서명 증거는 남긴다 · 탈퇴 전 CSV 백업 (2026-09-10)
+
+## 결정 (2026-09-10)
+- **원칙: "내 기록에 적힌 상대방 이름은 남는다."** 종이 로그북과 같다.
+- 근거: 개인정보보호법 제15조①6호(정당한 이익) — 교관의 교관시간 경력 증명에 학생 이름이 필요.
+  조종사 개인 로그북의 법정 보존 기간은 없음(제56조③ 15개월은 사업자 의무). 그래서 "보존 의무"가 아니라 "정당한 이익"으로 간다.
+- 유예 없이 **즉시 삭제**(테스트 단계). 유예가 필요해지면 함수를 "예약"으로 바꾼다.
+- **개인정보처리방침에 넣을 문장**: "서명 기록에 포함된 이름은 상대방의 비행경력 증명을 위해 탈퇴 후에도 남습니다."
+
+## 무엇이 지워지고 무엇이 남나
+| 지워짐 | 남음 |
+|---|---|
+| 계정, 이메일·전화·생년월일·주소 | 서명 요청 행(승인·반려·취소 이력, 요청자 이름, 스냅샷·해시) |
+| 본인 로그북 전체 | 교관 손글씨 서명 이미지 |
+| 본인 자격증·증명서와 사진, 그 인증 요청 | 교관 승인 기록(자격번호 = 서명 자격의 증거) |
+| 아직 서명 안 된 요청 → "취소"로 바뀜 | 화면엔 "탈퇴한 사용자" 표시 |
+
+## SQL — `supabase/schema17-withdrawal-keeps-signatures.sql` (실행 필요)
+1. `approval_requests.requester_id`: cascade → **set null**, nullable
+2. `requester_deleted_at` 컬럼
+3. `delete_my_account()` 재작성: 사진 붙은 인증 요청 삭제 → 대기 요청 취소 → 이메일 비우고 탈퇴 시각 기록 → 내 파일 삭제(서명 이미지 제외) → auth.users 삭제
+
+## 화면
+- 탈퇴 흐름: 진행하기 → **"비행기록 N건을 CSV로 저장할까요?"** (저장하기 / 저장 없이 계속 / 취소) → 본인 확인 → 삭제. 기록 0건이면 백업 단계 건너뜀.
+- 안내 문구: "다른 사람의 로그북에 남은 서명 기록은 그대로 남아요"
+- 관리자 큐·교관 서명함: 요청자 옆 "탈퇴한 사용자" 배지
+
+## 파일
+`supabase/schema17-…sql`(새) · `src/pages/AccountPage.tsx` · `src/lib/approvals/types.ts` · `src/components/dashboard/ApprovalQueuePanel.tsx` · `src/components/account/InstructorSignatureInboxSection.tsx`
+
+## 검증
+`tsc` · `eslint` 통과 · `vitest` 99건 · `vite build` 통과 · `playwright --list` 17건. 삭제할 파일 없음.

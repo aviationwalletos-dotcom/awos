@@ -42,7 +42,15 @@ export default async (req) => {
       try {
         data = JSON.parse(text)
       } catch {
-        results.push({ query, found: false, note: 'API 응답 해석 실패(권한 미승인 또는 형식 변경)' })
+        // 법령정보센터는 OC 가 미승인이거나 틀리면 JSON 대신 HTML 안내 페이지를 돌려준다.
+        // 무엇이 왔는지 앞부분을 같이 보내야 관리자 화면에서 원인을 알 수 있다.
+        const head = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)
+        results.push({ query, found: false, note: `JSON 이 아닌 응답(HTTP ${r.status}). OC 미승인·오타 가능성. 응답 앞부분: ${head || '(비어 있음)'}` })
+        continue
+      }
+      // 형식은 JSON 인데 결과 목록이 없으면 그 사실을 남긴다(검색어 불일치·권한 문제 구분용)
+      if (data && !data.LawSearch) {
+        results.push({ query, found: false, note: `응답에 LawSearch 없음: ${JSON.stringify(data).slice(0, 120)}` })
         continue
       }
       const list = data?.LawSearch?.law
@@ -51,7 +59,7 @@ export default async (req) => {
       const exact = laws.find((l) => String(l['법령명한글'] || '').replace(/\s/g, '') === query.replace(/\s/g, ''))
       const law = exact || laws[0]
       if (!law) {
-        results.push({ query, found: false })
+        results.push({ query, found: false, note: `검색 결과 0건(totalCnt ${data?.LawSearch?.totalCnt ?? '?'})` })
         continue
       }
       results.push({

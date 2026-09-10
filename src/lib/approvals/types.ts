@@ -29,9 +29,12 @@ export const TRACK_INSTRUCTOR_LABEL: Record<PilotTrack, string> = {
 export interface ApprovalRequest {
   id: string
   kind: ApprovalKind
-  requester_id: string
+  /** 요청자 auth uuid. 탈퇴하면 null 이 되고 행은 남는다(schema17). */
+  requester_id: string | null
   requester_name: string
   requester_email: string | null
+  /** 요청자가 탈퇴한 시각(schema17). 값이 있으면 화면에 "탈퇴한 사용자"를 붙인다. */
+  requester_deleted_at?: string | null
   target_id: string | null
   track: PilotTrack | null
   subject_id: string | null

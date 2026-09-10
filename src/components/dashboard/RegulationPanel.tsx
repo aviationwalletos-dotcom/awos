@@ -118,7 +118,9 @@ export function RegulationPanel() {
       }
       return { tone: 'ok', text: `현재 시행일 ${apiRow.effectiveDate}${apiRow.revisionType ? ` · ${apiRow.revisionType}` : ''}` }
     }
-    if (apiRow && !apiRow.found) return { tone: 'unknown', text: 'API 에서 못 찾음 — 링크로 직접 확인' }
+    if (apiRow && !apiRow.found) {
+      return { tone: 'unknown', text: `API 에서 못 찾음 — 링크로 직접 확인${apiRow.note ? ` · ${apiRow.note}` : ''}` }
+    }
     return { tone: 'unknown', text: '아직 확인 안 함' }
   }
 

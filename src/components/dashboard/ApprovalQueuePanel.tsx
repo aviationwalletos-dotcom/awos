@@ -106,7 +106,9 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
           <p className="truncate text-sm font-semibold text-white">{item.title}</p>
           <p className="mt-1 text-xs text-slate-400">
             {item.requester_name}
-            {item.requester_email ? ` (${item.requester_email})` : ''} · {formatDateTime(item.created_at)}
+            {item.requester_email ? ` (${item.requester_email})` : ''}
+            {item.requester_deleted_at ? <span className="ml-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">탈퇴한 사용자</span> : null}
+            {' · '}{formatDateTime(item.created_at)}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span
