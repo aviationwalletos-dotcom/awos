@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { getAuthedAccessToken, getFreshDataClient } from '../../lib/baas/supabaseTransport'
 import { Button } from '../Button'
 // 법령 개정 대응 매뉴얼 — 새 Claude 채팅에 그대로 붙여 넣는 문서. 저장소 docs/ 가 원본.
-import amendmentManual from '../../../docs/법령개정-대응매뉴얼.md?raw'
+import amendmentManual from '../../../docs/regulation-update-manual.md?raw'
 
 interface CheckRecord {
   regulation_id: string

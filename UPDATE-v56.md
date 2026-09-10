@@ -307,7 +307,13 @@ CPL 사진을 올리고 "사진에서 읽어오기"를 누르면 자격증명서
 ---
 
 # UPDATE v1.9d — 법령 개정 대응 매뉴얼 (2026-09-10)
-- `docs/법령개정-대응매뉴얼.md`: 새 Claude 채팅에 그대로 붙여 넣으면 이 프로젝트를 모르는 Claude 도 법령 값을 고칠 수 있게 쓴 문서. 법령 값 ↔ 파일·함수 표(§3), 검증 명령(§4), zip 규칙(§5), 답변 형식(§6).
+- `docs/regulation-update-manual.md`: 새 Claude 채팅에 그대로 붙여 넣으면 이 프로젝트를 모르는 Claude 도 법령 값을 고칠 수 있게 쓴 문서. 법령 값 ↔ 파일·함수 표(§3), 검증 명령(§4), zip 규칙(§5), 답변 형식(§6).
 - 법령 관리 탭에 **"개정 대응 매뉴얼 복사"** 버튼(클립보드). 설명 문구에 사용 순서.
 - 시행 예정 개정(v1.9c) + 별표 검색어(v1.9c) 포함.
-파일: `docs/법령개정-대응매뉴얼.md`(새), `RegulationPanel.tsx`. 삭제 없음.
+파일: `docs/regulation-update-manual.md`(새), `RegulationPanel.tsx`. 삭제 없음.
+
+---
+
+# UPDATE v1.9f — 빌드 실패 수정 (2026-09-10)
+Netlify 빌드 exit 2: 매뉴얼 파일명이 한글(`docs/법령개정-대응매뉴얼.md`)이라 Windows→Linux 경로가 안 맞아 import 실패로 추정. `docs/regulation-update-manual.md` 로 개명.
+**삭제할 파일**: `docs/법령개정-대응매뉴얼.md` (저장소에 남아 있으면 GitHub Desktop 에서 지워 주세요. 남아 있어도 빌드엔 영향 없음)
