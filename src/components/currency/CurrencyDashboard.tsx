@@ -253,8 +253,10 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                 {/* 등급별(단발/다발/회전익) 판정이 갈리면 "일부 충족" — 8.2.2 는 동일 등급 요건(실시간 적합성 카드와 같은 기준) */}
                 {(() => {
                   const cls = recency.byClass
-                  const generalMet = cls.length > 0 ? cls.some((r) => r.baseMet) : recency.baseMet
-                  const generalPartial = generalMet && cls.some((r) => !r.baseMet)
+                  // 한정 없는 등급은 "유지"로 치지 않아요(제37조)
+                  const usable = cls.filter((r) => r.ratingHeld !== false)
+                  const generalMet = cls.length > 0 ? usable.some((r) => r.baseMet) : recency.baseMet
+                  const generalPartial = generalMet && cls.some((r) => !r.baseMet || r.ratingHeld === false)
                   const nightMet = cls.length > 0 ? cls.some((r) => r.nightMet) : recency.nightMet
                   const nightPartial = nightMet && cls.some((r) => !r.nightMet)
                   return (
@@ -301,16 +303,32 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
             {recency.byClass.length > 0 && (
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {recency.byClass.map((r) => (
-                  <div key={r.aircraftClass} className="flex items-center justify-between rounded-control border border-white/10 bg-navy px-3 py-2">
-                    <div>
-                      <p className="text-sm font-semibold text-ink">{AIRCRAFT_CLASS_LABEL[r.aircraftClass]}</p>
-                      <p className="text-[11px] text-slate-400">이·착륙 {r.landingCount}회 · 야간 {r.nightLandingCount}회</p>
+                  <div key={r.aircraftClass} className="rounded-control border border-white/10 bg-navy px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{AIRCRAFT_CLASS_LABEL[r.aircraftClass]}</p>
+                        <p className="text-[11px] text-slate-400">이·착륙 {r.landingCount}회 · 야간 {r.nightLandingCount}회</p>
+                      </div>
+                      {/* 한정이 없는 등급은 커런시가 있어도 "유지"가 아니에요 — 제36조·제37조. 조종연습(감독 필요)만 가능 */}
+                      {r.ratingHeld === false ? (
+                        <StatusBadge tone="unmet" label="한정 없음" />
+                      ) : (
+                        <StatusBadge tone={r.baseMet ? 'met' : 'unmet'} label={r.baseMet ? '유지' : '미달'} />
+                      )}
                     </div>
-                    <StatusBadge tone={r.baseMet ? 'met' : 'unmet'} label={r.baseMet ? '유지' : '미달'} />
+                    {r.ratingHeld === false && (
+                      <p className="mt-1.5 text-[11px] text-amber-300">
+                        이 등급의 한정이 등록·승인돼 있지 않아요. 한정 없이는 조종교육증명 보유자 감독 아래 조종연습만 할 수 있어요(항공안전법 제37조·제46조①1호). 한정을 받았다면 자격증 탭에 등록하세요.
+                      </p>
+                    )}
+                    {r.ratingHeld !== false && r.recoveryHint && (
+                      <p className="mt-1.5 text-[11px] text-slate-400">{r.recoveryHint}</p>
+                    )}
                   </div>
                 ))}
                 <p className="text-[11px] text-slate-500 sm:col-span-2">
                   등급은 기록의 범주별 시간(단발/다발/회전익) 또는 기종명으로 판정해요. 등급 미기재 기록은 모든 등급에 합산돼요.
+                  {recency.excludedSimCount > 0 ? ` FTD·BATD 시뮬레이터 기록 ${recency.excludedSimCount}건은 착륙에 넣지 않았어요(제121조③ 지정 장치만 인정).` : ''}
                 </p>
               </div>
             )}
@@ -356,6 +374,9 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                     ? `최근 ${recency.windowDays}일 누적 야간 이·착륙 횟수`
                     : '기본 이·착륙 요건 미충족 시 야간 비행 요건도 함께 미충족으로 표시돼요'}
                 </p>
+                {!recency.baseMet && recency.byClass.length === 0 && recency.recoveryHint && (
+                  <p className="mt-2 text-xs text-slate-400">{recency.recoveryHint}</p>
+                )}
               </div>
             </div>
           </Collapsible>

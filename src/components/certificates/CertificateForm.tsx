@@ -701,7 +701,7 @@ export function CertificateForm({
             />
             {category === '항공신체검사' && medicalNote && (
               <p className="mt-1.5 text-xs text-slate-400">
-                발급일을 넣으면 <span className="font-semibold text-slate-300">별표 8 기준 {medicalNote.months}개월</span>, 월말 만료 원칙으로 자동 계산돼요(수정 가능).
+                발급일을 넣으면 <span className="font-semibold text-slate-300">별표 8 기준 {medicalNote.months}개월</span>, 월말 만료 원칙으로 자동 계산돼요(수정 가능). 증명서에 적힌 만료일이 다르면(항공전문의가 단축한 경우 등, 규칙 제92조③) 그 날짜를 넣으세요.
                 {medicalNote.assumedAge && (
                   <span className="text-amber-300"> 생년월일이 없어 가장 짧은 기간으로 잡았어요. 계정정보에 생년월일을 넣으면 정확해집니다.</span>
                 )}
@@ -709,7 +709,7 @@ export function CertificateForm({
             )}
             {category === '항공영어구술능력증명' && (
               <p className="mt-1.5 text-xs text-slate-400">
-                4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③). 6등급은 만료일을 비워 두세요.
+                4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③). 6등급은 만료일을 비워 두세요. 만료 6개월 전에 다시 합격했다면 기존 만료일 다음 날부터 새로 계산돼요 — 증명서의 만료일을 그대로 넣으세요.
               </p>
             )}
             {errors.expiryDate && (

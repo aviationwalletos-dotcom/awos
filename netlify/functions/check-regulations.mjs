@@ -101,7 +101,15 @@ export default async (req) => {
         effectiveDate: String(law['시행일자'] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
         promulgationDate: String(law[promKey] || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
         revisionType: law['제개정구분명'] || null,
-        link: law[linkKey] ? `https://www.law.go.kr${law[linkKey]}` : null,
+        // 사람이 보는 링크. DRF 상세링크는 본문 API 권한이 필요해 쓰지 않는다.
+        //  · 법령: 한글주소(/법령/법령명) — 패널의 manualUrl 이 우선
+        //  · 행정규칙: 공개 상세 페이지(admRulLsInfoP.do?admRulSeq=일련번호). 일련번호가 없으면 검색 페이지
+        link: isAdm
+          ? (law['행정규칙일련번호']
+              ? `https://www.law.go.kr/LSW/admRulLsInfoP.do?admRulSeq=${law['행정규칙일련번호']}`
+              : `https://www.law.go.kr/admRulSc.do?menuId=5&query=${encodeURIComponent(query)}`)
+          : (law[linkKey] ? `https://www.law.go.kr${law[linkKey]}` : null),
+        seq: law['행정규칙일련번호'] || law['법령일련번호'] || null,
       })
     } catch (e) {
       results.push({ query, found: false, note: '조회 실패' })

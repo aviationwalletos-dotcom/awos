@@ -1,97 +1,157 @@
-// 조문 단위 변경 감지 — 국가법령정보센터 "한글주소" 공개 페이지를 읽어 조문 본문의 해시를 만든다.
+// 조문 단위 변경 감지 — 국가법령정보센터 본문 조회 API(lawService.do)로 조문 하나를 받아 해시를 만든다.
 //
-// 왜 API 가 아니라 공개 페이지인가(2026-09-10):
-//   본문 조회 API(lawService.do)는 "등록된 서버 IP" 검증을 요구한다. Netlify 함수는 IP 가 고정이 아니라 통과할 수 없다.
-//   한글주소(law.go.kr/법령/<법령명>/<조문>)는 로그인·OC 없이 누구나 열리고, 조문·별표 단위로 열린다.
+// 경위(2026-09-10):
+//   · 한글주소 공개 페이지(/법령/…/제77조)는 껍데기만 오고 본문은 자바스크립트가 채운다 → 서버에서 못 읽음.
+//   · 본문 API 는 자가진단 페이지에서 "서버 IP 등록"을 요구했지만, 목록 API 도 같은 상황에서 Netlify + Referer 로 통과했다.
+//     같은 방식으로 시도한다. 안 되면 note 에 응답 앞부분을 실어 보내 다음 수를 정한다.
+//   · 별표는 한글주소 /법령별표서식/(법령명,별표N) 을 시도한다(서버 렌더링 여부 미확인 → excerpt 로 판단).
 //
-// 동작: POST { items: [{ id, slug, article }] } → 각 항목에 대해
-//   { id, ok, hash, excerpt, revisionTags, note }
-//   hash = 조문 본문(공백 정규화) SHA-256. 관리자가 "확인함"을 누를 때 저장해 두고, 다음 확인 때 비교한다.
-//   revisionTags = 본문에 붙은 <개정 2022. 6. 8.> 같은 표기(최신 개정일 추정용).
-//
-// 페이지 구조가 바뀌면 excerpt 로 알아챌 수 있게, 응답에 앞부분 120자를 같이 준다.
+// 요청: POST { items: [{ id, query, target?, slug?, article }] }
+//   query = lawSearch 검색어(법령명), target = law|admrul, article = '제77조' | '제39조의4' | '별표8'
+// 응답: { results: [{ id, ok, hash, excerpt, revisionTags, note, url, debug }] }
 
 import { createHash } from 'node:crypto'
 
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8' } })
 
-const UA = 'Mozilla/5.0 (compatible; AWOS/1.0; +https://aviationwallet.com)'
+const HEADERS = {
+  accept: 'application/json, text/html',
+  referer: 'https://aviationwallet.com/',
+  origin: 'https://aviationwallet.com',
+  'user-agent': 'Mozilla/5.0 (compatible; AWOS/1.0; +https://aviationwallet.com)',
+}
+
+/** '제77조' → '007700', '제39조의4' → '003904' (법령정보센터 JO 표기: 조 4자리 + 가지번호 2자리) */
+function joCode(article) {
+  const m = article.match(/^제(\d+)조(?:의(\d+))?$/)
+  if (!m) return null
+  return `${m[1].padStart(4, '0')}${(m[2] ?? '0').padStart(2, '0')}`
+}
+
+function sha(s) {
+  return createHash('sha256').update(s).digest('hex')
+}
 
 function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|li|tr|h\d)>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
-/** 조문 본문만 잘라낸다. 못 찾으면 페이지 본문 전체(정규화)를 쓰되 note 로 알린다. */
-function extractArticle(text, article) {
-  const norm = text.replace(/[ \t\u00a0]+/g, ' ').replace(/\n\s*\n+/g, '\n').trim()
-  const isAnnex = /^별표/.test(article)
-  if (isAnnex) {
-    // "[별표 8]" 같은 머리말부터 최대 6000자
-    const n = article.replace(/^별표/, '').trim()
-    const re = new RegExp(`\\[?별표\\s*${n}\\]?[^\\n]*`)
-    const m = norm.match(re)
-    if (m) return { body: norm.slice(m.index, m.index + 6000), found: true }
-    return { body: norm.slice(0, 6000), found: false }
+/** JSON 어디에 있든 문자열을 모두 모아 붙인다(필드명을 몰라도 본문 해시를 만들 수 있게). */
+function collectStrings(node, out = []) {
+  if (node == null) return out
+  if (typeof node === 'string') out.push(node)
+  else if (Array.isArray(node)) node.forEach((n) => collectStrings(n, out))
+  else if (typeof node === 'object') Object.values(node).forEach((n) => collectStrings(n, out))
+  return out
+}
+
+const mstCache = new Map()
+
+/** 법령일련번호(MST) — 목록 API 로 찾는다(이미 통하는 경로). */
+async function findMst(oc, query, target) {
+  const key = `${target}:${query}`
+  if (mstCache.has(key)) return mstCache.get(key)
+  const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=${target}&type=JSON&query=${encodeURIComponent(query)}&display=5`
+  const r = await fetch(url, { headers: HEADERS, redirect: 'follow' })
+  const text = await r.text()
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    return { error: `목록 응답 해석 실패: ${text.slice(0, 80)}` }
   }
-  // "제77조(" 부터 다음 "제N조(" 직전까지(조문 제목이 없으면 "제77조 " 로도 시도)
-  const head = article.replace(/조$/, '조')
-  const escaped = head.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const start = norm.search(new RegExp(`${escaped}\\s*\\(`)) >= 0
-    ? norm.search(new RegExp(`${escaped}\\s*\\(`))
-    : norm.search(new RegExp(`${escaped}\\b`))
-  if (start < 0) return { body: norm.slice(0, 4000), found: false }
-  const rest = norm.slice(start + head.length)
-  const next = rest.search(/\n\s*제\d+조(의\d+)?\s*\(/)
-  const body = next > 0 ? norm.slice(start, start + head.length + next) : norm.slice(start, start + 4000)
-  return { body, found: true }
+  const isAdm = target === 'admrul'
+  const list = isAdm ? data?.AdmRulSearch?.admrul : data?.LawSearch?.law
+  const laws = Array.isArray(list) ? list : list ? [list] : []
+  const norm = (v) => String(v || '').replace(/\s/g, '')
+  const nameKey = isAdm ? '행정규칙명' : '법령명한글'
+  const hit = laws.find((l) => norm(l[nameKey]) === norm(query)) || laws.find((l) => norm(l[nameKey]).includes(norm(query))) || laws[0]
+  const seq = hit ? (isAdm ? hit['행정규칙일련번호'] : hit['법령일련번호']) : null
+  const out = seq ? { mst: String(seq), efYd: String(hit['시행일자'] || '') } : { error: '목록에서 법령을 못 찾음' }
+  mstCache.set(key, out)
+  return out
 }
 
-async function fetchArticle(slug, article) {
-  const url = `https://www.law.go.kr/법령/${encodeURIComponent(slug)}/${encodeURIComponent(article)}`
-  const r = await fetch(url, { headers: { 'user-agent': UA, accept: 'text/html', referer: 'https://aviationwallet.com/' }, redirect: 'follow' })
+async function fetchArticleViaApi(oc, query, target, article) {
+  const jo = joCode(article)
+  if (!jo) return { ok: false, note: '조문 표기 인식 실패' }
+  const found = await findMst(oc, query, target)
+  if (found.error) return { ok: false, note: found.error }
+  const url = `https://www.law.go.kr/DRF/lawService.do?OC=${encodeURIComponent(oc)}&target=${target}&MST=${found.mst}&type=JSON&JO=${jo}`
+  const r = await fetch(url, { headers: HEADERS, redirect: 'follow' })
+  const text = await r.text()
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    return { ok: false, note: `본문 응답이 JSON 아님(HTTP ${r.status}): ${stripHtml(text).slice(0, 100)}`, url }
+  }
+  // 오류 형태 { Response: { result, msg } } 또는 { result, msg }
+  const err = data?.Response?.msg || data?.msg
+  if (err && !data?.법령 && !data?.Law) return { ok: false, note: `본문 API 거부: ${err}`, url, debug: Object.keys(data).join(',') }
+  const strings = collectStrings(data).filter((s) => s.trim().length > 0)
+  const body = strings.join(' ').replace(/\s+/g, ' ').trim()
+  if (!body) return { ok: false, note: '본문 비어 있음', url, debug: Object.keys(data).join(',') }
+  const revisionTags = [...body.matchAll(/<(개정|신설|전문개정|본조신설)\s*([0-9. ,]+)>/g)].map((m) => `${m[1]} ${m[2].trim()}`).slice(-3)
+  return {
+    ok: true,
+    found: body.includes(article),
+    hash: sha(body),
+    excerpt: body.slice(0, 160),
+    revisionTags,
+    length: body.length,
+    url,
+    debug: `keys=${Object.keys(data).join(',')}`,
+  }
+}
+
+async function fetchAnnexViaPage(slug, article) {
+  const n = article.replace(/^별표/, '')
+  const url = `https://www.law.go.kr/법령별표서식/(${encodeURIComponent(slug)},${encodeURIComponent('별표' + n)})`
+  const r = await fetch(url, { headers: HEADERS, redirect: 'follow' })
   const html = await r.text()
-  if (!r.ok) return { ok: false, note: `HTTP ${r.status}`, url }
   const text = stripHtml(html)
-  if (/한글주소명을 찾을 수 없습니다/.test(text)) return { ok: false, note: '한글주소 없음(법령명·조문 표기 확인)', url }
-  const { body, found } = extractArticle(text, article)
-  const normalized = body.replace(/\s+/g, ' ').trim()
-  const hash = createHash('sha256').update(normalized).digest('hex')
-  const revisionTags = [...normalized.matchAll(/<(개정|신설|전문개정|본조신설)\s*([0-9. ,]+)>/g)].map((m) => `${m[1]} ${m[2].trim()}`).slice(-3)
-  return { ok: true, hash, found, excerpt: normalized.slice(0, 120), revisionTags, length: normalized.length, url }
+  if (!r.ok) return { ok: false, note: `HTTP ${r.status}`, url }
+  if (/한글주소명을 찾을 수 없습니다/.test(text)) return { ok: false, note: '별표 한글주소 없음', url }
+  if (text.length < 200) return { ok: false, note: `별표 페이지 본문 없음(${text.length}자) — 자바스크립트 렌더링`, url, excerpt: text.slice(0, 120) }
+  const body = text.slice(0, 8000)
+  return { ok: true, found: /별표/.test(body), hash: sha(body), excerpt: body.slice(0, 160), revisionTags: [], length: body.length, url }
 }
 
 export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'POST only' })
+  const ocRaw = (process.env.LAW_GO_KR_OC || '').trim()
+  const oc = ocRaw.includes('@') ? ocRaw.split('@')[0] : ocRaw
+  if (!oc) return json(503, { error: 'LAW_GO_KR_OC 없음' })
+
   let body
   try {
     body = await req.json()
   } catch {
     return json(400, { error: 'bad json' })
   }
-  const items = Array.isArray(body?.items) ? body.items.slice(0, 20) : []
+  const items = Array.isArray(body?.items) ? body.items.slice(0, 24) : []
   const results = []
   for (const it of items) {
     const id = String(it?.id ?? '')
+    const query = String(it?.query ?? '')
     const slug = String(it?.slug ?? '')
+    const target = it?.target === 'admrul' ? 'admrul' : 'law'
     const article = String(it?.article ?? '')
-    if (!id || !slug || !article) {
-      results.push({ id, ok: false, note: 'id/slug/article 필요' })
+    if (!id || !article) {
+      results.push({ id, ok: false, note: 'id/article 필요' })
       continue
     }
     try {
-      results.push({ id, ...(await fetchArticle(slug, article)) })
+      if (/^별표/.test(article)) results.push({ id, ...(await fetchAnnexViaPage(slug || query.replace(/\s/g, ''), article)) })
+      else results.push({ id, ...(await fetchArticleViaApi(oc, query, target, article)) })
     } catch (e) {
       results.push({ id, ok: false, note: `요청 실패: ${e?.message ?? e}` })
     }

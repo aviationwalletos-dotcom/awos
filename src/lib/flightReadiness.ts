@@ -75,6 +75,13 @@ export interface RecencyByClass {
   nightLandingCount: number
   baseMet: boolean
   nightMet: boolean
+  /**
+   * 이 등급의 한정(육상단발/다발/회전익)을 승인된 자격증으로 보유했는가 — 항공안전법 제36조(업무범위)·제37조(한정).
+   * false 면 이 등급은 GO 가 아니라 "조종연습만 가능(제46조①1호, 감독 필요)". 한정 카드가 하나도 없으면 null(판정 보류).
+   */
+  ratingHeld: boolean | null
+  /** 커런시가 끊겼을 때 회복 조건 — 운항기술기준 8.2.4 가 */
+  recoveryHint: string | null
 }
 
 export interface RecencyReadiness {
@@ -91,6 +98,10 @@ export interface RecencyReadiness {
   nightRequired: boolean
   /** 8.2.2 "동일 등급 항공기 형식" — 최근 비행에 나타난 등급별 판정 */
   byClass: RecencyByClass[]
+  /** 판정에서 뺀 시뮬레이터(FTD·BATD) 기록 수 — 지정 장치가 아니면 착륙으로 안 세요 */
+  excludedSimCount: number
+  /** 전체 커런시가 끊겼을 때 회복 조건(8.2.4 가). 유지 중이면 null */
+  recoveryHint: string | null
 }
 
 export interface IfrReadiness {
@@ -179,7 +190,11 @@ export function computeFlightReadiness(
   const windowDays = operationType === 'commercial' ? 90 : 180
   const nightRequired = operationType === 'commercial'
   const recencyStart = daysAgo(today, windowDays)
-  const recencyRecent = entries.filter((e) => isWithinWindow(e.date, recencyStart, today))
+  // 8.2.2 "동일 등급 항공기 형식 또는 모의비행장치", 제121조③ "지방항공청장이 지정한 모의비행훈련장치".
+  // 시뮬레이터 기록은 FFS(모의비행장치)만 착륙에 넣고, FTD·BATD 는 뺀다(지정 장치가 아닐 가능성이 커서 보수적으로).
+  const countsForRecency = (e: LogbookEntry) => !((e.groundTrainerTime ?? 0) > 0 && e.simDevice && e.simDevice !== 'FFS')
+  const recencyRecent = entries.filter((e) => isWithinWindow(e.date, recencyStart, today) && countsForRecency(e))
+  const excludedSimCount = entries.filter((e) => isWithinWindow(e.date, recencyStart, today) && !countsForRecency(e)).length
   const landingCount = recencyRecent.reduce((sum, e) => sum + (e.dayLandings ?? 0) + (e.nightLandings ?? 0), 0)
   const nightLandingCount = recencyRecent.reduce((sum, e) => sum + (e.nightLandings ?? 0), 0)
   // 착륙 횟수 "기재 없음"(undefined) 기록 — 해외 증명서(AG·Part 61 타임빌딩)처럼 착륙 수가 없는 이월 기록. 0 으로 세지 않고 제외한 뒤 건수를 알린다.
@@ -189,6 +204,15 @@ export function computeFlightReadiness(
   // 등급별(8.2.2 "동일 등급") — 최근 24개월 안에 비행한 등급마다 따로 센다. 등급 미기재 기록은 모든 등급에 합산(보수적)
   const classWindow = daysAgo(today, 730)
   const classesFlown = [...new Set(entries.filter((e) => isWithinWindow(e.date, classWindow, today)).map(inferAircraftClass))].filter((c): c is Exclude<AircraftClass, 'unknown'> => c !== 'unknown')
+  // 한정 보유 — 승인된 "한정" 카드의 등급. 하나도 없으면 판정 보류(null), 있으면 등급별로 확인(제36조·제37조).
+  const ratingCards = certificates.filter((c) => c.category === '한정' && c.approvalStatus === 'approved' && getCertificateStatus(c.expiryDate) !== 'expired')
+  const heldClasses = new Set<AircraftClass>()
+  for (const c of ratingCards) {
+    if (c.aircraftCategory === 'HELICOPTER') heldClasses.add('ROTOR')
+    else if (c.classRating === 'MEL' || c.classRating === 'MES') heldClasses.add('MEL')
+    else if (c.classRating === 'SEL' || c.classRating === 'SES') heldClasses.add('SEL')
+  }
+  const recoveryHint = '회복하려면 조종교육증명을 받은 교관과 같은 등급 항공기(또는 모의비행장치)로 2시간 이상, 이착륙 3회 이상 비행교육을 받으세요(운항기술기준 8.2.4 가).'
   const byClass: RecencyByClass[] = classesFlown.map((cls) => {
     const rows = recencyRecent.filter((e) => {
       const c = inferAircraftClass(e)
@@ -196,7 +220,16 @@ export function computeFlightReadiness(
     })
     const l = rows.reduce((s, e) => s + (e.dayLandings ?? 0) + (e.nightLandings ?? 0), 0)
     const n = rows.reduce((s, e) => s + (e.nightLandings ?? 0), 0)
-    return { aircraftClass: cls, landingCount: l, nightLandingCount: n, baseMet: l >= 3, nightMet: l >= 3 && (!nightRequired || n >= 1) }
+    const met = l >= 3
+    return {
+      aircraftClass: cls,
+      landingCount: l,
+      nightLandingCount: n,
+      baseMet: met,
+      nightMet: met && (!nightRequired || n >= 1),
+      ratingHeld: ratingCards.length === 0 ? null : heldClasses.has(cls),
+      recoveryHint: met ? null : recoveryHint,
+    }
   })
   const recency: RecencyReadiness = {
     recentCount: recencyRecent.length,
@@ -208,6 +241,8 @@ export function computeFlightReadiness(
     unknownLandingCount,
     nightRequired,
     byClass,
+    excludedSimCount,
+    recoveryHint: baseMet ? null : recoveryHint,
   }
 
   // 2) 계기비행 경험(IFR) — 6개월(월 단위 소급)
@@ -298,10 +333,15 @@ export function computeReadinessStates(
   const useClasses = classRows.length > 0
   const generalReasons: string[] = []
   if (!medicalValid) generalReasons.push('유효한 항공신체검사(제1종 또는 제2종)가 없습니다')
+  // 한정이 없는 등급은 커런시가 있어도 "가능"으로 치지 않는다(항공안전법 제36조·제37조). 조종연습(감독 필요)만 가능.
   const generalByClass = useClasses
-    ? classRows.map((r) => ({ label: AIRCRAFT_CLASS_LABEL[r.aircraftClass], met: r.baseMet, landings: r.landingCount }))
+    ? classRows.map((r) => ({ label: AIRCRAFT_CLASS_LABEL[r.aircraftClass], met: r.baseMet && r.ratingHeld !== false, landings: r.landingCount }))
     : []
   const generalRecencyMet = useClasses ? generalByClass.some((c) => c.met) : recency.baseMet
+  const noRatingClasses = classRows.filter((r) => r.ratingHeld === false).map((r) => AIRCRAFT_CLASS_LABEL[r.aircraftClass])
+  if (noRatingClasses.length > 0 && !generalRecencyMet) {
+    generalReasons.push(`${noRatingClasses.join('·')} 한정이 등록·승인되지 않았습니다(제37조). 한정 없이는 조종연습만 가능합니다`)
+  }
   if (!generalRecencyMet) {
     generalReasons.push(`최근 ${recency.windowDays}일 이착륙 ${recency.landingCount}/3회로 기준 미달입니다(운항기술기준 8.2.2)`)
     if (recency.unknownLandingCount > 0) {

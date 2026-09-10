@@ -49,8 +49,12 @@ export function toPilotCertRow(e: LogbookEntry): PilotCertRow {
   const day = e.conditions?.day ?? 0
   const night = e.conditions?.night ?? 0
   const xc = e.conditions?.crossCountry ?? 0
-  const dayXc = Math.min(xc, day)
-  const nightXc = Math.max(0, Math.min(xc - dayXc, night))
+  // 야간 야외가 따로 적혀 있으면 그대로, 없으면 주간부터 배정(2026-09-10 이전 기록 호환)
+  const nightXcInput = e.conditions?.nightCrossCountry
+  const nightXc = nightXcInput !== undefined
+    ? Math.max(0, Math.min(nightXcInput, xc, night))
+    : Math.max(0, Math.min(xc - Math.min(xc, day), night))
+  const dayXc = Math.max(0, Math.min(xc - nightXc, day))
   const dayVfr = Math.max(0, day - dayXc)
   const nightVfr = Math.max(0, night - nightXc)
   const asPic = pic > 0

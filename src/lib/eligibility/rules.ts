@@ -263,6 +263,7 @@ export const PPL_AIRPLANE: EligibilityRule = {
   title: '자가용 조종사 (비행기)',
   category: 'AIRPLANE',
   source: '별표 4 제1호 가목 · 자가용 조종사 1)',
+  notes: ['만 17세 이상(운항기술기준 2.2.3.2)'],
   approvedSchoolVariant: true,
   simCredit: PPL_SIM,
   crossCategory: PPL_CROSS,
@@ -293,6 +294,7 @@ export const PPL_HELICOPTER: EligibilityRule = {
   title: '자가용 조종사 (헬리콥터)',
   category: 'HELICOPTER',
   source: '별표 4 제1호 가목 · 자가용 조종사 1)',
+  notes: ['만 17세 이상(운항기술기준 2.2.3.2)'],
   approvedSchoolVariant: true,
   simCredit: PPL_SIM,
   crossCategory: PPL_CROSS,
@@ -650,6 +652,7 @@ function makeIR(category: AircraftCategory): EligibilityRule {
     source: '별표 4 제1호 나목 · 계기비행증명 · 조종사',
     approvedSchoolVariant: false,
     simCredit: IR_SIM,
+    notes: ['자가용 조종사가 계기비행증명을 받으려면 제1종 신체검사 기준을 충족해야 해요(규칙 제92조⑥)'],
     requirements: [
       {
         kind: 'prereq',

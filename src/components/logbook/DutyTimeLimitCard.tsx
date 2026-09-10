@@ -60,19 +60,30 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
         </p>
       ) : (
         <div className={compact ? 'mt-3' : 'mt-6'}>
-          <span role="status"
-            className={`inline-flex items-center rounded-control px-2.5 py-1 text-xs font-bold ${
-              isGo ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
-            }`}
-          >
-            {isGo ? 'GO' : 'NO-GO'}
-          </span>
+          {/* 별표 18 은 운송·사용사업자 의무(제127조). 자가용·훈련에는 법정 한도가 없어서 GO/NO-GO 대신 "참고"로 보여줘요(2026-09-10). */}
+          {operationType === 'commercial' ? (
+            <span role="status"
+              className={`inline-flex items-center rounded-control px-2.5 py-1 text-xs font-bold ${
+                isGo ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
+              }`}
+            >
+              {isGo ? 'GO' : 'NO-GO'}
+            </span>
+          ) : (
+            <span role="status"
+              className={`inline-flex items-center rounded-control px-2.5 py-1 text-xs font-bold ${
+                isGo ? 'bg-white/10 text-slate-200' : 'bg-amber-400/15 text-amber-300'
+              }`}
+            >
+              {isGo ? '참고 · 한도 안' : '참고 · 한도 초과'}
+            </span>
+          )}
           <p className="mt-2 text-sm text-slate-200">
-            오늘 최대{' '}
+            {operationType === 'commercial' ? '오늘 최대' : '훈련원 기준으로 보면 오늘'}{' '}
             <span className="font-mono-data font-bold text-white">
               {remainingHours.toFixed(1)}시간
             </span>{' '}
-            더 비행 가능해요.
+            {operationType === 'commercial' ? '더 비행 가능해요.' : '남았어요.'}
             <DutyTimeDisclaimer compact={compact} operationType={operationType} />
           </p>
         </div>

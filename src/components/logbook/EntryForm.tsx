@@ -330,6 +330,7 @@ export function EntryForm({
         // 경량·초경량은 야간비행 금지 — 값이 있어도 저장하지 않는다
         night: vehicleClass === 'aircraft' ? numOrUndef(form.get('conditionNight')) : undefined,
         crossCountry: numOrUndef(form.get('crossCountry')),
+        nightCrossCountry: vehicleClass === 'aircraft' ? numOrUndef(form.get('nightCrossCountry')) : undefined,
         actualInstrument: numOrUndef(form.get('actualInstrument')),
         simulatedInstrument: numOrUndef(form.get('simulatedInstrument')),
         soloCrossCountry: numOrUndef(form.get('soloCrossCountry')),
@@ -872,6 +873,25 @@ export function EntryForm({
               className={numberInputClass}
             />
           </div>
+          {vehicleClass === 'aircraft' && (
+            <div>
+              <label htmlFor="nightCrossCountry" className={`${labelClass} inline-flex items-center gap-1`}>
+                그중 야간 야외(시간)
+                <InfoTip label="야간 야외비행">
+                  크로스컨트리 중 야간에 한 시간이에요. 비행경력증명서(별지 제36호)는 야외비행을 주간·야간으로 나눠 적어요. 비워 두면 주간부터 배정해요.
+                </InfoTip>
+              </label>
+              <input id="nightCrossCountry"
+                name="nightCrossCountry"
+                type="number"
+                inputMode="decimal"
+                step="0.1"
+                min="0"
+                defaultValue={initialValues?.conditions?.nightCrossCountry}
+                className={numberInputClass}
+              />
+            </div>
+          )}
           <div>
             <label htmlFor="actualInstrument" className={labelClass}>
               실제계기(시간)

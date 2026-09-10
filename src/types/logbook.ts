@@ -47,7 +47,10 @@ export interface PilotingTime {
 export interface FlightConditionHours {
   day?: number // 주간
   night?: number // 야간
-  crossCountry?: number // 크로스컨트리
+  crossCountry?: number // 크로스컨트리(야외비행) 합계 — 주간+야간
+  // 운항기술기준 8.1.7.6 나 11)·13), 별지 제36호서식은 야외비행을 주간/야간으로 나눠 적는다.
+  // 값이 있으면 야간 야외 = 이 값, 주간 야외 = crossCountry − 이 값. 없으면 주간부터 배정(예전 방식).
+  nightCrossCountry?: number
   actualInstrument?: number // 실제계기
   simulatedInstrument?: number // 모의계기
   // v1.1 — 별표 4 응시경력 계산용(선택 입력)

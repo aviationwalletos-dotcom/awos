@@ -38,7 +38,7 @@ export const TRAINING_PERMIT_TYPES: CertificateSubType[] = [
 export const ENDORSEMENT_TYPES: CertificateSubType[] = [
   { key: 'SOLO', label: '단독비행 확인', requiresDetail: true, detailPlaceholder: '기종/비행장, 예: C172S / RKTL' },
   { key: 'SOLO_NIGHT', label: '야간 단독비행 확인', requiresDetail: true, detailPlaceholder: '비행장, 예: RKTL' },
-  { key: 'SOLO_XC', label: '단독 야외비행 확인', requiresDetail: true, detailPlaceholder: '노선, 예: RKTL-RKPU-RKTL' },
+  { key: 'SOLO_XC', label: '단독 야외비행 확인(야외비행마다 새로 받아요)', requiresDetail: true, detailPlaceholder: '노선, 예: RKTL-RKPU-RKTL' },
   { key: 'NIGHT_TRAINING', label: '야간비행 훈련 이수(자가용, 2시간·이착륙 3회 동승)' },
   { key: 'EXAM_PPL', label: '자가용 조종사 응시 전 확인' },
   { key: 'EXAM_CPL', label: '사업용 조종사 응시 전 확인' },

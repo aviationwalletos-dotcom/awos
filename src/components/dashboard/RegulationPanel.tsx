@@ -25,6 +25,7 @@ interface CheckRecord {
 interface ArticleResult {
   id: string
   ok: boolean
+  debug?: string
   hash?: string
   found?: boolean
   excerpt?: string
@@ -104,7 +105,13 @@ export function RegulationPanel() {
 
       // 2단계: 우리가 쓰는 조문·별표만 공개 페이지에서 읽어 해시를 비교해요(본문 API 는 서버 IP 등록이 필요해 못 씀).
       const items = REGULATIONS.flatMap((r) =>
-        (r.hangulSlug && r.watchArticles ? r.watchArticles : []).map((article) => ({ id: `${r.id}:${article}`, slug: r.hangulSlug as string, article })),
+        (r.lawGoKrQuery && r.watchArticles ? r.watchArticles : []).map((article) => ({
+          id: `${r.id}:${article}`,
+          query: r.lawGoKrQuery as string,
+          target: r.lawGoKrTarget ?? 'law',
+          slug: r.hangulSlug ?? '',
+          article,
+        })),
       )
       if (items.length > 0) {
         const res2 = await fetch('/api/check-articles', {
@@ -249,7 +256,7 @@ export function RegulationPanel() {
                           label = `읽기 실패 · ${cur.note ?? ''}`
                         } else if (cur && cur.ok && !cur.found) {
                           tone = 'border-amber-400/40 text-amber-300'
-                          label = '본문에서 조문을 못 찾음 — 페이지 구조 확인'
+                          label = `읽었지만 조문 표기 확인 필요 · ${cur.debug ?? ''}`
                         } else if (cur && cur.ok) {
                           if (!saved) {
                             tone = 'border-sky/40 text-sky'
@@ -266,10 +273,10 @@ export function RegulationPanel() {
                         return (
                           <a
                             key={a}
-                            href={cur?.url ?? `https://www.law.go.kr/법령/${reg.hangulSlug}/${a}`}
+                            href={/^별표/.test(a) ? `https://www.law.go.kr/법령별표서식/(${reg.hangulSlug ?? ''},${a})` : `https://www.law.go.kr/법령/${reg.hangulSlug ?? ''}/${a}`}
                             target="_blank"
                             rel="noreferrer"
-                            title={cur?.excerpt ? `${cur.excerpt}…` : undefined}
+                            title={cur?.excerpt ? `${cur.excerpt}…${cur.debug ? ` [${cur.debug}]` : ''}` : cur?.note}
                             className={`rounded border px-2 py-0.5 text-[11px] hover:bg-white/5 ${tone}`}
                           >
                             <span className="font-semibold">{a}</span> · {label}{tags}
@@ -284,7 +291,7 @@ export function RegulationPanel() {
                 {/* 사람이 보는 링크는 공개 주소(manualUrl)로. API 가 주는 lawService.do 링크는 "본문 조회 API" 권한이 따로 필요해 로그인 화면이 뜬다(2026-09-10). */}
                 {(reg.manualUrl || apiRow?.link) && (
                   <a
-                    href={reg.manualUrl || apiRow?.link}
+                    href={reg.lawGoKrTarget === 'admrul' && apiRow?.link ? apiRow.link : (reg.manualUrl || apiRow?.link)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex min-h-[36px] items-center gap-1.5 rounded-control border border-white/15 px-3 text-xs font-semibold text-slate-200 hover:bg-white/5"
