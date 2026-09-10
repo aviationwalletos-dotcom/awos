@@ -2,6 +2,7 @@
 // 등록 직후(useLogbookPageModel.handleCreateCertificate)와 상세 다이얼로그의 "다시 보내기"가 같은 함수를 쓴다.
 
 import { createApprovalRequest } from './api'
+import { buildFieldsSnapshot } from './snapshot'
 import type { ApprovalRequest } from './types'
 import { buildCertificateApprovalContent } from '../certificateApproval'
 import type { AccountResponse } from '../baas/types'
@@ -18,9 +19,12 @@ export interface SubmitCertificateApprovalOptions {
   file?: File | null
   /** useUploadBoardFile().uploadFile — 훅이라 여기서 직접 부를 수 없어 주입받는다 */
   uploadFile: (file: Blob, options: { filename: string; contentType: string }) => Promise<UploadedAttachment>
+  /** 교관 확인(Endorsement): 서명할 교관. 이 구분은 관리자가 아니라 교관이 서명한다 */
+  targetInstructor?: { userId: string; name: string } | null
 }
 
-export function certificateApprovalKind(certificate: Pick<Certificate, 'category'>): 'certificate' | 'medical' {
+export function certificateApprovalKind(certificate: Pick<Certificate, 'category'>): 'certificate' | 'medical' | 'endorsement' {
+  if (certificate.category === '교관 확인') return 'endorsement'
   return certificate.category.includes('신체') ? 'medical' : 'certificate'
 }
 
@@ -31,8 +35,37 @@ export async function submitCertificateApprovalRequest(options: SubmitCertificat
     const uploaded = await uploadFile(file, { filename: file.name, contentType: file.type || 'image/jpeg' })
     attachmentPath = uploaded.cdnUrl
   }
+  const kind = certificateApprovalKind(certificate)
+
+  // 교관 확인(Endorsement): 교관에게 서명 요청. 서명 대상(확인 종류·세부·날짜·학생)을 스냅샷+해시로 고정한다(비행 서명과 같은 증거 구조).
+  if (kind === 'endorsement') {
+    const target = options.targetInstructor
+    if (!target) throw new Error('교관 확인은 서명할 교관을 골라야 해요.')
+    const fields = {
+      endorsementType: certificate.name,
+      endorsementDetail: certificate.notes ?? '',
+      endorsedDate: certificate.issuedDate,
+      studentName: account.name || account.user_id,
+      instructorName: target.name,
+    }
+    const signedSnapshot = await buildFieldsSnapshot(fields)
+    return createApprovalRequest({
+      kind,
+      requesterName: account.name || account.user_id || '사용자',
+      requesterEmail: account.user_id,
+      targetId: target.userId,
+      track: certificateTrack(certificate),
+      subjectId: certificate.id,
+      affiliation: affiliation?.trim() || account.data?.organization_affiliation?.trim() || null,
+      title: `교관 확인(Endorsement) — ${certificate.name}`,
+      summary: `${account.name || account.user_id} 학생의 "${certificate.name}" 확인 요청이에요. 아래 내용을 확인하고 서명해 주세요.\n확인일: ${certificate.issuedDate}${certificate.notes ? `\n세부: ${certificate.notes}` : ''}`,
+      payload: { signedSnapshot, category: certificate.category, name: certificate.name },
+      attachmentPath,
+    })
+  }
+
   return createApprovalRequest({
-    kind: certificateApprovalKind(certificate),
+    kind,
     requesterName: account.name || account.user_id || '사용자',
     requesterEmail: account.user_id,
     track: certificateTrack(certificate),

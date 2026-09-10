@@ -673,10 +673,12 @@ export function EntryDetailDialog({
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">조건별 시간(주/야/CC/실계기/모의계기)</dt>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">조건별 시간(주/야/XC/야간XC/실계기/모의계기)</dt>
                       <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
                         {(entry.conditions?.day ?? 0).toFixed(1)} / {(entry.conditions?.night ?? 0).toFixed(1)} /{' '}
-                        {(entry.conditions?.crossCountry ?? 0).toFixed(1)} / {(entry.conditions?.actualInstrument ?? 0).toFixed(1)} /{' '}
+                        {(entry.conditions?.crossCountry ?? 0).toFixed(1)} /{' '}
+                        {entry.conditions?.nightCrossCountry === undefined ? '-' : entry.conditions.nightCrossCountry.toFixed(1)} /{' '}
+                        {(entry.conditions?.actualInstrument ?? 0).toFixed(1)} /{' '}
                         {(entry.conditions?.simulatedInstrument ?? 0).toFixed(1)}
                       </dd>
                     </div>

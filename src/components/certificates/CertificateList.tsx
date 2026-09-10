@@ -100,10 +100,10 @@ export function CertificateList({ certificates, onSelect, accentHoverBorderClass
                 <span className="flex items-center gap-x-2">
                   <span className="min-w-0 truncate text-sm font-bold text-ink">{cert.name}</span>
                   {cert.approvalStatus === 'approved' && (
-                    <span className="shrink-0 rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">인증됨</span>
+                    <span className="shrink-0 rounded bg-go/15 px-1.5 py-0.5 text-[10px] font-semibold text-go">{cert.category === '교관 확인' ? '교관 서명됨' : '인증됨'}</span>
                   )}
                   {cert.approvalStatus === 'pending' && (
-                    <span className="shrink-0 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">승인 대기</span>
+                    <span className="shrink-0 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">{cert.category === '교관 확인' ? '교관 서명 대기' : '승인 대기'}</span>
                   )}
                   {cert.approvalStatus === 'rejected' && (
                     <span className="shrink-0 rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">반려됨</span>

@@ -134,6 +134,7 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                     void handleCreateCertificate(
                       { ...input, track: input.track ?? activeTrack },
                       options?.approvalFile,
+                      { targetInstructor: options?.targetInstructor ?? null },
                     ).then(async (created) => {
                       if (!created) return;
                       // 자격증 사진 한 장에서 같이 찾은 한정·계기·교관·항공영어도 같은 사진으로 각각 등록·인증 요청해요.

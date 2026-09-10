@@ -353,3 +353,32 @@ Netlify 빌드 exit 2: 매뉴얼 파일명이 한글(`docs/법령개정-대응�
 # UPDATE v2.1a — "한정 없음" 오판 수정 (2026-09-10)
 CPL 카드에 "비행기/육상단발"이 있는데도 커런시에 "한정 없음"이 뜸. 원인: 한정 검사가 '한정' 구분 + 승인됨 + 등급 필드만 봄.
 → 마스터 카드와 같은 규칙으로: 자격증명 카드 자체의 종류·등급 + '한정' 카드(필드 없으면 이름으로) + 반려·만료 제외 + 승인 대기는 보유로. `flightReadiness.ts`.
+
+---
+
+# UPDATE v2.1b — 자격증 폼 문구·교관 확인 1차 정리 (2026-09-10)
+- 사진 안내가 구분에 따라 달라짐: 조종사 자격증명이면 "AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요", 법정교육·신체검사·무선 등은 "관리자가 이 사진과 대조해 인증해요"(AI 버튼 없음), 교관 확인은 "로그북에 받은 교관 서명·확인 페이지".
+- **AI 읽기는 조종사 자격증명 구분에서만** 보임(다른 서식은 못 읽음).
+- 교관 확인: 구분 라벨 "교관 확인 (Endorsement)", 발급기관 → "확인 교관(이름·조종교육증명 번호)", 발급일 → "확인일".
+- ※ 교관 확인을 교관 전자서명으로 받는 구조(별도 섹션)는 설계 후 다음 단계. 지금은 사진+교관 이름으로 기록.
+
+---
+
+# UPDATE v2.2 — 교관 확인(Endorsement)을 교관 전자서명으로 · 야간 XC 전파 (2026-09-10)
+
+## 교관 확인 = 교관 서명 (schema20 실행 필요)
+- 전: 학생이 "교관이 확인해 줬다"고 자기 신고(발급기관·발급일 칸). 후: **비행 기록 서명과 같은 구조.**
+- 자격증 탭 → 구분 "교관 확인 (Endorsement)" → 세부 종류(단독비행·야간 단독·단독 야외·응시 전 확인…) → **서명할 교관 선택**(승인된 교관 목록) → 확인일 → 등록
+- 서버: `approval_requests kind='endorsement'`, 대상 교관, 스냅샷(확인 종류·세부·확인일·학생·교관) + SHA-256. 트리거·판정 RPC 가 'signature' 와 동일하게 검증(대상 교관만, 서명 이미지 필수).
+- 교관 서명함에 비행 서명과 같이 뜸 → 손글씨 서명 → 학생 카드 "교관 서명 대기" → "교관 서명됨".
+- 관리자 자격증 큐엔 안 뜸(교관이 서명하는 것). 탈퇴 시 서명 기록으로 남음(schema17 대상 아님).
+- 사진은 선택(종이 로그북에 이미 받은 확인이 있으면 첨부).
+- 파일: `supabase/schema20-endorsement.sql`(새), `approvals/types.ts`, `approvals/snapshot.ts`(buildFieldsSnapshot), `approvals/certificateRequests.ts`, `useLogbookPageModel.tsx`, `CertificatesTab.tsx`, `CertificateForm.tsx`, `CertificateApprovalStatusWatcher.tsx`, `InstructorSignatureInboxSection.tsx`, `CertificateList.tsx`
+
+## 야간 XC 전파
+- 기록 상세: "조건별 시간(주/야/XC/야간XC/실계기/모의계기)" (CC→XC, 야간XC 추가. 없으면 '-')
+- CSV 백업: "야간 크로스컨트리" 열 추가(합계 포함)
+- 엑셀 가져오기: `nightCrossCountryTime` 필드(동의어: nightxc·야간크로스컨트리·야간xc·야간야외)
+
+## 검증
+tsc · eslint 통과 · vitest 99 · build 통과 · playwright --list 20. 삭제할 파일 없음.

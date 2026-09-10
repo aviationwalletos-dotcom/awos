@@ -71,6 +71,11 @@ export interface SignedSnapshot {
   capturedAt: string
 }
 
+/** 교관 확인(Endorsement)처럼 비행 기록이 아닌 것도 같은 형식(필드 + 해시)으로 서명 대상을 고정한다 */
+export async function buildFieldsSnapshot(fields: Record<string, unknown>): Promise<SignedSnapshot> {
+  return { version: 1, fields, hash: await sha256Hex(canonicalJson(fields)), capturedAt: new Date().toISOString() }
+}
+
 export async function buildSignedSnapshot(entry: LogbookEntry | LogbookEntryInput): Promise<SignedSnapshot> {
   const fields = pickSignedFields(entry)
   return { version: 1, fields, hash: await sha256Hex(canonicalJson(fields)), capturedAt: new Date().toISOString() }
@@ -124,6 +129,12 @@ export const SIGNED_FIELD_LABEL: Record<string, string> = {
   flightPurpose: '비행 목적/훈련 내용',
   instructorLicenceNo: '지도조종자 자격번호',
   traineeName: '교육생 성명',
+  // 교관 확인(Endorsement)
+  endorsementType: '확인 종류',
+  endorsementDetail: '세부(기종·비행장·노선)',
+  endorsedDate: '확인일',
+  studentName: '학생',
+  instructorName: '확인 교관',
 }
 
 export function snapshotFromPayload(payload: Record<string, unknown> | null | undefined): SignedSnapshot | null {

@@ -16,7 +16,7 @@ interface Props {
 export function CertificateApprovalStatusWatcher({ certificates, onUpdate }: Props) {
   const pending = useMemo(() => certificates.filter((c) => c.approvalStatus === 'pending' && c.approvalRequestPostId), [certificates])
   const { data } = useApprovalRequests(
-    { scope: 'mine', kind: ['certificate', 'medical'], status: ['approved', 'rejected'], limit: 300 },
+    { scope: 'mine', kind: ['certificate', 'medical', 'endorsement'], status: ['approved', 'rejected'], limit: 300 },
     { enabled: pending.length > 0, pollMs: 60_000 },
   )
 

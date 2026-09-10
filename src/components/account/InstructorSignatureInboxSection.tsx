@@ -235,7 +235,7 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
 
   // 대기중은 pending 만, 완료됨은 approved+rejected 만 서버에서 받는다. 구분(track)도 서버에서 거른다.
   const { data, isLoading, error, refetch } = useApprovalRequests(
-    { scope: 'inbox', kind: 'signature', status: tab === 'pending' ? 'pending' : ['approved', 'rejected'], track, limit: 200 },
+    { scope: 'inbox', kind: ['signature', 'endorsement'], status: tab === 'pending' ? 'pending' : ['approved', 'rejected'], track, limit: 200 },
     { pollMs: tab === 'pending' ? 30_000 : undefined },
   )
 
@@ -247,7 +247,7 @@ export function InstructorSignatureInboxSection({ account, instructorCurrencyMet
 
   // 다른 구분에 대기중인 요청 — 교관이 지금 보는 구분과 다른 구분의 요청을 놓치지 않게 개수만 보여준다
   const { data: allPending } = useApprovalRequests(
-    { scope: 'inbox', kind: 'signature', status: 'pending', limit: 200 },
+    { scope: 'inbox', kind: ['signature', 'endorsement'], status: 'pending', limit: 200 },
     { enabled: Boolean(track), pollMs: 60_000 },
   )
   const otherTrackCounts = useMemo(() => {

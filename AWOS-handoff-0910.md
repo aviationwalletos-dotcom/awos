@@ -11,7 +11,7 @@
 - 관리자 aviationwalletos@gmail.com · 문의 awos.help@gmail.com · 사이트 aviationwallet.com
 - 배포: Claude 가 `/home/claude/awos` 수정 → `awos-<버전>.zip`(영문명) → 대표가 덮어쓰기 → GitHub Desktop Push. **zip 은 삭제를 못 전하므로 지운 파일은 `DELETE-LIST-<날짜>.md` 로.** 파일명은 영문만(한글 파일명이 Netlify 빌드를 깨뜨림, 9/10).
 - 검증: `npx tsc --noEmit` → `eslint src --max-warnings=0` → `vitest run`(99) → `npm run build` → `playwright test --list`(20). 컨테이너엔 브라우저 없음.
-- 실행된 SQL: schema11~19 전부 완료.
+- 실행된 SQL: schema11~19 완료. **schema20(교관 확인 endorsement) 실행 필요.**
 - Netlify 환경변수: `ANTHROPIC_API_KEY`(월 한도 $30 설정 권장), `SUPABASE_URL`, `SUPABASE_ANON_KEY`(sb_publishable_…), `LAW_GO_KR_OC`(=aviationwallet, 법령정보센터 OPEN API 승인·본문·별표 JSON 체크 완료). 선택: `VITE_SENTRY_DSN`(넣으면 오류 모니터링 켜짐).
 
 ## 2. 9/10 하루에 끝난 것 (v1.4h → v2.0)
@@ -28,6 +28,9 @@
 - **개정 대응 매뉴얼** `docs/regulation-update-manual.md` + 탭의 "매뉴얼 복사" 버튼. 새 Claude 에 붙여 넣으면 법령 값 수정 가능.
 - **개인정보처리방침** `public/privacy.html` 갱신: 국외 이전 표(Anthropic·Sentry), 탈퇴 후 서명 기록 보존(정당한 이익), AI 사용량 30일, 보호책임자.
 - **Sentry**(`src/lib/monitoring.ts`): DSN 있을 때만 켜짐, PII 안 보냄. **탈퇴 E2E**(`e2e/06-withdrawal.spec.ts`, 버리는 계정 자동 생성, Auto Confirm 필요).
+
+- **교관 확인(Endorsement) = 교관 전자서명**(v2.2, schema20): 자격증 탭 "교관 확인" 구분에서 승인 교관을 고르면 `approval_requests kind='endorsement'`(스냅샷·해시)가 교관 서명함으로 감 → 손글씨 서명 → 카드 "교관 서명됨". 관리자 큐엔 안 뜸. 탈퇴해도 남음(서명 기록).
+- 기록 입력 "야간 크로스컨트리" 자동 채움(min(야간, XC)), 상세·CSV·엑셀 가져오기에 야간 XC 반영.
 
 ## 3. 법령 사실 (9/10 원문 확인)
 - **제76조② 는 2026-11-13 삭제 → 제39조의4 신설**(소지 의무 이동). 같은 날 제44조②3호 신설. 그날 화면·문서의 "제76조②"를 바꿀 것(법령 관리 탭 노란 띠로 뜸).

@@ -30,6 +30,7 @@ import type { PilotTrack } from '../../lib/tracks'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
 import { AiReadPanel } from '../AiReadPanel'
+import { useApprovedInstructors } from '../../hooks/baas/useApprovedInstructors'
 import { type CertificateSuggestion, buildCertificateSuggestions } from '../../lib/certificateSuggestions'
 import { DateField, isCompleteDate } from '../DateField'
 import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocument'
@@ -45,7 +46,7 @@ interface FieldErrors {
 interface CertificateFormProps {
   mode: 'create' | 'edit'
   initialValues?: Certificate
-  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; extras?: CertificateInput[] }) => void
+  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; extras?: CertificateInput[]; targetInstructor?: { userId: string; name: string } | null }) => void
   onCancel?: () => void
   /** 로그인한 사용자의 역할에 해당하는 자격 템플릿(빠른 추가 칩)과 강조 색상 */
   roleTemplate?: RoleContent
@@ -124,6 +125,7 @@ const CLASS_RATING_LABEL: Record<'SEL' | 'MEL' | 'SES' | 'MES', string> = {
 /** 드롭다운에서만 다르게 보여줄 구분 이름. 저장되는 category 값은 그대로다. */
 const CATEGORY_OPTION_LABEL: Partial<Record<CertificateCategory, string>> = {
   '한정': '한정 추가 (기존 자격증명에 등급·형식 추가)',
+  '교관 확인': '교관 확인 (Endorsement) — 교관이 로그북에 써 준 확인',
 }
 
 /**
@@ -249,6 +251,9 @@ export function CertificateForm({
   const hasLicenceNumber =
     category === '조종사 자격증명' || category === '경량항공기 조종사 자격증명' || category === '초경량비행장치 조종자증명' || category === '지도조종자'
   const [approvalFile, setApprovalFile] = useState<File | null>(null)
+  // 교관 확인(Endorsement): 서명할 교관. 승인된 교관 목록에서 고른다(비행 서명과 같은 절차).
+  const { instructors: approvedInstructors, isLoading: isLoadingInstructors } = useApprovedInstructors()
+  const [endorserUserId, setEndorserUserId] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
   const currentSub = subTypes.find((t) => t.key === subKey) ?? subTypes[0]
   const isFreeText = subTypes.length === 0 && category !== '한정'
@@ -342,7 +347,8 @@ export function CertificateForm({
     if (!issuer) nextErrors.issuer = '발급기관을 입력해 주세요.'
     if (!issuedDate) nextErrors.issuedDate = '발급일을 입력해 주세요.'
     if (expiryRequirement === 'required' && !expiryDateRaw) nextErrors.expiryDate = '만료일을 입력해 주세요.'
-    if (mode === 'create' && !approvalFile) nextErrors.approvalFile = '자격증 사진(이미지 또는 PDF)을 첨부해 주세요.'
+    if (mode === 'create' && !approvalFile && category !== '교관 확인') nextErrors.approvalFile = '자격증 사진(이미지 또는 PDF)을 첨부해 주세요.'
+    if (mode === 'create' && category === '교관 확인' && !endorserUserId) nextErrors.issuer = '서명할 교관을 골라 주세요.'
 
     // 같은 자격증이 두 번 등록되는 것을 막아요(목록에 CPL 이 2개 뜨던 문제, 2026-09-10).
     // 자격번호가 있으면 번호가 같을 때, 없으면 이름·구분·종류·등급이 모두 같을 때 중복으로 봐요.
@@ -391,6 +397,12 @@ export function CertificateForm({
       },
       {
         approvalFile: approvalFile ?? undefined,
+        targetInstructor: category === '교관 확인'
+          ? (() => {
+              const t = approvedInstructors.find((i) => i.userId === endorserUserId)
+              return t ? { userId: t.userId, name: t.name } : null
+            })()
+          : null,
         // 같이 찾은 자격 중 체크된 것. 발급일이 비어 있으면 본체 발급일을 따른다(같은 증서에 인쇄돼 있으므로).
         extras: isLicenceCategory
           ? aiExtras.filter((x) => x.checked).map((x) => ({ ...x.input, issuedDate: x.input.issuedDate || issuedDate, track: initialValues?.track ?? track }))
@@ -407,17 +419,27 @@ export function CertificateForm({
     }
   }
 
+  // AI 읽기는 조종사 자격증명서(한정·계기·교관·항공영어가 같이 적힌 것) 전용. 법정교육·신체검사·무선 등은 서식이 제각각이라 사진만 올린다(2026-09-10).
+  const aiReadable = mode === 'create' && isLicenceCategory
+  const isEndorsement = category === '교관 확인'
+
   return (
     <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <span className={labelClass}>자격증 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 자격번호·발급일을 채워요</span>
+          <span className={labelClass}>
+            {isEndorsement
+              ? '교관 확인(Endorsement) 사진 (선택) — 종이 로그북에 이미 받은 확인이 있으면 그 페이지'
+              : aiReadable
+                ? '자격증 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요'
+                : '사진 (이미지 또는 PDF) — 관리자가 이 사진과 대조해 인증해요'}
+          </span>
           <input type="file"
             data-testid="cert-photo"
             accept="image/*,application/pdf,.pdf"
             onChange={(e) => setApprovalFile(e.target.files?.[0] ?? null)}
             className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
           />
-          {mode === 'create' && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
+          {aiReadable && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
           {mode === 'create' && isLicenceCategory && aiExtras.length > 0 && (
             <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">
               <p className="text-sm font-semibold text-ink">
@@ -449,9 +471,11 @@ export function CertificateForm({
             </div>
           )}
           <p className="mt-1.5 text-xs text-slate-400">
-            {mode === 'create'
-              ? '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'
-              : '수정 시에는 첨부하지 않아도 돼요. 재인증은 상세 화면에서 요청하세요.'}
+            {mode !== 'create'
+              ? '수정 시에는 첨부하지 않아도 돼요. 재인증은 상세 화면에서 요청하세요.'
+              : isEndorsement
+                ? '등록하면 아래에서 고른 교관의 서명함에 요청이 가고, 교관이 서명하면 "교관 서명됨"으로 표시돼요.'
+                : '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'}
           </p>
           {errors.approvalFile && (
             <p className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
@@ -646,18 +670,48 @@ export function CertificateForm({
 
       <div>
         <label htmlFor="issuer" className={labelClass}>
-          발급기관
+          {isEndorsement ? '서명할 교관' : '발급기관'}
         </label>
+        {isEndorsement && mode === 'create' ? (
+          <>
+            <select id="issuer"
+              value={endorserUserId}
+              onChange={(e) => {
+                setEndorserUserId(e.target.value)
+                const t = approvedInstructors.find((i) => i.userId === e.target.value)
+                setIssuerTouched(true)
+                setIssuerValue(t ? `${t.name}${t.affiliation && t.affiliation !== '미상' ? ` (${t.affiliation})` : ''}` : '')
+              }}
+              className={inputClass}
+              aria-invalid={Boolean(errors.issuer)}
+              aria-describedby={errors.issuer ? 'issuer-error' : undefined}
+            >
+              <option value="">{isLoadingInstructors ? '교관 목록 불러오는 중…' : '승인된 교관을 고르세요'}</option>
+              {approvedInstructors
+                .filter((i) => i.tracks.includes(initialValues?.track ?? track))
+                .map((i) => (
+                  <option key={i.userId} value={i.userId}>
+                    {i.name}{i.affiliation && i.affiliation !== '미상' ? ` · ${i.affiliation}` : ''}
+                  </option>
+                ))}
+            </select>
+            <input type="hidden" name="issuer" value={issuerValue} />
+            <p className="mt-1.5 text-xs text-slate-400">
+              등록하면 이 교관의 서명함에 요청이 가요. 교관이 손글씨로 서명하면 카드에 "교관 서명됨"이 붙어요. 관리자 인증이 아니라 교관 서명이에요.
+            </p>
+          </>
+        ) : (
         <input id="issuer"
           name="issuer"
           type="text"
           value={issuerValue}
           onChange={(e) => { setIssuerTouched(true); setIssuerValue(e.target.value) }}
-          placeholder="예: 한국교통안전공단, 항공전문의(병원명)"
+          placeholder={isEndorsement ? '예: 김교관 · 12-012345' : '예: 한국교통안전공단, 항공전문의(병원명)'}
           className={inputClass}
           aria-invalid={Boolean(errors.issuer)}
           aria-describedby={errors.issuer ? 'issuer-error' : undefined}
         />
+        )}
         {errors.issuer && (
           <p id="issuer-error" className="mt-1.5 text-xs text-rose-600">
             {errors.issuer}
@@ -668,7 +722,7 @@ export function CertificateForm({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="issuedDate" className={labelClass}>
-            발급일
+            {isEndorsement ? '확인일' : '발급일'}
           </label>
           <DateField id="issuedDate"
             name="issuedDate"

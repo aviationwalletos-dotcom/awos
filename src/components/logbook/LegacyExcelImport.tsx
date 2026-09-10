@@ -38,6 +38,7 @@ type MappableField =
   | 'singleEngineTime'
   | 'multiEngineTime'
   | 'crossCountryTime'
+  | 'nightCrossCountryTime'
   | 'conditionDayTime'
   | 'conditionNightTime'
   | 'actualInstrumentTime'
@@ -62,6 +63,7 @@ const FIELD_OPTIONS: { value: MappableField; label: string }[] = [
   { value: 'singleEngineTime', label: '단발(S/E) 비행시간' },
   { value: 'multiEngineTime', label: '다발(M/E) 비행시간' },
   { value: 'crossCountryTime', label: '크로스컨트리(XC) 시간' },
+  { value: 'nightCrossCountryTime', label: '야간 크로스컨트리(야간 XC) 시간' },
   { value: 'conditionDayTime', label: '주간 비행시간' },
   { value: 'conditionNightTime', label: '야간 비행시간' },
   { value: 'actualInstrumentTime', label: '실제계기 시간' },
@@ -117,6 +119,7 @@ const FIELD_SYNONYMS: { field: MappableField; synonyms: string[]; exactOnly?: st
   },
   { field: 'singleEngineTime', synonyms: ['se', 'singleengineland', 'singleengine', '단발', '단발시간'] },
   { field: 'multiEngineTime', synonyms: ['me', 'multiengineland', 'multiengine', '다발', '다발시간'] },
+  { field: 'nightCrossCountryTime', synonyms: ['nightxc', 'nightcrosscountry', '야간크로스컨트리', '야간xc', '야간야외'] },
   { field: 'crossCountryTime', synonyms: ['xc', 'crosscountry', '크로스컨트리', '장거리비행'] },
   { field: 'conditionDayTime', synonyms: ['day', '주간비행시간', '주간시간'] },
   { field: 'conditionNightTime', synonyms: ['night', '야간비행시간', '야간시간'] },
@@ -231,7 +234,7 @@ function detectHeaderLayout(rows: string[][]): HeaderLayout {
 // 매핑을 왼쪽 열로 보정해요. 날짜/텍스트 필드에는 적용하지 않아요.
 // 분 단위 감지를 적용할 "시간" 열. 착륙·계기접근 같은 횟수 열은 여기 들어가면 안 돼요.
 const TIME_FIELDS = new Set<MappableField>([
-  'blockTime', 'singleEngineTime', 'multiEngineTime', 'crossCountryTime',
+  'blockTime', 'singleEngineTime', 'multiEngineTime', 'crossCountryTime', 'nightCrossCountryTime',
   'conditionDayTime', 'conditionNightTime', 'actualInstrumentTime',
   'simulatedInstrumentTime', 'groundTrainerTime', 'picTime', 'sicTime',
   'dualReceivedTime', 'flightInstructorTime',
@@ -239,7 +242,7 @@ const TIME_FIELDS = new Set<MappableField>([
 
 const NUMERIC_SHIFT_CANDIDATE_FIELDS = new Set<MappableField>([
   'blockTime', 'dayLandings', 'nightLandings', 'singleEngineTime', 'multiEngineTime',
-  'crossCountryTime', 'conditionDayTime', 'conditionNightTime', 'actualInstrumentTime',
+  'crossCountryTime', 'nightCrossCountryTime', 'conditionDayTime', 'conditionNightTime', 'actualInstrumentTime',
   'simulatedInstrumentTime', 'groundTrainerTime', 'picTime', 'sicTime', 'dualReceivedTime',
   'flightInstructorTime', 'instrumentApproaches',
 ])
@@ -431,6 +434,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
     const singleEngineIdx = columnIndexFor('singleEngineTime')
     const multiEngineIdx = columnIndexFor('multiEngineTime')
     const crossCountryIdx = columnIndexFor('crossCountryTime')
+    const nightCrossCountryIdx = columnIndexFor('nightCrossCountryTime')
     const conditionDayIdx = columnIndexFor('conditionDayTime')
     const conditionNightIdx = columnIndexFor('conditionNightTime')
     const actualInstrumentIdx = columnIndexFor('actualInstrumentTime')
@@ -466,6 +470,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
       const singleEngineLand = singleEngineIdx !== null ? parseDurationValue(row[singleEngineIdx], timeUnit) : undefined
       const multiEngineLand = multiEngineIdx !== null ? parseDurationValue(row[multiEngineIdx], timeUnit) : undefined
       const crossCountry = crossCountryIdx !== null ? parseDurationValue(row[crossCountryIdx], timeUnit) : undefined
+      const nightCrossCountry = nightCrossCountryIdx !== null ? parseDurationValue(row[nightCrossCountryIdx], timeUnit) : undefined
       const conditionDay = conditionDayIdx !== null ? parseDurationValue(row[conditionDayIdx], timeUnit) : undefined
       const conditionNight = conditionNightIdx !== null ? parseDurationValue(row[conditionNightIdx], timeUnit) : undefined
       const actualInstrument = actualInstrumentIdx !== null ? parseDurationValue(row[actualInstrumentIdx], timeUnit) : undefined
@@ -493,6 +498,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
               day: conditionDay,
               night: conditionNight,
               crossCountry,
+              nightCrossCountry,
               actualInstrument,
               simulatedInstrument,
             }

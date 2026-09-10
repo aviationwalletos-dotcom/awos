@@ -1,7 +1,7 @@
 // 서명·승인 전용 테이블(approval_requests, schema12) 타입.
 // 게시판+댓글 파싱 구조(부채 3단계 이전)를 대체한다.
 
-export type ApprovalKind = 'signature' | 'instructor' | 'certificate' | 'medical' | 'flight_experience'
+export type ApprovalKind = 'signature' | 'instructor' | 'certificate' | 'medical' | 'flight_experience' | 'endorsement'
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
 export type PilotTrack = 'aircraft' | 'lsa' | 'ultralight'
 
@@ -11,6 +11,7 @@ export const APPROVAL_KIND_LABEL: Record<ApprovalKind, string> = {
   certificate: '자격증 인증',
   medical: '항공신체검사 인증',
   flight_experience: '비행경력증명서 승인',
+  endorsement: '교관 확인(Endorsement)',
 }
 
 export const TRACK_LABEL: Record<PilotTrack, string> = {

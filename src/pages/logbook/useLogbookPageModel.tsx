@@ -273,6 +273,7 @@ export function useLogbookPageModel() {
   async function handleCreateCertificate(
     input: CertificateInput,
     approvalFile?: File,
+    options?: { targetInstructor?: { userId: string; name: string } | null },
   ): Promise<Certificate | null> {
     const created = addCertificate({ ...input, approvalStatus: "pending" });
     if (!created || !account) return created ?? null;
@@ -282,6 +283,7 @@ export function useLogbookPageModel() {
         account,
         file: approvalFile ?? null,
         uploadFile,
+        targetInstructor: options?.targetInstructor ?? null,
       });
       const {
         id: _id,
