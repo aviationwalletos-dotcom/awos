@@ -18,6 +18,8 @@ import { buildFlightExperienceCertificateContent } from '../../lib/flightExperie
 import { FLIGHT_CATEGORIES } from '../../types/logbook'
 import type { LogbookEntryInput } from '../../types/logbook'
 import { AiReadPanel } from '../AiReadPanel'
+import { InfoTip } from '../InfoTip'
+import { guessForeignIssuer } from '../../lib/foreignRecord'
 import { DateField } from '../DateField'
 import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocument'
 
@@ -111,6 +113,9 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   })()
 
   const [errors, setErrors] = useState<FieldErrors>({})
+  // 해외 기록 여부 — 발급기관이 외국이면 자동으로 켜지고, 사용자가 고칠 수 있다(2026-09-11).
+  const [foreignTouched, setForeignTouched] = useState(false)
+  const [foreignRecord, setForeignRecord] = useState(false)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   // 여러 쪽(증명서가 두 장 이상). 첫 장은 imageFile(AI 읽기·미리보기), 전체는 여기
@@ -298,6 +303,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       origin: 'flight_experience_certificate',
       legacySourceNote: issuer ? `비행경력증명서 - ${issuer}` : '비행경력증명서',
       certificateIssuer: issuer || undefined,
+      foreignRecord: foreignTouched ? foreignRecord : guessForeignIssuer(issuer),
       certificateImageDataUrl: imageDataUrl ?? undefined,
       certificateApprovalStatus: 'pending',
       certificateRequestPostId,
@@ -331,7 +337,10 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
       {/* 0. 증명서 사진 — 먼저 올리면 AI 가 아래 칸을 채워 준다 */}
       <fieldset>
-        <legend className={sectionTitleClass}>비행경력증명서 사진 <span className="text-sky">(필수)</span> — 먼저 올리면 AI 가 칸을 채우고, 관리자가 이 파일과 대조해 승인해요</legend>
+        <legend className={`${sectionTitleClass} inline-flex items-center gap-1`}>
+          비행경력증명서 사진 <span className="text-sky">(필수)</span>
+          <InfoTip label="증명서 사진 안내">먼저 올리면 AI 가 칸을 채워요. 관리자가 이 파일과 대조해 승인해요. 여러 쪽이면 한 번에 고르세요(최대 5장, 첫 장을 읽어요).</InfoTip>
+        </legend>
         <p className={sectionHintClass}>
           이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
           담당자가 확인할 수 있어요(선택 입력).
@@ -344,7 +353,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           사진 선택
         </label>
         <input id="cert-image" type="file" accept="image/*,application/pdf,.pdf" multiple onChange={handleImageChange} className="sr-only" />
-        <p className="mt-1.5 text-[11px] text-slate-500">여러 장을 한 번에 고를 수 있어요(최대 5장). 첫 장을 AI 가 읽어요.</p>
+
         {extraFiles.length > 0 && (
           <ul className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-slate-400">
             {extraFiles.map((f, i) => (
@@ -405,7 +414,21 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
               type="text"
               placeholder="예: OO비행교육원"
               className={inputClass}
+              onChange={(e) => {
+                if (!foreignTouched) setForeignRecord(guessForeignIssuer(e.target.value))
+              }}
             />
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+              <input type="checkbox"
+                checked={foreignTouched ? foreignRecord : foreignRecord}
+                onChange={(e) => { setForeignTouched(true); setForeignRecord(e.target.checked) }}
+                className="h-4 w-4 accent-[#00D4FF]"
+              />
+              해외 기록(미국 등 외국 훈련)
+              <InfoTip label="해외 기록">
+                외국 발급기관이면 자동으로 켜져요. 해외 기록은 국내 교관 서명 대상이 아니고, 관리자가 이 증명서를 대조해 승인한 것으로 확인을 갈음해요. 총 비행시간과 비행경력증명서(별지 36호)에는 포함돼요.
+              </InfoTip>
+            </label>
           </div>
         </div>
       </fieldset>

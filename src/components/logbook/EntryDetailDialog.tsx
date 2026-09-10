@@ -6,6 +6,8 @@ import { useApprovalRequestById, useApprovalRequests } from '../../lib/approvals
 import { SIGNED_FIELD_LABEL, buildSignedSnapshot, matchesSnapshot, snapshotFromPayload } from '../../lib/approvals/snapshot'
 import { buildSignatureRequestContent, buildSignatureRequestTitle } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
+import { isForeignRecord } from '../../lib/foreignRecord'
+import { InfoTip } from '../InfoTip'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { Button } from '../Button'
 import { StatusBadge } from '../StatusBadge'
@@ -720,6 +722,32 @@ export function EntryDetailDialog({
                 </div>
               )}
 
+              {/* 해외 기록: 국내 교관 서명 대상이 아니에요(제77조① — 사후 확인은 법적 의미 없음). 증거는 관리자의 증명서 대조 승인(2026-09-11). */}
+              {isForeignRecord(entry) && !entry.instructorSignature ? (
+                <div className="rounded-control border border-white/10 bg-surface p-4">
+                  <h4 className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                    <ShieldCheck className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                    해외 기록
+                    <InfoTip label="해외 기록 안내">
+                      외국에서 한 비행이라 국내 교관 서명을 받지 않아요. 비행경력증명서(원본)를 관리자가 대조해 승인한 것으로 확인을 갈음해요. 총 비행시간과 별지 36호에는 포함돼요.
+                    </InfoTip>
+                  </h4>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {entry.certificateIssuer ? `${entry.certificateIssuer} 발급 증명서 기준.` : ''}{' '}
+                    {entry.origin === 'flight_experience_certificate'
+                      ? entry.certificateApprovalStatus === 'confirmed' ? '관리자가 증명서를 대조해 승인했어요.' : entry.certificateApprovalStatus === 'rejected' ? '증명서 인증이 반려됐어요.' : '관리자 대조 승인 대기 중이에요.'
+                      : '증명서 인증은 "과거 기록 가져오기"로 제출한 기록에만 붙어요.'}
+                  </p>
+                  {mode === 'view' && (
+                    <button type="button"
+                      onClick={() => onUpdate(entry.id, { ...toLogbookEntryInput(entry), foreignRecord: false })}
+                      className="mt-2 text-[11px] text-slate-500 underline underline-offset-2 hover:text-slate-300"
+                    >
+                      해외 기록이 아니에요 — 국내 기록으로 바꾸기
+                    </button>
+                  )}
+                </div>
+              ) : (
               <div className="rounded-control border border-white/10 bg-surface p-4">
                 <h4 className="flex items-center gap-1.5 text-sm font-bold text-ink">
                   <ShieldCheck className="h-4 w-4 text-go" aria-hidden="true" />
@@ -909,6 +937,7 @@ export function EntryDetailDialog({
                   </div>
                 )}
               </div>
+              )}
 
               {confirmingDelete ? (
                 <div role="alert" className="rounded-control border border-rose-400/40 bg-rose-500/10 p-4">

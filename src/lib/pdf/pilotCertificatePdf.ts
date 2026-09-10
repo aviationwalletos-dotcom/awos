@@ -2,6 +2,7 @@
 // 23개 열. 행이 많으면 페이지를 넘기며 머리글을 반복하고, 마지막 페이지에 합계·증명문·서명란을 둔다.
 
 import { PILOT_CERT_NUM_KEYS, buildPilotCertRows, dateKr, sumPilotCertRows } from '../flightExperienceRows'
+import { isForeignRecord } from '../foreignRecord'
 import type { PilotCertRow } from '../flightExperienceRows'
 import type { LogbookEntry } from '../../types/logbook'
 import { cellLines, cellText, createPdf, drawDraftBadge, drawLine, drawPageNo, drawRect, drawText, mm, newPage } from './pdfCore'
@@ -145,9 +146,15 @@ export async function buildPilotFlightExperienceCertificatePdf(entries: LogbookE
   y += mm(7)
   drawLine(ctx, x0, y, x0 + tableW, y, 0.3, [0.6, 0.6, 0.6])
   y += mm(2)
+  // 해외 기록이 있으면 발급기관·시간을 비고에 적는다(별표 4 는 외국 경력을 인정하므로 포함하되 출처를 밝힌다)
+  const foreign = entries.filter((e) => isForeignRecord(e))
+  const foreignNote = foreign.length > 0
+    ? `해외 훈련·비행 기록 ${foreign.length}건(${[...new Set(foreign.map((e) => e.certificateIssuer).filter(Boolean))].join(', ') || '외국 기관'}, 합계 ${foreign.reduce((a, e) => a + (e.blockTime || 0), 0).toFixed(1)}시간)을 포함했습니다. 해당 기록은 국내 교관 서명 대상이 아니며 해당 기관의 비행경력증명서로 확인합니다.`
+    : null
   const notes = [
     '이 문서는 AWOS 디지털 로그북에서 생성한 초안입니다. 발급기관(교육기관·운항사)의 확인과 서명·날인 전에는 효력이 없습니다. 주민등록번호는 앱이 저장하지 않으므로 발급 시 직접 기재합니다.',
     '주간·야간 × 시계·야외 구분은 로그북의 주간/야간 시간과 야외비행(주간·야간) 시간을 바탕으로 배정한 값이며(야간 야외가 없는 예전 기록은 주간부터 배정), "기장/기장 외" 열은 해당 비행의 PIC 시간 유무로 나눴습니다. 모의비행 열은 모의계기 + 모의비행훈련장치 시간입니다. 미인증 비행경력증명서 이월 기록은 제외했습니다.',
+    ...(foreignNote ? [foreignNote] : []),
   ]
   for (const n of notes) {
     // 간단 줄바꿈

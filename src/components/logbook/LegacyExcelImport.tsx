@@ -648,7 +648,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
             <p className="mb-2 flex items-center gap-1 text-sm font-medium text-ink">
               읽기 방식
               <InfoTip label="읽기 방식 설명">
-                파일을 훑어서 자동으로 골랐어요. 미리보기 날짜나 시간이 이상하면 여기서 바꿔 보세요.
+                파일을 훑어서 자동으로 골랐어요. 미리보기 날짜나 시간이 이상하면 여기서 바꿔 보세요. 1:30 · 1시간 30분 · 90분처럼 단위가 적혀 있으면 설정과 상관없이 그대로 읽어요. 착륙·계기접근 횟수는 시간 단위를 적용하지 않아요.
               </InfoTip>
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
@@ -687,14 +687,8 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
               </p>
             )}
             {detectedTimeUnit === 'minutes' && (
-              <p className="mt-2 text-xs text-slate-400">
-                시간 칸이 25 이상 정수뿐이라 분으로 읽었어요. 90 → 1.5시간.
-              </p>
+              <p className="mt-2 text-xs text-slate-400">시간 칸이 25 이상 정수뿐이라 분으로 읽었어요(90 → 1.5시간).</p>
             )}
-            <p className="mt-2 text-xs text-slate-400">
-              1:30 · 1시간 30분 · 90분처럼 단위가 적혀 있으면 위 설정과 상관없이 그대로 읽어요.
-              착륙·계기접근 횟수는 시간 단위를 적용하지 않아요.
-            </p>
           </div>
 
           <div className="mt-4 overflow-x-auto rounded-control border border-white/10">

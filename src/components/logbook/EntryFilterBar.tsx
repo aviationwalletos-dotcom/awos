@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { isForeignRecord } from '../../lib/foreignRecord'
 import React from 'react'
 
 import { FILTER_KIND_LABEL } from '../../types/logbook'
@@ -196,8 +197,8 @@ export function matchesFilter(entry: LogbookEntry, kind: LogbookFilterKind, valu
   const isImported = entry.origin === 'flight_experience_certificate' || entry.origin === 'legacy_excel'
   if (kind === 'imported') return isImported
   if (kind === 'unsigned') {
-    // 교관 서명 없음(실비행·시뮬레이터 모두). 이월 기록은 별도 탭.
-    return !entry.instructorSignature && !isImported
+    // 교관 서명 없음(실비행·시뮬레이터 모두). 이월 기록은 별도 탭. 해외 기록은 서명 대상이 아니라 제외(2026-09-11).
+    return !entry.instructorSignature && !isImported && !isForeignRecord(entry)
   }
   if (kind === 'all' || value === null) return true
   if (kind === 'date') return entry.date === value

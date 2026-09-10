@@ -9,6 +9,7 @@ import type { LogbookEntry, LogbookEntryInput, SimDeviceKind } from '../../types
 import { Button } from '../Button'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
+import { isForeignRecord } from '../../lib/foreignRecord'
 import { DateField } from '../DateField'
 
 interface FieldErrors {
@@ -359,6 +360,7 @@ export function EntryForm({
       nightLandings: vehicleClass === 'aircraft' && Number.isFinite(nightLandings) && nightLandings > 0 ? nightLandings : 0,
       nightTakeoffs: vehicleClass === 'aircraft' ? numOrUndef(form.get('nightTakeoffs')) : undefined,
       notes: String(form.get('notes') || '').trim() || undefined,
+      foreignRecord: vehicleClass === 'aircraft' ? form.get('foreignRecord') === 'on' : undefined,
       twoPilotAircraft: form.get('twoPilotAircraft') === 'on' ? true : undefined,
       // 본인 서명은 제77조 증명이 아니라 v45에서 제거. 예전 기록에 붙은 값만 유지.
       pilotCertification: initialValues?.pilotCertification,
@@ -1050,6 +1052,15 @@ export function EntryForm({
             placeholder="특이사항, 기동, 훈련과목, 단독비행 승인 등을 남겨 주세요."
             className={inputClass}
           />
+          <label className="mt-2 flex items-start gap-1.5 text-[11px] text-slate-400">
+            <input type="checkbox" name="foreignRecord" defaultChecked={initialValues ? isForeignRecord(initialValues) : false} className="mt-0.5 h-3.5 w-3.5 accent-sky" />
+            <span className="inline-flex items-center gap-1">
+              해외 기록(미국 등 외국 비행)
+              <InfoTip label="해외 기록 설명">
+                국내 교관 서명 대상이 아니에요. 증명서·원본 로그북으로 확인해요. 총 비행시간과 별지 36호에는 포함돼요.
+              </InfoTip>
+            </span>
+          </label>
         </div>
       </fieldset>
       </>)}

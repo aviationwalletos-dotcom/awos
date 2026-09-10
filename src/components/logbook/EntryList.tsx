@@ -5,6 +5,7 @@ import { Button } from '../Button'
 import { MoreMenu } from '../MoreMenu'
 import { EmptyState } from '../EmptyState'
 import { StatusBadge } from '../StatusBadge'
+import { isForeignRecord } from '../../lib/foreignRecord'
 import { sumHours } from '../../lib/hours'
 import { entryTrack } from '../../lib/tracks'
 import type { LogbookEntry } from '../../types/logbook'
@@ -380,6 +381,9 @@ export function EntryList({
                     )}
                     {entry.instructorSignature && (
                       <StatusBadge tone="success" icon={ShieldCheck} label="교관 서명 완료" />
+                    )}
+                    {!entry.instructorSignature && isForeignRecord(entry) && (
+                      <StatusBadge tone="pending" icon={ShieldCheck} label="해외 기록 · 증명서로 확인" />
                     )}
                     {entry.origin === 'flight_experience_certificate' && (
                       <StatusBadge

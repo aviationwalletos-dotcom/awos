@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { InfoTip } from '../InfoTip'
 import { CircleAlert, CircleCheck, CircleDashed, GraduationCap, HeartPulse, Moon, Radar, Sun, TriangleAlert } from 'lucide-react'
 
 import type { LogbookEntry } from '../../types/logbook'
@@ -317,18 +318,27 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                       )}
                     </div>
                     {r.ratingHeld === false && (
-                      <p className="mt-1.5 text-[11px] text-amber-300">
-                        이 등급의 한정이 등록·승인돼 있지 않아요. 한정 없이는 조종교육증명 보유자 감독 아래 조종연습만 할 수 있어요(항공안전법 제37조·제46조①1호). 한정을 받았다면 자격증 탭에 등록하세요.
+                      <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-300">
+                        한정 없이는 조종연습만 가능
+                        <InfoTip label="한정 없음 설명">
+                          이 등급의 한정이 등록·승인돼 있지 않아요. 한정 없이는 조종교육증명 보유자 감독 아래 조종연습만 할 수 있어요(항공안전법 제37조·제46조①1호). 한정을 받았다면 자격증 탭에 등록하세요.
+                        </InfoTip>
                       </p>
                     )}
                     {r.ratingHeld !== false && r.recoveryHint && (
-                      <p className="mt-1.5 text-[11px] text-slate-400">{r.recoveryHint}</p>
+                      <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
+                        회복 조건
+                        <InfoTip label="자격회복 조건">{r.recoveryHint}</InfoTip>
+                      </p>
                     )}
                   </div>
                 ))}
-                <p className="text-[11px] text-slate-500 sm:col-span-2">
-                  등급은 기록의 범주별 시간(단발/다발/회전익) 또는 기종명으로 판정해요. 등급 미기재 기록은 모든 등급에 합산돼요.
-                  {recency.excludedSimCount > 0 ? ` FTD·BATD 시뮬레이터 기록 ${recency.excludedSimCount}건은 착륙에 넣지 않았어요(제121조③ 지정 장치만 인정).` : ''}
+                <p className="flex items-center gap-1 text-[11px] text-slate-500 sm:col-span-2">
+                  등급 판정 기준
+                  <InfoTip label="등급 판정 기준">
+                    등급은 기록의 범주별 시간(단발/다발/회전익) 또는 기종명으로 판정해요. 등급 미기재 기록은 모든 등급에 합산돼요.
+                    {recency.excludedSimCount > 0 ? ` FTD·BATD 시뮬레이터 기록 ${recency.excludedSimCount}건은 착륙에 넣지 않았어요(제121조③ 지정 장치만 인정).` : ''}
+                  </InfoTip>
                 </p>
               </div>
             )}
@@ -336,8 +346,13 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
               최근 {recency.windowDays}일 이내 비행 기록 <span className="font-mono-data tabular-nums font-semibold text-ink">{recency.recentCount}</span>건 기준
             </p>
             {recency.unknownLandingCount > 0 && (
-              <p className="mt-1 text-xs text-amber-300">
-                착륙 횟수가 없는 기록 {recency.unknownLandingCount}건(해외 증명서 등)은 판정에서 제외했어요.
+              <p className="mt-1 flex items-center gap-1 text-xs text-amber-300">
+                착륙 기재 없는 기록 {recency.unknownLandingCount}건 제외
+                <InfoTip label="제외된 기록 설명">
+                  착륙 횟수가 적혀 있지 않은 기록은 0회로 세지 않고 판정에서 뺐어요.
+                  {recency.foreignUnknownCount > 0 ? ` 그중 ${recency.foreignUnknownCount}건은 해외 기록(FAA 증명서 등엔 착륙 횟수가 없어요).` : ''}
+                  {' '}상세에서 착륙 횟수를 넣으면 반영돼요.
+                </InfoTip>
               </p>
             )}
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -375,7 +390,10 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                     : '기본 이·착륙 요건 미충족 시 야간 비행 요건도 함께 미충족으로 표시돼요'}
                 </p>
                 {!recency.baseMet && recency.byClass.length === 0 && recency.recoveryHint && (
-                  <p className="mt-2 text-xs text-slate-400">{recency.recoveryHint}</p>
+                  <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
+                    회복 조건
+                    <InfoTip label="자격회복 조건">{recency.recoveryHint}</InfoTip>
+                  </p>
                 )}
               </div>
             </div>

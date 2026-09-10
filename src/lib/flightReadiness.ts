@@ -6,6 +6,7 @@
 import type { LogbookEntry } from '../types/logbook'
 import { AIRCRAFT_CLASS_LABEL, inferAircraftClass } from './aircraftClass'
 import type { AircraftClass } from './aircraftClass'
+import { isForeignRecord } from './foreignRecord'
 import type { Certificate, CertificateStatus } from '../types/certificate'
 import { getCertificateStatus } from '../types/certificate'
 
@@ -100,6 +101,8 @@ export interface RecencyReadiness {
   byClass: RecencyByClass[]
   /** 판정에서 뺀 시뮬레이터(FTD·BATD) 기록 수 — 지정 장치가 아니면 착륙으로 안 세요 */
   excludedSimCount: number
+  /** 착륙 기재가 없어 제외된 기록 중 해외 기록 수 */
+  foreignUnknownCount: number
   /** 전체 커런시가 끊겼을 때 회복 조건(8.2.4 가). 유지 중이면 null */
   recoveryHint: string | null
 }
@@ -199,6 +202,8 @@ export function computeFlightReadiness(
   const nightLandingCount = recencyRecent.reduce((sum, e) => sum + (e.nightLandings ?? 0), 0)
   // 착륙 횟수 "기재 없음"(undefined) 기록 — 해외 증명서(AG·Part 61 타임빌딩)처럼 착륙 수가 없는 이월 기록. 0 으로 세지 않고 제외한 뒤 건수를 알린다.
   const unknownLandingCount = recencyRecent.filter((e) => e.dayLandings === undefined && e.nightLandings === undefined).length
+  // 그중 해외 기록(미국 증명서 등) — ⓘ 안내용
+  const foreignUnknownCount = recencyRecent.filter((e) => e.dayLandings === undefined && e.nightLandings === undefined && isForeignRecord(e)).length
   const baseMet = landingCount >= 3
   const nightMet = baseMet && (!nightRequired || nightLandingCount >= 1)
   // 등급별(8.2.2 "동일 등급") — 최근 24개월 안에 비행한 등급마다 따로 센다. 등급 미기재 기록은 모든 등급에 합산(보수적)
@@ -258,6 +263,7 @@ export function computeFlightReadiness(
     nightRequired,
     byClass,
     excludedSimCount,
+    foreignUnknownCount,
     recoveryHint: baseMet ? null : recoveryHint,
   }
 

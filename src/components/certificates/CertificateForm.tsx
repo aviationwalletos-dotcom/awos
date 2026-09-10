@@ -436,23 +436,31 @@ export function CertificateForm({
 
   // AI 읽기가 되는 구분: 정해진 서식이 있는 증서. 조종사 자격증명(한정·계기·교관·항공영어까지), 신체검사(종류·유효기간),
   // 무선통신사·조종연습허가서·항공영어(번호·발급일·만료일). 법정교육·운전면허·기타·교관 확인은 서식이 제각각이라 사진만.
-  const AI_READABLE_CATEGORIES: CertificateCategory[] = ['조종사 자격증명', '항공신체검사', '무선통신사', '조종연습허가서', '항공영어구술능력증명', '경량항공기 조종사 자격증명', '초경량비행장치 조종자증명']
+  const AI_READABLE_CATEGORIES: CertificateCategory[] = ['조종사 자격증명', '항공신체검사', '무선통신사', '조종연습허가서', '경량항공기 조종사 자격증명', '초경량비행장치 조종자증명']
   const aiReadable = mode === 'create' && AI_READABLE_CATEGORIES.includes(category)
   const isEndorsement = category === '교관 확인'
+  // 조종사 자격증명서 한 장에 같이 적히는 것들. 따로 사진 올릴 일이 거의 없고, 자격증명 구분에서 AI 가 같이 등록해 준다.
+  const ON_LICENCE_CATEGORIES: CertificateCategory[] = ['한정', '계기비행증명', '조종교육증명', '항공영어구술능력증명']
+  const isOnLicence = ON_LICENCE_CATEGORIES.includes(category)
 
   return (
     <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <span className={labelClass}>
-            {isEndorsement
-              ? '교관 확인(Endorsement) 사진 (선택) — 종이 로그북에 이미 받은 확인이 있으면 그 페이지'
-              : aiReadable
-                ? isLicenceCategory
-                  ? '자격증 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요'
-                  : category === '항공신체검사'
-                    ? '증명서 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 종류(1·2·3종)·발급일·유효기간·발급기관을 읽어요'
-                    : '증서 사진 (이미지 또는 PDF) — 먼저 올리면 AI 가 번호·발급일·만료일·발급기관을 읽어요'
-                : '사진 (이미지 또는 PDF) — 관리자가 이 사진과 대조해 인증해요'}
+          <span className={`${labelClass} inline-flex items-center gap-1`}>
+            {isEndorsement ? '교관 확인 사진 (선택)' : isOnLicence ? '사진 — 자격증명서에 같이 적힌 항목이에요' : '사진 (이미지·PDF, 여러 장 가능)'}
+            <InfoTip label="사진 첨부 안내">
+              {isEndorsement
+                ? '종이 로그북에 이미 받은 확인이 있으면 그 페이지를 올려요. 교관 전자서명이 확인이라 사진은 선택이에요.'
+                : isOnLicence
+                  ? '이 항목은 조종사 자격증명서(CPL·PPL 카드) 한정사항·특기사항에 적혀 있어요. 보통은 "조종사 자격증명" 구분에서 자격증 사진을 올리면 AI 가 같이 찾아 등록해 줘요. 여기서는 따로 받은 증서가 있을 때만 그 사진을 올리세요.'
+                : aiReadable
+                  ? isLicenceCategory
+                    ? '먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요. 앞면을 첫 번째로 고르세요(그 장을 읽어요). 최대 5장.'
+                    : category === '항공신체검사'
+                      ? '먼저 올리면 AI 가 종류(1·2·3종)·발급일·유효기간·발급기관을 읽어요. 최대 5장.'
+                      : '먼저 올리면 AI 가 번호·발급일·만료일·발급기관을 읽어요. 최대 5장.'
+                  : '관리자가 이 사진과 대조해 인증해요. 앞·뒷면처럼 여러 장이면 한 번에 고르세요(최대 5장).'}
+            </InfoTip>
           </span>
           <input type="file"
             data-testid="cert-photo"
@@ -470,7 +478,7 @@ export function CertificateForm({
               ))}
             </ul>
           )}
-          <p className="mt-1 text-[11px] text-slate-500">여러 장을 한 번에 고를 수 있어요(최대 5장). 앞면을 첫 번째로 고르면 AI 가 그걸 읽어요.</p>
+
           {aiReadable && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
           {mode === 'create' && isLicenceCategory && aiExtras.length > 0 && (
             <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">
@@ -504,10 +512,10 @@ export function CertificateForm({
           )}
           <p className="mt-1.5 text-xs text-slate-400">
             {mode !== 'create'
-              ? '수정 시에는 첨부하지 않아도 돼요. 재인증은 상세 화면에서 요청하세요.'
+              ? '수정 시에는 첨부하지 않아도 돼요.'
               : isEndorsement
-                ? '등록하면 아래에서 고른 교관의 서명함에 요청이 가고, 교관이 서명하면 "교관 서명됨"으로 표시돼요.'
-                : '등록과 동시에 관리자에게 인증 요청이 전송되고, 승인되면 목록에 "인증됨"으로 표시돼요.'}
+                ? '교관이 서명하면 "교관 서명됨"으로 표시돼요.'
+                : '관리자가 승인하면 "인증됨"으로 표시돼요.'}
           </p>
           {errors.approvalFile && (
             <p className="mt-1.5 text-xs text-rose-600">{errors.approvalFile}</p>
@@ -728,9 +736,7 @@ export function CertificateForm({
                 ))}
             </select>
             <input type="hidden" name="issuer" value={issuerValue} />
-            <p className="mt-1.5 text-xs text-slate-400">
-              등록하면 이 교관의 서명함에 요청이 가요. 교관이 손글씨로 서명하면 카드에 "교관 서명됨"이 붙어요. 관리자 인증이 아니라 교관 서명이에요.
-            </p>
+            <p className="mt-1.5 text-xs text-slate-400">등록하면 이 교관의 서명함에 요청이 가요.</p>
           </>
         ) : (
         <input id="issuer"
@@ -787,7 +793,8 @@ export function CertificateForm({
             />
             {category === '항공신체검사' && medicalNote && (
               <p className="mt-1.5 text-xs text-slate-400">
-                발급일을 넣으면 <span className="font-semibold text-slate-300">별표 8 기준 {medicalNote.months}개월</span>, 월말 만료 원칙으로 자동 계산돼요(수정 가능). 증명서에 적힌 만료일이 다르면(항공전문의가 단축한 경우 등, 규칙 제92조③) 그 날짜를 넣으세요.
+                별표 8 기준 <span className="font-semibold text-slate-300">{medicalNote.months}개월</span>로 자동 계산(수정 가능).
+                <InfoTip label="만료일 계산 설명">발급일 + {medicalNote.months}개월, 월말 만료 원칙(별표 8 비고 1). 증명서에 적힌 만료일이 다르면(항공전문의가 단축한 경우, 규칙 제92조③) 그 날짜를 넣으세요.</InfoTip>
                 {medicalNote.assumedAge && (
                   <span className="text-amber-300"> 생년월일이 없어 가장 짧은 기간으로 잡았어요. 계정정보에 생년월일을 넣으면 정확해집니다.</span>
                 )}
@@ -795,7 +802,8 @@ export function CertificateForm({
             )}
             {category === '항공영어구술능력증명' && (
               <p className="mt-1.5 text-xs text-slate-400">
-                4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③). 6등급은 만료일을 비워 두세요. 만료 6개월 전에 다시 합격했다면 기존 만료일 다음 날부터 새로 계산돼요 — 증명서의 만료일을 그대로 넣으세요.
+                4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③).
+                <InfoTip label="항공영어 만료일 설명">6등급은 만료일을 비워 두세요. 만료 6개월 전에 다시 합격했다면 기존 만료일 다음 날부터 새로 계산돼요 — 증명서의 만료일을 그대로 넣으세요.</InfoTip>
               </p>
             )}
             {errors.expiryDate && (

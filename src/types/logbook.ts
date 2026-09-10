@@ -137,6 +137,9 @@ export interface LogbookEntry {
   certificateApprovalStatus?: 'pending' | 'confirmed' | 'rejected'
   // 비행경력증명서 발급기관명
   certificateIssuer?: string
+  // 해외 기록(미국 등 외국 훈련·비행). 국내 교관 서명 대상이 아니고, 증거는 관리자의 증명서 대조 승인.
+  // 값이 없으면 발급기관 이름으로 추정(foreignRecord.ts). 사용자가 고칠 수 있다.
+  foreignRecord?: boolean
   // "기록관리" 게시판(동적 게시판)에 이 비행기록을 동기화한 게시글의 id.
   // 서버 동기화가 아직 되지 않았거나 실패한 경우 값이 없을 수 있다(로컬 저장은 항상 유지됨).
   syncPostId?: string
