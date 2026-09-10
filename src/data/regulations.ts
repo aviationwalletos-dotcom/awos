@@ -24,6 +24,10 @@ export interface RegulationRef {
   lawGoKrQuery?: string
   /** 검색 대상. law = 법령(법·시행령·시행규칙), admrul = 행정규칙(고시·훈령). 기본 law */
   lawGoKrTarget?: 'law' | 'admrul'
+  /** 한글주소 법령명(띄어쓰기 없이). 조문 단위 변경 감지에 쓴다. 예: '항공안전법시행규칙' */
+  hangulSlug?: string
+  /** 변경을 지켜볼 조문·별표. 한글주소 표기 그대로: '제77조', '제39조의4', '별표8' */
+  watchArticles?: string[]
   /** 직접 열어 볼 링크 */
   manualUrl?: string
   /** 조문 값이 코드에 하드코딩된 요약(대조용) */
@@ -40,6 +44,8 @@ export const REGULATIONS: RegulationRef[] = [
     features: ['자격증 카드 [REF] 표기', '자격증 구분'],
     usedIn: ['src/components/logbook/MyCertificateStatusCard.tsx', 'src/types/certificate.ts'],
     lawGoKrQuery: '항공안전법',
+    hangulSlug: '항공안전법',
+    watchArticles: ['제34조', '제35조', '제37조', '제44조', '제46조', '제76조', '제39조의4'],
     manualUrl: 'https://www.law.go.kr/법령/항공안전법',
     valuesSummary: '조문 번호 표기만. 수치 계산 없음. [2026-09-10 원문 대조 완료] ※ 2026-11-13 시행 개정: 소지 의무가 제76조②(삭제)→제39조의4(신설)로 이동, 제44조②3호 신설(계기·교관 응시자 조종연습). 그날 이후 화면·문서의 "제76조②"를 "제39조의4"로 바꿀 것.',
   },
@@ -59,6 +65,8 @@ export const REGULATIONS: RegulationRef[] = [
       'src/lib/pdf/pilotCertificatePdf.ts',
     ],
     lawGoKrQuery: '항공안전법 시행규칙',
+    hangulSlug: '항공안전법시행규칙',
+    watchArticles: ['제77조', '제78조', '제92조', '제99조', '제121조', '제125조', '별표4', '별표8', '별표18'],
     manualUrl: 'https://www.law.go.kr/법령/항공안전법시행규칙',
     valuesSummary:
       '신체검사(별표 8, 개정 2025-12-05): 2종 40세 미만 60개월·40대 24개월·50세 이상 12개월, 1종 12개월(운송·사용사업 60세 이상, 1인 조종 여객운송 40세 이상은 6개월 — 앱은 "상업" 40세 이상을 6개월로 보수 적용), 만료는 그 달 말일. 승무시간(별표 18, 개정 2019-09-23, 기장 1명 편성): 24시간 8h·28일 100h·365일 1,000h, 휴식 10h/12h, 7일마다 30h. SIC 1/2(제78조). 항공영어 4등급 3년·5등급 6년·6등급 영구(제99조③). 응시경력(별표 4, 개정 2025-12-05): PPL 40/35h, CPL 200/150h 등 rules.ts. [2026-09-10 원문 대조 완료: 본문 조문·별표 4·8·18 전부 확인. 별표 18의 "7일 35h"는 근거 없어 삭제, 30일→28일 정정]',
@@ -97,6 +105,8 @@ export const REGULATIONS: RegulationRef[] = [
     usedIn: ['src/lib/eligibility/'],
     lawGoKrQuery: '항공안전법 시행규칙',
     // 별표 4 는 시행규칙 페이지에서 "별표/서식" 탭으로. DRF 본문 링크는 권한이 따로 필요해 공개 주소를 쓴다.
+    hangulSlug: '항공안전법시행규칙',
+    watchArticles: ['별표4'],
     manualUrl: 'https://www.law.go.kr/법령/항공안전법시행규칙',
     valuesSummary: '경량항공기는 법정 커런시 없음. 응시경력 시간 요건만.',
   },

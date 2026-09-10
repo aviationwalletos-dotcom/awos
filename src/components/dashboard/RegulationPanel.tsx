@@ -18,6 +18,20 @@ interface CheckRecord {
   checked_by_name: string | null
   latest_effective_date: string | null
   note: string | null
+  /** 마지막 "확인함" 때 저장한 조문별 본문 해시(schema19). 없으면 {} */
+  article_hashes?: Record<string, string> | null
+}
+
+interface ArticleResult {
+  id: string
+  ok: boolean
+  hash?: string
+  found?: boolean
+  excerpt?: string
+  revisionTags?: string[]
+  length?: number
+  url?: string
+  note?: string
 }
 
 interface ApiResult {
@@ -43,6 +57,8 @@ export function RegulationPanel() {
   const { account } = useAuth()
   const [records, setRecords] = useState<Record<string, CheckRecord>>({})
   const [api, setApi] = useState<Record<string, ApiResult>>({})
+  // 조문 단위 결과. 키 = `${regulationId}:${article}`
+  const [articles, setArticles] = useState<Record<string, ArticleResult>>({})
   const [apiError, setApiError] = useState<string | null>(null)
   const [isChecking, setIsChecking] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -85,6 +101,22 @@ export function RegulationPanel() {
       const map: Record<string, ApiResult> = {}
       for (const r of data.results ?? []) map[r.query] = r
       setApi(map)
+
+      // 2단계: 우리가 쓰는 조문·별표만 공개 페이지에서 읽어 해시를 비교해요(본문 API 는 서버 IP 등록이 필요해 못 씀).
+      const items = REGULATIONS.flatMap((r) =>
+        (r.hangulSlug && r.watchArticles ? r.watchArticles : []).map((article) => ({ id: `${r.id}:${article}`, slug: r.hangulSlug as string, article })),
+      )
+      if (items.length > 0) {
+        const res2 = await fetch('/api/check-articles', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ items }),
+        })
+        const data2 = (await res2.json().catch(() => ({}))) as { results?: ArticleResult[] }
+        const amap: Record<string, ArticleResult> = {}
+        for (const r of data2.results ?? []) amap[r.id] = r
+        setArticles(amap)
+      }
     } catch (err) {
       setApiError(err instanceof Error ? err.message : '확인에 실패했어요.')
     } finally {
@@ -105,6 +137,12 @@ export function RegulationPanel() {
         checked_by_name: account.name ?? null,
         latest_effective_date: apiRow?.effectiveDate ?? null,
         note: notes[reg.id]?.trim() || null,
+        // 지금 읽은 조문 해시를 기준으로 저장 → 다음 확인 때 달라진 조문만 "변경됨"
+        article_hashes: Object.fromEntries(
+          (reg.watchArticles ?? [])
+            .map((a) => [a, articles[`${reg.id}:${a}`]?.hash])
+            .filter((pair): pair is [string, string] => typeof pair[1] === 'string'),
+        ),
       })
       if (error) throw new Error(error.message)
       await loadRecords()
@@ -194,6 +232,53 @@ export function RegulationPanel() {
                   <dt className="text-slate-500">코드 위치(개정 시 고칠 곳)</dt>
                   <dd className="font-mono-data text-[11px] text-slate-300">{reg.usedIn.join(' · ')}</dd>
                 </div>
+                {reg.watchArticles && reg.watchArticles.length > 0 && (
+                  <div className="sm:col-span-2">
+                    <dt className="text-slate-500">
+                      우리가 쓰는 조문 — 조문 단위 변경 감지
+                      <span className="ml-1 text-[10px] text-slate-600">(공개 페이지 본문 해시를 마지막 "확인함"과 비교)</span>
+                    </dt>
+                    <dd className="mt-1 flex flex-wrap gap-1.5">
+                      {reg.watchArticles.map((a) => {
+                        const cur = articles[`${reg.id}:${a}`]
+                        const saved = rec?.article_hashes?.[a]
+                        let tone = 'border-white/10 text-slate-400'
+                        let label = '아직 확인 안 함'
+                        if (cur && !cur.ok) {
+                          tone = 'border-amber-400/40 text-amber-300'
+                          label = `읽기 실패 · ${cur.note ?? ''}`
+                        } else if (cur && cur.ok && !cur.found) {
+                          tone = 'border-amber-400/40 text-amber-300'
+                          label = '본문에서 조문을 못 찾음 — 페이지 구조 확인'
+                        } else if (cur && cur.ok) {
+                          if (!saved) {
+                            tone = 'border-sky/40 text-sky'
+                            label = '기준 없음 — "확인함"으로 기준 저장'
+                          } else if (saved === cur.hash) {
+                            tone = 'border-go/40 text-go'
+                            label = '변경 없음'
+                          } else {
+                            tone = 'border-rose-400/50 text-rose-300'
+                            label = '변경됨 — 원문 확인 필요'
+                          }
+                        }
+                        const tags = cur?.revisionTags?.length ? ` · ${cur.revisionTags[cur.revisionTags.length - 1]}` : ''
+                        return (
+                          <a
+                            key={a}
+                            href={cur?.url ?? `https://www.law.go.kr/법령/${reg.hangulSlug}/${a}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={cur?.excerpt ? `${cur.excerpt}…` : undefined}
+                            className={`rounded border px-2 py-0.5 text-[11px] hover:bg-white/5 ${tone}`}
+                          >
+                            <span className="font-semibold">{a}</span> · {label}{tags}
+                          </a>
+                        )
+                      })}
+                    </dd>
+                  </div>
+                )}
               </dl>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {/* 사람이 보는 링크는 공개 주소(manualUrl)로. API 가 주는 lawService.do 링크는 "본문 조회 API" 권한이 따로 필요해 로그인 화면이 뜬다(2026-09-10). */}
