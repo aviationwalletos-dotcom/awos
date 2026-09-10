@@ -121,7 +121,7 @@ async function fetchAnnexViaApi(oc, query, article, keyword) {
   const n = article.replace(/^별표/, '').trim()
   // 별표 목록 API 는 별표 제목으로 검색한다(법령명으로 검색하면 0건, 2026-09-10 확인). 검색어가 없으면 법령명으로.
   const q = keyword || query
-  const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=licbyl&type=JSON&query=${encodeURIComponent(q)}&display=100`
+  const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${encodeURIComponent(oc)}&target=licbyl&type=JSON&query=${encodeURIComponent(q)}&display=100&page=1`
   const r = await fetch(url, { headers: HEADERS, redirect: 'follow' })
   const text = await r.text()
   let data
@@ -142,8 +142,17 @@ async function fetchAnnexViaApi(oc, query, article, keyword) {
   }
   const norm = (v) => String(v ?? '').replace(/\s/g, '')
   const wantLaw = norm(query)
-  // 별표번호는 "8", "08", "별표 8", "28의2" 등으로 올 수 있다 → 숫자·'의' 만 남겨 비교
-  const numKey = (v) => norm(v).replace(/^별표/, '').replace(/^0+(?=\d)/, '')
+  // 별표번호는 6자리 "000800"(= 별표 8), "002802"(= 별표 28의2) 로 온다(2026-09-10 확인). 다른 표기도 받아 준다.
+  const numKey = (v) => {
+    const t = norm(v).replace(/^별표/, '')
+    const m6 = t.match(/^(\d{4})(\d{2})$/)
+    if (m6) {
+      const main = String(Number(m6[1]))
+      const branch = Number(m6[2])
+      return branch > 0 ? `${main}의${branch}` : main
+    }
+    return t.replace(/^0+(?=\d)/, '')
+  }
   const candidates = rows.filter((row) => {
     const lawOk = norm(row['관련법령명']).includes(wantLaw) || wantLaw.includes(norm(row['관련법령명']))
     const kindOk = !row['별표종류'] || /별표/.test(String(row['별표종류']))
