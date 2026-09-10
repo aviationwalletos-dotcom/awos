@@ -1,5 +1,6 @@
 // 라우트 단위 에러 경계. 한 컴포넌트가 예외를 던져도 화면 전체가 하얘지지 않고 복구 버튼을 보여준다.
 import React from 'react'
+import { reportError } from '../lib/monitoring'
 
 interface Props {
   children: React.ReactNode
@@ -17,6 +18,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('[AWOS] 화면 오류', error, info.componentStack)
+    reportError(error, { componentStack: (info.componentStack ?? '').slice(0, 800) })
   }
 
   render() {

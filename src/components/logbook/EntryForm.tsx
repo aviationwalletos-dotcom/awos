@@ -195,14 +195,32 @@ export function EntryForm({
       setField('conditionNight', fmt(total - day), true)
     }
   }
+  /**
+   * 야간 크로스컨트리 자동 채움: 야간 시간과 크로스컨트리가 둘 다 있으면 야간 크컨 = 둘 중 작은 값.
+   * (야간에 비행했고 그 비행이 크로스컨트리면 야간 시간만큼은 야간 크컨이라는 가정. 사용자가 직접 고치면 안 덮어씀)
+   */
+  const syncNightCrossCountry = () => {
+    if (!canAutofill('nightCrossCountry')) return
+    const night = Number(getField('conditionNight')?.value)
+    const xc = Number(getField('crossCountry')?.value)
+    if (!Number.isFinite(night) || !Number.isFinite(xc) || night <= 0 || xc <= 0) {
+      if (autofilledRef.current.has('nightCrossCountry')) setField('nightCrossCountry', '')
+      return
+    }
+    setField('nightCrossCountry', fmt(Math.min(night, xc)), true)
+  }
   /** 주간↔야간 자동 보완: 하나를 넣으면 나머지 = 총시간 − 입력값 */
   const handleDayNight = (e: React.ChangeEvent<HTMLInputElement>) => {
     const total = Number(getField('blockTime')?.value)
     const value = Number(e.target.value)
-    if (!(total > 0) || !Number.isFinite(value) || value < 0) return
+    if (!(total > 0) || !Number.isFinite(value) || value < 0) {
+      syncNightCrossCountry()
+      return
+    }
     const other = e.target.name === 'conditionDay' ? 'conditionNight' : 'conditionDay'
     const rest = total - value
     if (rest >= 0 && canAutofill(other)) setField(other, fmt(rest), true)
+    syncNightCrossCountry()
   }
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const role = e.target.value as EntryRole
@@ -870,15 +888,16 @@ export function EntryForm({
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.crossCountry}
+              onChange={syncNightCrossCountry}
               className={numberInputClass}
             />
           </div>
           {vehicleClass === 'aircraft' && (
             <div>
               <label htmlFor="nightCrossCountry" className={`${labelClass} inline-flex items-center gap-1`}>
-                그중 야간 야외(시간)
-                <InfoTip label="야간 야외비행">
-                  크로스컨트리 중 야간에 한 시간이에요. 비행경력증명서(별지 제36호)는 야외비행을 주간·야간으로 나눠 적어요. 비워 두면 주간부터 배정해요.
+                야간 크로스컨트리(시간)
+                <InfoTip label="야간 크로스컨트리">
+                  크로스컨트리 중 야간에 한 시간이에요. 야간 시간과 크로스컨트리를 넣으면 둘 중 작은 값으로 자동으로 채워져요(고칠 수 있어요). 비행경력증명서(별지 제36호)는 야외비행을 주간·야간으로 나눠 적어요.
                 </InfoTip>
               </label>
               <input id="nightCrossCountry"

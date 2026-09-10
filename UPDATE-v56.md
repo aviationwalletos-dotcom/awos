@@ -317,3 +317,21 @@ CPL 사진을 올리고 "사진에서 읽어오기"를 누르면 자격증명서
 # UPDATE v1.9f — 빌드 실패 수정 (2026-09-10)
 Netlify 빌드 exit 2: 매뉴얼 파일명이 한글(`docs/법령개정-대응매뉴얼.md`)이라 Windows→Linux 경로가 안 맞아 import 실패로 추정. `docs/regulation-update-manual.md` 로 개명.
 **삭제할 파일**: `docs/법령개정-대응매뉴얼.md` (저장소에 남아 있으면 GitHub Desktop 에서 지워 주세요. 남아 있어도 빌드엔 영향 없음)
+
+---
+
+# UPDATE v2.0 — 개인정보처리방침 · Sentry · 탈퇴 E2E · 인수인계 (2026-09-10 밤)
+- `public/privacy.html`: 4-1 국외 이전 표(Anthropic 미국 / Sentry 미국), 탈퇴 후 서명 기록 보존(정당한 이익) 문장, AI 사용량 30일, 보호책임자·침해신고센터. 최종 개정 2026-09-10.
+- `src/lib/monitoring.ts` + `main.tsx` + `ErrorBoundary`: Sentry. `VITE_SENTRY_DSN` 없으면 아무 동작 없음. PII 스크럽, tracesSampleRate 0.
+- `e2e/06-withdrawal.spec.ts`: 버리는 계정 가입 → 탈퇴 → 재로그인 실패. Auto Confirm 꺼져 있으면 skip. E2E 20건.
+- `docs/regulation-update-manual.md` §0: "코드 위치 옮기면 이 문서 §3 도 고쳐라" 추가.
+- `DELETE-LIST-0910.md`, `AWOS-handoff-0910.md`(새 인수인계).
+검증: tsc · eslint 통과 · vitest 99 · build 통과 · playwright --list 20. **삭제할 파일**: DELETE-LIST-0910.md 참고.
+
+---
+
+# UPDATE v2.0a — 증명서 첨부 필수 · 야간 크로스컨트리 자동 채움 (2026-09-10)
+- **비행경력증명서 파일 필수.** 업로드 실패 시 조용히 넘어가며 "첨부 없음" 요청이 생기던 것을 막음 — 실패하면 제출 중단 + 오류 표시. PDF contentType 보정. 제목에 "(필수) — 관리자가 이 파일과 대조해 승인".
+  · 9/10 00:39 에 만들어진 오재헌 증명서 요청은 첨부가 없으므로 **다시 제출**해야 함(관리자는 그 요청을 반려).
+- 기록 입력 "그중 야간 야외" → **"야간 크로스컨트리(시간)"**. 야간 시간과 크로스컨트리가 둘 다 있으면 min(야간, 크컨)으로 자동 채움(사용자가 고치면 유지).
+파일: `FlightExperienceCertificateForm.tsx`, `EntryForm.tsx`. 삭제 없음.

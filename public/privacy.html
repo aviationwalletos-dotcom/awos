@@ -16,7 +16,7 @@
 </head>
 <body>
   <h1>개인정보처리방침</h1>
-  <p class="meta">Aviation Wallet OS (이하 "AWOS") · 시행일: 2026-09-01 · 최종 개정: 2026-09-04 · 운영: TEAM KAU</p>
+  <p class="meta">Aviation Wallet OS (이하 "AWOS") · 시행일: 2026-09-01 · 최종 개정: 2026-09-10 · 운영: TEAM KAU</p>
 
   <p>AWOS는 항공 종사자를 위한 디지털 로그북 서비스로서, 이용자의 개인정보를 소중히 다루며 「개인정보 보호법」 등 관련 법령을 준수합니다. 본 방침은 AWOS 웹사이트 및 애플리케이션에 적용됩니다.</p>
 
@@ -40,9 +40,20 @@
 
   <h2>3. 보관 장소와 기간</h2>
   <p>데이터는 이용자의 기기(브라우저 저장소)와 클라우드 데이터베이스(Supabase)에 저장됩니다. 개인정보는 <strong>회원 탈퇴 또는 삭제 요청 시 지체 없이 파기</strong>하며(보유 기간: 회원 탈퇴 시까지), 관련 법령이 보존을 요구하는 경우 해당 기간 동안만 분리 보관합니다. 회원 탈퇴는 앱의 계정정보 화면 또는 <a href="/delete-account.html">계정 삭제 안내</a>에서 할 수 있습니다.</p>
+  <p><strong>탈퇴 후에도 남는 정보:</strong> 이용자가 다른 이용자(교관·학생)와 주고받은 <strong>비행기록 서명 기록에 포함된 이름, 서명 일시, 서명 이미지, 해당 비행의 요약(일자·기종·시간)</strong>은 상대방의 비행경력 증명을 위해 탈퇴 후에도 상대방의 기록 안에 남습니다(종이 로그북에 상대방 이름이 남는 것과 같습니다). 이는 「개인정보 보호법」 제15조제1항제6호(정당한 이익)에 근거하며, 이메일·전화번호 등 연락처는 삭제됩니다.</p>
+  <p>AI 문서 읽기 사용 횟수(일자·횟수만)는 남용 방지를 위해 30일간 보관 후 삭제합니다.</p>
 
   <h2>4. 제3자 제공 및 위탁</h2>
-  <p>AWOS는 이용자의 개인정보를 외부에 판매하거나 광고 목적으로 제공하지 않습니다. 서비스 운영을 위해 클라우드 인프라(Supabase, 호스팅: Netlify)에 저장·처리를 위탁하며, 이용자가 서명·승인을 요청한 경우 해당 기록의 확인에 필요한 범위에서 지정된 교관·소속 기관에게만 열람됩니다.</p>
+  <p>AWOS는 이용자의 개인정보를 외부에 판매하거나 광고 목적으로 제공하지 않습니다. 서비스 운영을 위해 클라우드 인프라(Supabase, 호스팅: Netlify)에 저장·처리를 위탁하며, 이용자가 서명·승인을 요청한 경우 해당 기록의 확인에 필요한 범위에서 지정된 교관과 AWOS 관리자에게만 열람됩니다.</p>
+
+  <h2>4-1. 개인정보의 국외 이전</h2>
+  <p>다음 기능을 이용자가 <strong>직접 선택하여 사용할 때</strong>에만 개인정보가 국외로 이전됩니다. 이용하지 않으면 이전되지 않습니다.</p>
+  <table style="border-collapse:collapse;width:100%;font-size:.9rem">
+    <tr style="text-align:left;color:#9ecbff"><th style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.15)">이전받는 자</th><th style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.15)">국가</th><th style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.15)">이전 시기·방법</th><th style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.15)">이전 항목</th><th style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.15)">목적</th><th style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.15)">보유·이용 기간</th></tr>
+    <tr><td style="padding:6px 8px;vertical-align:top">Anthropic, PBC</td><td style="padding:6px 8px;vertical-align:top">미국</td><td style="padding:6px 8px;vertical-align:top">이용자가 "사진에서 읽어오기(AI)"를 누를 때, 암호화 통신(HTTPS)으로 전송</td><td style="padding:6px 8px;vertical-align:top">이용자가 올린 자격증·비행경력증명서 사진(이름·생년월일·자격번호 등 사진에 적힌 정보 포함)</td><td style="padding:6px 8px;vertical-align:top">사진 내용을 읽어 입력 칸을 채우는 AI 처리</td><td style="padding:6px 8px;vertical-align:top">처리 즉시 이용 종료. Anthropic 은 API 입력을 모델 학습에 사용하지 않으며, 남용 방지 목적으로 최대 30일 보관 후 삭제</td></tr>
+    <tr><td style="padding:6px 8px;vertical-align:top">Functional Software, Inc.(Sentry)</td><td style="padding:6px 8px;vertical-align:top">미국</td><td style="padding:6px 8px;vertical-align:top">앱에서 오류가 발생했을 때 자동 전송</td><td style="padding:6px 8px;vertical-align:top">오류 내용, 브라우저·기기 종류, 오류가 난 화면 주소. 이름·이메일·비행기록은 보내지 않음</td><td style="padding:6px 8px;vertical-align:top">서비스 오류 파악·수정</td><td style="padding:6px 8px;vertical-align:top">90일 보관 후 자동 삭제</td></tr>
+  </table>
+  <p>이용자는 국외 이전을 거부할 수 있으며, 이 경우 AI 문서 읽기 기능은 이용할 수 없고 나머지 기능은 그대로 이용할 수 있습니다. AI 문서 읽기는 기능 사용 전 화면에서 별도 동의를 받습니다. 거부·철회는 앱 내 동의 철회 링크 또는 아래 문의처로 요청할 수 있습니다.</p>
 
   <h2>5. 이용자의 권리</h2>
   <p>이용자는 언제든지 자신의 개인정보를 조회·수정·삭제하거나 회원 탈퇴를 요청할 수 있습니다. 앱 내 기능 또는 아래 연락처를 통해 요청하실 수 있습니다.</p>
@@ -50,8 +61,9 @@
   <h2>6. 안전성 확보 조치</h2>
   <p>통신 구간 암호화(HTTPS), 데이터베이스 접근 통제(행 수준 보안), 승인·서명 권한 검증 등 기술적 보호조치를 적용하고 있습니다.</p>
 
-  <h2>7. 문의처</h2>
-  <p>개인정보 관련 문의: awos.help@gmail.com</p>
+  <h2>7. 개인정보 보호책임자 및 문의처</h2>
+  <p>개인정보 보호책임자: 우혁준 (TEAM KAU 대표) · 문의: awos.help@gmail.com</p>
+  <p>개인정보 침해에 대한 신고·상담은 개인정보침해신고센터(privacy.kisa.or.kr, 국번 없이 118)에서도 하실 수 있습니다.</p>
 
   <p class="meta">본 방침이 변경되는 경우 시행 7일 전 서비스 내 공지합니다.</p>
 </body>

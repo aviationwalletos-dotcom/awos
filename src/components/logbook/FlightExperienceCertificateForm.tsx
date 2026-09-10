@@ -24,6 +24,7 @@ import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocume
 interface FieldErrors {
   date?: string
   blockTime?: string
+  image?: string
 }
 
 interface FlightExperienceCertificateFormProps {
@@ -157,6 +158,8 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     const nightLandings = nightLandingsRaw ? Number(nightLandingsRaw) : undefined
 
     if (!date) nextErrors.date = '기준일을 입력해 주세요.'
+    // 관리자가 증명서와 대조해 승인하는 게 정책이라 증명서 파일은 필수예요(2026-09-10). 없이 들어간 요청은 승인할 근거가 없어요.
+    if (!imageFile) nextErrors.image = '비행경력증명서 사진 또는 PDF 를 첨부해 주세요. 관리자가 이 파일과 대조해 승인해요.'
     if (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0) {
       nextErrors.blockTime = '총 블록타임을 0보다 큰 숫자로 입력해 주세요.'
     }
@@ -205,11 +208,15 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       try {
         const uploaded = await uploadFile(imageFile, {
           filename: imageFile.name,
-          contentType: imageFile.type || 'image/jpeg',
+          contentType: imageFile.type || (imageFile.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
         })
         attachmentPath = uploaded.cdnUrl
       } catch (err) {
+        // 예전엔 여기서 조용히 넘어가 "첨부 없음" 요청이 생겼어요. 증명서 없이는 관리자가 승인할 수 없으니 제출을 멈춰요.
         console.warn('[비행경력증명서 사진 업로드 실패]', err)
+        setErrors({ image: `증명서 파일 업로드에 실패했어요(${err instanceof Error ? err.message : '알 수 없는 오류'}). 파일 크기(10MB 이하)나 네트워크를 확인하고 다시 시도해 주세요.` })
+        setIsSubmitting(false)
+        return
       }
     }
 
@@ -301,7 +308,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
       {/* 0. 증명서 사진 — 먼저 올리면 AI 가 아래 칸을 채워 준다 */}
       <fieldset>
-        <legend className={sectionTitleClass}>비행경력증명서 사진 (먼저 올리면 AI 가 칸을 채워요)</legend>
+        <legend className={sectionTitleClass}>비행경력증명서 사진 <span className="text-sky">(필수)</span> — 먼저 올리면 AI 가 칸을 채우고, 관리자가 이 파일과 대조해 승인해요</legend>
         <p className={sectionHintClass}>
           이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
           담당자가 확인할 수 있어요(선택 입력).
@@ -314,10 +321,10 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
           사진 선택
         </label>
         <input id="cert-image" type="file" accept="image/*,application/pdf,.pdf" onChange={handleImageChange} className="sr-only" />
-        {imageError && (
+        {(imageError || errors.image) && (
           <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-600">
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-            {imageError}
+            {imageError || errors.image}
           </p>
         )}
         {imageFile && !imageDataUrl && (

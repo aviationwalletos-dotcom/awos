@@ -3,11 +3,13 @@ import ReactDOM from 'react-dom/client'
 
 import App from './App.tsx'
 import { installCompatShims } from './lib/ui/compat'
+import { installMonitoring } from './lib/monitoring'
 
 import './tailwind.css'
 import './index.css'
 
 installCompatShims()
+installMonitoring()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
