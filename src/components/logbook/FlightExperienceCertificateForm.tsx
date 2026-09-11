@@ -20,6 +20,7 @@ import type { LogbookEntryInput } from '../../types/logbook'
 import { AiReadPanel } from '../AiReadPanel'
 import { InfoTip } from '../InfoTip'
 import { guessForeignIssuer } from '../../lib/foreignRecord'
+import { reconcileCertTotals, sanityNotes } from '../../lib/flightExperienceTotals'
 import { DateField } from '../DateField'
 import { type ReadDocumentResult, fillFormFields } from '../../lib/ai/readDocument'
 
@@ -73,6 +74,13 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       setAiDate(f.date)
       filled.push(FIELD_LABEL.date)
     }
+    // 검산·교정은 lib/flightExperienceTotals.ts (단위 테스트: 오재헌·채지훈 실제 증명서 값)
+    const reconciled = reconcileCertTotals(f)
+    const f2 = reconciled.fields
+    delete f2.studentTime // 검산용. 폼 칸 없음(소계 − 기장 − 부조종사로 계산)
+    result.notes.unshift(...reconciled.notes, ...sanityNotes(f2))
+    Object.keys(f).forEach((k) => delete f[k])
+    Object.assign(f, f2)
     const values: Record<string, string | number | null | undefined> = {}
     for (const [k, v] of Object.entries(f)) {
       if (k === 'date' || v === null || v === undefined) continue

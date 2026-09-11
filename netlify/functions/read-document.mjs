@@ -20,7 +20,10 @@ const SCHEMAS = {
 매핑:
 - blockTime = 소계(계 행). singleEngineLand/multiEngineLand/rotorcraftHelicopter = 항공기 형식별 소계 합(C172·PA28 등 단발, DA42·PA44 등 다발, R22·R44 등 회전익). 시뮬레이터 행(FTD·AATD·FFS·Frasca 등)은 여기서 제외.
 - picTime = 기장(교관 비행 포함). picSupervisedTime = 부조종사 중 "기장 감독하의 조종행위". sicTime = 부조종사 중 "기장 외의 조종사". flightInstructorTime = 교관조종사.
-- 학생조종사 열은 추출하지 않습니다(앱이 소계 − 기장 − 부조종사로 계산). 대신 검산: 기장 + 부조종사 + 학생조종사 = 소계 인지 확인하고 안 맞으면 notes 에 적으세요(교관조종사는 기장에 포함되어 있어 더하지 않음).
+- 교관조종사와 학생조종사는 나란히 붙은 열이라 헷갈리기 쉽습니다. 반드시 검산하세요:
+  (1) 교관조종사 ≤ 기장 (교관 비행은 기장 시간 안에 들어 있음) (2) 학생조종사 = 소계 − 기장 − 부조종사.
+  예: 기장 942.8 · 소계 963.4 이면 학생조종사는 20.6 이어야 하고, 720.0 같은 큰 값은 교관조종사입니다. 검산이 안 맞으면 두 값을 바꿔 다시 확인하세요.
+- studentTime = 학생조종사(검산용으로 함께 돌려주세요).
 - dualReceived(교육받은 시간 전체)는 별지 36호에 없습니다. 한국 서식이면 반드시 null. 미국식 증명서(예: "Dual Received: 58.2")에 있을 때만 채우세요.
 - conditionDay = 주간비행 4열의 합. conditionNight = 야간비행 4열의 합. crossCountry = 야외비행 4열(주간 기장/기장외 + 야간 기장/기장외)의 합. nightCrossCountry = 야간비행 중 야외비행 2열의 합.
 - actualInstrument = 실제비행(계). simulatedInstrument = 모의비행(계 — 시뮬레이터 행의 모의비행도 포함).
@@ -35,6 +38,7 @@ const SCHEMAS = {
       multiEngineLand: '육상다발 시간(시간). 모르면 null',
       rotorcraftHelicopter: '회전익 시간(시간). 모르면 null',
       dualReceived: '교육받은 시간 전체(Dual received). 미국식 증명서에 그 값이 있을 때만. 한국 별지 36호면 반드시 null',
+      studentTime: '학생조종사 시간(별지 36호 학생조종사 열, 검산용). 없으면 null',
       picTime: '기장(PIC) 시간. 모르면 null',
       picSupervisedTime: '기장 감독하의 조종행위 시간(부조종사 열). 없으면 null',
       sicTime: '기장 외의 조종사(SIC) 시간. 모르면 null',
@@ -49,6 +53,10 @@ const SCHEMAS = {
       instrumentApproaches: '계기접근 횟수(정수). 모르면 null',
       dayLandings: '주간 착륙 횟수(정수). 주·야 구분 없는 착륙횟수 총계는 여기. 문서에 착륙 횟수가 없으면 반드시 null (0 으로 추정 금지)',
       nightLandings: '야간 착륙 횟수(정수). 없으면 null',
+      certTotals: `한국 별지 36호일 때만: 맨 아래 "계" 행의 칸을 왼쪽부터 순서대로 그대로 옮겨 적은 객체(합산하지 말고 칸 값을 그대로). 순서:
+{ landings, pic, picSupervised, sic, instructor, student, engineer, subtotal, dayVfrPic, dayVfrOther, dayXcPic, dayXcOther, nightVfrPic, nightVfrOther, nightXcPic, nightXcOther, instActual, instSim, other }
+= 착륙횟수 | 기장 | 부조종사(기장감독하) | 부조종사(기장외) | 교관조종사 | 학생조종사 | 항공기관사 | 소계 | 주간 시계 기장 | 주간 시계 기장외 | 주간 야외 기장 | 주간 야외 기장외 | 야간 시계 기장 | 야간 시계 기장외 | 야간 야외 기장 | 야간 야외 기장외 | 실제비행 | 모의비행 | 기타.
+검산: dayVfrPic+dayVfrOther+dayXcPic+dayXcOther+nightVfrPic+nightVfrOther+nightXcPic+nightXcOther = subtotal, pic+picSupervised+sic+student = subtotal. 한국 서식이 아니면 null`,
     },
   },
   licence: {
