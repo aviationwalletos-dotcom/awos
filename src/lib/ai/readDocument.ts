@@ -45,17 +45,26 @@ async function downscaleImage(file: File, maxPx = 1600, quality = 0.85): Promise
   }
 }
 
-export async function readDocumentWithAi(kind: ReadDocumentKind, file: File): Promise<ReadDocumentResult> {
+/** 파일 하나 또는 여러 장(앞·뒷면, 여러 쪽). 여러 장이면 한 번의 요청으로 같이 읽는다(2026-09-11). */
+export async function readDocumentWithAi(kind: ReadDocumentKind, fileOrFiles: File | File[]): Promise<ReadDocumentResult> {
   const token = getAuthedAccessToken()
   if (!token) throw new Error('로그인이 필요해요.')
-  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
-  const { blob, mediaType } = isPdf ? { blob: file as Blob, mediaType: 'application/pdf' } : await downscaleImage(file)
-  if (blob.size > 5 * 1024 * 1024) throw new Error('파일이 너무 커요(5MB 이하). 사진을 다시 찍거나 줄여 주세요.')
-  const image = await fileToBase64(blob)
+  const list = (Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles]).slice(0, 4)
+  if (list.length === 0) throw new Error('파일을 먼저 골라 주세요.')
+  const images: { data: string; mediaType: string }[] = []
+  let total = 0
+  for (const file of list) {
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+    const { blob, mediaType } = isPdf ? { blob: file as Blob, mediaType: 'application/pdf' } : await downscaleImage(file)
+    total += blob.size
+    if (blob.size > 5 * 1024 * 1024) throw new Error(`"${file.name}"이 너무 커요(장당 5MB 이하). 사진을 다시 찍거나 줄여 주세요.`)
+    images.push({ data: await fileToBase64(blob), mediaType })
+  }
+  if (total > 10 * 1024 * 1024) throw new Error('파일이 합쳐서 10MB 를 넘어요. 장수를 줄여 주세요.')
   const res = await fetch('/api/read-document', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-    body: JSON.stringify({ kind, image, mediaType }),
+    body: JSON.stringify({ kind, images }),
     signal: typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(60_000) : undefined,
   })
   const data = (await res.json().catch(() => ({}))) as Partial<ReadDocumentResult> & { error?: string }

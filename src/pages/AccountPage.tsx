@@ -846,14 +846,6 @@ export function AccountPage() {
           </div>
         )}
 
-        {/* 정보를 아래로 채워 내려온 뒤 돌아갈 버튼 — 가입 직후는 "AWOS 시작하기", 기존 계정은 "로그북으로"(지훈 피드백) */}
-        <section className="mx-auto mt-6 max-w-3xl px-6">
-          <Link to={homePath}
-            className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-control bg-sky px-5 text-base font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-          >
-            {homeLabel}
-          </Link>
-        </section>
         <section className="mx-auto mt-6 max-w-3xl px-6">
           <AccountSection id="account-export" title="내 데이터 내보내기" icon={Download} className="!mt-0" status={`기록 ${myEntries.length}건 · 자격증 ${myCertificates.length}개`}>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
@@ -874,7 +866,7 @@ export function AccountPage() {
             </div>
           </AccountSection>
         </section>
-        <section className="mx-auto mt-6 max-w-3xl px-6 pb-16">
+        <section className="mx-auto mt-6 max-w-3xl px-6">
           <AccountSection id="account-delete" title="회원 탈퇴" tone="danger" className="!mt-0">
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               탈퇴하면 계정, 비행기록, 자격증과 사진이 <span className="font-semibold text-rose-300">즉시 영구 삭제</span>되며 복구할 수 없어요.
@@ -980,6 +972,15 @@ export function AccountPage() {
               </div>
             )}
           </AccountSection>
+        </section>
+
+        {/* 맨 아래 돌아가기 — 페이지 중간에 있으면 어중간하고, 가로 꽉 차면 과하다(9/11 피드백). 가입 직후는 "AWOS 시작하기" */}
+        <section className="mx-auto mt-10 max-w-3xl px-6 pb-16 text-center">
+          <Link to={homePath}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-control bg-sky px-8 text-base font-bold text-navy transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+          >
+            {homeLabel}
+          </Link>
         </section>
       </main>
     </div>

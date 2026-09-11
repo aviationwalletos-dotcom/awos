@@ -4,6 +4,7 @@ import { Gauge, PlaneTakeoff } from 'lucide-react'
 
 import { EmptyState } from '../EmptyState'
 import { sumHours } from '../../lib/hours'
+import { nightCrossCountryOf } from '../../lib/flightExperienceRows'
 
 import type { LogbookEntry } from '../../types/logbook'
 import { vehicleKindLabel } from '../../lib/tracks'
@@ -83,6 +84,7 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
     day: sumHours(officialEntries.map((e) => e.conditions?.day)),
     night: sumHours(officialEntries.map((e) => e.conditions?.night)),
     crossCountry: sumHours(officialEntries.map((e) => e.conditions?.crossCountry)),
+    nightCrossCountry: sumHours(officialEntries.map((e) => nightCrossCountryOf(e))),
     actualInstrument: sumHours(officialEntries.map((e) => e.conditions?.actualInstrument)),
     simulatedInstrument: sumHours(officialEntries.map((e) => e.conditions?.simulatedInstrument)),
     instrumentApproaches: officialEntries.reduce((a, e) => a + (e.instrumentApproaches ?? 0), 0),
@@ -167,10 +169,11 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
 
       <div className="mt-6">
         <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">비행 조건별 누적</h3>
-        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-5">
+        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-6">
           <StatCell label="주간" value={totals.day} />
           <StatCell label="야간" value={totals.night} />
           <StatCell label="크로스컨트리" value={totals.crossCountry} />
+          <StatCell label="야간 크로스컨트리" value={totals.nightCrossCountry} />
           <StatCell label="실제계기" value={totals.actualInstrument} />
           <StatCell label="모의계기" value={totals.simulatedInstrument} />
         </dl>

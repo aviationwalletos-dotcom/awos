@@ -124,8 +124,8 @@ const CLASS_RATING_LABEL: Record<'SEL' | 'MEL' | 'SES' | 'MES', string> = {
 
 /** 드롭다운에서만 다르게 보여줄 구분 이름. 저장되는 category 값은 그대로다. */
 const CATEGORY_OPTION_LABEL: Partial<Record<CertificateCategory, string>> = {
-  '한정': '한정 추가 (기존 자격증명에 등급·형식 추가)',
-  '교관 확인': '교관 확인 (Endorsement) — 교관이 로그북에 써 준 확인',
+  '한정': '한정 추가 (등급·형식)',
+  '교관 확인': '교관 확인 (Endorsement)',
 }
 
 /**
@@ -446,7 +446,7 @@ export function CertificateForm({
   return (
     <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <span className={`${labelClass} inline-flex items-center gap-1`}>
+          <span className={`${labelClass} flex flex-wrap items-center gap-1`}>
             {isEndorsement ? '교관 확인 사진 (선택)' : isOnLicence ? '사진 — 자격증명서에 같이 적힌 항목이에요' : '사진 (이미지·PDF, 여러 장 가능)'}
             <InfoTip label="사진 첨부 안내">
               {isEndorsement
@@ -455,10 +455,10 @@ export function CertificateForm({
                   ? '이 항목은 조종사 자격증명서(CPL·PPL 카드) 한정사항·특기사항에 적혀 있어요. 보통은 "조종사 자격증명" 구분에서 자격증 사진을 올리면 AI 가 같이 찾아 등록해 줘요. 여기서는 따로 받은 증서가 있을 때만 그 사진을 올리세요.'
                 : aiReadable
                   ? isLicenceCategory
-                    ? '먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요. 앞면을 첫 번째로 고르세요(그 장을 읽어요). 최대 5장.'
+                    ? '먼저 올리면 AI 가 자격명·번호·발급일·만료일과 한정·계기·교관·항공영어까지 읽어요. 앞·뒷면을 같이 고르면 둘 다 읽어요(최대 4장).'
                     : category === '항공신체검사'
-                      ? '먼저 올리면 AI 가 종류(1·2·3종)·발급일·유효기간·발급기관을 읽어요. 최대 5장.'
-                      : '먼저 올리면 AI 가 번호·발급일·만료일·발급기관을 읽어요. 최대 5장.'
+                      ? '먼저 올리면 AI 가 종류(1·2·3종)·발급일·유효기간·발급기관을 읽어요. 여러 장이면 같이 읽어요(최대 4장).'
+                      : '먼저 올리면 AI 가 번호·발급일·만료일·발급기관을 읽어요. 여러 장이면 같이 읽어요(최대 4장).'
                   : '관리자가 이 사진과 대조해 인증해요. 앞·뒷면처럼 여러 장이면 한 번에 고르세요(최대 5장).'}
             </InfoTip>
           </span>
@@ -466,20 +466,20 @@ export function CertificateForm({
             data-testid="cert-photo"
             accept="image/*,application/pdf,.pdf"
             multiple
-            onChange={(e) => setApprovalFiles(Array.from(e.target.files ?? []).slice(0, 5))}
+            onChange={(e) => setApprovalFiles(Array.from(e.target.files ?? []).slice(0, 4))}
             className="mt-1.5 block w-full text-xs text-slate-400 file:mr-3 file:rounded-control file:border file:border-sky/40 file:bg-sky/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky"
           />
           {approvalFiles.length > 0 && (
             <ul className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-slate-400">
               {approvalFiles.map((f, i) => (
                 <li key={`${f.name}-${i}`} className="rounded border border-white/10 px-2 py-0.5">
-                  {i === 0 ? '앞면(AI 읽기) · ' : `${i + 1}장 · `}{f.name}
+                  {i + 1}장 · {f.name}
                 </li>
               ))}
             </ul>
           )}
 
-          {aiReadable && <AiReadPanel kind="licence" file={approvalFile} onApply={applyAiResult} className="mt-3" />}
+          {aiReadable && <AiReadPanel kind="licence" file={approvalFile} files={approvalFiles} onApply={applyAiResult} className="mt-3" />}
           {mode === 'create' && isLicenceCategory && aiExtras.length > 0 && (
             <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">
               <p className="text-sm font-semibold text-ink">
@@ -645,6 +645,12 @@ export function CertificateForm({
                   <option value="SES">수상단발(SES)</option>
                   <option value="MES">수상다발(MES)</option>
                 </select>
+                {/* 4번 피드백(9/11): AI 가 다발·계기를 찾아도 이 칸은 첫 등급만 보여서 "반영 안 됐다"고 보임. 나머지는 체크 목록으로 같이 등록된다는 걸 여기서 알린다. */}
+                {aiExtras.some((x) => x.checked && x.input.category === '한정') && (
+                  <p className="mt-1.5 text-xs text-sky">
+                    + {aiExtras.filter((x) => x.checked && x.input.category === '한정').map((x) => x.input.name).join(', ')} — 위 "같이 찾은 자격" 체크로 함께 등록돼요
+                  </p>
+                )}
               </div>
             )}
           </>
@@ -792,7 +798,7 @@ export function CertificateForm({
               aria-describedby={errors.expiryDate ? 'expiryDate-error' : undefined}
             />
             {category === '항공신체검사' && medicalNote && (
-              <p className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-400">
                 별표 8 기준 <span className="font-semibold text-slate-300">{medicalNote.months}개월</span>로 자동 계산(수정 가능).
                 <InfoTip label="만료일 계산 설명">발급일 + {medicalNote.months}개월, 월말 만료 원칙(별표 8 비고 1). 증명서에 적힌 만료일이 다르면(항공전문의가 단축한 경우, 규칙 제92조③) 그 날짜를 넣으세요.</InfoTip>
                 {medicalNote.assumedAge && (
@@ -801,7 +807,7 @@ export function CertificateForm({
               </p>
             )}
             {category === '항공영어구술능력증명' && (
-              <p className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-400">
                 4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③).
                 <InfoTip label="항공영어 만료일 설명">6등급은 만료일을 비워 두세요. 만료 6개월 전에 다시 합격했다면 기존 만료일 다음 날부터 새로 계산돼요 — 증명서의 만료일을 그대로 넣으세요.</InfoTip>
               </p>

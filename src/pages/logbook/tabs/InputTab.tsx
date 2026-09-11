@@ -7,10 +7,15 @@ import { LegacyImportSection } from "../../../components/logbook/LegacyImportSec
 import { UltralightEntryForm } from "../../../components/logbook/UltralightEntryForm";
 import { VehicleCards } from "../../../components/logbook/VehicleCards";
 import type { LogbookModel } from "../useLogbookPageModel";
+import { sendEntrySignatureRequest } from "../../../lib/approvals/entrySignatureRequest";
+import { isForeignRecord } from "../../../lib/foreignRecord";
+import { toLogbookEntryInput } from "../../../lib/logbookEntryInput";
+import { useOrganizationAffiliationOverride } from "../../../hooks/useOrganizationAffiliationOverride";
 
 export function InputTab({ m }: { m: LogbookModel }) {
   const {
     account,
+    updateEntry,
     activeTrack,
     addEntry,
     addVehicle,
@@ -24,6 +29,8 @@ export function InputTab({ m }: { m: LogbookModel }) {
     showToast,
     vehicles,
   } = m;
+  const { override: affiliationOverride } = useOrganizationAffiliationOverride(account);
+  const myAffiliation = affiliationOverride ?? (account?.data?.organization_affiliation as string | undefined);
   // 입력 폼은 길어서 아래 "종이 로그북 가져오기"를 가린다 → 기본은 접어 두고 기록할 때 펼친다.
   // 접어도 폼은 그대로 두어(unmount 하지 않음) 적던 내용이 사라지지 않는다.
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -92,11 +99,24 @@ export function InputTab({ m }: { m: LogbookModel }) {
                 ) : (
                   <EntryForm
                     mode="create"
-                    onSubmit={(input) => {
-                      addEntry({
+                    onSubmit={(input, options) => {
+                      const created = addEntry({
                         ...input,
                         vehicleClass: input.vehicleClass ?? activeTrack,
                       });
+                      const target = options?.requestSignatureTo;
+                      // 해외 기록은 국내 교관 서명 대상이 아니라 요청을 보내지 않는다
+                      if (target && created && account && !isForeignRecord(created)) {
+                        void sendEntrySignatureRequest(created, account, target, myAffiliation)
+                          .then((req) => {
+                            updateEntry(created.id, { ...toLogbookEntryInput(created), signatureRequestPostId: req.id });
+                            showToast(`비행기록을 저장하고 ${target.name} 교관에게 서명 요청을 보냈어요.`);
+                          })
+                          .catch((err: unknown) => {
+                            showToast(`기록은 저장됐지만 서명 요청은 실패했어요: ${err instanceof Error ? err.message : "다시 시도해 주세요"}`);
+                          });
+                        return;
+                      }
                       showToast(
                         input.pilotCertification
                           ? "본인 서명과 함께 비행기록이 저장됐어요."

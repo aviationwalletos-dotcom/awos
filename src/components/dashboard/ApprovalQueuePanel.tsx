@@ -172,7 +172,7 @@ function RequestRow({ item, showAttachment, onDecided, renderExtra }: RowProps) 
               </a>
             ) : (
               <a key={url} href={url} target="_blank" rel="noreferrer" title="새 창에서 크게 보기">
-                <img src={url} alt={`첨부 사진 ${i + 1}`} className="max-h-64 w-auto max-w-sm rounded-control border border-white/10 object-contain" />
+                <img src={url} alt={`첨부 사진 ${i + 1}`} className="max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain" />
               </a>
             ),
           )}

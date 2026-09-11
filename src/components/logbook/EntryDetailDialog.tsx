@@ -7,6 +7,7 @@ import { SIGNED_FIELD_LABEL, buildSignedSnapshot, matchesSnapshot, snapshotFromP
 import { buildSignatureRequestContent, buildSignatureRequestTitle } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 import { isForeignRecord } from '../../lib/foreignRecord'
+import { nightCrossCountryOf } from '../../lib/flightExperienceRows'
 import { InfoTip } from '../InfoTip'
 import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { Button } from '../Button'
@@ -679,7 +680,7 @@ export function EntryDetailDialog({
                       <dd className="mt-0.5 font-mono-data tabular-nums text-ink">
                         {(entry.conditions?.day ?? 0).toFixed(1)} / {(entry.conditions?.night ?? 0).toFixed(1)} /{' '}
                         {(entry.conditions?.crossCountry ?? 0).toFixed(1)} /{' '}
-                        {entry.conditions?.nightCrossCountry === undefined ? '-' : entry.conditions.nightCrossCountry.toFixed(1)} /{' '}
+                        {nightCrossCountryOf(entry).toFixed(1)} /{' '}
                         {(entry.conditions?.actualInstrument ?? 0).toFixed(1)} /{' '}
                         {(entry.conditions?.simulatedInstrument ?? 0).toFixed(1)}
                       </dd>

@@ -13,26 +13,41 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 const SCHEMAS = {
   flight_experience: {
-    description: '비행경력증명서(별지 36호) 또는 미국 비행학교 증명서 / 로그북 요약',
+    description: '비행경력증명서(항공안전법 시행규칙 별지 제36호서식) 또는 미국 비행학교 증명서 / 로그북 요약',
+    // 별지 36호 열 구조(2026-09-11 테스터 피드백으로 명시): 주간·야간이 각각 4열이라 합산 규칙이 없으면 엉뚱한 열을 집는다.
+    guide: `한국 비행경력증명서(별지 36호)라면 아래 열 구조로 읽으세요. 값은 반드시 맨 아래 "계" 행(총계)에서 가져오세요.
+열: 일자 | 항공기 형식 | 착륙횟수 | [비행임무별비행시간] 기장 | 부조종사(기장 감독하의 조종행위 / 기장 외의 조종사) | 교관조종사 | 학생조종사 | 항공기관사 | 소계 | [비행종류별비행시간] 주간비행(시계비행 기장/기장외, 야외비행 기장/기장외) | 야간비행(시계비행 기장/기장외, 야외비행 기장/기장외) | [계기비행] 실제비행 | 모의비행 | 기타
+매핑:
+- blockTime = 소계(계 행). singleEngineLand/multiEngineLand/rotorcraftHelicopter = 항공기 형식별 소계 합(C172·PA28 등 단발, DA42·PA44 등 다발, R22·R44 등 회전익). 시뮬레이터 행(FTD·AATD·FFS·Frasca 등)은 여기서 제외.
+- picTime = 기장(교관 비행 포함). picSupervisedTime = 부조종사 중 "기장 감독하의 조종행위". sicTime = 부조종사 중 "기장 외의 조종사". flightInstructorTime = 교관조종사.
+- 학생조종사 열은 추출하지 않습니다(앱이 소계 − 기장 − 부조종사로 계산). 대신 검산: 기장 + 부조종사 + 학생조종사 = 소계 인지 확인하고 안 맞으면 notes 에 적으세요(교관조종사는 기장에 포함되어 있어 더하지 않음).
+- dualReceived(교육받은 시간 전체)는 별지 36호에 없습니다. 한국 서식이면 반드시 null. 미국식 증명서(예: "Dual Received: 58.2")에 있을 때만 채우세요.
+- conditionDay = 주간비행 4열의 합. conditionNight = 야간비행 4열의 합. crossCountry = 야외비행 4열(주간 기장/기장외 + 야간 기장/기장외)의 합. nightCrossCountry = 야간비행 중 야외비행 2열의 합.
+- actualInstrument = 실제비행(계). simulatedInstrument = 모의비행(계 — 시뮬레이터 행의 모의비행도 포함).
+- groundTrainerTime = "기타" 열의 계(시뮬레이터 행 FTD·AATD·FFS·Frasca 의 총 시간). 시뮬레이터 행은 실제 비행시간(소계)에 넣지 마세요.
+- dayLandings = 착륙횟수 총계(주·야 구분이 없으면 전부 여기), nightLandings = null. 착륙횟수 열이 비어 있으면 둘 다 null.
+확인: 주간 + 야간 ≈ 소계 여야 합니다. 안 맞으면 notes 에 적으세요.`,
     fields: {
       date: 'YYYY-MM-DD. 증명서 발급일 또는 기록 기준일. 모르면 null',
       issuer: '발급 기관/학교 이름(문자열). 모르면 null',
-      blockTime: '총 비행시간(시간, 소수). 모르면 null',
+      blockTime: '총 비행시간(시간, 소수). 시뮬레이터 제외. 모르면 null',
       singleEngineLand: '육상단발 시간(시간). 모르면 null',
       multiEngineLand: '육상다발 시간(시간). 모르면 null',
       rotorcraftHelicopter: '회전익 시간(시간). 모르면 null',
-      dualReceived: '교육 받은 시간(Dual received). 모르면 null',
-      picTime: 'PIC 시간. 모르면 null',
-      sicTime: 'SIC 시간. 모르면 null',
-      flightInstructorTime: '교관 시간(as instructor). 모르면 null',
+      dualReceived: '교육받은 시간 전체(Dual received). 미국식 증명서에 그 값이 있을 때만. 한국 별지 36호면 반드시 null',
+      picTime: '기장(PIC) 시간. 모르면 null',
+      picSupervisedTime: '기장 감독하의 조종행위 시간(부조종사 열). 없으면 null',
+      sicTime: '기장 외의 조종사(SIC) 시간. 모르면 null',
+      flightInstructorTime: '교관조종사 시간(as instructor). 모르면 null',
       groundTrainerTime: '시뮬레이터/지상훈련장비 시간. 모르면 null',
-      conditionDay: '주간 시간. 모르면 null',
-      conditionNight: '야간 시간. 모르면 null',
-      crossCountry: '크로스컨트리 시간. 모르면 null',
-      actualInstrument: '실계기 시간. 모르면 null',
-      simulatedInstrument: '모의계기 시간. 모르면 null',
+      conditionDay: '주간 시간(주간비행 4열 합). 모르면 null',
+      conditionNight: '야간 시간(야간비행 4열 합). 모르면 null',
+      crossCountry: '야외비행(크로스컨트리) 시간(주·야 야외 4열 합). 모르면 null',
+      nightCrossCountry: '야간 야외비행 시간(야간비행 중 야외 2열 합). 모르면 null',
+      actualInstrument: '실제 계기비행 시간. 모르면 null',
+      simulatedInstrument: '모의 계기비행 시간. 모르면 null',
       instrumentApproaches: '계기접근 횟수(정수). 모르면 null',
-      dayLandings: '주간 착륙 횟수(정수). 문서에 착륙 횟수가 없으면 반드시 null (0 으로 추정 금지)',
+      dayLandings: '주간 착륙 횟수(정수). 주·야 구분 없는 착륙횟수 총계는 여기. 문서에 착륙 횟수가 없으면 반드시 null (0 으로 추정 금지)',
       nightLandings: '야간 착륙 횟수(정수). 없으면 null',
     },
   },
@@ -120,11 +135,16 @@ export default async (req) => {
   const kind = body?.kind
   const schema = SCHEMAS[kind]
   if (!schema) return json(400, { error: 'kind 는 flight_experience 또는 licence 여야 해요.' })
-  const image = String(body?.image || '')
-  const mediaType = String(body?.mediaType || 'image/jpeg')
-  if (!image) return json(400, { error: '이미지가 없어요.' })
-  if (image.length * 0.75 > MAX_IMAGE_BYTES) return json(413, { error: '이미지가 너무 커요(5MB 이하).' })
-  const isPdf = mediaType === 'application/pdf'
+  // 여러 장(자격증 앞·뒷면, 증명서 여러 쪽)을 한 번에 읽는다. 예전 형식(image 하나)도 받는다.
+  const rawList = Array.isArray(body?.images) && body.images.length > 0
+    ? body.images
+    : body?.image
+      ? [{ data: body.image, mediaType: body.mediaType || 'image/jpeg' }]
+      : []
+  const files = rawList.slice(0, 4).map((f) => ({ data: String(f?.data || ''), mediaType: String(f?.mediaType || 'image/jpeg') })).filter((f) => f.data)
+  if (files.length === 0) return json(400, { error: '이미지가 없어요.' })
+  const totalBytes = files.reduce((a, f) => a + f.data.length * 0.75, 0)
+  if (totalBytes > MAX_IMAGE_BYTES * 2) return json(413, { error: '파일이 너무 커요(합쳐서 10MB 이하).' })
 
   const token = (req.headers.get('authorization') || '').slice(7)
   const quota = await consumeQuota(token)
@@ -141,25 +161,28 @@ export default async (req) => {
 필드:
 ${fieldLines}
 
-notes 작성 규칙: 조종사가 읽는 문장입니다. 필드 이름(singleEngineLand, expiryDate 같은 영어 코드), "null", JSON 용어를 쓰지 마세요. 화면에 보이는 한국어 칸 이름(예: 육상단발, 만료일, 착륙 횟수)으로 말하고, 한 문장씩 짧게 쓰세요. 예: "착륙 횟수가 문서에 없어 비워 뒀어요." / "항공영어 유효기간은 있지만 자격증 자체의 만료일은 없어 비워 뒀어요."
+notes 작성 규칙: 조종사가 읽는 문장입니다. 증명서에 없어서 비운 값(예: Dual 전체)은 "증명서에는 없는 값이라 비워 뒀어요. 직접 채워 주세요."처럼 알려 주세요. 필드 이름(singleEngineLand, expiryDate 같은 영어 코드), "null", JSON 용어를 쓰지 마세요. 화면에 보이는 한국어 칸 이름(예: 육상단발, 만료일, 착륙 횟수)으로 말하고, 한 문장씩 짧게 쓰세요. 예: "착륙 횟수가 문서에 없어 비워 뒀어요." / "항공영어 유효기간은 있지만 자격증 자체의 만료일은 없어 비워 뒀어요."
 
 응답은 JSON 객체 하나만, 다른 텍스트 없이:
 {"rows": [{...}, ...], "notes": ["읽기 어려웠던 행/칸이나 주의할 점을 한국어로 0~5개"], "confidence": "high|medium|low"}`
     : `당신은 항공 문서를 읽어 구조화하는 보조자입니다. 첨부된 문서는 "${schema.description}"입니다.
 아래 필드를 JSON 으로 추출하세요. 문서에 없는 값은 반드시 null 로 두고 절대 추정하지 마세요. 숫자는 숫자형으로, 날짜는 YYYY-MM-DD 로.
+${schema.guide ? `\n${schema.guide}\n` : ''}
 필드:
 ${fieldLines}
 
-notes 작성 규칙: 조종사가 읽는 문장입니다. 필드 이름(singleEngineLand, expiryDate 같은 영어 코드), "null", JSON 용어를 쓰지 마세요. 화면에 보이는 한국어 칸 이름(예: 육상단발, 만료일, 착륙 횟수)으로 말하고, 한 문장씩 짧게 쓰세요. 예: "착륙 횟수가 문서에 없어 비워 뒀어요." / "항공영어 유효기간은 있지만 자격증 자체의 만료일은 없어 비워 뒀어요."
+notes 작성 규칙: 조종사가 읽는 문장입니다. 증명서에 없어서 비운 값(예: Dual 전체)은 "증명서에는 없는 값이라 비워 뒀어요. 직접 채워 주세요."처럼 알려 주세요. 필드 이름(singleEngineLand, expiryDate 같은 영어 코드), "null", JSON 용어를 쓰지 마세요. 화면에 보이는 한국어 칸 이름(예: 육상단발, 만료일, 착륙 횟수)으로 말하고, 한 문장씩 짧게 쓰세요. 예: "착륙 횟수가 문서에 없어 비워 뒀어요." / "항공영어 유효기간은 있지만 자격증 자체의 만료일은 없어 비워 뒀어요."
 
 응답은 JSON 객체 하나만, 다른 텍스트 없이:
 {"fields": {...}, "notes": ["읽기 어려웠던 부분이나 주의할 점을 한국어로 0~3개"], "confidence": "high|medium|low"}`
 
   const content = [
-    isPdf
-      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: image } }
-      : { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
-    { type: 'text', text: prompt },
+    ...files.map((f) =>
+      f.mediaType === 'application/pdf'
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } }
+        : { type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.data } },
+    ),
+    { type: 'text', text: files.length > 1 ? `첨부 ${files.length}장은 같은 문서의 앞·뒷면 또는 여러 쪽입니다. 모두 함께 읽어 한 번에 추출하세요.\n${prompt}` : prompt },
   ]
 
   let ai

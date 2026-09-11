@@ -10,6 +10,8 @@ import { type ReadDocumentKind, type ReadDocumentResult, readDocumentWithAi } fr
 interface AiReadPanelProps {
   kind: ReadDocumentKind
   file: File | null
+  /** 여러 장이면 같이 읽는다(앞·뒷면). 없으면 file 하나 */
+  files?: File[]
   /** 읽은 값을 폼에 채우고, 채운 항목의 한글 이름 목록을 돌려준다 */
   onApply: (result: ReadDocumentResult) => string[]
   className?: string
@@ -28,7 +30,8 @@ function readConsent(): boolean {
   }
 }
 
-export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanelProps) {
+export function AiReadPanel({ kind, file, files, onApply, className = '' }: AiReadPanelProps) {
+  const inputFiles = files && files.length > 0 ? files : file ? [file] : []
   const [isReading, setIsReading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<{ filled: string[]; notes: string[]; confidence: ReadDocumentResult['confidence']; quota?: ReadDocumentResult['quota'] } | null>(null)
@@ -50,7 +53,7 @@ export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanel
     setError(null)
     setSummary(null)
     try {
-      const result = await readDocumentWithAi(kind, file)
+      const result = await readDocumentWithAi(kind, inputFiles)
       const filled = onApply(result)
       setSummary({ filled, notes: result.notes, confidence: result.confidence, quota: result.quota })
     } catch (err) {
@@ -68,7 +71,7 @@ export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanel
         disabled={!file || !consented || isReading}
         className="inline-flex min-h-[44px] items-center gap-2 rounded-control border border-sky/40 bg-sky/10 px-4 text-sm font-semibold text-sky hover:bg-sky/15
           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky disabled:cursor-not-allowed disabled:opacity-50"
-        title={file ? '사진을 AI 가 읽어 칸을 채워요. 채운 값은 꼭 확인하세요.' : '먼저 사진을 골라 주세요'}
+        title={file ? '사진·PDF 를 AI 가 읽어 칸을 채워요. 채운 값은 꼭 확인하세요.' : '먼저 사진이나 PDF 를 골라 주세요'}
       >
         {isReading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ScanText className="h-4 w-4" aria-hidden="true" />}
         {isReading ? '읽는 중… (10~20초)' : '사진에서 읽어오기 (AI)'}
@@ -82,13 +85,15 @@ export function AiReadPanel({ kind, file, onApply, className = '' }: AiReadPanel
             className="mt-0.5 h-4 w-4 shrink-0 accent-[#00D4FF]"
           />
           <span>
-            사진은 AI 가 읽기 위해 해외 서버(Anthropic, 미국)로 전송돼요. 읽는 데만 쓰이고 모델 학습에는 쓰이지 않아요.
+            사진·PDF 는 AI 가 읽기 위해 해외 서버(Anthropic, 미국)로 전송돼요. 읽는 데만 쓰이고 모델 학습에는 쓰이지 않아요.
             자격증에는 이름·생년월일·자격번호가 있어요. <span className="font-semibold text-ink">전송에 동의해요.</span>
           </span>
         </label>
       ) : (
         <p className="mt-1.5 text-[11px] text-slate-500">
-          {file ? '사진은 AI 읽기를 위해 해외 서버(Anthropic, 미국)로 전송돼요.' : '사진을 고르면 AI 가 읽어 칸을 채워 줘요. 채운 값은 확인하고 고칠 수 있어요.'}
+          {file
+            ? `${inputFiles.length > 1 ? `${inputFiles.length}장을 함께 읽어요. ` : ''}사진·PDF 는 AI 읽기를 위해 해외 서버(Anthropic, 미국)로 전송돼요.`
+            : '사진이나 PDF 를 고르면 AI 가 읽어 칸을 채워 줘요. 채운 값은 확인하고 고칠 수 있어요.'}
           {' '}
           <button type="button" onClick={() => handleConsent(false)} className="underline underline-offset-2 hover:text-slate-300">동의 철회</button>
         </p>

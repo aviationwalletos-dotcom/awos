@@ -32,7 +32,7 @@ export interface CategoryHours {
 
 // 비행 자격 시간 종류별 탑승 시간 (모두 선택 입력, 기본 0)
 export interface PilotingTime {
-  dualReceived?: number // 교관으로부터 교육받은 시간
+  dualReceived?: number // 교관으로부터 교육받은 시간(전체)
   pic?: number // 기장(PIC) 시간
   sic?: number // 부기장(SIC) 시간
   flightInstructor?: number // 비행교관으로서 탑승 시간

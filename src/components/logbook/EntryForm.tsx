@@ -10,6 +10,7 @@ import { Button } from '../Button'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
 import { isForeignRecord } from '../../lib/foreignRecord'
+import { useApprovedInstructors } from '../../hooks/baas/useApprovedInstructors'
 import { DateField } from '../DateField'
 
 interface FieldErrors {
@@ -25,7 +26,7 @@ interface FieldErrors {
 interface EntryFormProps {
   mode: 'create' | 'edit'
   initialValues?: LogbookEntry
-  onSubmit: (input: LogbookEntryInput) => void
+  onSubmit: (input: LogbookEntryInput, options?: { requestSignatureTo?: { userId: string; name: string; affiliation?: string } | null }) => void
   onCancel?: () => void
   /** 드론 조종자 등 항공기 개념이 다른 역할을 위한 라벨/플레이스홀더 커스터마이즈 (미지정 시 조종사 기본값 사용) */
   aircraftTypeLabel?: string
@@ -238,6 +239,10 @@ export function EntryForm({
   const [vehicleKind, setVehicleKind] = useState<string>(initialValues?.vehicleKind ?? '')
   const [simDevice, setSimDevice] = useState<SimDeviceKind>(initialValues?.simDevice ?? 'FTD')
   const kindOptions = vehicleKindsForTrack(vehicleClass)
+  // 저장하면서 바로 교관에게 서명 요청(선택). 상세 화면에서 다시 들어가 요청하던 번거로움을 줄인다(2026-09-11).
+  const { instructors: approvedInstructors } = useApprovedInstructors()
+  const signableInstructors = approvedInstructors.filter((i) => i.tracks.includes(vehicleClass))
+  const [signatureTargetId, setSignatureTargetId] = useState('')
   const isUnmanned = vehicleClass === 'ultralight' && isUnmannedKind(vehicleKind)
 
   const isSimKind = entryKind === 'sim'
@@ -368,10 +373,17 @@ export function EntryForm({
       signatureRequestPostId: initialValues?.signatureRequestPostId,
       origin: initialValues?.origin ?? 'manual',
       legacySourceNote: initialValues?.legacySourceNote,
+    }, {
+      requestSignatureTo: (() => {
+        if (mode !== 'create' || !signatureTargetId) return null
+        const t = signableInstructors.find((i) => i.userId === signatureTargetId)
+        return t ? { userId: t.userId, name: t.name, affiliation: t.affiliation } : null
+      })(),
     })
 
     if (mode === 'create') {
       e.currentTarget.reset()
+      setSignatureTargetId('')
     }
   }
 
@@ -1070,7 +1082,29 @@ export function EntryForm({
 
       <hr className="border-white/[0.08]" />
 
-
+      {/* 저장하면서 바로 교관에게 서명 요청(선택). 해외 기록·시뮬레이터·경량/초경량은 대상이 아니라 숨긴다 */}
+      {mode === 'create' && vehicleClass === 'aircraft' && signableInstructors.length > 0 && (
+        <div>
+          <label htmlFor="signatureTarget" className={`${labelClass} flex flex-wrap items-center gap-1`}>
+            저장하면서 교관에게 서명 요청 (선택)
+            <InfoTip label="서명 요청 설명">
+              고르면 저장 직후 그 교관의 서명함에 요청이 가요. 안 골라도 나중에 기록 상세에서 보낼 수 있어요. 해외 기록으로 체크한 비행은 요청이 가지 않아요.
+            </InfoTip>
+          </label>
+          <select id="signatureTarget"
+            value={signatureTargetId}
+            onChange={(e) => setSignatureTargetId(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">나중에 요청할게요</option>
+            {signableInstructors.map((i) => (
+              <option key={i.userId} value={i.userId}>
+                {i.name}{i.affiliation && i.affiliation !== '미상' ? ` · ${i.affiliation}` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div
         className="sticky bottom-0 -mx-cardpad -mb-cardpad mt-8 flex flex-wrap gap-3 border-t border-white/10 bg-navy/95 px-cardpad py-4 backdrop-blur-sm"

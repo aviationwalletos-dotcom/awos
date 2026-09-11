@@ -59,11 +59,11 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   // AI 가 읽은 값을 폼에 채운다(uncontrolled input 은 이름으로, 날짜는 상태로). 채운 항목의 한글 이름을 돌려준다.
   const FIELD_LABEL: Record<string, string> = {
     issuer: '발급 기관', blockTime: '총 비행시간', singleEngineLand: '육상단발', multiEngineLand: '육상다발', rotorcraftHelicopter: '회전익',
-    dualReceived: '교육 받은 시간', picTime: 'PIC', sicTime: 'SIC', flightInstructorTime: '교관 시간', groundTrainerTime: '시뮬레이터',
-    conditionDay: '주간', conditionNight: '야간', crossCountry: '크로스컨트리', actualInstrument: '실계기', simulatedInstrument: '모의계기',
+    dualReceived: 'Dual', picTime: '기장', picSupervisedTime: '기장 감독하 조종', sicTime: 'SIC', flightInstructorTime: '교관 시간', groundTrainerTime: '시뮬레이터',
+    conditionDay: '주간', conditionNight: '야간', crossCountry: '크로스컨트리', nightCrossCountry: '야간 크로스컨트리', actualInstrument: '실계기', simulatedInstrument: '모의계기',
     instrumentApproaches: '계기접근', dayLandings: '주간 착륙', nightLandings: '야간 착륙', date: '날짜',
   }
-  const FIELD_TO_INPUT: Record<string, string> = { issuer: 'certificateIssuer', dualReceived: 'dualReceived', picTime: 'picTime', sicTime: 'sicTime', flightInstructorTime: 'flightInstructorTime' }
+  const FIELD_TO_INPUT: Record<string, string> = { issuer: 'certificateIssuer', dualReceived: 'dualReceived', picTime: 'picTime', picSupervisedTime: 'picSupervisedTime', sicTime: 'sicTime', flightInstructorTime: 'flightInstructorTime' }
   function applyAiResult(result: ReadDocumentResult): string[] {
     const form = formRef.current
     if (!form) return []
@@ -110,6 +110,21 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     const day = Math.round((total - night) * 10) / 10
     if (day <= 0) return null
     return { total, night, day }
+  })()
+
+  // Dual 상한 = 학생조종사 + (기장 − 교관). 여기서 "PIC 만 있던 비행"(단독·공단 평가·시험비행 등)을 빼면 Dual 전체.
+  // 증명서만으론 그 뺄 값을 모르므로 자동으로 넣지 않고, 상한과 뺄 것을 알려주고 사용자가 넣는다(2026-09-11 대표 제안).
+  const dualHint = (() => {
+    void formTick
+    if (readFormNumber('dualReceived') !== undefined) return null
+    const block = readFormNumber('blockTime')
+    if (block === undefined) return null
+    const inst = readFormNumber('flightInstructorTime') ?? 0
+    const sic = (readFormNumber('sicTime') ?? 0) + (readFormNumber('picSupervisedTime') ?? 0)
+    // 상한 = 소계 − 교관 − 부조종사 = 학생조종사 + (기장 − 교관). 오재헌 244.6(실제 238.9), 채지훈 142.6.
+    const upper = Math.round((block - inst - sic) * 10) / 10
+    if (upper <= 0) return null
+    return { upper }
   })()
 
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -206,6 +221,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     const pilotingTime = {
       dualReceived: numOrUndef(form.get('dualReceived')),
       pic: numOrUndef(form.get('picTime')),
+      picSupervised: numOrUndef(form.get('picSupervisedTime')),
       sic: numOrUndef(form.get('sicTime')),
       flightInstructor: numOrUndef(form.get('flightInstructorTime')),
     }
@@ -214,6 +230,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
       day: numOrUndef(form.get('conditionDay')),
       night: numOrUndef(form.get('conditionNight')),
       crossCountry: numOrUndef(form.get('crossCountry')),
+      nightCrossCountry: numOrUndef(form.get('nightCrossCountry')),
       actualInstrument: numOrUndef(form.get('actualInstrument')),
       simulatedInstrument: numOrUndef(form.get('simulatedInstrument')),
     }
@@ -337,9 +354,11 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
 
       {/* 0. 증명서 사진 — 먼저 올리면 AI 가 아래 칸을 채워 준다 */}
       <fieldset>
-        <legend className={`${sectionTitleClass} inline-flex items-center gap-1`}>
-          비행경력증명서 사진 <span className="text-sky">(필수)</span>
-          <InfoTip label="증명서 사진 안내">먼저 올리면 AI 가 칸을 채워요. 관리자가 이 파일과 대조해 승인해요. 여러 쪽이면 한 번에 고르세요(최대 5장, 첫 장을 읽어요).</InfoTip>
+        <legend className={sectionTitleClass}>
+          <span className="flex flex-wrap items-center gap-1">
+            비행경력증명서 사진 <span className="text-sky">(필수)</span>
+            <InfoTip label="증명서 사진 안내">먼저 올리면 AI 가 칸을 채워요. 관리자가 이 파일과 대조해 승인해요. 여러 쪽이면 한 번에 고르세요(최대 4장, 같이 읽어요). 기관이 여러 곳이면(예: PPL 은 다른 기관, IR·CPL 은 여기) 증명서마다 따로 이월하세요 — 합산돼요.</InfoTip>
+          </span>
         </legend>
         <p className={sectionHintClass}>
           이 브라우저에 미리보기로 표시되며, 제출 시 관리자 인증 요청 게시글의 첨부파일로 함께 업로드되어
@@ -378,7 +397,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             className="mt-3 max-h-64 w-full max-w-sm rounded-control border border-white/10 object-contain"
           />
         )}
-        <AiReadPanel kind="flight_experience" file={imageFile} onApply={applyAiResult} className="mt-3" />
+        <AiReadPanel kind="flight_experience" file={imageFile} files={imageFile ? [imageFile, ...extraFiles] : []} onApply={applyAiResult} className="mt-3" />
       </fieldset>
 
       <hr className="border-white/[0.08]" />
@@ -426,7 +445,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
               />
               해외 기록(미국 등 외국 훈련)
               <InfoTip label="해외 기록">
-                외국 발급기관이면 자동으로 켜져요. 해외 기록은 국내 교관 서명 대상이 아니고, 관리자가 이 증명서를 대조해 승인한 것으로 확인을 갈음해요. 총 비행시간과 비행경력증명서(별지 36호)에는 포함돼요.
+                외국 기관이면 자동으로 켜져요. 국내 교관 서명은 받지 않고, 관리자의 증명서 대조 승인으로 확인해요. 총 시간과 별지 36호에는 포함돼요.
               </InfoTip>
             </label>
           </div>
@@ -485,10 +504,40 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         <legend className={sectionTitleClass}>3. 비행 자격 시간 종류별 누적 (선택)</legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <label htmlFor="cert-dualReceived" className={labelClass}>
+            <label htmlFor="cert-dualReceived" className={`${labelClass} flex flex-wrap items-center gap-1`}>
               DUAL RECEIVED(시간)
+              <InfoTip label="Dual 설명">
+                교관에게 교육받은 시간 전체. 미국식 증명서엔 이 값이 있고, 한국 별지 36호에는 없어요(자격증 후 교육 시간은 기장에 들어가요). 학생조종사 시간은 소계 − 기장 − 부조종사로 자동 계산돼요.
+              </InfoTip>
             </label>
             <input id="cert-dualReceived" name="dualReceived" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
+            {dualHint && (
+              <div className="mt-1.5 rounded-control border border-sky/30 bg-sky/10 px-3 py-2 text-xs text-slate-300">
+                <p>
+                  증명서엔 없는 값이에요. 최대 <span className="font-semibold text-sky">{dualHint.upper}</span>(소계 − 교관 − 부조종사)에서 혼자 탄 시간(단독·평가·시험비행)을 빼면 돼요.
+                </p>
+                <button type="button"
+                  onClick={() => {
+                    const el = formRef.current?.elements.namedItem('dualReceived') as HTMLInputElement | null
+                    if (!el) return
+                    el.value = String(dualHint.upper)
+                    setFormTick((t) => t + 1)
+                    el.focus()
+                  }}
+                  className="mt-1.5 font-semibold text-sky underline underline-offset-2 hover:opacity-80"
+                >
+                  {dualHint.upper} 넣고 고치기
+                </button>
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="cert-picSupervisedTime" className={`${labelClass} flex flex-wrap items-center gap-1`}>
+              기장 감독하 조종(시간)
+              <InfoTip label="기장 감독하 조종 설명">별지 36호 부조종사 열의 "기장 감독하의 조종행위"(제78조 2호 다).</InfoTip>
+            </label>
+            <input id="cert-picSupervisedTime" name="picSupervisedTime" type="number"
               inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
@@ -577,6 +626,14 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
               크로스컨트리(시간)
             </label>
             <input id="cert-crossCountry" name="crossCountry" type="number"
+              inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
+          </div>
+          <div>
+            <label htmlFor="cert-nightCrossCountry" className={`${labelClass} flex flex-wrap items-center gap-1`}>
+              야간 크로스컨트리(시간)
+              <InfoTip label="야간 크로스컨트리 설명">별지 36호 야간비행 중 야외비행 2열의 합. 비워 두면 야간·크로스컨트리 중 작은 값으로 잡아요.</InfoTip>
+            </label>
+            <input id="cert-nightCrossCountry" name="nightCrossCountry" type="number"
               inputMode="decimal" step="0.1" min="0" className={numberInputClass} />
           </div>
           <div>
