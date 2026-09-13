@@ -131,6 +131,28 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                     // 등록 뒤 폼이 비워져 "정보가 사라진 것처럼" 보이던 문제(지훈 피드백):
                     // 폼을 접고, 새 카드로 스크롤·강조하고, 인증 대기 안내 배너를 남긴다
                     const extras = options?.extras ?? [];
+                    // 이미 등록된 자격증에 한정·계기 등만 추가하는 경우 — 본체는 만들지 않고 기존 카드에 붙인다
+                    if (options?.extrasOnlyFor) {
+                      const linkId = options.extrasOnlyFor;
+                      void (async () => {
+                        let added = 0;
+                        for (const one of [input, ...extras]) {
+                          const made = await handleCreateCertificate(
+                            {
+                              ...one,
+                              track: one.track ?? activeTrack,
+                              linkedCertificateId: one.category === "한정" ? linkId : one.linkedCertificateId,
+                            },
+                            options?.approvalFile,
+                            { approvalFiles: options?.approvalFiles },
+                          );
+                          if (made) added += 1;
+                        }
+                        setIsCertFormOpen(false);
+                        showToast(`기존 자격증에 ${added}개를 추가했어요.`);
+                      })();
+                      return;
+                    }
                     void handleCreateCertificate(
                       { ...input, track: input.track ?? activeTrack },
                       options?.approvalFile,

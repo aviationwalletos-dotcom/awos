@@ -46,7 +46,7 @@ interface FieldErrors {
 interface CertificateFormProps {
   mode: 'create' | 'edit'
   initialValues?: Certificate
-  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; approvalFiles?: File[]; extras?: CertificateInput[]; targetInstructor?: { userId: string; name: string } | null }) => void
+  onSubmit: (input: CertificateInput, options?: { approvalFile?: File; approvalFiles?: File[]; extras?: CertificateInput[]; targetInstructor?: { userId: string; name: string } | null; extrasOnlyFor?: string }) => void
   onCancel?: () => void
   /** 로그인한 사용자의 역할에 해당하는 자격 템플릿(빠른 추가 칩)과 강조 색상 */
   roleTemplate?: RoleContent
@@ -177,6 +177,8 @@ export function CertificateForm({
   const [aiExpiryDate, setAiExpiryDate] = useState<string | undefined>(undefined)
   // 자격증명서 한 장에서 같이 찾은 자격(한정·계기·교관·EPTA). 사용자가 체크한 것만 본체와 함께 등록된다.
   const [aiExtras, setAiExtras] = useState<(CertificateSuggestion & { checked: boolean })[]>([])
+  // 사진 속 자격증이 이미 등록돼 있으면 본체는 다시 만들지 않고, 사진에서 찾은 한정·계기·교관만 그 카드에 붙인다(2026-09-13).
+  const [existingLicence, setExistingLicence] = useState<Certificate | null>(null)
 
   function applyAiResult(result: ReadDocumentResult): string[] {
     const form = formRef.current
@@ -199,6 +201,17 @@ export function CertificateForm({
         filled.push('자격 종류·등급')
         const extras = suggestions.filter((s) => s.kind !== 'licence').map((s) => ({ ...s, checked: !s.duplicate }))
         setAiExtras(extras)
+        // 이 자격증이 이미 등록돼 있으면 "기존 자격증에 추가" 모드로
+        const norm = (v: string | undefined) => (v ?? '').replace(/\s/g, '').toLowerCase()
+        const num = typeof f.licenceNumber === 'string' ? f.licenceNumber.trim() : ''
+        const found = primary.duplicate
+          ? existingCertificates.find(
+              (c) =>
+                c.category === '조종사 자격증명' &&
+                (num && c.licenceNumber ? norm(c.licenceNumber) === norm(num) : norm(c.name) === norm(primary.input.name)),
+            ) ?? null
+          : null
+        setExistingLicence(found)
       }
     }
 
@@ -324,6 +337,7 @@ export function CertificateForm({
   }, [category, subKey, birthDate, commercialSinglePilot])
 
   function handleCategoryChange(next: CertificateCategory) {
+    setExistingLicence(null)
     setNameTouched(false)
     setIssuerTouched(false)
     setCategory(next)
@@ -356,6 +370,29 @@ export function CertificateForm({
     const issuedDate = String(form.get('issuedDate') || '').trim()
     const expiryDateRaw = String(form.get('expiryDate') || '').trim()
     const expiryDate = showExpiryField && expiryDateRaw ? expiryDateRaw : undefined
+
+    if (existingLicence) {
+      // 기존 자격증에 추가: 본체는 만들지 않으므로 사진과 체크 항목만 확인한다
+      const picked = aiExtras.filter((x) => x.checked)
+      if (!approvalFile) nextErrors.approvalFile = '자격증 사진(이미지 또는 PDF)을 첨부해 주세요.'
+      if (picked.length === 0) nextErrors.name = '추가할 항목을 하나 이상 체크해 주세요.'
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors)
+        scrollToFirstError(formRef.current)
+        return
+      }
+      setErrors({})
+      onSubmit(
+        { ...picked[0].input, issuedDate: picked[0].input.issuedDate || issuedDate, track: initialValues?.track ?? track },
+        {
+          approvalFile: approvalFile ?? undefined,
+          approvalFiles: approvalFiles.length > 0 ? approvalFiles : undefined,
+          extras: picked.slice(1).map((x) => ({ ...x.input, issuedDate: x.input.issuedDate || issuedDate, track: initialValues?.track ?? track })),
+          extrasOnlyFor: existingLicence.id,
+        },
+      )
+      return
+    }
 
     if (!name) nextErrors.name = '자격/면허 명칭을 입력해 주세요.'
     if (!issuer) nextErrors.issuer = '발급기관을 입력해 주세요.'
@@ -480,6 +517,20 @@ export function CertificateForm({
           )}
 
           {aiReadable && <AiReadPanel kind="licence" file={approvalFile} files={approvalFiles} onApply={applyAiResult} className="mt-3" />}
+          {existingLicence && (
+            <div className="mt-3 rounded-control border border-sky/30 bg-sky/10 px-4 py-3 text-sm">
+              <p className="font-semibold text-sky">이미 등록된 자격증이에요 — {existingLicence.name}</p>
+              <p className="mt-1 text-xs text-slate-300">
+                자격증을 다시 만들지 않고, 아래에서 체크한 한정·계기·교관·항공영어만 이 자격증에 추가해요. 같은 사진으로 인증 요청이 가요.
+              </p>
+              <button type="button"
+                onClick={() => setExistingLicence(null)}
+                className="mt-1.5 text-xs text-slate-400 underline underline-offset-2 hover:text-slate-200"
+              >
+                아니에요, 새 자격증으로 등록할래요
+              </button>
+            </div>
+          )}
           {mode === 'create' && isLicenceCategory && aiExtras.length > 0 && (
             <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">
               <p className="text-sm font-semibold text-ink">
@@ -846,7 +897,11 @@ export function CertificateForm({
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" size="md" data-testid="cert-submit">
-          {mode === 'create' ? '자격증 등록하기' : '수정 내용 저장하기'}
+          {mode !== 'create'
+            ? '수정 내용 저장하기'
+            : existingLicence
+              ? `선택한 ${aiExtras.filter((x) => x.checked).length}개 추가하기`
+              : '자격증 등록하기'}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" tone="neutral" size="md" onClick={onCancel}>
