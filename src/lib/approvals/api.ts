@@ -6,6 +6,7 @@
 //  - "승인된 교관" 집합은 짧게 캐시하고, 판정이 일어나면 즉시 비운다.
 
 import { getAuthedUserId, getFreshDataClient } from '../baas/supabaseTransport'
+import { attachmentsOf } from './types'
 import type {
   ApprovalKind,
   ApprovalRequest,
@@ -16,6 +17,8 @@ import type {
 } from './types'
 
 const TABLE = 'approval_requests'
+/** supabaseTransport 의 업로드 URL 접두사. 저장된 값에서 실제 스토리지 경로만 떼어낼 때 쓴다. */
+const UPLOAD_SCHEME = 'sb-upload://'
 
 async function requireClient() {
   // 토큰이 곧 만료면 먼저 갱신("JWT expired" 방지)
@@ -192,4 +195,22 @@ export async function verifyApprovalRequestExists(id: string): Promise<boolean> 
     // 조회 실패(네트워크·테이블 미설치)는 판정 보류 — 끊지 않는다
     return true
   }
+}
+
+/**
+ * 탈퇴 전에 내가 올린 사진·PDF 를 스토리지에서 지운다(자격증·신체검사·비행경력증명서).
+ * SQL 로는 storage.objects 를 지울 수 없어서(Supabase 가 막음, 2026-09-13) Storage API 로 한다.
+ * 교관 서명 이미지는 상대방 기록의 일부라 건드리지 않는다.
+ * 실패해도 탈퇴는 진행한다 — 요청 행이 지워지면 그 파일은 열람 경로가 없다(board_files_scoped_read).
+ */
+export async function deleteMyUploadedFiles(): Promise<number> {
+  const mine = await listApprovalRequests({ scope: 'mine', kind: ['certificate', 'medical', 'flight_experience'], limit: 500 })
+  const paths = [...new Set(mine.flatMap((r) => attachmentsOf(r)))]
+    .map((u) => (u.startsWith(UPLOAD_SCHEME) ? u.slice(UPLOAD_SCHEME.length) : u))
+    .filter((p) => p && !p.includes('://') && !p.endsWith('-signature.png'))
+  if (paths.length === 0) return 0
+  const { client } = await requireClient()
+  const { error } = await client.storage.from('board-files').remove(paths)
+  if (error) throw new Error(error.message)
+  return paths.length
 }

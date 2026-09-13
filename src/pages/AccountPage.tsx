@@ -33,6 +33,7 @@ import { useLogbookEntries } from '../hooks/useLogbookEntries'
 import { useCertificates } from '../hooks/useCertificates'
 import { downloadLogbookCsv } from '../lib/logbookCsv'
 import { downloadFullExport } from '../lib/fullExport'
+import { deleteMyUploadedFiles } from '../lib/approvals/api'
 
 
 function formatDateTime(value: string | null): string {
@@ -212,14 +213,21 @@ export function AccountPage() {
       } else if (deletePhrase.trim() !== DELETE_PHRASE) {
         throw new Error(`확인 문구 "${DELETE_PHRASE}"를 정확히 입력해 주세요.`)
       }
-      // 2) 삭제
+      // 2) 내가 올린 사진·PDF 먼저 삭제(스토리지). SQL 로는 지울 수 없어 Storage API 로 한다.
+      try {
+        await deleteMyUploadedFiles()
+      } catch (err) {
+        // 실패해도 탈퇴는 계속한다 — 요청 행이 지워지면 그 파일은 열람 경로가 없다
+        console.warn('[탈퇴] 첨부 파일 삭제 실패', err)
+      }
+      // 3) 계정 삭제
       const client = await getFreshDataClient()
       if (!client) throw new Error('로그인 정보를 찾을 수 없어요. 다시 로그인 후 시도해 주세요.')
       const { error } = await client.rpc('delete_my_account')
       if (error) {
         throw new Error(
           error.message.includes('delete_my_account')
-            ? '탈퇴 기능이 아직 서버에 설정되지 않았어요(schema17 SQL 실행 필요).'
+            ? '탈퇴 기능이 아직 서버에 설정되지 않았어요(schema17·schema22 SQL 실행 필요).'
             : error.message,
         )
       }

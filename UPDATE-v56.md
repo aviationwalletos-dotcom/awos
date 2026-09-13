@@ -536,3 +536,13 @@ tsc · eslint 통과 · vitest 99 · build 통과 · playwright --list 20. 삭�
 - **틀림**: 크로스컨트리 ⓘ의 "50NM 이상 공항"은 FAA 규정. 한국 별표 4는 구간 거리(자가용 270km·사업용 540km, 2개 이상 비행장 착륙)로 정정.
 - 짧게/쉽게: 만료일 계산(별표 8 비고 인용 삭제), 항공영어 만료(제99조③ 재기산 설명 → "증명서 만료일 그대로"), 한정 없음(조문 축약), 회복 조건, 야간 크로스컨트리, 해외 기록 2곳, 서명 요청, 단독 비행("자격증 없는 학생 기록" 명시), 같이 찾은 자격, 증명서 사진 안내, Dual.
 - 지명 제거: 엑셀 가져오기 안내 "울진 탈론 리포트" → "탈론 리포트". "최대 5장" → 4장 통일. "ASA 로그북" → "탈론·ASA".
+
+---
+
+# UPDATE v2.9 — 회원 탈퇴 실패 수정 (2026-09-13)
+**증상**: 탈퇴 시 "Direct deletion from storage tables is not allowed. Use the Storage API instead." → 탈퇴 안 됨(롤백되어 데이터는 안전).
+**원인**: schema17 (d) 단계가 `storage.objects` 를 SQL delete. Supabase 가 트리거로 금지.
+**수정**
+- `supabase/schema22-withdrawal-storage-fix.sql`(**실행 필요**): delete_my_account 재작성, 스토리지 삭제 구문 제거.
+- `lib/approvals/api.ts` `deleteMyUploadedFiles()`: 내 인증 요청(certificate·medical·flight_experience)의 첨부 경로를 모아 Storage API 로 삭제. 교관 서명 이미지(-signature.png) 제외. 실패해도 탈퇴는 계속(요청 행이 지워지면 열람 경로 없음 — board_files_scoped_read).
+- `AccountPage`: 계정 삭제 전에 파일 삭제 호출.
