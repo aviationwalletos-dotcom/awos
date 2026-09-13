@@ -21,6 +21,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useOrganizationAffiliationOverride } from '../../hooks/useOrganizationAffiliationOverride'
 
 import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
+import { latestSignaturePath, storableSignaturePath } from '../../lib/approvals/select'
 
 function formatSignedAt(signedAt: number): string {
   try {
@@ -137,9 +138,6 @@ export function EntryDetailDialog({
     refetch: refetchCertificateComments,
   } = useApprovalRequestById(certificateRequestPostId, { enabled: shouldTrackCertificateDecision, pollMs: 30_000 })
 
-  // [SEC-003] 비공개 버킷 전환 후에도 교관 서명 이미지를 볼 수 있도록 서명 URL로 해석한다.
-  const resolvedInstructorSignatureUrl = useSignedFileUrl(entry?.instructorSignature?.signatureDataUrl)
-
   // [증거] 이 기록의 서명 이력 — 승인(서명 완료)된 요청 전부. 각 요청에는 그때의 기록 스냅샷·해시가 있다.
   // 종이 로그북에서 줄을 긋고 옆에 적듯, 몇 번째 서명 뒤에 무엇이 바뀌었는지 차수별로 보여준다. 서버 행이라 지울 수 없다.
   const hasSignatureHistory = Boolean(entry?.signedRequestId || entry?.instructorSignature)
@@ -147,6 +145,14 @@ export function EntryDetailDialog({
     { scope: 'mine', kind: 'signature', status: 'approved', subjectId: entry?.id, limit: 50 },
     { enabled: Boolean(entry) && hasSignatureHistory },
   )
+
+  // 서명 이미지는 기록에 싣지 않는다(기록 비대 방지) — 위에서 이미 불러온 승인 행에서 가져온다.
+  // 옛 기록에는 data URL 이 박혀 있을 수 있으므로 그때는 기록 값을 그대로 쓴다.
+  // [SEC-003] 비공개 버킷 전환 후에도 보이도록 서명 URL 로 해석한다(data: 는 그대로 통과).
+  const resolvedInstructorSignatureUrl = useSignedFileUrl(
+    entry?.instructorSignature?.signatureDataUrl ?? latestSignaturePath(signedRequests),
+  )
+
   const [signatureHistory, setSignatureHistory] = useState<
     Array<{ id: string; order: number; signedAt: string | null; instructor: string; matches: boolean | null; changes: Array<{ key: string; before: unknown; after: unknown }> }>
   >([])
@@ -216,7 +222,7 @@ export function EntryDetailDialog({
         instructorSignature: {
           instructorName: signatureRequest.decided_by_name || '교관',
           instructorUserId: signatureRequest.decided_by,
-          signatureDataUrl: signatureRequest.signature_path ?? undefined,
+          signatureDataUrl: storableSignaturePath(signatureRequest.signature_path),
           signedAt: signatureRequest.decided_at ? new Date(signatureRequest.decided_at).getTime() : Date.now(),
         },
       })

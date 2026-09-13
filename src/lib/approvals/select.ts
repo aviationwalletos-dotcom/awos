@@ -26,3 +26,31 @@ export function pickInstructorRequestByTrack(rows: ApprovalRequest[]): Partial<R
 export function approvedTracksOf(byTrack: Partial<Record<PilotTrack, ApprovalRequest>>): PilotTrack[] {
   return (Object.keys(byTrack) as PilotTrack[]).filter((t) => byTrack[t]?.status === 'approved')
 }
+
+/**
+ * 서명 이미지 경로 중 "기록에 실어도 되는 것"만 돌려준다.
+ *
+ * 교관이 서명할 때 저장소 업로드가 실패하거나 8초를 넘기면 data URL 을 그대로 쓴다
+ * (InstructorSignatureInboxSection — 서명 자체가 막히는 것보다 낫다는 판단). 그 값이 학생
+ * 기록으로 흘러들면 기록 한 건이 600B → 3~5KB 가 되고, localStorage 와 동기화 게시글이
+ * 같이 무거워진다.
+ *
+ * 이미지는 서버 approval_requests.signature_path 에 이미 남아 있고 상세 화면이 그 행을
+ * 이미 조회하므로(EntryDetailDialog), 기록에는 짧은 저장소 URL 만 싣는다.
+ * 법적 효력은 이미지가 아니라 승인 행(서명자 uuid · 스냅샷 해시 · 시각)에 있다.
+ */
+export function storableSignaturePath(path: string | null | undefined): string | undefined {
+  if (!path) return undefined
+  return path.startsWith('data:') ? undefined : path
+}
+
+/**
+ * 승인된 서명 요청들 중 "가장 나중" 것의 이미지 경로를 고른다.
+ * 서명 → 수정(서명 해제) → 재서명 하면 승인 행이 여러 개 생기므로, 옛 서명 그림이 뜨지
+ * 않도록 decided_at 기준 마지막을 쓴다(서명 이력 타임라인의 latestSignature 와 같은 기준).
+ */
+export function latestSignaturePath(rows: ApprovalRequest[] | undefined): string | undefined {
+  if (!rows || rows.length === 0) return undefined
+  const ordered = [...rows].sort((a, b) => (a.decided_at ?? '').localeCompare(b.decided_at ?? ''))
+  return ordered[ordered.length - 1]?.signature_path ?? undefined
+}

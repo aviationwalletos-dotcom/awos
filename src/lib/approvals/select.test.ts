@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { approvedTracksOf, pickInstructorRequestByTrack } from './select'
+import { approvedTracksOf, latestSignaturePath, pickInstructorRequestByTrack, storableSignaturePath } from './select'
 import type { ApprovalRequest } from './types'
 
 function row(partial: Partial<ApprovalRequest>): ApprovalRequest {
@@ -65,5 +65,38 @@ describe('교관 승인 구분별 대표 선택', () => {
       row({ id: 's', kind: 'signature', status: 'approved' }),
     ])
     expect(by.aircraft).toBeUndefined()
+  })
+})
+
+describe('storableSignaturePath', () => {
+  it('저장소 경로는 그대로 돌려준다', () => {
+    expect(storableSignaturePath('board-files/sig/abc.png')).toBe('board-files/sig/abc.png')
+  })
+
+  it('업로드 실패로 온 data URL 은 기록에 싣지 않는다', () => {
+    expect(storableSignaturePath('data:image/png;base64,AAAA')).toBeUndefined()
+  })
+
+  it('없으면 undefined', () => {
+    expect(storableSignaturePath(null)).toBeUndefined()
+    expect(storableSignaturePath(undefined)).toBeUndefined()
+    expect(storableSignaturePath('')).toBeUndefined()
+  })
+})
+
+describe('latestSignaturePath', () => {
+  it('재서명하면 가장 나중 서명의 이미지를 고른다', () => {
+    const rows = [
+      row({ kind: 'signature', status: 'approved', decided_at: '2026-03-01T00:00:00Z', signature_path: 'old.png' }),
+      row({ kind: 'signature', status: 'approved', decided_at: '2026-05-20T00:00:00Z', signature_path: 'new.png' }),
+      row({ kind: 'signature', status: 'approved', decided_at: '2026-04-10T00:00:00Z', signature_path: 'mid.png' }),
+    ]
+    expect(latestSignaturePath(rows)).toBe('new.png')
+  })
+
+  it('행이 없거나 이미지가 없으면 undefined', () => {
+    expect(latestSignaturePath([])).toBeUndefined()
+    expect(latestSignaturePath(undefined)).toBeUndefined()
+    expect(latestSignaturePath([row({ kind: 'signature', status: 'approved', decided_at: '2026-03-01T00:00:00Z' })])).toBeUndefined()
   })
 })

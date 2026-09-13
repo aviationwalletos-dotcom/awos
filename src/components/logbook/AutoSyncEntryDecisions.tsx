@@ -10,6 +10,7 @@ import { useApprovalRequests } from '../../lib/approvals/hooks'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 
 import type { LogbookEntry, LogbookEntryInput } from '../../types/logbook'
+import { storableSignaturePath } from '../../lib/approvals/select'
 
 interface AutoSyncEntryDecisionsProps {
   entries: LogbookEntry[]
@@ -85,7 +86,9 @@ export function AutoSyncEntryDecisions({ entries, onUpdate }: AutoSyncEntryDecis
           instructorSignature: {
             instructorName: req.decided_by_name || '교관',
             instructorUserId: req.decided_by,
-            signatureDataUrl: req.signature_path ?? undefined,
+            // 업로드 실패로 온 data URL(3~5KB)은 기록에 싣지 않는다. 서버 승인 행에 남아 있고
+            // 상세 화면이 거기서 가져온다(storableSignaturePath 주석 참고).
+            signatureDataUrl: storableSignaturePath(req.signature_path),
             signedAt: req.decided_at ? new Date(req.decided_at).getTime() : Date.now(),
           },
         })
