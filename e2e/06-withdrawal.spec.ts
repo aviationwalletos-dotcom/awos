@@ -21,20 +21,24 @@ test('회원 탈퇴: 새 계정 가입 → 탈퇴 → 재로그인 불가', asyn
   await page.locator('#signup-phone').fill('010-0000-0000')
   await page.locator('#signup-password').fill(password)
   await page.locator('#signup-password2').fill(password)
-  // 자격 구분(버튼형 체크박스) 하나 선택
+  // 자격 구분은 role="checkbox" 인 버튼, 약관은 진짜 input[type=checkbox] — 서로 다른 요소라 따로 누른다
   await page.getByRole('group', { name: /자격 구분 선택/ }).getByRole('checkbox').first().click()
-  // 필수 약관 2개
-  const agreements = page.locator('input[type="checkbox"]')
-  const n = await agreements.count()
-  for (let i = 0; i < n; i += 1) {
-    const box = agreements.nth(i)
-    if (!(await box.isChecked())) await box.check()
-  }
-  await page.getByRole('button', { name: /가입|회원가입|시작/ }).last().click()
+  await page.locator('label:has-text("이용약관에 동의") input[type="checkbox"]').check()
+  await page.locator('label:has-text("개인정보 수집·이용에 동의") input[type="checkbox"]').check()
+  await page.getByRole('button', { name: /^가입하기$|기관 사용자로 가입하기/ }).click()
 
-  // 이메일 인증이 켜져 있으면(=Auto Confirm 꺼짐) 이 테스트는 진행할 수 없다 → 스킵으로 알림
-  const needsVerify = page.getByText(/인증 메일|메일을 확인/)
-  if (await appears(needsVerify, 5_000)) test.skip(true, 'Supabase 이메일 Auto Confirm 이 꺼져 있어 가입 직후 로그인이 안 됩니다.')
+  // 가입 결과를 먼저 확인한다. 확인 못 하면 로그인에서 30초 기다리다 죽으므로 여기서 판정한다.
+  const done = page.getByRole('heading', { name: '회원가입이 완료됐어요' })
+  const needsVerify = page.getByRole('heading', { name: /인증 메일을 보냈어요|이미 가입된 이메일/ })
+  const ok = await appears(done, 20_000)
+  if (!ok) {
+    if (await appears(needsVerify, 1_000)) {
+      test.skip(true, 'Supabase 이메일 Auto Confirm 이 꺼져 있어 가입 직후 로그인이 안 됩니다.')
+    }
+    // 폼 유효성 오류 등 — 화면 텍스트를 그대로 남겨 원인을 알 수 있게 한다
+    const body = (await page.locator('main, body').first().innerText()).slice(0, 500)
+    throw new Error(`가입이 완료되지 않았어요. 화면 내용: ${body}`)
+  }
 
   // 2) 로그인
   await page.goto('/login')

@@ -546,3 +546,10 @@ tsc · eslint 통과 · vitest 99 · build 통과 · playwright --list 20. 삭�
 - `supabase/schema22-withdrawal-storage-fix.sql`(**실행 필요**): delete_my_account 재작성, 스토리지 삭제 구문 제거.
 - `lib/approvals/api.ts` `deleteMyUploadedFiles()`: 내 인증 요청(certificate·medical·flight_experience)의 첨부 경로를 모아 Storage API 로 삭제. 교관 서명 이미지(-signature.png) 제외. 실패해도 탈퇴는 계속(요청 행이 지워지면 열람 경로 없음 — board_files_scoped_read).
 - `AccountPage`: 계정 삭제 전에 파일 삭제 호출.
+
+---
+
+# UPDATE v2.9a — 탈퇴 E2E 수정 (2026-09-13)
+GitHub Actions #35~ 실패는 9/10 에 추가한 `06-withdrawal.spec.ts` 하나 때문(기존 17건은 통과). 앱 버그 아님.
+원인: 가입 단계에서 자격 구분(role=checkbox 인 button)과 약관(진짜 input)을 뭉뚱그려 눌러 가입이 안 됐는데, 테스트가 그걸 확인하지 않고 로그인으로 넘어가 30초 타임아웃.
+수정: 약관 두 개를 라벨로 정확히 체크, 제출 버튼 이름 고정, **가입 완료 화면("회원가입이 완료됐어요")을 먼저 확인**. 인증 메일 화면이면 skip, 그 외 실패면 화면 텍스트를 에러에 담아 원인 파악 가능.
