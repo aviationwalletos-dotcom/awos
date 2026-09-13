@@ -162,6 +162,7 @@ export function useLogbookPageModel() {
     tracks: pilotTracks,
     activeTrack,
     setActiveTrack,
+    setTracks: setPilotTracks,
     birthDate,
     operationType,
   } = usePilotTracks(account);
@@ -631,6 +632,7 @@ export function useLogbookPageModel() {
     selectedWorkLogEntry,
     setActiveTab,
     setActiveTrack,
+    setPilotTracks,
     setFilterKind,
     setFilterValue,
     setIsResyncing,

@@ -94,6 +94,24 @@ export const EPTA_VALIDITY_YEARS: Record<string, number | null> = {
   EPTA_6: null, // 영구
 }
 
+/**
+ * 항공영어구술능력증명 만료일 = 기준일 + N년 − 1일.
+ *
+ * 근거: 항공안전법 시행규칙 제99조제3항 — "각 호의 구분에 따른 기준일부터 계산하여 4등급은 3년,
+ * 5등급은 6년, 6등급은 영구". "기준일부터" 라 초일이 들어가므로(민법 제157조 단서), 민법 제160조②에
+ * 따라 마지막 해에서 기준일에 해당하는 날의 **전날**에 만료한다.
+ *
+ * 기준일(제99조③ 각 호):
+ *   1호. 최초 응시자(유효기간이 지난 사람 포함) → 합격 통지일
+ *   2호. 4·5등급 보유자가 유효기간이 끝나기 전 6개월 이내에 합격 → 기존 증명의 유효기간이 끝난 다음 날
+ *
+ * 2호(갱신)는 직전 증명의 만료일을 알아야 계산할 수 있어 여기서 다루지 않는다. 갱신이면 사용자가
+ * 기준일 칸에 "기존 만료일 + 1일"을 넣으면 이 함수가 그대로 맞는 값을 낸다.
+ *
+ * [2026-09-13 수정] 예전에는 −1일이 없어 하루 길게 나왔다. 만료 다음 날에도 유효로 보여
+ * 커런시 판정에서 잘못된 GO 가 날 수 있었다. TS 영어등급조회 실제 3건으로 확인:
+ *   2021-06-10 → 2024-06-09 · 2024-06-10 → 2027-06-09 · 2025-12-02 → 2028-12-01
+ */
 export function computeEptaExpiryDate(issuedDate: string, levelKey: string): string | null {
   const years = EPTA_VALIDITY_YEARS[levelKey]
   if (years == null || !issuedDate) return null
@@ -101,8 +119,22 @@ export function computeEptaExpiryDate(issuedDate: string, levelKey: string): str
   if (Number.isNaN(issued.getTime())) return null
   const due = new Date(issued)
   due.setFullYear(due.getFullYear() + years)
+  due.setDate(due.getDate() - 1) // 기준일 당일을 포함해 세므로 마지막 날은 하루 앞이다
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}`
+}
+
+/** 만료일에서 기준일을 거꾸로 구한다(증서에 만료일만 적혀 있을 때). 위 규칙의 역이다. */
+export function eptaBaseDateFromExpiry(expiryDate: string, levelKey: string): string | null {
+  const years = EPTA_VALIDITY_YEARS[levelKey]
+  if (years == null || !expiryDate) return null
+  const expiry = new Date(`${expiryDate}T00:00:00`)
+  if (Number.isNaN(expiry.getTime())) return null
+  const base = new Date(expiry)
+  base.setFullYear(base.getFullYear() - years)
+  base.setDate(base.getDate() + 1)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}`
 }
 
 // ── 경량항공기 조종사 트랙 ─────────────────────────────────────────────────
@@ -254,20 +286,48 @@ export function computeMedicalExpiryDate(
   return `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}`
 }
 
-/** 무선통신사 통신보안 의무교육(5년 주기) 다음 기한 = 발급일 + 5년 */
-export function commEducationDueDate(issuedDate: string): string | null {
-  const issued = new Date(`${issuedDate}T00:00:00`)
-  if (Number.isNaN(issued.getTime())) return null
-  const due = new Date(issued)
+/**
+ * 통신보안교육 기한의 기준일 = 최종교육일과 자격증 발급일 중 **늦은 쪽**.
+ *
+ * 제도가 두 단계라 그렇다(전파법 제30조·시행규칙 제7조).
+ *   · 교육을 아직 안 받았으면 → 자격 취득(발급)이 기준이 된다
+ *   · 한 번이라도 받았으면   → 그 최종교육일부터 다시 5년이다
+ * 최종교육일은 자격증에 안 적혀 있고 전파진흥원에서 따로 조회한다. 모르면 비워 두면 된다.
+ *
+ * 실제 사례(2026-09-13): 자격 발급 2017-11-24 · 최종교육 2022-03-08 → 4년 4개월 차이.
+ * 발급일만 쓰면 만료를 2022-11-23 로 잡아 "기한이 지났어요"를 잘못 띄웠다(실제는 2027-03-07).
+ */
+export function commEducationBaseDate(issuedDate: string, lastEducationDate?: string): string {
+  if (!lastEducationDate) return issuedDate
+  if (!issuedDate) return lastEducationDate
+  return lastEducationDate > issuedDate ? lastEducationDate : issuedDate
+}
+
+/**
+ * 무선통신사 통신보안 의무교육(5년 주기)의 마지막 유효일 = 기준일 + 5년 − 1일.
+ *
+ * 한국방송통신전파진흥원 통신보안교육내역 실제 기록으로 확인(2026-09-13):
+ *   최종교육일 2022-03-08 → 통신보안교육만료일 2027-03-07
+ * 항공영어(시행규칙 제99조③)와 같은 방식이다. 기간을 "…부터 5년"으로 세면 초일이 들어가므로
+ * 민법 제160조②에 따라 마지막 해의 해당일 전날에 끝난다.
+ *
+ * 기준일은 commEducationBaseDate() 로 구해서 넘긴다(최종교육일과 발급일 중 늦은 쪽).
+ */
+export function commEducationDueDate(lastEducationDate: string): string | null {
+  const base = new Date(`${lastEducationDate}T00:00:00`)
+  if (Number.isNaN(base.getTime())) return null
+  const due = new Date(base)
   due.setFullYear(due.getFullYear() + 5)
+  due.setDate(due.getDate() - 1) // 기준일 당일을 포함해 세므로 마지막 날은 하루 앞이다
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}`
 }
 
 /** 무선통신사 교육 기한(발급 후 5년)이 지났는가 */
-export function isCommEducationDue(issuedDate: string): boolean {
-  const due = commEducationDueDate(issuedDate)
-  return Boolean(due) && due! <= localToday()
+/** 통신보안교육 기한이 지났는지. 만료일 당일까지는 유효하므로 "만료일 < 오늘" 이어야 지난 것이다. */
+export function isCommEducationDue(lastEducationDate: string): boolean {
+  const due = commEducationDueDate(lastEducationDate)
+  return Boolean(due) && due! < localToday()
 }
 
 export type ExpiryRequirement = 'required' | 'optional' | 'hidden'

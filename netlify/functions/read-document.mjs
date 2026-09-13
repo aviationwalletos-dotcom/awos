@@ -70,7 +70,7 @@ const SCHEMAS = {
       expiryDate: '만료일/유효기간 YYYY-MM-DD. 없으면 null',
       ratings: '한정사항 문자열(예: 비행기 육상단발). 없으면 null',
       medicalClass: "항공신체검사증명서면 종류: '제1종' | '제2종' | '제3종'. 신체검사증명서가 아니면 null",
-      documentKind: "문서 종류: 'licence'(조종사 자격증명서) | 'medical'(항공신체검사증명서) | 'radio'(무선통신사 자격증) | 'permit'(조종연습허가서) | 'epta'(항공영어구술능력증명서) | 'other'",
+      documentKind: "문서 종류: 'licence'(항공기 조종사 자격증명서) | 'ultralight'(초경량비행장치 조종자증명) | 'lsa'(경량항공기 조종사 자격증명) | 'medical'(항공신체검사증명서) | 'radio'(무선통신사 자격증) | 'permit'(조종연습허가서) | 'epta'(항공영어구술능력증명서) | 'other'",
       limitations: '제한사항 문자열. 없으면 null',
       medicalClass: '항공신체검사 종류(1, 2, 3) 정수. 해당 없으면 null',
       // ── 조종사 자격증명서 한 장에서 같이 등록할 수 있는 항목들(한정사항·특기사항에서 읽는다) ──
@@ -83,6 +83,14 @@ const SCHEMAS = {
       eptaLevel: '특기사항(REMARKS)의 ENGLISH PROFICIENCY LEVEL 정수(4, 5, 6). 없으면 null',
       eptaValidUntil: "ENGLISH PROFICIENCY 의 'VALID UNTIL' 날짜 YYYY-MM-DD. 없으면 null (LEVEL 6 는 만료가 없을 수 있음)",
       holderBirthDate: '소지자 생년월일(IVa. DATE OF BIRTH) YYYY-MM-DD. 없으면 null',
+      // ── 초경량비행장치 조종자증명 (II 항목이 "초경량비행장치 조종자 / PILOT OF AN ULTRA LIGHT VEHICLE") ──
+      ultralightKind:
+        "초경량비행장치 조종자증명이면 한정사항(XII. RATINGS)에 적힌 장치 종류 코드 하나. 'UL_POWERED'(동력비행장치) | 'UL_ROTOR'(회전익비행장치) | 'UL_POWERED_PARAGLIDER'(동력패러글라이더) | 'UL_HANG_GLIDER'(행글라이더) | 'UL_PARAGLIDER'(패러글라이더) | 'UL_BALLOON_PRIVATE'(유인자유기구 자가용) | 'UL_BALLOON_COMMERCIAL'(유인자유기구 사업용) | 'UAS_AIRPLANE'(무인비행기) | 'UAS_HELICOPTER'(무인헬리콥터) | 'UAS_MULTICOPTER'(무인멀티콥터/UNMANNED MULTICOPTER) | 'UAS_VTOL'(무인수직이착륙기) | 'UAS_AIRSHIP'(무인비행선). 초경량 증명이 아니면 null",
+      // ── 경량항공기 조종사 자격증명 (II 항목이 "경량항공기 조종사 / PILOT OF A LIGHT SPORT AIRCRAFT") ──
+      lsaKind:
+        "경량항공기 조종사 자격증명이면 한정사항(XII. RATINGS)에 적힌 종류 코드 하나. 'LSA_AIRPLANE'(타면조종형비행기) | 'LSA_WEIGHT_SHIFT'(체중이동형비행기) | 'LSA_HELICOPTER'(경량헬리콥터) | 'LSA_GYROPLANE'(자이로플레인) | 'LSA_POWERED_PARACHUTE'(동력패러슈트). 경량항공기 자격증명이 아니면 null",
+      uasGrade:
+        "무인비행장치(UAS_*)의 종 구분 정수 1|2|3|4. 한정사항에 '무인멀티콥터/1종' 또는 'UNMANNED MULTICOPTER/1st' 처럼 적혀 있으면 1. 종 표기가 없거나 무인장치가 아니면 null",
     },
   },
 }

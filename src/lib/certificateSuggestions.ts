@@ -11,7 +11,7 @@
 
 import type { Certificate, CertificateCategory, CertificateInput } from '../types/certificate'
 import type { PilotTrack } from './tracks'
-import { EPTA_VALIDITY_YEARS, computeEptaExpiryDate } from '../data/certificateOptions'
+import { EPTA_VALIDITY_YEARS, LSA_LICENCE_TYPES, ULTRALIGHT_CERT_TYPES, computeEptaExpiryDate, eptaBaseDateFromExpiry } from '../data/certificateOptions'
 
 type AircraftCategory = 'AIRPLANE' | 'HELICOPTER'
 type ClassRating = 'SEL' | 'MEL' | 'SES' | 'MES'
@@ -81,10 +81,50 @@ export function buildCertificateSuggestions(
   licenceIssuedDate: string,
 ): CertificateSuggestion[] {
   const out: CertificateSuggestion[] = []
+  const issued = isDate(licenceIssuedDate) ? licenceIssuedDate : ''
+
+  // ── 초경량비행장치 조종자증명 · 경량항공기 조종사 자격증명 ──
+  // 항공기 조종사 자격증명(PPL/CPL/ATPL/MPL)과 서식이 비슷하지만 다른 증명이다. licenceCode 가 없으므로
+  // 아래 항공기용 경로를 타면 제안이 하나도 안 만들어진다(2026-09-13 테스터 제보). 먼저 처리한다.
+  const otherLicence = (() => {
+    const ulKind = typeof fields.ultralightKind === 'string' ? fields.ultralightKind : null
+    const ulType = ulKind ? ULTRALIGHT_CERT_TYPES.find((t) => t.key === ulKind) : undefined
+    if (ulType) {
+      // 무인장치는 종(1~4종)까지 있어야 이름이 완성된다. 종을 못 읽었으면 비워 두고 사용자가 고른다.
+      const grade = typeof fields.uasGrade === 'number' && [1, 2, 3, 4].includes(fields.uasGrade) ? `${fields.uasGrade}종` : ''
+      return {
+        category: '초경량비행장치 조종자증명' as const,
+        track: 'ultralight' as const,
+        name: grade ? `${ulType.label} ${grade}` : ulType.label,
+      }
+    }
+    const lsaKind = typeof fields.lsaKind === 'string' ? fields.lsaKind : null
+    const lsaType = lsaKind ? LSA_LICENCE_TYPES.find((t) => t.key === lsaKind) : undefined
+    if (lsaType) return { category: '경량항공기 조종사 자격증명' as const, track: 'lsa' as const, name: lsaType.label }
+    return null
+  })()
+
+  if (otherLicence) {
+    out.push({
+      key: 'licence',
+      kind: 'licence',
+      label: otherLicence.name,
+      input: {
+        name: otherLicence.name,
+        category: otherLicence.category,
+        track: otherLicence.track,
+        licenceNumber: typeof fields.licenceNumber === 'string' ? fields.licenceNumber.trim() || undefined : undefined,
+        limitations: typeof fields.limitations === 'string' ? fields.limitations.trim() || undefined : undefined,
+        issuer: TS,
+        issuedDate: issued,
+      },
+      duplicate: hasSame(existing, otherLicence.category, otherLicence.name),
+    })
+    return out
+  }
+
   const code = typeof fields.licenceCode === 'string' && LICENCE_LABEL[fields.licenceCode] ? fields.licenceCode : null
   if (!code) return out
-
-  const issued = isDate(licenceIssuedDate) ? licenceIssuedDate : ''
   const licenceNumber = typeof fields.licenceNumber === 'string' ? fields.licenceNumber.trim() || undefined : undefined
   const limitations = typeof fields.limitations === 'string' ? fields.limitations.trim() || undefined : undefined
 
@@ -187,13 +227,11 @@ export function buildCertificateSuggestions(
     const name = `항공영어구술능력증명 ${level}등급`
     const validUntil = isDate(fields.eptaValidUntil) ? fields.eptaValidUntil : null
     const years = EPTA_VALIDITY_YEARS[levelKey]
-    // 발급일은 증서에 없다. 만료일이 있으면 규칙으로 거꾸로 계산하고, 없으면 자격증명 발급일을 쓴다(사용자가 고칠 수 있다).
+    // 기준일(합격 통지일)은 자격증명서에 안 적혀 있다. 만료일이 있으면 규칙으로 거꾸로 계산하고,
+    // 없으면 자격증명 발급일을 쓴다(사용자가 고칠 수 있다). 규칙은 시행규칙 제99조③ — eptaBaseDateFromExpiry 주석 참고.
     let eptaIssued = issued
     if (validUntil && years) {
-      const d = new Date(`${validUntil}T00:00:00`)
-      d.setFullYear(d.getFullYear() - years)
-      const pad = (n: number) => String(n).padStart(2, '0')
-      eptaIssued = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      eptaIssued = eptaBaseDateFromExpiry(validUntil, levelKey) ?? issued
     }
     const expiry = validUntil ?? (eptaIssued ? computeEptaExpiryDate(eptaIssued, levelKey) : null) ?? undefined
     out.push({

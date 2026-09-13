@@ -48,6 +48,12 @@ export interface Certificate {
   limitations?: string
   issuer: string // 발급기관
   issuedDate: string // YYYY-MM-DD
+  /**
+   * 무선통신사 통신보안 의무교육의 최종교육일(전파진흥원 "통신보안교육내역"의 최종교육일).
+   * 자격증 발급일과 다른 날짜다 — 자격은 한 번 따면 유효기간이 없고, 교육은 5년마다 따로 받는다.
+   * 비어 있으면(교육을 아직 안 받았거나 모르면) 발급일을 기준으로 쓴다. commEducationBaseDate 참고.
+   */
+  lastEducationDate?: string // YYYY-MM-DD
   /** 항공신체검사/법정교육 등 실제 만료가 있는 자격만 값을 가집니다. 조종사 자격증명/한정/조종교육증명은 만료 개념이 없어 비어 있을 수 있습니다. */
   expiryDate?: string // YYYY-MM-DD
   notes?: string

@@ -3,7 +3,7 @@ import { Pencil, Trash2, X } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUploadBoardFile } from '../../hooks/baas/useUploadBoardFile'
 import { submitCertificateApprovalRequest } from '../../lib/approvals/certificateRequests'
-import { commEducationDueDate, isCommEducationDue } from '../../data/certificateOptions'
+import { commEducationBaseDate, commEducationDueDate, isCommEducationDue } from '../../data/certificateOptions'
 
 import { Button } from '../Button'
 import { CertificateForm } from './CertificateForm'
@@ -178,12 +178,26 @@ export function CertificateDetailDialog({ certificate, onClose, onUpdate, onDele
               {certificate.category === '무선통신사' && (
                 <div className="rounded-card border border-orange-400/30 bg-orange-400/10 p-4 text-xs leading-relaxed text-orange-200">
                   <p className="font-semibold">통신보안 의무교육 (5년 주기)</p>
-                  <p className="mt-1">
-                    다음 교육 기한: <span className="font-mono-data font-semibold">{commEducationDueDate(certificate.issuedDate) ?? '-'}</span>
-                    {isCommEducationDue(certificate.issuedDate) && certificate.approvalStatus !== 'approved'
-                      ? ' — 기한이 지났어요. 아래에서 교육 이수증을 첨부해 관리자 인증을 요청하세요.'
-                      : ' — 기한 내예요.'}
-                  </p>
+                  {(() => {
+                    // 기준일 = 최종교육일과 발급일 중 늦은 쪽. 교육을 아직 안 받았으면 발급일이 기준이 된다.
+                    const base = commEducationBaseDate(certificate.issuedDate, certificate.lastEducationDate)
+                    const usedEducation = Boolean(certificate.lastEducationDate) && base === certificate.lastEducationDate
+                    return (
+                      <>
+                        <p className="mt-1">
+                          교육 만료일: <span className="font-mono-data font-semibold">{commEducationDueDate(base) ?? '-'}</span>
+                          {isCommEducationDue(base) && certificate.approvalStatus !== 'approved'
+                            ? ' — 기한이 지났어요. 아래에서 교육 이수증을 첨부해 관리자 인증을 요청하세요.'
+                            : ' — 기한 내예요.'}
+                        </p>
+                        <p className="mt-1 text-[11px] text-orange-300/80">
+                          {usedEducation
+                            ? `최종교육일 ${certificate.lastEducationDate} 기준이에요.`
+                            : `최종교육일을 아직 안 넣어서 발급일 ${certificate.issuedDate} 기준이에요. 교육을 받으신 적이 있으면 수정해서 넣어 주세요.`}
+                        </p>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
 

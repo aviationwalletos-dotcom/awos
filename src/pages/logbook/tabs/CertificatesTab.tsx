@@ -8,12 +8,16 @@ import { CertificateForm } from "../../../components/certificates/CertificateFor
 import { CertificateList } from "../../../components/certificates/CertificateList";
 import type { LogbookModel } from "../useLogbookPageModel";
 import { InfoTip } from "../../../components/InfoTip";
+import { PILOT_TRACK_LABEL } from "../../../lib/tracks";
 
 export function CertificatesTab({ m }: { m: LogbookModel }) {
   const [isCertFormOpen, setIsCertFormOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<{ id: string; name: string; withPhoto: boolean } | null>(null);
   const {
     activeTrack,
+    setActiveTrack,
+    pilotTracks,
+    setPilotTracks,
     birthDate,
     certificates,
     handleCreateCertificate,
@@ -182,6 +186,13 @@ export function CertificatesTab({ m }: { m: LogbookModel }) {
                   }}
                   roleTemplate={roleContent}
                   track={activeTrack}
+                  ownedTracks={pilotTracks}
+                  onRequestTrack={(next, { needsAdd }) => {
+                    // AI 가 다른 종류의 자격증이라고 판정했을 때만 불린다. 보유 목록에 없으면 먼저 추가한다.
+                    if (needsAdd) setPilotTracks([...pilotTracks, next]);
+                    setActiveTrack(next);
+                    showToast(`${PILOT_TRACK_LABEL[next]} 화면으로 옮겼어요. 사진을 다시 올려 읽어 주세요.`);
+                  }}
                   birthDate={birthDate}
                   commercialSinglePilot={operationType === "commercial"}
                   existingCertificates={certificates}

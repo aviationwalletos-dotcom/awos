@@ -26,7 +26,7 @@ import {
 } from '../../data/certificateOptions'
 import type { CertificateSubType } from '../../data/certificateOptions'
 import type { RoleContent } from '../../data/content'
-import type { PilotTrack } from '../../lib/tracks'
+import { PILOT_TRACK_LABEL, type PilotTrack } from '../../lib/tracks'
 import { localToday } from '../../lib/ui/localDate'
 import { InfoTip } from '../InfoTip'
 import { AiReadPanel } from '../AiReadPanel'
@@ -52,6 +52,10 @@ interface CertificateFormProps {
   roleTemplate?: RoleContent
   /** v1.1 — 어느 트랙의 자격을 등록하는지. 구분(카테고리) 선택지가 이 값으로 정해진다. */
   track?: PilotTrack
+  /** 보유한 자격 종류. AI 가 다른 종류의 자격증을 읽었을 때 "추가하고 이동" 이 필요한지 판단한다. */
+  ownedTracks?: PilotTrack[]
+  /** AI 가 다른 종류의 자격증이라고 판정했을 때 그쪽으로 옮겨 달라고 요청한다. 없으면 안내만 뜬다. */
+  onRequestTrack?: (track: PilotTrack, opts: { needsAdd: boolean }) => void
   /** v1.1 — 항공신체검사 유효기간이 연령으로 갈리므로(별표 8) 생년월일이 있으면 정확히 계산한다. */
   birthDate?: string | null
   /** v1.1 — 1종 6개월 예외(여객 1인조종 등) 판정용 */
@@ -158,11 +162,15 @@ export function CertificateForm({
   onCancel,
   roleTemplate: _roleTemplate,
   track = 'aircraft',
+  ownedTracks,
+  onRequestTrack,
   birthDate,
   commercialSinglePilot,
   existingCertificates = [],
 }: CertificateFormProps) {
   const categories = CERTIFICATE_CATEGORIES_BY_TRACK[track]
+  // AI 가 읽은 자격증이 지금 보고 있는 자격 종류와 다를 때(예: 조종사 화면에서 초경량 증명을 읽음)
+  const [aiOtherTrack, setAiOtherTrack] = useState<{ track: PilotTrack; name: string } | null>(null)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [nameValue, setNameValue] = useState(initialValues?.name ?? '')
   // 사용자가 명칭을 직접 고치기 전까지는 세부 종류에서 자동으로 채운다(모바일 select는 onChange 타이밍이 달라 effect로 처리).
@@ -189,6 +197,34 @@ export function CertificateForm({
 
     // 조종사 자격증명서면 종류(PPL/CPL/ATPL)·종류/등급 한정을 본체 폼에 먼저 맞추고, 나머지는 체크 목록으로
     setAiExtras([])
+    setAiOtherTrack(null)
+
+    // 초경량비행장치 조종자증명 · 경량항공기 조종사 자격증명 — 항공기 조종사 자격증명과 다른 증명이다
+    // (licenceCode 가 없다). 지금 보고 있는 자격 종류와 다르면 값을 바꾸지 않고 안내만 띄운다.
+    // 말없이 화면을 바꾸면 사용자가 무슨 일이 일어났는지 모른다(2026-09-13 대표 판단).
+    const otherKind = typeof f.ultralightKind === 'string' ? f.ultralightKind : typeof f.lsaKind === 'string' ? f.lsaKind : null
+    if (mode === 'create' && otherKind) {
+      const isUl = typeof f.ultralightKind === 'string'
+      const wantTrack: PilotTrack = isUl ? 'ultralight' : 'lsa'
+      const wantCategory = isUl ? '초경량비행장치 조종자증명' : '경량항공기 조종사 자격증명'
+      const built = buildCertificateSuggestions(f, existingCertificates, wantTrack, isDate(f.issuedDate) ? f.issuedDate : '')
+      const primaryOther = built.find((x) => x.kind === 'licence')
+      if (primaryOther) {
+        if (track !== wantTrack) {
+          setAiOtherTrack({ track: wantTrack, name: primaryOther.input.name })
+          return filled
+        }
+        if (category !== wantCategory) handleCategoryChange(wantCategory)
+        setNameTouched(false)
+        setSubKey(otherKind)
+        const grade = isUl && typeof f.uasGrade === 'number' && [1, 2, 3, 4].includes(f.uasGrade) ? `${f.uasGrade}종` : ''
+        setSubDetail(grade)
+        setNameValue(primaryOther.input.name)
+        filled.push(grade ? '자격 종류·종' : '자격 종류')
+        return filled
+      }
+    }
+
     if (mode === 'create' && typeof f.licenceCode === 'string') {
       const suggestions = buildCertificateSuggestions(f, existingCertificates, track, isDate(f.issuedDate) ? f.issuedDate : '')
       const primary = suggestions.find((s) => s.kind === 'licence')
@@ -443,6 +479,10 @@ export function CertificateForm({
         typeRating: isRatingCategory ? typeRating.trim() || undefined : initialValues?.typeRating,
         issuer,
         issuedDate,
+        lastEducationDate:
+          category === '무선통신사'
+            ? String(form.get('lastEducationDate') || '').trim() || undefined
+            : initialValues?.lastEducationDate,
         expiryDate,
         notes: String(form.get('notes') || '').trim() || undefined,
       },
@@ -517,6 +557,37 @@ export function CertificateForm({
           )}
 
           {aiReadable && <AiReadPanel kind="licence" file={approvalFile} files={approvalFiles} onApply={applyAiResult} className="mt-3" />}
+          {aiOtherTrack && (() => {
+            const needsAdd = !(ownedTracks ?? []).includes(aiOtherTrack.track)
+            const label = PILOT_TRACK_LABEL[aiOtherTrack.track]
+            return (
+              <div className="mt-3 rounded-control border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm">
+                <p className="font-semibold text-amber-200">{label} 자격증이에요</p>
+                <p className="mt-1 text-xs text-slate-300">
+                  읽은 자격증은 <span className="font-semibold text-slate-100">{aiOtherTrack.name}</span> 이에요.
+                  지금은 {PILOT_TRACK_LABEL[track]} 자격을 등록하는 중이라 값을 채우지 않았어요.
+                  {needsAdd && ' 아직 이 자격 종류를 쓰고 있지 않아서, 옮기면 함께 추가돼요.'}
+                </p>
+                {onRequestTrack ? (
+                  <button type="button"
+                    onClick={() => onRequestTrack(aiOtherTrack.track, { needsAdd })}
+                    className="mt-2 rounded-control border border-amber-400/40 bg-amber-400/15 px-3 py-1.5 text-xs font-medium text-amber-100
+                      transition-colors hover:bg-amber-400/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                  >
+                    {needsAdd ? `${label} 추가하고 옮기기` : `${label}로 옮기기`}
+                  </button>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-400">{label} 화면에서 등록해 주세요.</p>
+                )}
+                <button type="button"
+                  onClick={() => setAiOtherTrack(null)}
+                  className="mt-1.5 block text-xs text-slate-400 underline underline-offset-2 hover:text-slate-200"
+                >
+                  괜찮아요, 여기서 직접 입력할래요
+                </button>
+              </div>
+            )
+          })()}
           {existingLicence && (
             <div className="mt-3 rounded-control border border-sky/30 bg-sky/10 px-4 py-3 text-sm">
               <p className="font-semibold text-sky">이미 등록된 자격증이에요 — {existingLicence.name}</p>
@@ -705,10 +776,25 @@ export function CertificateForm({
         )}
 
         {category === '무선통신사' && (
-          <p className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
-            무선통신사는 <span className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며, 발급 5년이 지나면
-            교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리돼요.
-          </p>
+          <>
+            <div className="sm:col-span-2">
+              <label htmlFor="lastEducationDate" className={labelClass}>
+                통신보안교육 최종교육일 <span className="font-normal text-slate-400">(선택)</span>
+              </label>
+              <DateField id="lastEducationDate"
+                name="lastEducationDate"
+                defaultValue={initialValues?.lastEducationDate}
+                className={inputClass} />
+              <p className="mt-1.5 text-xs text-slate-400">
+                자격증에 없는 값이에요. 전파진흥원 마이페이지 &gt; 통신보안교육내역에서 볼 수 있어요.
+                비워 두면 발급일을 기준으로 계산해요.
+              </p>
+            </div>
+            <p className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
+              무선통신사는 <span className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며,
+              기한이 지나면 교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리돼요.
+            </p>
+          </>
         )}
       </div>
 
