@@ -27,11 +27,17 @@ const CATEGORY_BADGE: Record<DisplayBadge, string> = {
 // 채워지는 경우가 많음)를 그대로 신뢰하지 않고, 지상훈련장비 시간 및 conditions의 실제 기록된
 // 시간 값을 근거로 다시 계산해요.
 // 규칙:
-// 1) 지상훈련장비 시간(groundTrainerTime)이 0보다 크면 다른 배지 없이 FTD만 표시해요.
-// 2) 그 외에는 크로스컨트리(X-C) 여부에 따라 X-C 또는 LCL을 기본 배지로 표시하고,
+// 1) 비행경력증명서 이월 기록(누적 합계)은 배지를 달지 않아요. 배지는 "이 비행 한 건이
+//    어떤 비행이었나"를 뜻하는데, 이월 기록은 과거 수백 건의 합계라 해당하지 않아요.
+//    특히 합계 안에 시뮬레이터가 몇 시간만 섞여 있어도 아래 2)의 이른 반환 때문에
+//    1,000시간짜리 카드 전체가 FTD 로 찍혀 "천 시간을 전부 시뮬레이터로 탔다"로 읽혔어요.
+//    카드에 이미 "비행경력증명서(누적 기록)" 제목과 인증 칩이 있어 구분은 충분해요.
+// 2) 지상훈련장비 시간(groundTrainerTime)이 0보다 크면 다른 배지 없이 FTD만 표시해요.
+// 3) 그 외에는 크로스컨트리(X-C) 여부에 따라 X-C 또는 LCL을 기본 배지로 표시하고,
 //    야간(NGT) 시간이 있으면 기본 배지 옆에 NGT 배지를 추가로 표시해요.
 function deriveBadges(entry: LogbookEntry): DisplayBadge[] {
   if (entryTrack(entry) === 'ultralight') return []
+  if (entry.origin === 'flight_experience_certificate') return []
   if ((entry.groundTrainerTime ?? 0) > 0) return ['FTD']
 
   const conditions = entry.conditions
