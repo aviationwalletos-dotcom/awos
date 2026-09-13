@@ -13,12 +13,15 @@ test('회원 탈퇴: 새 계정 가입 → 탈퇴 → 재로그인 불가', asyn
   const stamp = Date.now()
   const email = `e2e-delete-${stamp}@awos-test.invalid`
   const password = `E2eDel!${stamp}`
+  // 계정은 전화번호당 하나만 만들 수 있다 — 고정 번호를 쓰면 두 번째 실행부터 가입이 막힌다(2026-09-13).
+  // 010-9xxx-xxxx 대역에서 실행마다 다른 번호를 만든다. 탈퇴가 성공하면 번호도 함께 풀린다.
+  const phone = `010-9${String(stamp % 1000).padStart(3, '0')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`
 
   // 1) 가입
   await page.goto('/signup')
   await page.locator('#signup-name').fill('탈퇴테스트')
   await page.locator('#signup-email').fill(email)
-  await page.locator('#signup-phone').fill('010-0000-0000')
+  await page.locator('#signup-phone').fill(phone)
   await page.locator('#signup-password').fill(password)
   await page.locator('#signup-password2').fill(password)
   // 자격 구분은 role="checkbox" 인 버튼, 약관은 진짜 input[type=checkbox] — 서로 다른 요소라 따로 누른다
@@ -36,8 +39,9 @@ test('회원 탈퇴: 새 계정 가입 → 탈퇴 → 재로그인 불가', asyn
       test.skip(true, 'Supabase 이메일 Auto Confirm 이 꺼져 있어 가입 직후 로그인이 안 됩니다.')
     }
     // 폼 유효성 오류 등 — 화면 텍스트를 그대로 남겨 원인을 알 수 있게 한다
-    const body = (await page.locator('main, body').first().innerText()).slice(0, 500)
-    throw new Error(`가입이 완료되지 않았어요. 화면 내용: ${body}`)
+    const body = (await page.locator('main, body').first().innerText()).replace(/\s+/g, ' ')
+    const reason = body.match(/[^.]*(?:이미 있어요|동의|형식|8자|일치하지)[^.]*\./)?.[0]?.trim()
+    throw new Error(`가입이 완료되지 않았어요${reason ? ` — ${reason}` : ''}\n화면: ${body.slice(0, 400)}`)
   }
 
   // 2) 로그인
