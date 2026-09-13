@@ -729,7 +729,7 @@ export function CertificateForm({
               aria-invalid={Boolean(errors.issuer)}
               aria-describedby={errors.issuer ? 'issuer-error' : undefined}
             >
-              <option value="">{isLoadingInstructors ? '교관 목록 불러오는 중…' : '승인된 교관을 고르세요'}</option>
+              <option value="">{isLoadingInstructors ? '교관 목록 불러오는 중…' : approvedInstructors.filter((i) => i.tracks.includes(initialValues?.track ?? track)).length === 0 ? '승인된 교관이 없어요' : '승인된 교관을 고르세요'}</option>
               {approvedInstructors
                 .filter((i) => i.tracks.includes(initialValues?.track ?? track))
                 .map((i) => (

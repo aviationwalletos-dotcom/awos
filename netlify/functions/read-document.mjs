@@ -79,7 +79,7 @@ const SCHEMAS = {
         "한정사항(XII. RATINGS)에 적힌 종류/등급을 빠짐없이 배열로. 각 항목은 {\"category\":\"AIRPLANE\"|\"HELICOPTER\",\"class\":\"SEL\"|\"MEL\"|\"SES\"|\"MES\"|null}. 육상단발=SEL, 육상다발=MEL, 수상단발=SES, 수상다발=MES, 헬리콥터는 class null. 계기비행증명·조종교육증명은 여기 넣지 말 것. 없으면 []",
       instrumentRatings: "계기비행증명(INSTRUMENT RATING)이 있으면 종류 배열 [\"AIRPLANE\"|\"HELICOPTER\"]. 없으면 []",
       flightInstructorRatings:
-        "조종교육증명(FLIGHT INSTRUCTOR RATING)이 있으면 배열. 각 항목 {\"grade\":\"BASIC\"|\"SENIOR\",\"category\":\"AIRPLANE\"|\"HELICOPTER\"}. 초급/JUNIOR=BASIC, 선임/SENIOR=SENIOR. 등급 표기가 없으면 BASIC. 없으면 []",
+        "조종교육증명(FLIGHT INSTRUCTOR RATING)이 있으면 배열. 각 항목 {\"grade\":\"BASIC\"|\"SENIOR\",\"category\":\"AIRPLANE\"|\"HELICOPTER\",\"classRating\":\"SEL\"|\"MEL\"|\"SES\"|\"MES\"|null}. 초급/JUNIOR=BASIC, 선임/SENIOR=SENIOR. \"초급(비행기/육상단발, 비행기/육상다발)\"처럼 등급까지 적혀 있으면 등급마다 항목을 하나씩 만드세요(육상단발=SEL·육상다발=MEL·수상단발=SES·수상다발=MES). 등급 표기가 없으면 classRating 은 null. 없으면 []",
       eptaLevel: '특기사항(REMARKS)의 ENGLISH PROFICIENCY LEVEL 정수(4, 5, 6). 없으면 null',
       eptaValidUntil: "ENGLISH PROFICIENCY 의 'VALID UNTIL' 날짜 YYYY-MM-DD. 없으면 null (LEVEL 6 는 만료가 없을 수 있음)",
       holderBirthDate: '소지자 생년월일(IVa. DATE OF BIRTH) YYYY-MM-DD. 없으면 null',

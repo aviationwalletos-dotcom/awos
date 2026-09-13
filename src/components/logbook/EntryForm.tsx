@@ -1083,6 +1083,9 @@ export function EntryForm({
       <hr className="border-white/[0.08]" />
 
       {/* 저장하면서 바로 교관에게 서명 요청(선택). 해외 기록·시뮬레이터·경량/초경량은 대상이 아니라 숨긴다 */}
+      {mode === 'create' && vehicleClass === 'aircraft' && approvedInstructors.length > 0 && signableInstructors.length === 0 && (
+        <p className="text-xs text-slate-500">이 자격 구분으로 승인된 교관이 없어서 서명 요청을 보낼 수 없어요.</p>
+      )}
       {mode === 'create' && vehicleClass === 'aircraft' && signableInstructors.length > 0 && (
         <div>
           <label htmlFor="signatureTarget" className={`${labelClass} flex flex-wrap items-center gap-1`}>

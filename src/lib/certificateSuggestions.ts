@@ -24,6 +24,9 @@ const LICENCE_LABEL: Record<string, string> = {
 }
 const CATEGORY_LABEL: Record<AircraftCategory, string> = { AIRPLANE: '비행기', HELICOPTER: '헬리콥터' }
 const CLASS_LABEL: Record<ClassRating, string> = { SEL: '육상단발', MEL: '육상다발', SES: '수상단발', MES: '수상다발' }
+/** 조종교육증명 등급 표기(자격증에 "초급(비행기/육상단발)"처럼 적힘) */
+const CFI_CLASS_LABEL: Record<string, string> = { SEL: '육상단발', MEL: '육상다발', SES: '수상단발', MES: '수상다발' }
+
 const TS = '한국교통안전공단'
 
 export interface CertificateSuggestion {
@@ -161,13 +164,15 @@ export function buildCertificateSuggestions(
   // ── 조종교육증명(초급/선임) ──
   const fiRaw = Array.isArray(fields.flightInstructorRatings) ? fields.flightInstructorRatings : []
   for (const item of fiRaw) {
-    const o = item as { grade?: unknown; category?: unknown } | null
+    const o = item as { grade?: unknown; category?: unknown; classRating?: unknown } | null
     if (!o || !isCat(o.category)) continue
     const grade = o.grade === 'SENIOR' ? '선임' : '초급'
-    const name = `${grade} 조종교육증명 - ${CATEGORY_LABEL[o.category]}`
+    // 자격증에 "초급(비행기/육상단발)"처럼 등급까지 적히므로 등급별로 따로 등록한다(2026-09-13)
+    const cls = typeof o.classRating === 'string' ? CFI_CLASS_LABEL[o.classRating] : undefined
+    const name = `${grade} 조종교육증명 - ${CATEGORY_LABEL[o.category]}${cls ? ` ${cls}` : ''}`
     if (out.some((s) => s.input.name === name)) continue
     out.push({
-      key: `instructor:${o.grade === 'SENIOR' ? 'SENIOR' : 'BASIC'}:${o.category}`,
+      key: `instructor:${o.grade === 'SENIOR' ? 'SENIOR' : 'BASIC'}:${o.category}:${typeof o.classRating === 'string' ? o.classRating : 'NA'}`,
       kind: 'instructor',
       label: name,
       input: { name, category: '조종교육증명', track, issuer: TS, issuedDate: issued },

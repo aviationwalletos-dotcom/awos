@@ -66,9 +66,15 @@ export const INSTRUMENT_RATING_TYPES: CertificateSubType[] = [
 
 /** 조종교육증명 — v1.1: 초급·선임 × 종류(비행기/헬리콥터) */
 export const FLIGHT_INSTRUCTOR_TYPES: CertificateSubType[] = [
-  { key: 'CFI_BASIC_AIRPLANE', label: '초급 조종교육증명 - 비행기' },
+  // 조종교육증명은 자격증에 "초급(비행기/육상단발, 비행기/육상다발)"처럼 종류·등급까지 적힌다(별표 4 한정심사).
+  // 그래서 등급별로 따로 등록한다. 헬리콥터는 등급 구분이 없다.
+  { key: 'CFI_BASIC_AIRPLANE_SEL', label: '초급 조종교육증명 - 비행기 육상단발' },
+  { key: 'CFI_BASIC_AIRPLANE_MEL', label: '초급 조종교육증명 - 비행기 육상다발' },
+  { key: 'CFI_BASIC_AIRPLANE', label: '초급 조종교육증명 - 비행기 (등급 미상)' },
   { key: 'CFI_BASIC_HELICOPTER', label: '초급 조종교육증명 - 헬리콥터' },
-  { key: 'CFI_SENIOR_AIRPLANE', label: '선임 조종교육증명 - 비행기' },
+  { key: 'CFI_SENIOR_AIRPLANE_SEL', label: '선임 조종교육증명 - 비행기 육상단발' },
+  { key: 'CFI_SENIOR_AIRPLANE_MEL', label: '선임 조종교육증명 - 비행기 육상다발' },
+  { key: 'CFI_SENIOR_AIRPLANE', label: '선임 조종교육증명 - 비행기 (등급 미상)' },
   { key: 'CFI_SENIOR_HELICOPTER', label: '선임 조종교육증명 - 헬리콥터' },
 ]
 

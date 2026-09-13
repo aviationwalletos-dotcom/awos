@@ -51,7 +51,10 @@ function makeCheck(used: number, limit: number): DutyLimitCheck {
  * entries를 기준으로 오늘 날짜에 대한 누적 승무시간 법정 한도(하루/28일/365일)와
  * 최소 휴식시간 요건, 최근 7일 내 휴식일 확보 여부를 계산합니다.
  */
-export function computeDutyTimeLimits(entries: LogbookEntry[]): DutyTimeLimits {
+export function computeDutyTimeLimits(allEntries: LogbookEntry[]): DutyTimeLimits {
+  // 비행경력증명서 이월 기록은 "그날 하루에 963시간을 탔다"가 아니라 과거 전체의 합계다.
+  // 기준일이 최근이면 하루 8시간 한도를 바로 넘겨 NO-GO 가 되므로 승무시간 계산에서 뺀다(2026-09-13).
+  const entries = allEntries.filter((e) => e.origin !== 'flight_experience_certificate')
   const today = startOfDay(new Date())
 
   const today8h = makeCheck(sumBlockTimeInWindow(entries, today, today), 8)
