@@ -38,6 +38,12 @@ export function approvedTracksOf(byTrack: Partial<Record<PilotTrack, ApprovalReq
  * 이미지는 서버 approval_requests.signature_path 에 이미 남아 있고 상세 화면이 그 행을
  * 이미 조회하므로(EntryDetailDialog), 기록에는 짧은 저장소 URL 만 싣는다.
  * 법적 효력은 이미지가 아니라 승인 행(서명자 uuid · 스냅샷 해시 · 시각)에 있다.
+ *
+ * ⚠️ 이 함수 때문에 그림이 "서버에만" 있게 됐다. 그림이 계속 보이려면 세 곳이 함께 살아
+ *    있어야 한다 — ① delete_my_account 가 스토리지를 안 건드림(schema22)
+ *    ② deleteMyUploadedFiles 의 `-signature.png` 제외(approvals/api.ts)
+ *    ③ board_files_scoped_read 의 서명 파일 예외(schema14).
+ *    하나만 빠져도 오류 없이 그림만 사라진다. docs/signature-image-dependency.md 참고.
  */
 export function storableSignaturePath(path: string | null | undefined): string | undefined {
   if (!path) return undefined

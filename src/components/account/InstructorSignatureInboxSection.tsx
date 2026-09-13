@@ -14,7 +14,7 @@ import { useSignedFileUrl } from '../../hooks/useSignedFileUrl'
 import { useUploadSignatureImage } from '../../hooks/baas/useUploadSignatureImage'
 import { decideApprovalRequest } from '../../lib/approvals/api'
 import { useApprovalRequests } from '../../lib/approvals/hooks'
-import { SIGNED_FIELD_LABEL, snapshotFromPayload } from '../../lib/approvals/snapshot'
+import { SIGNED_FIELD_LABEL, formatSnapshotValue, isEmptySnapshotValue, snapshotFromPayload } from '../../lib/approvals/snapshot'
 import { type ApprovalRequest, type PilotTrack, TRACK_LABEL } from '../../lib/approvals/types'
 import type { AccountResponse } from '../../lib/baas/types'
 import { InfoTip } from '../InfoTip'
@@ -126,7 +126,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
             <p className="mt-3 whitespace-pre-wrap rounded-control border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-300">{request.summary}</p>
           ) : null
         }
-        const rows = Object.entries(snap.fields).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+        const rows = Object.entries(snap.fields).filter(([, v]) => !isEmptySnapshotValue(v))
         return (
           <div className="mt-3 rounded-control border border-sky/20 bg-white/5 px-3 py-2.5 text-xs">
             <p className="mb-1.5 font-semibold text-sky">서명 대상 기록 (이 내용에 서명해요)</p>
@@ -135,7 +135,7 @@ function SignatureRequestCard({ request, account, onDecided }: SignatureRequestC
                 {rows.map(([k, v]) => (
                   <tr key={k} className="border-t border-white/10 first:border-t-0">
                     <td className="py-0.5 pr-3 text-slate-400">{SIGNED_FIELD_LABEL[k] ?? k}</td>
-                    <td className="py-0.5 font-mono-data text-slate-200">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</td>
+                    <td className="py-0.5 font-mono-data text-slate-200">{formatSnapshotValue(v)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -50,6 +50,9 @@ create policy "board_files_scoped_read" on storage.objects
       owner = auth.uid()
       or owner_id = auth.uid()::text
       or public.is_awos_admin()
+      -- ⚠️ 이 줄을 지우지 마세요. v2.9j(2026-09-13) 이후 학생 기록의 교관 서명 그림은
+      --    서버에만 있고, 교관이 올린 파일을 학생이 읽어야 해서 소유자 예외가 필요해요.
+      --    지우면 오류 없이 그림만 조용히 사라져요. docs/signature-image-dependency.md 참고.
       or name like '%-signature.png'
     )
   );

@@ -202,6 +202,10 @@ export async function verifyApprovalRequestExists(id: string): Promise<boolean> 
  * SQL 로는 storage.objects 를 지울 수 없어서(Supabase 가 막음, 2026-09-13) Storage API 로 한다.
  * 교관 서명 이미지는 상대방 기록의 일부라 건드리지 않는다.
  * 실패해도 탈퇴는 진행한다 — 요청 행이 지워지면 그 파일은 열람 경로가 없다(board_files_scoped_read).
+ *
+ * ⚠️ 아래 filter 의 `-signature.png` 조건을 빼지 마세요. v2.9j(2026-09-13) 이후 서명 그림은
+ *    기록이 아니라 서버에만 있어서, 교관이 탈퇴할 때 그 파일이 지워지면 학생 기록에서
+ *    그림이 영영 사라져요. docs/signature-image-dependency.md 참고.
  */
 export async function deleteMyUploadedFiles(): Promise<number> {
   const mine = await listApprovalRequests({ scope: 'mine', kind: ['certificate', 'medical', 'flight_experience'], limit: 500 })

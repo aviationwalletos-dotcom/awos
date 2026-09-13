@@ -11,6 +11,11 @@
 --        교관 서명 이미지는 상대방 기록의 일부라 그대로 둔다(schema17 원칙).
 -- [주의] 스토리지 파일이 남아도 접근은 막힌다 — board_files_scoped_read 정책이 "내 요청에 붙은 파일"만 읽게 하므로
 --        요청 행이 지워지거나 익명화되면 더 이상 열람 경로가 없다.
+--
+-- ⚠️ [2026-09-13 추가] (d) 단계를 되살리지 마세요. v2.9j 이후 학생 기록의 교관 서명 그림은
+--    기록이 아니라 이 스토리지 파일에만 있어요. 탈퇴가 파일을 지우면 학생 로그북에서 그림이
+--    사라지고, schema17 의 "교관 손글씨 서명 이미지는 남는다" 원칙이 깨져요.
+--    docs/signature-image-dependency.md 에 의존 관계 3곳을 정리해 뒀어요.
 
 create or replace function public.delete_my_account()
 returns void

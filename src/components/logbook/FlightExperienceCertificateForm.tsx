@@ -1,5 +1,5 @@
 import { AlertTriangle, Camera } from 'lucide-react'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { Button } from '../Button'
 import {
@@ -107,8 +107,15 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
   }
 
   // 증명서에는 야간 시간만 적히고 주간은 생략되는 경우가 많아요(나머지가 전부 주간이니까요).
-  // 계산은 앱이 하고 넣을지는 사용자가 정해요 — "AI 는 문서에 없는 값을 만들지 않는다"는 정책은 그대로예요.
-  // 관리자도 이 값이 계산된 값이라는 걸 알 수 있어야 하므로, 자동으로 채우지 않아요.
+  //
+  // [2026-09-13 변경] 예전에는 "총 − 야간 = 주간 넣기" 버튼을 눌러야 했어요. 그런데 주간이 비면
+  // 저장 자체가 막혀서(아래 검증) 결국 버튼을 누르거나 같은 숫자를 손으로 치는 수밖에 없었어요.
+  // 선택지가 아닌데 선택처럼 보이게 해서 클릭만 하나 더 있었던 셈이에요. 그래서 자동으로 채워요.
+  //
+  // 근거: 주간 + 야간 = 총 비행시간 은 항상 성립해요. 모의계기·FTD 는 총 비행시간에 들어가지
+  // 않아요(2026-09-13 대표 확인). "AI 는 문서에 없는 값을 만들지 않는다"는 정책은 그대로예요 —
+  // AI 는 여전히 비워 두고, 이 뺄셈은 앱이 해요("계산은 앱, 판단은 사람").
+  // 채운 뒤에도 칸은 그대로 수정할 수 있고, 증명서에 주간이 직접 적혀 있으면 그 값이 우선해요.
   const dayHint = (() => {
     void formTick // 이 값이 바뀔 때 다시 계산돼요
     if (readFormNumber('conditionDay') !== undefined) return null
@@ -119,6 +126,22 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     if (day <= 0) return null
     return { total, night, day }
   })()
+
+  // 주간이 비고 총·야간이 모두 있으면 칸에 바로 써 넣어요. 폼이 uncontrolled 라 DOM 에 직접 씁니다.
+  // autoDay 는 "이 값은 앱이 계산해 넣었다"는 표시라, 사용자가 손으로 고치면 안내를 내려요.
+  const [autoDay, setAutoDay] = useState<{ total: number; night: number; day: number } | null>(null)
+  useEffect(() => {
+    const el = formRef.current?.elements.namedItem('conditionDay') as HTMLInputElement | null
+    if (!el) return
+    if (dayHint) {
+      el.value = String(dayHint.day)
+      setAutoDay(dayHint)
+      setErrors((prev) => ({ ...prev, conditionDay: undefined }))
+      return
+    }
+    // 칸에 값이 있는데 그게 우리가 넣은 값이 아니면(= 사용자가 고침) 안내를 내려요.
+    if (autoDay && el.value !== String(autoDay.day)) setAutoDay(null)
+  }, [dayHint, autoDay])
 
   // Dual 상한 = 학생조종사 + (기장 − 교관). 여기서 "PIC 만 있던 비행"(단독·공단 평가·시험비행 등)을 빼면 Dual 전체.
   // 증명서만으론 그 뺄 값을 모르므로 자동으로 넣지 않고, 상한과 뺄 것을 알려주고 사용자가 넣는다(2026-09-11 대표 제안).
@@ -197,16 +220,10 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     if (!blockTimeRaw || Number.isNaN(blockTime) || blockTime <= 0) {
       nextErrors.blockTime = '총 블록타임을 0보다 큰 숫자로 입력해 주세요.'
     }
-    // 주간이 비어 있는데 총·야간이 있으면(= 계산 버튼이 떠 있는 상태) 그냥 넘어가지 않아요.
-    // 증명서의 주간 열이 비면 별지 36호 산정이 틀어져요. 버튼을 누르거나 직접 넣어야 해요(2026-09-10).
-    if (dayHint) {
-      nextErrors.conditionDay = `주간 시간이 비어 있어요. 아래 "총 ${dayHint.total} − 야간 ${dayHint.night} = ${dayHint.day} 넣기"를 누르거나 직접 입력해 주세요.`
-    }
-
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
       // 첫 오류 칸으로 올라가서 보여줘요(폼이 길어서 아래 오류를 못 보고 지나치기 쉬워요)
-      const firstId = nextErrors.date ? 'cert-date' : nextErrors.image ? 'cert-image' : nextErrors.blockTime ? 'cert-blockTime' : 'cert-conditionDay'
+      const firstId = nextErrors.date ? 'cert-date' : nextErrors.image ? 'cert-image' : 'cert-blockTime'
       window.setTimeout(() => {
         const el = document.getElementById(firstId)
         el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -606,20 +623,10 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
                 {errors.conditionDay}
               </p>
             )}
-            {dayHint && (
-              <button type="button"
-                onClick={() => {
-                  const el = formRef.current?.elements.namedItem('conditionDay') as HTMLInputElement | null
-                  if (!el) return
-                  el.value = String(dayHint.day)
-                  setFormTick((t) => t + 1)
-                  setErrors((prev) => ({ ...prev, conditionDay: undefined }))
-                }}
-                className="mt-1.5 w-full rounded-control border border-sky/30 bg-sky/10 px-3 py-1.5 text-left text-xs font-medium text-sky
-                  transition-colors hover:bg-sky/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
-              >
-                총 {dayHint.total} − 야간 {dayHint.night} = <span className="font-semibold">{dayHint.day}</span> 넣기
-              </button>
+            {autoDay && (
+              <p className="mt-1.5 text-xs text-slate-400">
+                총 {autoDay.total} − 야간 {autoDay.night} 로 계산해 넣었어요. 증명서에 다른 값이 적혀 있으면 고쳐 주세요.
+              </p>
             )}
           </div>
           <div>

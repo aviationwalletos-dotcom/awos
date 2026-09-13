@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cancelApprovalRequest, createApprovalRequest } from '../../lib/approvals/api'
 import { useApprovalRequestById, useApprovalRequests } from '../../lib/approvals/hooks'
-import { SIGNED_FIELD_LABEL, buildSignedSnapshot, matchesSnapshot, snapshotFromPayload } from '../../lib/approvals/snapshot'
+import { SIGNED_FIELD_LABEL, buildSignedSnapshot, formatSnapshotValue, matchesSnapshot, snapshotFromPayload } from '../../lib/approvals/snapshot'
 import { buildSignatureRequestContent, buildSignatureRequestTitle } from '../../lib/baas/signatureRequest'
 import { toLogbookEntryInput } from '../../lib/logbookEntryInput'
 import { isForeignRecord } from '../../lib/foreignRecord'
@@ -539,8 +539,8 @@ export function EntryDetailDialog({
                                 {h.changes.map((c) => (
                                   <tr key={c.key} className="border-t border-white/10">
                                     <td className="py-0.5 pr-2 text-slate-300">{SIGNED_FIELD_LABEL[c.key] ?? c.key}</td>
-                                    <td className="py-0.5 pr-2 font-mono-data text-amber-200">{c.before === null || c.before === undefined ? '-' : typeof c.before === 'object' ? JSON.stringify(c.before) : String(c.before)}</td>
-                                    <td className="py-0.5 font-mono-data text-slate-200">{c.after === null || c.after === undefined ? '-' : typeof c.after === 'object' ? JSON.stringify(c.after) : String(c.after)}</td>
+                                    <td className="py-0.5 pr-2 font-mono-data text-amber-200">{formatSnapshotValue(c.before)}</td>
+                                    <td className="py-0.5 font-mono-data text-slate-200">{formatSnapshotValue(c.after)}</td>
                                   </tr>
                                 ))}
                               </tbody>

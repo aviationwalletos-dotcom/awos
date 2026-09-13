@@ -137,6 +137,67 @@ export const SIGNED_FIELD_LABEL: Record<string, string> = {
   instructorName: '확인 교관',
 }
 
+/**
+ * 중첩 객체(범주별 시간·조종 시간·비행 조건) 안쪽 키의 한글 이름.
+ * 서명 표에 {"day":0.8,"night":0} 처럼 날것으로 나오던 걸 "주간 0.8 · 야간 0" 으로 읽히게 한다.
+ */
+export const SIGNED_SUBFIELD_LABEL: Record<string, string> = {
+  // CategoryHours — 범주별 시간
+  singleEngineLand: '단발육상',
+  multiEngineLand: '다발육상',
+  rotorcraftHelicopter: '회전익',
+  otherLabel: '기타 범주',
+  otherHours: '기타 시간',
+  // PilotingTime — 조종 시간
+  dualReceived: 'Dual',
+  pic: '기장',
+  sic: '부조종사',
+  flightInstructor: '교관',
+  solo: '단독',
+  picSupervised: '기장 감독 하',
+  training: '훈련',
+  // FlightConditionHours — 비행 조건
+  day: '주간',
+  night: '야간',
+  crossCountry: '야외',
+  nightCrossCountry: '야간 야외',
+  actualInstrument: '실계기',
+  simulatedInstrument: '모의계기',
+  soloCrossCountry: '단독 야외',
+  crossCountryDistanceKm: '야외 거리(km)',
+}
+
+/**
+ * 스냅샷 값 한 칸을 사람이 읽을 수 있는 문자열로 바꾼다.
+ *
+ * 값은 바꾸지 않는다 — 0 은 0 으로 그대로 보여준다. 로그북에서 `0` 과 `기재 없음`(undefined)은
+ * 다른 뜻이고, 서명 대상 표는 "이 내용에 서명한다"는 증거라 임의로 숨기면 안 된다.
+ * 비어 있는 객체({})만 '—' 로 바꾼다. 담긴 값이 없다는 뜻이라 보여줄 게 없다.
+ */
+export function formatSnapshotValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—'
+  if (Array.isArray(value)) return value.length === 0 ? '—' : value.map((v) => formatSnapshotValue(v)).join(', ')
+  if (typeof value === 'boolean') return value ? '예' : '아니오'
+  if (typeof value === 'object') {
+    const parts = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== undefined && v !== '')
+      .map(([k, v]) => `${SIGNED_SUBFIELD_LABEL[k] ?? k} ${formatSnapshotValue(v)}`)
+    return parts.length > 0 ? parts.join(' · ') : '—'
+  }
+  return String(value)
+}
+
+/** 보여줄 내용이 없는 칸인지. 빈 객체·빈 배열·빈 값은 표에서 뺀다. */
+export function isEmptySnapshotValue(value: unknown): boolean {
+  if (value === null || value === undefined || value === '') return true
+  if (Array.isArray(value)) return value.length === 0
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .every((v) => v === null || v === undefined || v === '')
+  }
+  return false
+}
+
 export function snapshotFromPayload(payload: Record<string, unknown> | null | undefined): SignedSnapshot | null {
   const raw = payload?.signedSnapshot as Partial<SignedSnapshot> | undefined
   if (!raw || typeof raw.hash !== 'string' || !raw.fields) return null
