@@ -193,7 +193,7 @@ export function MemberStatusOverview() {
       {isLoading ? (
         <p className="mt-6 text-sm text-slate-400">회원 상태를 불러오는 중이에요...</p>
       ) : error ? (
-        <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/100/10 px-4 py-3">
+        <div role="alert" className="mt-6 rounded-control border border-rose-500/30 bg-rose-500/10 px-4 py-3">
           <p className="text-xs font-medium text-rose-300">{error}</p>
           <Button type="button" variant="outline" tone="neutral" size="sm" className="mt-3 border-white/25 text-white hover:bg-white/10" onClick={() => void refetch()}>
             다시 시도

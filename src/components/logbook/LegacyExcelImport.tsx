@@ -660,7 +660,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
                   id="legacyDateOrder"
                   value={dateOrder}
                   onChange={(e) => setDateOrder(e.target.value as DateOrder)}
-                  className="rounded-control border border-white/10 bg-base px-3 py-1.5 text-sm text-ink"
+                  className="rounded-control border border-white/10 bg-panel px-3 py-1.5 text-sm text-ink"
                 >
                   <option value="mdy">월/일/년 (미국식)</option>
                   <option value="dmy">일/월/년</option>
@@ -674,7 +674,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
                   id="legacyTimeUnit"
                   value={timeUnit}
                   onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
-                  className="rounded-control border border-white/10 bg-base px-3 py-1.5 text-sm text-ink"
+                  className="rounded-control border border-white/10 bg-panel px-3 py-1.5 text-sm text-ink"
                 >
                   <option value="hours">시간 (1.5)</option>
                   <option value="minutes">분 (90)</option>
@@ -791,7 +791,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
                 </thead>
                 <tbody>
                   {filteredRows.slice(0, visibleMaxRows).map((r) => (
-                    <tr key={r.rowIndex} className={`border-t border-white/[0.08] ${r.valid ? '' : 'bg-rose-500/10/60'}`}>
+                    <tr key={r.rowIndex} className={`border-t border-white/[0.08] ${r.valid ? '' : 'bg-rose-500/10'}`}>
                       <td className="px-3 py-2">
                         {r.valid ? (
                           <span className="rounded-control bg-go/10 px-2 py-0.5 font-semibold text-go">
@@ -799,7 +799,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
                           </span>
                         ) : (
                           <div>
-                            <span className="rounded-control bg-rose-500/100/15 px-2 py-0.5 font-semibold text-rose-600">
+                            <span className="rounded-control bg-rose-500/15 px-2 py-0.5 font-semibold text-rose-600">
                               오류 - 수정 필요
                             </span>
                             <p className="mt-1 text-[11px] leading-snug text-rose-500">

@@ -64,7 +64,7 @@ export function DutyTimeLimitCard({ entries, compact = false, operationType = 'g
           {operationType === 'commercial' ? (
             <span role="status"
               className={`inline-flex items-center rounded-control px-2.5 py-1 text-xs font-bold ${
-                isGo ? 'bg-go/15 text-go' : 'bg-rose-500/100/15 text-rose-300'
+                isGo ? 'bg-go/15 text-go' : 'bg-rose-500/15 text-rose-300'
               }`}
             >
               {isGo ? 'GO' : 'NO-GO'}

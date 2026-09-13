@@ -10,12 +10,9 @@ export const BAAS_BASE_URL = '/aiapp-baas'
 // 이 워크스페이스에 연결된 BaaS 프로젝트 ID (배포/프리뷰 공통 폴백)
 const FALLBACK_BAAS_PROJECT_ID = '3ecd1885-15e0-408a-8a9c-560a3476b7ed'
 
-// "교관 승인" 동적 게시판(FREE) ID — 관리자가 BaaS 콘솔에서 사전 생성한 고정 게시판.
-// board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-
-// "서명 요청" 동적 게시판(FREE) ID — 학생이 비행 기록 서명을 "요청"하고, 승인된 교관이
-// 나중에 자신의 서명 요청함에서 확인 후 본인 명의 댓글([SIGNED] ...)로 서명 완료를 표시한다.
-// board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
+// [제거됨] 교관 승인·서명 요청·자격증 인증·비행경력증명서 게시판은 상수째 없앴다.
+// 승인과 서명은 approval_requests 테이블(schema12)이 담당한다. 아래에 남은 게시판 상수는
+// "데이터 저장용"이지 워크플로용이 아니다.
 
 // "공유 게시판" 동적 게시판(FREE) ID — 개인 회원이 본인의 GO/NO-GO 비행 적합성 상태를
 // 소속 기관에 공유하는 용도(status share)로 재사용한다.
@@ -27,16 +24,14 @@ export const STATUS_SHARE_BOARD_ID = 'b7c87a0e-cfc3-4c80-97cd-6ef7934c58e2'
 // 실 서버에도 best-effort로 동기화하는 용도. 자격증 1건당 게시글 1건(content에 자격증 JSON을
 // 한 줄로 직렬화)으로 저장한다.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-// 주의: 이 게시판은 프로젝트에 로그인한 모든 회원이 목록/상세를 조회할 수 있는 구조라, 다른 회원도
-// API를 직접 호출하면 타인의 자격증 게시글을 볼 수 있는 구조적 한계가 있다(진짜 비공개 저장이 아님).
+// 조회 범위: 본인 + 관리자(authorized_orgs). schema9 에서 잠갔다(bp_select_authenticated).
 export const CERTIFICATE_BOARD_ID = 'd4df52f6-fd5d-4a19-a252-7a2ffd9e245d'
 
 // "비행기록" 동적 게시판(FREE) ID — 계정별 localStorage에만 저장되던 비행기록(로그북) 데이터를
 // 실 서버에도 best-effort로 동기화하는 용도. 비행기록 1건당 게시글 1건(content에 비행기록 JSON을
 // 한 줄로 직렬화)으로 저장한다. "자격증관리" 게시판 연동과 동일한 패턴이다.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-// 주의: 이 게시판도 프로젝트에 로그인한 모든 회원이 목록/상세를 조회할 수 있는 구조라, 다른 회원도
-// API를 직접 호출하면 타인의 비행기록 게시글을 볼 수 있는 구조적 한계가 있다(진짜 비공개 저장이 아님).
+// 조회 범위: 본인 + 관리자(authorized_orgs). schema9 에서 잠갔다(bp_select_authenticated).
 export const LOGBOOK_BOARD_ID = '634956de-9ab1-4417-84c0-088a5d655e20'
 
 // "업무기록" 동적 게시판(FREE) ID — 정비사/관제사/운항관리사가 계정별 localStorage에만 저장하던
@@ -44,8 +39,7 @@ export const LOGBOOK_BOARD_ID = '634956de-9ab1-4417-84c0-088a5d655e20'
 // 게시글 1건(content에 업무기록 JSON을 한 줄로 직렬화)으로 저장한다. "자격증관리"/"비행기록"
 // 게시판 연동과 동일한 패턴이다.
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-// 주의: 이 게시판도 프로젝트에 로그인한 모든 회원이 목록/상세를 조회할 수 있는 구조라, 다른 회원도
-// API를 직접 호출하면 타인의 업무기록 게시글을 볼 수 있는 구조적 한계가 있다(진짜 비공개 저장이 아님).
+// 조회 범위: 본인 + 관리자(authorized_orgs). schema24 에서 잠갔다(그 전까지는 전원 열람이었다).
 export const WORK_LOG_BOARD_ID = '2966212a-877c-4964-a927-18e40802b32d'
 
 // "개인설정" 동적 게시판(FREE) ID — 계정별 localStorage에만 저장되던 "개인설정"(개인 역할 오버라이드,
@@ -53,8 +47,7 @@ export const WORK_LOG_BOARD_ID = '2966212a-877c-4964-a927-18e40802b32d'
 // 자기신고)을 실 서버에도 best-effort로 동기화하는 용도. 다른 "게시글 1건당 데이터 1건" 연동과 달리,
 // 계정당 딱 1개의 "개인설정" 게시글만 유지한다(있으면 갱신, 없으면 생성).
 // board_type: FREE, allow_comment: true, allow_attachment: true, require_login: true, categories: null
-// 주의: 이 게시판도 프로젝트에 로그인한 모든 회원이 목록/상세를 조회할 수 있는 구조라, 다른 회원도
-// API를 직접 호출하면 타인의 개인설정 게시글을 볼 수 있는 구조적 한계가 있다(진짜 비공개 저장이 아님).
+// 조회 범위: 본인 + 관리자(authorized_orgs). schema24 에서 잠갔다(그 전까지는 전원 열람이었다).
 export const PROFILE_SETTINGS_BOARD_ID = 'bf6c2b9a-b210-4c3f-a1ad-9bcd06805270'
 
 // "비행경력증명서" 동적 게시판(FREE) ID — 엑셀 파일이 없는 사용자가 제출하는 비행경력증명서

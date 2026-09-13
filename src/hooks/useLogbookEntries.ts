@@ -77,9 +77,8 @@ function saveEntries(storageKey: string, entries: LogbookEntry[]) {
  * 로컬(localStorage)에 즉시 반영하는 기존 동작은 그대로 유지하면서, "비행기록" 게시판
  * (`634956de-9ab1-4417-84c0-088a5d655e20`)에도 best-effort로 비행기록 데이터를 동기화합니다.
  *
- * 주의(구조적 한계): 이 게시판은 프로젝트에 로그인한 모든 회원이 목록/상세를 조회할 수 있는
- * 구조라, 다른 회원이 API를 직접 호출하면 내 비행기록 게시글을 볼 수 있는 한계가 있다(진짜
- * 비공개 저장이 아니다). 화면에서는 본인 게시글만 필터링해서 보여준다.
+ * 조회 범위: 본인 + 관리자(authorized_orgs)만. schema9 의 bp_select_authenticated 정책이
+ * 이 게시판을 잠근다. 화면에서도 본인 게시글만 필터링해서 보여준다.
  */
 export function useLogbookEntries(account: AccountResponse | null | undefined) {
   const accountId = account?.id

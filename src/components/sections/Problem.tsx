@@ -31,7 +31,7 @@ export function Problem() {
           {PAIN_POINTS.map((point) => (
             <Reveal key={point}>
               <div className="flex items-start gap-3.5 border border-white/10 border-l-2 border-l-slate-500/70 bg-panel/70 px-4 py-3.5 transition-colors hover:border-white/20">
-                <AlertCircle className="mt-0.5 h-4.5 w-4.5 flex-none text-slate-500" aria-hidden="true" />
+                <AlertCircle className="mt-0.5 h-[18px] w-[18px] flex-none text-slate-500" aria-hidden="true" />
                 <p className="text-[15px] leading-relaxed text-slate-300">{point}</p>
               </div>
             </Reveal>

@@ -20,9 +20,9 @@ test('자격증 등록 → 목록에 보임 → 상세 → 삭제', async ({ pag
     if ((await stale.count()) === 0) break
     await stale.click()
     const d = page.getByRole('dialog')
-    await d.getByRole('button', { name: /삭제하기/ }).click().catch(() => undefined)
-    await d.getByRole('button', { name: /삭제 확인/ }).click().catch(() => undefined)
-    await expect(stale).toHaveCount(0, { timeout: 10_000 }).catch(() => undefined)
+    await d.getByRole('button', { name: /삭제하기/ }).click().catch((e) => console.warn('[cleanup] 03-certificate 삭제하기 클릭 실패:', e))
+    await d.getByRole('button', { name: /삭제 확인/ }).click().catch((e) => console.warn('[cleanup] 03-certificate 삭제 확인 클릭 실패:', e))
+    await expect(stale).toHaveCount(0, { timeout: 10_000 }).catch(() => console.warn('[cleanup] 03-certificate 자격증 찌꺼기가 남았어요 — 운영 DB 확인 필요'))
   }
 
   // 등록 폼은 기본 접힘 — 펼친다

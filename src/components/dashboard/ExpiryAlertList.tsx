@@ -28,7 +28,7 @@ export function ExpiryAlertList({ personnel }: ExpiryAlertListProps) {
     <ul className="space-y-3">
       {riskItems.map((p) => (
         <li key={p.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-rose-500/30 bg-rose-500/100/10 p-4"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-rose-500/30 bg-rose-500/10 p-4"
         >
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 shrink-0 text-rose-400" aria-hidden="true" />
@@ -41,7 +41,7 @@ export function ExpiryAlertList({ personnel }: ExpiryAlertListProps) {
               </p>
             </div>
           </div>
-          <span className="font-mono-data tabular-nums rounded-control bg-rose-500/100/20 px-3 py-1 text-xs font-bold text-rose-300">
+          <span className="font-mono-data tabular-nums rounded-control bg-rose-500/20 px-3 py-1 text-xs font-bold text-rose-300">
             {p.nearestExpiry ? `만료 ${p.nearestExpiry.expiryDate}` : 'NO-GO'}
           </span>
         </li>

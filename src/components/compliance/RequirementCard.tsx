@@ -5,7 +5,7 @@ import type { RequirementItem } from '../../lib/roleCompliance'
 
 const STATUS_BADGE_CLASS: Record<RequirementItem['status'], string> = {
   met: 'bg-go/10 text-go',
-  unmet: 'bg-rose-500/100/15 text-rose-300',
+  unmet: 'bg-rose-500/15 text-rose-300',
   info: 'bg-sky/10 text-[#00D4FF]',
 }
 

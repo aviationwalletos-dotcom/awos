@@ -8,7 +8,7 @@ import type { Certificate, CertificateStatus } from '../../types/certificate'
 const STATUS_BADGE: Record<CertificateStatus, string> = {
   valid: 'bg-go/10 text-go',
   warning: 'bg-amber-400/15 text-amber-300',
-  urgent: 'bg-rose-500/100/15 text-rose-300',
+  urgent: 'bg-rose-500/15 text-rose-300',
   expired: 'bg-white/10 text-slate-400',
   no_expiry: 'bg-sky/15 text-sky-700',
 }

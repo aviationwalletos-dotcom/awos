@@ -111,6 +111,7 @@ const DAILY_LIMIT = 10
 async function consumeQuota(token) {
   const url = process.env.SUPABASE_URL
   const anon = process.env.SUPABASE_ANON_KEY
+  // 환경변수가 없으면 한도를 물어볼 곳 자체가 없다 → 통과.
   if (!url || !anon) return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
   try {
     const r = await fetch(`${url}/rest/v1/rpc/consume_ai_quota`, {
@@ -118,12 +119,15 @@ async function consumeQuota(token) {
       headers: { apikey: anon, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
       body: JSON.stringify({ p_limit: DAILY_LIMIT }),
     })
+    // 404 = consume_ai_quota() 가 아직 없는 환경(schema18 미실행). 이때만 통과시킨다.
     if (r.status === 404) return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
-    if (!r.ok) return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
+    // 그 밖의 오류는 막는다(2026-09-13 변경). 함수는 있는데 Supabase 가 흔들리는 상황이라,
+    // 여기서 통과시키면 남는 방어선이 Anthropic 월 한도 하나뿐이 된다.
+    if (!r.ok) return { allowed: false, used: null, limit: DAILY_LIMIT, enforced: false, unavailable: true }
     const data = await r.json()
     return { allowed: data?.allowed !== false, used: data?.used ?? null, limit: data?.limit ?? DAILY_LIMIT, enforced: true }
   } catch {
-    return { allowed: true, used: null, limit: DAILY_LIMIT, enforced: false }
+    return { allowed: false, used: null, limit: DAILY_LIMIT, enforced: false, unavailable: true }
   }
 }
 
@@ -156,6 +160,10 @@ export default async (req) => {
 
   const token = (req.headers.get('authorization') || '').slice(7)
   const quota = await consumeQuota(token)
+  // 한도를 확인할 수 없는 상태. "다 썼어요"라고 하면 거짓말이 되니 따로 알린다.
+  if (quota.unavailable) {
+    return json(503, { error: 'AI 읽기 사용량을 확인하지 못했어요. 잠시 뒤 다시 해 주세요. 급하면 직접 입력할 수 있어요.', quota })
+  }
   if (!quota.allowed) {
     return json(429, { error: `AI 읽기는 하루 ${quota.limit}회까지예요. 오늘은 다 썼어요. 내일 다시 하거나 직접 입력해 주세요.`, quota })
   }

@@ -202,7 +202,7 @@ export function FlightReadinessPanel({
                 sm 이상: 원형 배지 왼쪽, 칩은 가로 나열(원래 배치) */}
             <div className="flex items-center gap-3 sm:items-start">
               <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-4 sm:h-14 sm:w-14 ${
-                  summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/100/10 text-rose-400'
+                  summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/10 text-rose-400'
                 }`}
               >
                 {summary.overallGo ? (
@@ -278,7 +278,7 @@ export function FlightReadinessPanel({
           {/* 종합 배지 — 일반 비행 가능 여부 기준 GO/NO-GO */}
           <div className="mt-6 flex flex-col items-center text-center">
             <span className={`flex h-24 w-24 items-center justify-center rounded-full border-4 ${
-                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/100/10 text-rose-400'
+                summary.overallGo ? 'border-go/60 bg-go/10 text-go' : 'border-rose-400/60 bg-rose-500/10 text-rose-400'
               }`}
             >
               {summary.overallGo ? (
@@ -337,7 +337,7 @@ function ReadinessStateChip({ state, compact = false, active = false, onToggle }
       <Icon className={compact ? 'h-4 w-4 shrink-0' : 'h-5 w-5 shrink-0'} aria-hidden={true} />
       <span className="truncate">{state.label}</span>
       <span className={`ml-auto shrink-0 rounded-control px-1 text-[10px] font-bold ${
-          state.met && !state.partial ? 'bg-go/15 text-go' : state.met ? 'bg-amber-400/20 text-amber-200' : 'bg-rose-500/100/15 text-rose-300'
+          state.met && !state.partial ? 'bg-go/15 text-go' : state.met ? 'bg-amber-400/20 text-amber-200' : 'bg-rose-500/15 text-rose-300'
         }`}
       >
         {state.met && !state.partial ? '가능' : state.met ? '일부' : '제한'}
@@ -362,7 +362,7 @@ function ReadinessStateCard({ state }: { state: ReadinessState }) {
           </span>
         </div>
         <span className={`inline-flex shrink-0 items-center rounded-control px-2 py-0.5 text-sm font-bold ${
-            state.met && !state.partial ? 'bg-go/15 text-go' : state.met ? 'bg-amber-400/20 text-amber-200' : 'bg-rose-500/100/15 text-rose-300'
+            state.met && !state.partial ? 'bg-go/15 text-go' : state.met ? 'bg-amber-400/20 text-amber-200' : 'bg-rose-500/15 text-rose-300'
           }`}
         >
           {state.met && !state.partial ? '가능' : state.met ? '일부' : '제한'}

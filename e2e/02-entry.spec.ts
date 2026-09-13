@@ -5,7 +5,7 @@ const MARKER = 'E2E-ENTRY'
 
 test.describe('비행기록', () => {
   test.afterEach(async ({ page }) => {
-    await deleteEntriesByMarker(page, MARKER).catch(() => undefined)
+    await deleteEntriesByMarker(page, MARKER).catch((e) => console.warn('[cleanup] 02-entry 기록 삭제 실패 — 운영 DB에 찌꺼기가 남았을 수 있어요:', e))
   })
 
   test('기록 추가 → 목록에 보임 → 상세 열림 → 총계 반영', async ({ page }) => {

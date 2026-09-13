@@ -1,5 +1,6 @@
 // 디지털 로그북 데이터 모델
-// 실 서버 연동 전까지 브라우저 localStorage에 저장되는 비행 기록 타입 정의입니다.
+// localStorage 를 1차 저장소로 쓰고, Supabase 게시판에 best-effort 로 동기화합니다
+// (useLogbookEntries.ts 의 2중 구조). 기기 간 동기화는 마지막 수정이 이깁니다.
 
 import type { PilotTrack } from '../lib/tracks'
 

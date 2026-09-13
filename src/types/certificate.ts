@@ -1,5 +1,6 @@
 // 디지털 자격 월렛 — 자격/면허 데이터 모델
-// 실 서버 연동 전까지 브라우저 localStorage에 저장되는 자격증 타입 정의입니다.
+// localStorage 를 1차 저장소로 쓰고, Supabase 게시판에 best-effort 로 동기화합니다
+// (useCertificates.ts 의 2중 구조).
 
 import type { PilotTrack } from '../lib/tracks'
 

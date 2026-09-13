@@ -190,13 +190,13 @@ test('교관 서명 흐름 (학생 요청 → 교관 서명 → 학생 반영)',
   ).toBeVisible({ timeout: 60_000 })
 
   // 정리: 방금 만든 기록 삭제(상세 → 삭제하기 → 삭제 확인)
-  await deleteEntriesByMarker(student, MARKER).catch(() => undefined)
+  await deleteEntriesByMarker(student, MARKER).catch((e) => console.warn('[cleanup] 04-signature 기록 삭제 실패 — 운영 DB에 찌꺼기가 남았을 수 있어요:', e))
   const leftover = student.getByTestId('entry-item').filter({ hasText: 'C172R' }).filter({ hasText: 'RKTL' }).first()
   if ((await leftover.count()) > 0) {
     await leftover.getByRole('button').first().click()
     const d = student.getByRole('dialog')
     await d.getByRole('button', { name: /삭제하기/ }).click()
-    await d.getByRole('button', { name: /삭제 확인|삭제/ }).first().click().catch(() => undefined)
+    await d.getByRole('button', { name: /삭제 확인|삭제/ }).first().click().catch((e) => console.warn('[cleanup] 04-signature 삭제 확인 클릭 실패:', e))
   }
   await studentCtx.close()
   await instructorCtx.close()

@@ -22,7 +22,7 @@ export function TsIntegrationCard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex gap-3">
           <span className="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-control border border-sky/30 bg-sky/10">
-            <Landmark className="h-4.5 w-4.5 text-sky" aria-hidden="true" />
+            <Landmark className="h-[18px] w-[18px] text-sky" aria-hidden="true" />
           </span>
           <div>
             <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
