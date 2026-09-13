@@ -459,7 +459,7 @@ export function CertificateForm({
                     : category === '항공신체검사'
                       ? '먼저 올리면 AI 가 종류(1·2·3종)·발급일·유효기간·발급기관을 읽어요. 여러 장이면 같이 읽어요(최대 4장).'
                       : '먼저 올리면 AI 가 번호·발급일·만료일·발급기관을 읽어요. 여러 장이면 같이 읽어요(최대 4장).'
-                  : '관리자가 이 사진과 대조해 인증해요. 앞·뒷면처럼 여러 장이면 한 번에 고르세요(최대 5장).'}
+                  : '관리자가 이 사진과 대조해 인증해요. 앞·뒷면처럼 여러 장이면 한 번에 고르세요(최대 4장).'}
             </InfoTip>
           </span>
           <input type="file"
@@ -484,10 +484,7 @@ export function CertificateForm({
             <div className="mt-3 rounded-control border border-sky/25 bg-sky/5 px-4 py-3">
               <p className="text-sm font-semibold text-ink">
                 이 사진에서 같이 찾은 자격 {aiExtras.filter((x) => x.checked).length}개
-                <InfoTip label="같이 찾은 자격 안내">
-                  자격증명서의 한정사항·특기사항에서 읽었어요. 체크한 것은 자격증명과 함께 등록되고, 같은 사진으로 인증 요청이 가요.
-                  항공영어 만료일은 증서의 VALID UNTIL 값을 그대로 쓰고, 없으면 시행규칙 제99조③(4등급 3년·5등급 6년·6등급 영구)으로 계산해요.
-                </InfoTip>
+                <InfoTip label="같이 찾은 자격 안내">자격증에 적힌 한정사항·특기사항에서 읽었어요. 체크한 것은 같은 사진으로 함께 등록·인증 요청돼요. 항공영어 만료일은 자격증의 VALID UNTIL, 없으면 등급별 기간(4등급 3년·5등급 6년·6등급 영구)으로요.</InfoTip>
               </p>
               <ul className="mt-2 space-y-1.5">
                 {aiExtras.map((x, i) => (
@@ -800,7 +797,7 @@ export function CertificateForm({
             {category === '항공신체검사' && medicalNote && (
               <p className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-400">
                 별표 8 기준 <span className="font-semibold text-slate-300">{medicalNote.months}개월</span>로 자동 계산(수정 가능).
-                <InfoTip label="만료일 계산 설명">발급일 + {medicalNote.months}개월, 월말 만료 원칙(별표 8 비고 1). 증명서에 적힌 만료일이 다르면(항공전문의가 단축한 경우, 규칙 제92조③) 그 날짜를 넣으세요.</InfoTip>
+                <InfoTip label="만료일 계산 설명">발급일부터 {medicalNote.months}개월, 그 달 말일까지(별표 8). 증명서에 적힌 만료일이 다르면 그 날짜를 넣으세요.</InfoTip>
                 {medicalNote.assumedAge && (
                   <span className="text-amber-300"> 생년월일이 없어 가장 짧은 기간으로 잡았어요. 계정정보에 생년월일을 넣으면 정확해집니다.</span>
                 )}
@@ -809,7 +806,7 @@ export function CertificateForm({
             {category === '항공영어구술능력증명' && (
               <p className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-400">
                 4등급 3년 · 5등급 6년 · 6등급 영구(규칙 제99조③).
-                <InfoTip label="항공영어 만료일 설명">6등급은 만료일을 비워 두세요. 만료 6개월 전에 다시 합격했다면 기존 만료일 다음 날부터 새로 계산돼요 — 증명서의 만료일을 그대로 넣으세요.</InfoTip>
+                <InfoTip label="항공영어 만료일 설명">6등급은 비워 두세요. 만료 전에 다시 합격했으면 증명서에 적힌 만료일을 그대로 넣으세요.</InfoTip>
               </p>
             )}
             {errors.expiryDate && (

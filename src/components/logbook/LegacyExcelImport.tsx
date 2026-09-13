@@ -736,9 +736,7 @@ export function LegacyExcelImport({ onImportEntries }: LegacyExcelImportProps) {
               {invalidCount > 0 && `, 형식 오류 ${invalidCount}건`})
             </h4>
             <p className="mt-2 text-xs leading-relaxed text-slate-400">
-              날짜·기종이 없는 하단 합계/서명 행은 자동으로 제외돼요. ·
-              엑셀에 계기접근 횟수 컬럼이 없는 경우(울진 탈론 리포트 등) 0으로 저장되니, 계기 비행 기록은
-              가져온 뒤 목록에서 해당 기록을 눌러 횟수를 보완해 주세요.
+              날짜·기종이 없는 하단 합계/서명 행은 자동으로 제외돼요. 엑셀에 계기접근 횟수 열이 없으면(탈론 리포트 등) 0으로 들어가니, 계기 비행은 가져온 뒤 기록을 눌러 횟수를 채워 주세요.
             </p>
 
             <div role="group" aria-label="상태별 필터" className="mt-3 flex flex-wrap gap-2">

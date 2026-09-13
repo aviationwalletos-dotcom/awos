@@ -365,7 +365,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
         <legend className={sectionTitleClass}>
           <span className="flex flex-wrap items-center gap-1">
             비행경력증명서 사진 <span className="text-sky">(필수)</span>
-            <InfoTip label="증명서 사진 안내">먼저 올리면 AI 가 칸을 채워요. 관리자가 이 파일과 대조해 승인해요. 여러 쪽이면 한 번에 고르세요(최대 4장, 같이 읽어요). 기관이 여러 곳이면(예: PPL 은 다른 기관, IR·CPL 은 여기) 증명서마다 따로 이월하세요 — 합산돼요.</InfoTip>
+            <InfoTip label="증명서 사진 안내">올리면 AI 가 칸을 채우고, 관리자가 이 파일과 대조해 승인해요. 여러 쪽은 한 번에(최대 4장). 기관이 여러 곳이면 증명서마다 따로 이월해요 — 합산돼요.</InfoTip>
           </span>
         </legend>
         <p className={sectionHintClass}>
@@ -515,7 +515,7 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
             <label htmlFor="cert-dualReceived" className={`${labelClass} flex flex-wrap items-center gap-1`}>
               DUAL RECEIVED(시간)
               <InfoTip label="Dual 설명">
-                교관에게 교육받은 시간 전체. 미국식 증명서엔 이 값이 있고, 한국 별지 36호에는 없어요(자격증 후 교육 시간은 기장에 들어가요). 학생조종사 시간은 소계 − 기장 − 부조종사로 자동 계산돼요.
+                교육받은 시간 전체. 미국식 증명서엔 있고 한국 별지 36호에는 없어요(자격증 후 교육은 기장에 들어가요). 학생조종사 시간은 소계 − 기장 − 부조종사로 자동 계산돼요.
               </InfoTip>
             </label>
             <input id="cert-dualReceived" name="dualReceived" type="number"

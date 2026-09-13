@@ -468,7 +468,7 @@ export function EntryForm({
               <span className="inline-flex items-center gap-1">
                 <span className="font-semibold">단독 비행(Solo)이었어요</span>
                 <InfoTip label="단독 비행 기록 방식">
-                  체크하면 PIC 시간 + 단독 시간으로 기록돼요(자가용 응시경력의 "단독 10시간"에 합산). 체크 안 하면 교관 동승 교육 비행으로 보고 교육 받은 시간(Dual)에만 기록되고 PIC는 0이에요.
+                  자격증 없는 학생 기록이에요. 체크하면 단독 비행(PIC + 단독 시간, 자가용 응시경력 "단독 10시간"에 합산), 안 하면 교관 동승 교육(Dual만, PIC 0)이에요.
                 </InfoTip>
               </span>
             </label>
@@ -892,7 +892,7 @@ export function EntryForm({
             <label htmlFor="crossCountry" className={`${labelClass} inline-flex items-center gap-1`}>
               크로스컨트리(시간)
               <InfoTip label="크로스컨트리 정의">
-                출발지 외 1개 지점 착륙을 포함한 비행시간(운항기술기준 정의 43). 자가용·사업용·계기비행증명 응시경력용은 출발지에서 직선 50NM 이상 떨어진 공항 착륙을 포함해야 해요.
+                출발지 외 다른 지점에 착륙한 비행(운항기술기준 정의 43). 응시경력엔 구간 조건이 따로 있어요 — 자가용 270km, 사업용 540km 구간에 2개 이상 다른 비행장 착륙(별표 4).
               </InfoTip>
             </label>
             <input id="crossCountry"
@@ -911,7 +911,7 @@ export function EntryForm({
               <label htmlFor="nightCrossCountry" className={`${labelClass} inline-flex items-center gap-1`}>
                 야간 크로스컨트리(시간)
                 <InfoTip label="야간 크로스컨트리">
-                  크로스컨트리 중 야간에 한 시간이에요. 야간 시간과 크로스컨트리를 넣으면 둘 중 작은 값으로 자동으로 채워져요(고칠 수 있어요). 비행경력증명서(별지 제36호)는 야외비행을 주간·야간으로 나눠 적어요.
+                  크로스컨트리 중 야간에 한 시간. 야간과 크로스컨트리를 넣으면 둘 중 작은 값으로 자동으로 채워져요(고칠 수 있어요). 비행경력증명서에 주간·야간 야외를 나눠 적어야 해서 있어요.
                 </InfoTip>
               </label>
               <input id="nightCrossCountry"
@@ -968,7 +968,7 @@ export function EntryForm({
         <legend className={`${sectionTitleClass} inline-flex items-center gap-1`}>
           접근/착륙 횟수 (선택)
           <InfoTip label="착륙 횟수 안내">
-            착륙 횟수만 적어요(이륙은 같은 수로 봐요). ASA 로그북의 Landings 값을 그대로 옮기면 돼요. 커런시(8.2.2)는 "이륙 및 착륙 3회"라 착륙 수로 판정해요.
+            착륙 횟수만 적어요(이륙은 같은 수로 봐요). 탈론·ASA 로그북의 Landings 값을 그대로. 커런시(8.2.2)는 착륙 수로 판정해요.
           </InfoTip>
         </legend>
         <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -1069,7 +1069,7 @@ export function EntryForm({
             <span className="inline-flex items-center gap-1">
               해외 기록(미국 등 외국 비행)
               <InfoTip label="해외 기록 설명">
-                국내 교관 서명 대상이 아니에요. 증명서·원본 로그북으로 확인해요. 총 비행시간과 별지 36호에는 포함돼요.
+                외국에서 한 비행. 국내 교관 서명은 받지 않고 증명서로 확인해요. 총 시간엔 포함돼요.
               </InfoTip>
             </span>
           </label>
@@ -1088,7 +1088,7 @@ export function EntryForm({
           <label htmlFor="signatureTarget" className={`${labelClass} flex flex-wrap items-center gap-1`}>
             저장하면서 교관에게 서명 요청 (선택)
             <InfoTip label="서명 요청 설명">
-              고르면 저장 직후 그 교관의 서명함에 요청이 가요. 안 골라도 나중에 기록 상세에서 보낼 수 있어요. 해외 기록으로 체크한 비행은 요청이 가지 않아요.
+              고르면 저장하면서 바로 서명 요청이 가요. 안 골라도 나중에 기록 상세에서 보낼 수 있어요. 해외 기록은 요청이 가지 않아요.
             </InfoTip>
           </label>
           <select id="signatureTarget"

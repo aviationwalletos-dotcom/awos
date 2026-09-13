@@ -233,7 +233,7 @@ export function computeFlightReadiness(
     const cls = classOf(c)
     if (cls) heldClasses.add(cls)
   }
-  const recoveryHint = '회복하려면 조종교육증명을 받은 교관과 같은 등급 항공기(또는 모의비행장치)로 2시간 이상, 이착륙 3회 이상 비행교육을 받으세요(운항기술기준 8.2.4 가).'
+  const recoveryHint = '교관과 같은 등급 항공기로 2시간 이상, 이착륙 3회 이상 비행교육을 받으면 회복돼요(운항기술기준 8.2.4).'
   const byClass: RecencyByClass[] = classesFlown.map((cls) => {
     const rows = recencyRecent.filter((e) => {
       const c = inferAircraftClass(e)

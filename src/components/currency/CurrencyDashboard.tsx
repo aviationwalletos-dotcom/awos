@@ -322,7 +322,7 @@ export function CurrencyDashboard({ entries, account, certificates = [], isAppro
                       <p className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] text-amber-300">
                         한정 없이는 조종연습만 가능
                         <InfoTip label="한정 없음 설명">
-                          이 등급의 한정이 등록·승인돼 있지 않아요. 한정 없이는 조종교육증명 보유자 감독 아래 조종연습만 할 수 있어요(항공안전법 제37조·제46조①1호). 한정을 받았다면 자격증 탭에 등록하세요.
+                          이 등급의 한정이 등록돼 있지 않아요. 한정 없이는 교관 감독 아래 조종연습만 할 수 있어요(항공안전법 제37조·제46조). 한정을 받았다면 자격증 탭에 등록하세요.
                         </InfoTip>
                       </p>
                     )}
