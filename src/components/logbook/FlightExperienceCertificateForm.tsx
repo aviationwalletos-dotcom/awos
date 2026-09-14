@@ -252,7 +252,9 @@ export function FlightExperienceCertificateForm({ onSubmit }: FlightExperienceCe
     }
     const groundTrainerTime = numOrUndef(form.get('groundTrainerTime'))
     const conditions = {
-      day: numOrUndef(form.get('conditionDay')),
+      // 자동 채움은 useEffect 로 칸에 써 넣는다. 효과가 돌기 전에 저장하는 경우를 대비해 여기서 한 번 더 받는다
+      // (조건은 dayHint 와 같다 — 주간이 비고 총·야간이 둘 다 있을 때만).
+      day: numOrUndef(form.get('conditionDay')) ?? dayHint?.day,
       night: numOrUndef(form.get('conditionNight')),
       crossCountry: numOrUndef(form.get('crossCountry')),
       nightCrossCountry: numOrUndef(form.get('nightCrossCountry')),

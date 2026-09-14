@@ -22,6 +22,7 @@ import {
   computeEptaExpiryDate,
   computeMedicalExpiryDate,
   getExpiryRequirement,
+  medicalKeyFromAi,
   medicalValidityMonths,
 } from '../../data/certificateOptions'
 import type { CertificateSubType } from '../../data/certificateOptions'
@@ -202,9 +203,20 @@ export function CertificateForm({
     // 초경량비행장치 조종자증명 · 경량항공기 조종사 자격증명 — 항공기 조종사 자격증명과 다른 증명이다
     // (licenceCode 가 없다). 지금 보고 있는 자격 종류와 다르면 값을 바꾸지 않고 안내만 띄운다.
     // 말없이 화면을 바꾸면 사용자가 무슨 일이 일어났는지 모른다(2026-09-13 대표 판단).
-    const otherKind = typeof f.ultralightKind === 'string' ? f.ultralightKind : typeof f.lsaKind === 'string' ? f.lsaKind : null
+    // 한정사항이 여러 개일 수 있어 배열로 온다. 세부 종류 칸에는 첫 항목을 넣고, 나머지는 체크 목록으로 함께 등록한다.
+    const ulFirst = Array.isArray(f.ultralightRatings) && f.ultralightRatings.length > 0
+      ? (f.ultralightRatings[0] as { kind?: unknown; grade?: unknown })
+      : typeof f.ultralightKind === 'string'
+        ? { kind: f.ultralightKind, grade: f.uasGrade }
+        : null
+    const lsaFirst = Array.isArray(f.lsaRatings) && f.lsaRatings.length > 0
+      ? f.lsaRatings[0]
+      : typeof f.lsaKind === 'string'
+        ? f.lsaKind
+        : null
+    const otherKind = typeof ulFirst?.kind === 'string' ? ulFirst.kind : typeof lsaFirst === 'string' ? lsaFirst : null
     if (mode === 'create' && otherKind) {
-      const isUl = typeof f.ultralightKind === 'string'
+      const isUl = typeof ulFirst?.kind === 'string'
       const wantTrack: PilotTrack = isUl ? 'ultralight' : 'lsa'
       const wantCategory = isUl ? '초경량비행장치 조종자증명' : '경량항공기 조종사 자격증명'
       const built = buildCertificateSuggestions(f, existingCertificates, wantTrack, isDate(f.issuedDate) ? f.issuedDate : '')
@@ -217,9 +229,12 @@ export function CertificateForm({
         if (category !== wantCategory) handleCategoryChange(wantCategory)
         setNameTouched(false)
         setSubKey(otherKind)
-        const grade = isUl && typeof f.uasGrade === 'number' && [1, 2, 3, 4].includes(f.uasGrade) ? `${f.uasGrade}종` : ''
+        const g = ulFirst?.grade
+        const grade = isUl && typeof g === 'number' && [1, 2, 3, 4].includes(g) ? `${g}종` : ''
         setSubDetail(grade)
         setNameValue(primaryOther.input.name)
+        const others = built.filter((x) => x.kind !== 'licence')
+        if (others.length > 0) setAiExtras(others.map((x) => ({ ...x, checked: !x.duplicate })))
         filled.push(grade ? '자격 종류·종' : '자격 종류')
         return filled
       }
@@ -253,14 +268,25 @@ export function CertificateForm({
 
     // 신체검사증명서: 종류(1·2·3종)를 세부 종류에 맞춘다 → 유효기간 자동 계산도 그 종류로
     let aiMedicalKey: string | undefined
-    if (mode === 'create' && category === '항공신체검사' && typeof f.medicalClass === 'string') {
-      const cls = f.medicalClass.includes('1') ? 'CLASS1' : f.medicalClass.includes('2') ? 'CLASS2' : f.medicalClass.includes('3') ? 'CLASS3' : ''
+    // 종류는 정수(1·2·3)로 온다. 예전 스키마가 '제1종' 같은 문자열도 쓴 적이 있어 둘 다 받는다.
+    // [2026-09-14] 스키마에 medicalClass 가 두 번 정의돼 있었고(문자열/정수) 뒤엣것(정수)만 살아남는데,
+    // 여기서는 문자열일 때만 받고 있었다. 그래서 종류가 한 번도 자동으로 채워지지 않았다.
+    // 종류를 못 잡으면 아래 autofillExpiry 가 엉뚱한 종류로 유효기간을 계산한다(제2종 35세 60개월 vs 제1종 12개월).
+    if (mode === 'create' && category === '항공신체검사') {
+      const cls = medicalKeyFromAi(f.medicalClass)
       if (cls) {
         setNameTouched(false)
         setSubKey(cls)
         aiMedicalKey = cls
         filled.push('신체검사 종류')
       }
+    }
+    // 항공영어구술능력증명 단독 증서: 등급을 세부 종류에 맞춘다 → 만료일 자동 계산도 그 등급으로
+    if (mode === 'create' && category === '항공영어구술능력증명' && typeof f.eptaLevel === 'number' && [4, 5, 6].includes(f.eptaLevel)) {
+      setNameTouched(false)
+      setSubKey(`EPTA_${f.eptaLevel}`)
+      aiMedicalKey = `EPTA_${f.eptaLevel}`
+      filled.push('항공영어 등급')
     }
     if (isDate(f.issuedDate)) {
       setAiIssuedDate(f.issuedDate)
@@ -791,7 +817,7 @@ export function CertificateForm({
               </p>
             </div>
             <p className="rounded-control border border-orange-400/30 bg-orange-400/10 px-4 py-2.5 text-xs leading-relaxed text-orange-200 sm:col-span-2">
-              무선통신사는 <span className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조·규칙 제7조). 무선국 종사자에 한하며,
+              무선통신사는 <span className="font-semibold">5년마다 통신보안 의무교육</span> 대상이에요(전파법 제30조제2항 · 「무선국 운용 등에 관한 규정」 제7조). 무선국 종사자에 한하며,
               기한이 지나면 교육 이수증을 첨부해 관리자 인증을 받아야 커런시가 유효 처리돼요.
             </p>
           </>

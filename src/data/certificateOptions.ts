@@ -243,6 +243,25 @@ export function ageOnDate(birthDate: string, onDate: string): number | null {
   return age
 }
 
+/**
+ * AI 가 읽은 신체검사 종류를 세부 종류 키로 바꾼다.
+ *
+ * 스키마는 정수(1·2·3)를 요구하지만, 예전 스키마가 '제1종' 같은 문자열을 쓴 적이 있고
+ * 모델이 문자열로 답할 수도 있어 둘 다 받는다.
+ *
+ * [2026-09-14] 스키마에 medicalClass 가 두 번 정의돼 있었다(문자열/정수). JS 라 뒤엣것(정수)만
+ * 살아남는데 받는 쪽은 `typeof === 'string'` 일 때만 처리했다. 그래서 종류가 한 번도 자동으로
+ * 채워지지 않았고, 유효기간도 엉뚱한 종류로 계산됐다(제2종 35세 60개월 vs 제1종 12개월).
+ */
+export function medicalKeyFromAi(raw: unknown): 'CLASS1' | 'CLASS2' | 'CLASS3' | null {
+  const n = typeof raw === 'number'
+    ? raw
+    : typeof raw === 'string'
+      ? (raw.includes('1') ? 1 : raw.includes('2') ? 2 : raw.includes('3') ? 3 : 0)
+      : 0
+  return n === 1 ? 'CLASS1' : n === 2 ? 'CLASS2' : n === 3 ? 'CLASS3' : null
+}
+
 export function medicalValidityMonths(input: MedicalValidityInput): { months: number; assumedAge: boolean } {
   const age = input.birthDate ? ageOnDate(input.birthDate, input.issuedDate) : null
   const assumedAge = age === null
@@ -289,7 +308,18 @@ export function computeMedicalExpiryDate(
 /**
  * 통신보안교육 기한의 기준일 = 최종교육일과 자격증 발급일 중 **늦은 쪽**.
  *
- * 제도가 두 단계라 그렇다(전파법 제30조·시행규칙 제7조).
+ * 근거: 전파법 제30조제2항 · 「무선국 운용 등에 관한 규정」 제7조(통신보안 교육) —
+ * "무선통신업무에 종사하는 자는 5년마다 1회의 통신보안 교육을 받아야 한다".
+ * ※ 「무선국 운용 등에 관한 규정」은 시행규칙이 아니라 행정규칙(고시)이다. law.go.kr API 로 볼 때
+ *    target=admrul 을 써야 한다.
+ *
+ * [미확인] 위 조문은 "5년마다 1회"만 정하고 기산일이나 만료일 계산법을 적지 않는다.
+ * 아래 두 가지는 전파진흥원 실제 기록에서 역산한 것이지 조문에서 읽은 것이 아니다:
+ *   · 만료일 = 기준일 + 5년 − 1일   (실측 1건: 2022-03-08 → 2027-03-07)
+ *   · 기준일 = 최종교육일과 발급일 중 늦은 쪽  (제도 구조에서 유추)
+ * 근거가 필요하면 전파진흥원에 계산 기준을 직접 확인할 것.
+ *
+ * 제도가 두 단계라 "늦은 쪽"이 맞는다고 본 이유:
  *   · 교육을 아직 안 받았으면 → 자격 취득(발급)이 기준이 된다
  *   · 한 번이라도 받았으면   → 그 최종교육일부터 다시 5년이다
  * 최종교육일은 자격증에 안 적혀 있고 전파진흥원에서 따로 조회한다. 모르면 비워 두면 된다.

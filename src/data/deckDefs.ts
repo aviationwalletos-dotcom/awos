@@ -80,7 +80,7 @@ export const AIRCRAFT_DECK: DeckCardDef[] = [
   {
     category: '무선통신사',
     en: 'RADIO OPERATOR',
-    refText: '전파법 제30조 · 규칙 제7조',
+    refText: '전파법 제30조제2항 · 무선국 운용 등에 관한 규정 제7조',
     gradient: G.cyan,
     standards: [],
     hint: '무선국 종사자 한정 · 통신보안교육 5년',

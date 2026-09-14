@@ -86,45 +86,69 @@ export function buildCertificateSuggestions(
   // ── 초경량비행장치 조종자증명 · 경량항공기 조종사 자격증명 ──
   // 항공기 조종사 자격증명(PPL/CPL/ATPL/MPL)과 서식이 비슷하지만 다른 증명이다. licenceCode 가 없으므로
   // 아래 항공기용 경로를 타면 제안이 하나도 안 만들어진다(2026-09-13 테스터 제보). 먼저 처리한다.
-  const otherLicence = (() => {
-    const ulKind = typeof fields.ultralightKind === 'string' ? fields.ultralightKind : null
-    const ulType = ulKind ? ULTRALIGHT_CERT_TYPES.find((t) => t.key === ulKind) : undefined
-    if (ulType) {
+  // 한정사항에 종류가 여러 개 적힐 수 있으므로 배열로 받는다(2026-09-14).
+  // 항공기 쪽 classRatings 와 같은 구조다. 예전 단수 형식(ultralightKind/uasGrade/lsaKind)도 계속 받는다 —
+  // 배포 시점 차이로 프론트와 함수 버전이 어긋나도 읽기가 통째로 실패하지 않게 한다.
+  const otherLicences = (() => {
+    const rows: { category: CertificateCategory; track: PilotTrack; name: string }[] = []
+
+    const ulRaw = Array.isArray(fields.ultralightRatings)
+      ? fields.ultralightRatings
+      : typeof fields.ultralightKind === 'string'
+        ? [{ kind: fields.ultralightKind, grade: fields.uasGrade }]
+        : []
+    for (const item of ulRaw) {
+      const o = item as { kind?: unknown; grade?: unknown } | null
+      const type = typeof o?.kind === 'string' ? ULTRALIGHT_CERT_TYPES.find((t) => t.key === o.kind) : undefined
+      if (!type) continue
       // 무인장치는 종(1~4종)까지 있어야 이름이 완성된다. 종을 못 읽었으면 비워 두고 사용자가 고른다.
-      const grade = typeof fields.uasGrade === 'number' && [1, 2, 3, 4].includes(fields.uasGrade) ? `${fields.uasGrade}종` : ''
-      return {
-        category: '초경량비행장치 조종자증명' as const,
-        track: 'ultralight' as const,
-        name: grade ? `${ulType.label} ${grade}` : ulType.label,
-      }
+      const grade = typeof o?.grade === 'number' && [1, 2, 3, 4].includes(o.grade) ? `${o.grade}종` : ''
+      const name = grade ? `${type.label} ${grade}` : type.label
+      if (rows.some((r) => r.name === name)) continue
+      rows.push({ category: '초경량비행장치 조종자증명', track: 'ultralight', name })
     }
-    const lsaKind = typeof fields.lsaKind === 'string' ? fields.lsaKind : null
-    const lsaType = lsaKind ? LSA_LICENCE_TYPES.find((t) => t.key === lsaKind) : undefined
-    if (lsaType) return { category: '경량항공기 조종사 자격증명' as const, track: 'lsa' as const, name: lsaType.label }
-    return null
+    if (rows.length > 0) return rows
+
+    const lsaRaw = Array.isArray(fields.lsaRatings)
+      ? fields.lsaRatings
+      : typeof fields.lsaKind === 'string'
+        ? [fields.lsaKind]
+        : []
+    for (const key of lsaRaw) {
+      const type = typeof key === 'string' ? LSA_LICENCE_TYPES.find((t) => t.key === key) : undefined
+      if (!type || rows.some((r) => r.name === type.label)) continue
+      rows.push({ category: '경량항공기 조종사 자격증명', track: 'lsa', name: type.label })
+    }
+    return rows
   })()
 
-  if (otherLicence) {
-    out.push({
-      key: 'licence',
-      kind: 'licence',
-      label: otherLicence.name,
-      input: {
-        name: otherLicence.name,
-        category: otherLicence.category,
-        track: otherLicence.track,
-        licenceNumber: typeof fields.licenceNumber === 'string' ? fields.licenceNumber.trim() || undefined : undefined,
-        limitations: typeof fields.limitations === 'string' ? fields.limitations.trim() || undefined : undefined,
-        issuer: TS,
-        issuedDate: issued,
-      },
-      duplicate: hasSame(existing, otherLicence.category, otherLicence.name),
-    })
+  if (otherLicences.length > 0) {
+    for (const [i, o] of otherLicences.entries()) {
+      out.push({
+        // 첫 항목이 폼 본체가 되고(kind: 'licence'), 나머지는 체크 목록에 함께 뜬다.
+        key: i === 0 ? 'licence' : `other-licence:${o.name}`,
+        kind: i === 0 ? 'licence' : 'rating',
+        label: o.name,
+        input: {
+          name: o.name,
+          category: o.category,
+          track: o.track,
+          licenceNumber: typeof fields.licenceNumber === 'string' ? fields.licenceNumber.trim() || undefined : undefined,
+          limitations: typeof fields.limitations === 'string' ? fields.limitations.trim() || undefined : undefined,
+          issuer: TS,
+          issuedDate: issued,
+        },
+        duplicate: hasSame(existing, o.category, o.name),
+      })
+    }
     return out
   }
 
   const code = typeof fields.licenceCode === 'string' && LICENCE_LABEL[fields.licenceCode] ? fields.licenceCode : null
-  if (!code) return out
+  // [2026-09-14] 예전에는 여기서 `if (!code) return out` 으로 끝냈다. 그래서 자격증명 본체가 아닌 문서
+  // (단독 항공영어구술능력증명서 등)를 올리면 아래 블록이 통째로 건너뛰어져 제안이 하나도 안 만들어졌다.
+  // 조기 반환 대신 본체 블록만 감싼다 — 항공영어는 맨 아래에서 언제나 확인한다.
+  if (code) {
   const licenceNumber = typeof fields.licenceNumber === 'string' ? fields.licenceNumber.trim() || undefined : undefined
   const limitations = typeof fields.limitations === 'string' ? fields.limitations.trim() || undefined : undefined
 
@@ -203,6 +227,12 @@ export function buildCertificateSuggestions(
 
   // ── 조종교육증명(초급/선임) ──
   const fiRaw = Array.isArray(fields.flightInstructorRatings) ? fields.flightInstructorRatings : []
+  // 자격증명 본체(XII 한정사항)에서 읽힌 비행기 등급들. 안전망 판정에 쓴다.
+  const airplaneClasses = (Array.isArray(fields.classRatings) ? fields.classRatings : [])
+    .filter((r) => {
+      const o = r as { category?: unknown; class?: unknown } | null
+      return Boolean(o) && o!.category === 'AIRPLANE' && typeof o!.class === 'string'
+    })
   for (const item of fiRaw) {
     const o = item as { grade?: unknown; category?: unknown; classRating?: unknown } | null
     if (!o || !isCat(o.category)) continue
@@ -211,13 +241,21 @@ export function buildCertificateSuggestions(
     const cls = typeof o.classRating === 'string' ? CFI_CLASS_LABEL[o.classRating] : undefined
     const name = `${grade} 조종교육증명 - ${CATEGORY_LABEL[o.category]}${cls ? ` ${cls}` : ''}`
     if (out.some((s) => s.input.name === name)) continue
+    // [안전망] 비행기 조종교육증명인데 등급을 못 읽은 경우. 자격증명 본체에는 등급(육상단발/다발)이
+    // 읽혔는데 교육증명만 비었다면 AI 가 놓쳤을 가능성이 높다(자격증에 "초급(비행기/육상단발,
+    // 비행기/육상다발)"처럼 적힌다 — 별표 4 한정심사). 값을 지어내지 않고 사용자에게 확인을 청한다.
+    const licenceHasClass = airplaneClasses.length > 0
+    const needsClassCheck = !cls && o.category === 'AIRPLANE' && licenceHasClass
     out.push({
       key: `instructor:${o.grade === 'SENIOR' ? 'SENIOR' : 'BASIC'}:${o.category}:${typeof o.classRating === 'string' ? o.classRating : 'NA'}`,
       kind: 'instructor',
       label: name,
+      detail: needsClassCheck ? '등급(육상단발/다발)을 못 읽었어요 · 자격증을 보고 확인해 주세요' : undefined,
       input: { name, category: '조종교육증명', track, issuer: TS, issuedDate: issued },
       duplicate: hasSame(existing, '조종교육증명', name),
     })
+  }
+
   }
 
   // ── 항공영어구술능력증명(시행규칙 제99조③: 4등급 3년 · 5등급 6년 · 6등급 영구) ──
@@ -243,6 +281,7 @@ export function buildCertificateSuggestions(
       duplicate: hasSame(existing, '항공영어구술능력증명', name),
     })
   }
+
 
   return out
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { commEducationBaseDate, commEducationDueDate, computeEptaExpiryDate, eptaBaseDateFromExpiry } from './certificateOptions'
+import { commEducationBaseDate, commEducationDueDate, computeEptaExpiryDate, computeMedicalExpiryDate, eptaBaseDateFromExpiry, medicalKeyFromAi } from './certificateOptions'
 
 // 항공안전법 시행규칙 제99조③ — 기준일부터 계산하여 4등급 3년 / 5등급 6년 / 6등급 영구.
 // "기준일부터"라 초일을 세므로 마지막 해의 해당일 전날에 만료한다(민법 제160조②).
@@ -82,5 +82,34 @@ describe('commEducationBaseDate — 최종교육일과 발급일 중 늦은 쪽'
   it('예전 방식(발급일만)과 비교 — 실제 사례에서 4년 넘게 벌어진다', () => {
     expect(commEducationDueDate('2017-11-24')).toBe('2022-11-23') // 이미 지남 → 잘못된 경고
     expect(commEducationDueDate('2022-03-08')).toBe('2027-03-07') // 실제
+  })
+})
+
+// [2026-09-14] 스키마에 medicalClass 가 문자열/정수로 두 번 정의돼 있었고, 받는 쪽은 문자열만 받았다.
+// 그래서 신체검사 종류가 한 번도 자동으로 안 채워졌고, 유효기간도 엉뚱한 종류로 계산됐다.
+describe('medicalKeyFromAi', () => {
+  it('정수로 오는 경우 (지금 스키마)', () => {
+    expect(medicalKeyFromAi(1)).toBe('CLASS1')
+    expect(medicalKeyFromAi(2)).toBe('CLASS2')
+    expect(medicalKeyFromAi(3)).toBe('CLASS3')
+  })
+
+  it('문자열로 오는 경우도 받는다', () => {
+    expect(medicalKeyFromAi('제1종')).toBe('CLASS1')
+    expect(medicalKeyFromAi('CLASS 2')).toBe('CLASS2')
+    expect(medicalKeyFromAi('제3종 항공신체검사증명')).toBe('CLASS3')
+  })
+
+  it('없거나 알 수 없으면 null — 아무 종류나 고르지 않는다', () => {
+    expect(medicalKeyFromAi(null)).toBeNull()
+    expect(medicalKeyFromAi(undefined)).toBeNull()
+    expect(medicalKeyFromAi(0)).toBeNull()
+    expect(medicalKeyFromAi('종류 없음')).toBeNull()
+  })
+
+  it('종류를 틀리면 유효기간이 5배까지 벌어진다 (왜 중요한가)', () => {
+    const opts = { birthDate: '1991-01-01' } // 35세
+    expect(computeMedicalExpiryDate('2026-03-17', 'CLASS1', opts)).toBe('2027-03-31')
+    expect(computeMedicalExpiryDate('2026-03-17', 'CLASS2', opts)).toBe('2031-03-31')
   })
 })

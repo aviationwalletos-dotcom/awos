@@ -82,8 +82,18 @@ describe('buildCertificateSuggestions', () => {
     expect(s.find((x) => x.kind === 'epta')!.duplicate).toBe(false)
   })
 
-  it('licenceCode 가 없으면 아무것도 만들지 않는다(자격증명서가 아닌 문서)', () => {
-    expect(buildCertificateSuggestions({ ...CPL_FIELDS, licenceCode: null }, [], 'aircraft', '2026-03-17')).toEqual([])
+  // [2026-09-14 정정] 예전에는 licenceCode 가 없으면 무조건 빈 배열이었고, 이 테스트가 그 동작을 고정하고 있었다.
+  // 그래서 초경량·경량·단독 항공영어가 전부 조용히 빈 결과를 냈다. 이제는 문서에서 읽어낸 만큼 만든다.
+  it('licenceCode 가 없어도 문서에서 읽어낸 자격은 만든다', () => {
+    const s = buildCertificateSuggestions({ ...CPL_FIELDS, licenceCode: null }, [], 'aircraft', '2026-03-17')
+    // 자격증명 본체·한정·계기·교관은 licenceCode 가 있어야 하므로 안 나온다
+    expect(s.some((x) => ['licence', 'rating', 'instrument', 'instructor'].includes(x.kind))).toBe(false)
+    // 특기사항에 적힌 항공영어는 자격증명 본체와 무관하므로 나온다
+    expect(s.map((x) => x.kind)).toEqual(['epta'])
+  })
+
+  it('정말 아무것도 못 읽으면 빈 배열이다', () => {
+    expect(buildCertificateSuggestions({ licenceCode: null }, [], 'aircraft', '2026-03-17')).toEqual([])
   })
 
   it('헬리콥터 등급은 class 없이 처리한다', () => {
@@ -103,8 +113,7 @@ const UL_FIELDS = {
   issuedDate: '2026-07-23',
   documentKind: 'ultralight',
   licenceCode: null,
-  ultralightKind: 'UAS_MULTICOPTER',
-  uasGrade: 1,
+  ultralightRatings: [{ kind: 'UAS_MULTICOPTER', grade: 1 }],
   ratings: '무인멀티콥터/1종',
   limitations: null,
 }
@@ -121,7 +130,7 @@ describe('초경량비행장치 조종자증명', () => {
   })
 
   it('종을 못 읽으면 종류만 채우고 종은 비운다 — 없는 값을 만들지 않는다', () => {
-    const s = buildCertificateSuggestions({ ...UL_FIELDS, uasGrade: null }, [], 'ultralight', '2026-07-23')
+    const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightRatings: [{ kind: 'UAS_MULTICOPTER', grade: null }] }, [], 'ultralight', '2026-07-23')
     expect(s.find((x) => x.kind === 'licence')!.input.name).toBe('무인멀티콥터')
   })
 
@@ -132,18 +141,18 @@ describe('초경량비행장치 조종자증명', () => {
       ['UAS_MULTICOPTER', '무인멀티콥터'],
       ['UAS_VTOL', '무인수직이착륙기'],
     ]) {
-      const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightKind: key, uasGrade: 2 }, [], 'ultralight', '2026-07-23')
+      const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightRatings: [{ kind: key, grade: 2 }] }, [], 'ultralight', '2026-07-23')
       expect(s.find((x) => x.kind === 'licence')!.input.name).toBe(`${label} 2종`)
     }
   })
 
   it('유인 장치는 종 구분이 없다', () => {
-    const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightKind: 'UL_POWERED', uasGrade: null }, [], 'ultralight', '2026-07-23')
+    const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightRatings: [{ kind: 'UL_POWERED', grade: null }] }, [], 'ultralight', '2026-07-23')
     expect(s.find((x) => x.kind === 'licence')!.input.name).toBe('동력비행장치 조종자')
   })
 
   it('모르는 종류 코드면 제안하지 않는다 — 엉뚱한 자격을 만들지 않는다', () => {
-    const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightKind: 'UAS_SPACESHIP' }, [], 'ultralight', '2026-07-23')
+    const s = buildCertificateSuggestions({ ...UL_FIELDS, ultralightRatings: [{ kind: 'UAS_SPACESHIP', grade: 1 }] }, [], 'ultralight', '2026-07-23')
     expect(s).toHaveLength(0)
   })
 
@@ -166,7 +175,7 @@ const LSA_FIELDS = {
   issuedDate: '2026-05-02',
   documentKind: 'lsa',
   licenceCode: null,
-  lsaKind: 'LSA_AIRPLANE',
+  lsaRatings: ['LSA_AIRPLANE'],
   limitations: null,
 }
 
@@ -188,18 +197,18 @@ describe('경량항공기 조종사 자격증명', () => {
       ['LSA_GYROPLANE', '자이로플레인'],
       ['LSA_POWERED_PARACHUTE', '동력패러슈트'],
     ]) {
-      const s = buildCertificateSuggestions({ ...LSA_FIELDS, lsaKind: key }, [], 'lsa', '2026-05-02')
+      const s = buildCertificateSuggestions({ ...LSA_FIELDS, lsaRatings: [key] }, [], 'lsa', '2026-05-02')
       expect(s.find((x) => x.kind === 'licence')!.input.name).toBe(`경량항공기 조종사 - ${label}`)
     }
   })
 
   it('모르는 종류 코드면 제안하지 않는다', () => {
-    const s = buildCertificateSuggestions({ ...LSA_FIELDS, lsaKind: 'LSA_ROCKET' }, [], 'lsa', '2026-05-02')
+    const s = buildCertificateSuggestions({ ...LSA_FIELDS, lsaRatings: ['LSA_ROCKET'] }, [], 'lsa', '2026-05-02')
     expect(s).toHaveLength(0)
   })
 
   it('초경량과 경량이 동시에 오면 초경량이 이긴다(서식상 함께 올 수 없다)', () => {
-    const s = buildCertificateSuggestions({ ...LSA_FIELDS, ultralightKind: 'UAS_MULTICOPTER', uasGrade: 1 }, [], 'ultralight', '2026-05-02')
+    const s = buildCertificateSuggestions({ ...LSA_FIELDS, ultralightRatings: [{ kind: 'UAS_MULTICOPTER', grade: 1 }] }, [], 'ultralight', '2026-05-02')
     expect(s.find((x) => x.kind === 'licence')!.input.category).toBe('초경량비행장치 조종자증명')
   })
 
@@ -221,5 +230,170 @@ describe('항공기 조종사 경로는 그대로 동작한다 (회귀 확인)',
     expect(s.find((x) => x.kind === 'licence')!.input.category).toBe('조종사 자격증명')
     expect(s.some((x) => x.kind === 'rating')).toBe(true)
     expect(s.some((x) => x.kind === 'epta')).toBe(true)
+  })
+})
+
+// 오재헌 님 실제 자격증(12-015238)의 XII 한정사항 구조:
+//   비행기/육상다발, 비행기/육상단발, 계기비행증명(비행기),
+//   조종교육증명  초급(비행기/육상다발, 비행기/육상단발)  선임(비행기/육상다발, 비행기/육상단발)
+describe('조종교육증명 등급', () => {
+  const base = {
+    licenceCode: 'CPL',
+    issuedDate: '2026-03-17',
+    classRatings: [
+      { category: 'AIRPLANE', class: 'MEL' },
+      { category: 'AIRPLANE', class: 'SEL' },
+    ],
+    instrumentRatings: ['AIRPLANE'],
+  }
+
+  it('등급이 읽히면 4개로 나뉜다', () => {
+    const s = buildCertificateSuggestions({
+      ...base,
+      flightInstructorRatings: [
+        { grade: 'BASIC', category: 'AIRPLANE', classRating: 'MEL' },
+        { grade: 'BASIC', category: 'AIRPLANE', classRating: 'SEL' },
+        { grade: 'SENIOR', category: 'AIRPLANE', classRating: 'MEL' },
+        { grade: 'SENIOR', category: 'AIRPLANE', classRating: 'SEL' },
+      ],
+    }, [], 'aircraft', '2026-03-17')
+    expect(s.filter((x) => x.kind === 'instructor').map((x) => x.input.name)).toEqual([
+      '초급 조종교육증명 - 비행기 육상다발',
+      '초급 조종교육증명 - 비행기 육상단발',
+      '선임 조종교육증명 - 비행기 육상다발',
+      '선임 조종교육증명 - 비행기 육상단발',
+    ])
+  })
+
+  it('등급을 못 읽었는데 자격증명에는 등급이 있으면 확인을 청한다', () => {
+    const s = buildCertificateSuggestions({
+      ...base,
+      flightInstructorRatings: [
+        { grade: 'BASIC', category: 'AIRPLANE', classRating: null },
+        { grade: 'SENIOR', category: 'AIRPLANE', classRating: null },
+      ],
+    }, [], 'aircraft', '2026-03-17')
+    const fi = s.filter((x) => x.kind === 'instructor')
+    expect(fi).toHaveLength(2)
+    for (const x of fi) expect(x.detail).toMatch(/등급.*못 읽었어요/)
+  })
+
+  it('값을 지어내지는 않는다 — 이름은 등급 없이 그대로', () => {
+    const s = buildCertificateSuggestions({
+      ...base,
+      flightInstructorRatings: [{ grade: 'SENIOR', category: 'AIRPLANE', classRating: null }],
+    }, [], 'aircraft', '2026-03-17')
+    expect(s.find((x) => x.kind === 'instructor')!.input.name).toBe('선임 조종교육증명 - 비행기')
+  })
+
+  it('헬리콥터는 등급 구분이 없으니 확인을 청하지 않는다', () => {
+    const s = buildCertificateSuggestions({
+      ...base,
+      flightInstructorRatings: [{ grade: 'BASIC', category: 'HELICOPTER', classRating: null }],
+    }, [], 'aircraft', '2026-03-17')
+    expect(s.find((x) => x.kind === 'instructor')!.detail).toBeUndefined()
+  })
+})
+
+// 한정사항에 종류가 여러 개 적힌 경우. 항공기 classRatings 와 같은 구조여야 한다(2026-09-14).
+describe('초경량·경량 한정사항이 여러 개일 때', () => {
+  it('초경량 2종류를 모두 만든다', () => {
+    const s = buildCertificateSuggestions({
+      documentKind: 'ultralight',
+      licenceNumber: '91-180070',
+      ultralightRatings: [
+        { kind: 'UAS_MULTICOPTER', grade: 1 },
+        { kind: 'UAS_AIRPLANE', grade: 2 },
+      ],
+    }, [], 'ultralight', '2026-07-23')
+    expect(s.map((x) => x.input.name)).toEqual(['무인멀티콥터 1종', '무인비행기 2종'])
+    expect(s[0].kind).toBe('licence') // 첫 항목이 폼 본체
+    expect(s[1].kind).toBe('rating') // 나머지는 체크 목록
+  })
+
+  it('경량 2종류를 모두 만든다', () => {
+    const s = buildCertificateSuggestions({
+      documentKind: 'lsa',
+      lsaRatings: ['LSA_AIRPLANE', 'LSA_GYROPLANE'],
+    }, [], 'lsa', '2026-05-02')
+    expect(s.map((x) => x.input.name)).toEqual([
+      '경량항공기 조종사 - 타면조종형비행기',
+      '경량항공기 조종사 - 자이로플레인',
+    ])
+  })
+
+  it('같은 종류가 두 번 오면 한 번만 만든다', () => {
+    const s = buildCertificateSuggestions({
+      ultralightRatings: [
+        { kind: 'UAS_MULTICOPTER', grade: 1 },
+        { kind: 'UAS_MULTICOPTER', grade: 1 },
+      ],
+    }, [], 'ultralight', '2026-07-23')
+    expect(s).toHaveLength(1)
+  })
+
+  it('모르는 코드는 건너뛰고 나머지는 살린다', () => {
+    const s = buildCertificateSuggestions({
+      ultralightRatings: [
+        { kind: 'UAS_SPACESHIP', grade: 1 },
+        { kind: 'UAS_MULTICOPTER', grade: 3 },
+      ],
+    }, [], 'ultralight', '2026-07-23')
+    expect(s.map((x) => x.input.name)).toEqual(['무인멀티콥터 3종'])
+  })
+
+  it('예전 단수 형식도 계속 읽는다 — 함수와 프론트 배포 시점이 어긋나도 안 깨진다', () => {
+    const s = buildCertificateSuggestions({
+      ultralightKind: 'UAS_MULTICOPTER',
+      uasGrade: 1,
+    }, [], 'ultralight', '2026-07-23')
+    expect(s.map((x) => x.input.name)).toEqual(['무인멀티콥터 1종'])
+
+    const t = buildCertificateSuggestions({ lsaKind: 'LSA_HELICOPTER' }, [], 'lsa', '2026-05-02')
+    expect(t.map((x) => x.input.name)).toEqual(['경량항공기 조종사 - 경량헬리콥터'])
+  })
+})
+
+// [2026-09-14 전수 점검] "licenceCode 가 없으면 아무것도 안 나온다"는 같은 구멍이 세 번 나왔다.
+// 초경량 → 경량 → 단독 항공영어. 문서 종류별로 하나씩 고정해 둔다.
+describe('자격증명 본체가 아닌 문서도 제안을 만든다', () => {
+  it('단독 항공영어구술능력증명서 (licenceCode 없음)', () => {
+    const s = buildCertificateSuggestions({
+      documentKind: 'epta',
+      licenceCode: null,
+      eptaLevel: 4,
+      eptaValidUntil: '2028-12-01',
+    }, [], 'aircraft', '')
+    const epta = s.find((x) => x.kind === 'epta')
+    expect(epta).toBeDefined()
+    expect(epta!.input.name).toBe('항공영어구술능력증명 4등급')
+    expect(epta!.input.expiryDate).toBe('2028-12-01')
+    expect(epta!.input.issuedDate).toBe('2025-12-02') // 만료일에서 역산
+  })
+
+  it('자격증명서에 함께 적힌 항공영어도 그대로 나온다 (회귀)', () => {
+    const s = buildCertificateSuggestions(CPL_FIELDS, [], 'aircraft', '2026-03-17')
+    expect(s.some((x) => x.kind === 'epta')).toBe(true)
+    expect(s.some((x) => x.kind === 'licence')).toBe(true)
+  })
+
+  it('초경량 (licenceCode 없음)', () => {
+    const s = buildCertificateSuggestions({
+      documentKind: 'ultralight',
+      ultralightRatings: [{ kind: 'UAS_MULTICOPTER', grade: 1 }],
+    }, [], 'ultralight', '2026-07-23')
+    expect(s.find((x) => x.kind === 'licence')!.input.name).toBe('무인멀티콥터 1종')
+  })
+
+  it('경량 (licenceCode 없음)', () => {
+    const s = buildCertificateSuggestions({
+      documentKind: 'lsa',
+      lsaRatings: ['LSA_AIRPLANE'],
+    }, [], 'lsa', '2026-05-02')
+    expect(s.find((x) => x.kind === 'licence')!.input.name).toBe('경량항공기 조종사 - 타면조종형비행기')
+  })
+
+  it('아무것도 못 읽으면 빈 배열 — 엉뚱한 자격을 만들지 않는다', () => {
+    expect(buildCertificateSuggestions({ documentKind: 'other' }, [], 'aircraft', '')).toHaveLength(0)
   })
 })

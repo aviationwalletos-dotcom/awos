@@ -61,18 +61,43 @@ const SCHEMAS = {
   },
   licence: {
     description: '조종사 자격증명서 / 항공신체검사증명서 / 무선통신사 자격증 / 조종연습허가서 / 항공영어구술능력증명서 등 자격 증서',
+    guide: `XII. 한정사항(RATINGS) 칸을 특히 조심해서 읽으세요. 한국 자격증은 이 칸을 여러 줄로 적고,
+조종교육증명은 등급별로 다시 나뉩니다. 실제 예:
+
+  XII. 한정사항(RATINGS)
+    비행기/육상다발, 비행기/육상단발, 계기비행증명(비행기),
+    조종교육증명
+     초급(비행기/육상다발, 비행기/육상단발)
+     선임(비행기/육상다발, 비행기/육상단발)
+
+이 예를 읽으면 결과는 이렇게 나와야 합니다.
+  classRatings            → 2개  [{AIRPLANE,MEL}, {AIRPLANE,SEL}]
+  instrumentRatings       → 1개  ["AIRPLANE"]
+  flightInstructorRatings → 4개  [{BASIC,AIRPLANE,MEL}, {BASIC,AIRPLANE,SEL},
+                                  {SENIOR,AIRPLANE,MEL}, {SENIOR,AIRPLANE,SEL}]
+
+조종교육증명은 초급(JUNIOR)·선임(SENIOR) 줄마다 괄호 안 등급을 하나씩 떼어 따로 항목을 만드세요.
+"초급(비행기/육상다발, 비행기/육상단발)"은 항목 1개가 아니라 2개입니다. 등급을 합치거나 버리지 마세요.
+영문 줄(FLIGHT INSTRUCTOR RATING JUNIOR/SENIOR ...)은 같은 내용의 번역이므로 중복해서 세지 마세요.
+괄호 안에 등급 표기가 정말 없을 때만 classRating 을 null 로 두세요.
+
+초경량비행장치 조종자증명·경량항공기 조종사 자격증명도 한정사항에 종류가 여러 개 적힐 수 있습니다.
+ultralightRatings·lsaRatings 도 배열입니다. 하나만 적혀 있으면 항목 1개짜리 배열로, 여러 개면 전부 넣으세요.
+예: 무인멀티콥터/1종, 무인비행기/2종 → [{kind:'UAS_MULTICOPTER',grade:1},{kind:'UAS_AIRPLANE',grade:2}]`,
     fields: {
       name: '자격 명칭(예: 자가용 조종사, Private Pilot, 제1종 항공신체검사증명). 모르면 null',
       licenceNumber: '자격번호(예: 12-015238). 모르면 null',
+      // [읽지만 아직 안 씀] holderName · documentKind · holderBirthDate 는 앱이 소비하지 않는다.
+      // 빼지 않는 이유: documentKind 는 모델이 문서 종류를 먼저 정하게 만들어 나머지 추출을 안정시키고,
+      // holderBirthDate 는 신체검사 유효기간(나이별)에 쓸 수 있는 값이다(지금은 계정 생년월일을 쓰고,
+      // 없으면 50세 이상으로 보수적으로 가정한다). 의도적으로 남겨 둔 것이지 빠뜨린 게 아니다.
       holderName: '성명. 모르면 null',
       issuer: '발급기관. 모르면 null',
       issuedDate: '발급일 YYYY-MM-DD. 모르면 null',
       expiryDate: '만료일/유효기간 YYYY-MM-DD. 없으면 null',
-      ratings: '한정사항 문자열(예: 비행기 육상단발). 없으면 null',
-      medicalClass: "항공신체검사증명서면 종류: '제1종' | '제2종' | '제3종'. 신체검사증명서가 아니면 null",
       documentKind: "문서 종류: 'licence'(항공기 조종사 자격증명서) | 'ultralight'(초경량비행장치 조종자증명) | 'lsa'(경량항공기 조종사 자격증명) | 'medical'(항공신체검사증명서) | 'radio'(무선통신사 자격증) | 'permit'(조종연습허가서) | 'epta'(항공영어구술능력증명서) | 'other'",
       limitations: '제한사항 문자열. 없으면 null',
-      medicalClass: '항공신체검사 종류(1, 2, 3) 정수. 해당 없으면 null',
+      medicalClass: "항공신체검사증명서면 종류를 정수로: 1(제1종/CLASS 1) | 2(제2종) | 3(제3종). '제1종'처럼 적혀 있어도 숫자 1 로 주세요. 신체검사증명서가 아니면 null",
       // ── 조종사 자격증명서 한 장에서 같이 등록할 수 있는 항목들(한정사항·특기사항에서 읽는다) ──
       licenceCode: "조종사 자격증명 종류 코드: 'PPL'(자가용) | 'CPL'(사업용) | 'ATPL'(운송용) | 'MPL'(부조종사). 조종사 자격증명서가 아니면 null",
       classRatings:
@@ -84,13 +109,11 @@ const SCHEMAS = {
       eptaValidUntil: "ENGLISH PROFICIENCY 의 'VALID UNTIL' 날짜 YYYY-MM-DD. 없으면 null (LEVEL 6 는 만료가 없을 수 있음)",
       holderBirthDate: '소지자 생년월일(IVa. DATE OF BIRTH) YYYY-MM-DD. 없으면 null',
       // ── 초경량비행장치 조종자증명 (II 항목이 "초경량비행장치 조종자 / PILOT OF AN ULTRA LIGHT VEHICLE") ──
-      ultralightKind:
-        "초경량비행장치 조종자증명이면 한정사항(XII. RATINGS)에 적힌 장치 종류 코드 하나. 'UL_POWERED'(동력비행장치) | 'UL_ROTOR'(회전익비행장치) | 'UL_POWERED_PARAGLIDER'(동력패러글라이더) | 'UL_HANG_GLIDER'(행글라이더) | 'UL_PARAGLIDER'(패러글라이더) | 'UL_BALLOON_PRIVATE'(유인자유기구 자가용) | 'UL_BALLOON_COMMERCIAL'(유인자유기구 사업용) | 'UAS_AIRPLANE'(무인비행기) | 'UAS_HELICOPTER'(무인헬리콥터) | 'UAS_MULTICOPTER'(무인멀티콥터/UNMANNED MULTICOPTER) | 'UAS_VTOL'(무인수직이착륙기) | 'UAS_AIRSHIP'(무인비행선). 초경량 증명이 아니면 null",
-      // ── 경량항공기 조종사 자격증명 (II 항목이 "경량항공기 조종사 / PILOT OF A LIGHT SPORT AIRCRAFT") ──
-      lsaKind:
-        "경량항공기 조종사 자격증명이면 한정사항(XII. RATINGS)에 적힌 종류 코드 하나. 'LSA_AIRPLANE'(타면조종형비행기) | 'LSA_WEIGHT_SHIFT'(체중이동형비행기) | 'LSA_HELICOPTER'(경량헬리콥터) | 'LSA_GYROPLANE'(자이로플레인) | 'LSA_POWERED_PARACHUTE'(동력패러슈트). 경량항공기 자격증명이 아니면 null",
-      uasGrade:
-        "무인비행장치(UAS_*)의 종 구분 정수 1|2|3|4. 한정사항에 '무인멀티콥터/1종' 또는 'UNMANNED MULTICOPTER/1st' 처럼 적혀 있으면 1. 종 표기가 없거나 무인장치가 아니면 null",
+      ultralightRatings:
+        "초경량비행장치 조종자증명이면 한정사항(XII. RATINGS)에 적힌 종류를 빠짐없이 배열로. 각 항목 {\"kind\":코드,\"grade\":1|2|3|4|null}. 코드는 'UL_POWERED'(동력비행장치) | 'UL_ROTOR'(회전익비행장치) | 'UL_POWERED_PARAGLIDER'(동력패러글라이더) | 'UL_HANG_GLIDER'(행글라이더) | 'UL_PARAGLIDER'(패러글라이더) | 'UL_BALLOON_PRIVATE'(유인자유기구 자가용) | 'UL_BALLOON_COMMERCIAL'(유인자유기구 사업용) | 'UAS_AIRPLANE'(무인비행기) | 'UAS_HELICOPTER'(무인헬리콥터) | 'UAS_MULTICOPTER'(무인멀티콥터/UNMANNED MULTICOPTER) | 'UAS_VTOL'(무인수직이착륙기) | 'UAS_AIRSHIP'(무인비행선). grade 는 무인장치(UAS_*)의 종 구분 — '무인멀티콥터/1종' 또는 'UNMANNED MULTICOPTER/1st' 면 1. 종 표기가 없거나 유인 장치면 null. 초경량 증명이 아니면 []",
+      // ── 경량항공기 조종사 자격증명 (II 항목이 \"경량항공기 조종사 / PILOT OF A LIGHT SPORT AIRCRAFT\") ──
+      lsaRatings:
+        "경량항공기 조종사 자격증명이면 한정사항(XII. RATINGS)에 적힌 종류를 빠짐없이 배열로. 각 항목은 코드 문자열. 'LSA_AIRPLANE'(타면조종형비행기) | 'LSA_WEIGHT_SHIFT'(체중이동형비행기) | 'LSA_HELICOPTER'(경량헬리콥터) | 'LSA_GYROPLANE'(자이로플레인) | 'LSA_POWERED_PARACHUTE'(동력패러슈트). 경량항공기 자격증명이 아니면 []",
     },
   },
 }

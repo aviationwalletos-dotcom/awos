@@ -27,7 +27,7 @@ function fmtDate(iso?: string): string {
 }
 
 /** 실물 자격증 XII 한정사항 표기(예: 비행기/육상다발, 계기비행증명(비행기), 조종교육증명 초급(비행기/육상단발)) */
-function ratingLine(cert: Certificate): string[] {
+export function ratingLine(cert: Certificate): string[] {
   const n = cert.name
   const catKr = cert.aircraftCategory === 'HELICOPTER' ? '헬리콥터' : cert.aircraftCategory === 'AIRPLANE' ? '비행기' : ''
   switch (cert.category) {
@@ -52,9 +52,16 @@ function ratingLine(cert: Certificate): string[] {
     case '계기비행증명':
       return [n.includes('헬리콥터') ? '계기비행증명(헬리콥터)' : '계기비행증명(비행기)']
     case '조종교육증명': {
+      // 조종교육증명은 자격증에 "초급(비행기/육상단발)"처럼 등급까지 적힌다(별표 4 한정심사).
+      // 예전에는 종류(비행기/헬리콥터)만 뽑아서 등급이 사라졌다 — 실물과 다르게 보였다(2026-09-14).
       const grade = n.includes('선임') ? '선임' : '초급'
-      const kind = n.includes('헬리콥터') ? '헬리콥터' : '비행기'
-      return [`조종교육증명 ${grade}(${kind})`]
+      if (n.includes('헬리콥터')) return [`조종교육증명 ${grade}(헬리콥터)`]
+      const cls = n.includes('수상다발') ? '수상다발'
+        : n.includes('수상단발') ? '수상단발'
+        : n.includes('육상다발') ? '육상다발'
+        : n.includes('육상단발') ? '육상단발'
+        : ''
+      return [`조종교육증명 ${grade}(비행기${cls ? `/${cls}` : ''})`]
     }
     case '경량항공기 조종사 자격증명':
     case '초경량비행장치 조종자증명':
