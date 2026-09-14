@@ -21,11 +21,12 @@ function fmt(n: number): string {
   return n.toFixed(1)
 }
 
-function StatCell({ label, value }: { label: string; value: number }) {
+function StatCell({ label, value, note }: { label: string; value: number; note?: string }) {
   return (
     <div>
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
       <dd className="mt-0.5 font-mono-data tabular-nums text-base font-semibold text-ink">{fmt(value)}</dd>
+      {note && <dd className="mt-0.5 font-mono-data tabular-nums text-xs text-slate-400">{note}</dd>}
     </div>
   )
 }
@@ -172,8 +173,11 @@ export function LogbookTotalsSummary({ entries, track = 'aircraft' }: LogbookTot
         <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-6">
           <StatCell label="주간" value={totals.day} />
           <StatCell label="야간" value={totals.night} />
-          <StatCell label="크로스컨트리" value={totals.crossCountry} />
-          <StatCell label="야간 크로스컨트리" value={totals.nightCrossCountry} />
+          {/* 야외비행은 주간·야간을 합친 값이다(별표 4 응시경력 요건이 이 숫자를 본다).
+              예전에는 "크로스컨트리"와 "야간 크로스컨트리"를 나란히 놔서 더해야 하는 값처럼 보였다 — 실제로는 포함 관계다. */}
+          <StatCell label="야외비행"
+            value={totals.crossCountry}
+            note={`주간 ${fmt(Math.max(0, totals.crossCountry - totals.nightCrossCountry))} · 야간 ${fmt(totals.nightCrossCountry)}`} />
           <StatCell label="실제계기" value={totals.actualInstrument} />
           <StatCell label="모의계기" value={totals.simulatedInstrument} />
         </dl>

@@ -133,6 +133,10 @@ export function EntryForm({
   hasLicence = false,
 }: EntryFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
+  /** 폼이 uncontrolled 라, 입력값에서 파생해 보여줄 게 있을 때 다시 그리려고 쓰는 카운터 */
+  const [formTick, setFormTick] = useState(0)
+  /** 야간 야외를 직접 넣는 칸을 펼쳤는지. 이미 직접 넣어둔 기록은 값이 덮이지 않게 펼친 채로 연다 */
+  const [showNightXc, setShowNightXc] = useState(initialValues?.conditions?.nightCrossCountry !== undefined)
   const [entryRole, setEntryRole] = useState<EntryRole>(initialValues ? '' : (defaultRole ?? ''))
   const [entryKind, setEntryKind] = useState<'flight' | 'sim'>(
     initialValues && (initialValues.departure === 'SIM' || (initialValues.groundTrainerTime ?? 0) > 0) ? 'sim' : 'flight',
@@ -201,6 +205,23 @@ export function EntryForm({
    * 야간 크로스컨트리 자동 채움: 야간 시간과 크로스컨트리가 둘 다 있으면 야간 크컨 = 둘 중 작은 값.
    * (야간에 비행했고 그 비행이 크로스컨트리면 야간 시간만큼은 야간 크컨이라는 가정. 사용자가 직접 고치면 안 덮어씀)
    */
+  /**
+   * 야외비행을 주간·야간으로 나눈 값. 별지 36호는 둘을 따로 적어야 해서 앱이 나눠 준다.
+   * 기본은 자동(야간 시간과 야외 중 작은 값 = nightCrossCountryOf 와 같은 규칙)이고,
+   * 자동이 안 맞는 비행(예: 주간에 야외, 착륙 없이 야간 장주)만 "수정하기"로 직접 넣는다.
+   */
+  const crossCountrySplit = (() => {
+    void formTick
+    const xc = Number(getField('crossCountry')?.value)
+    if (!Number.isFinite(xc) || xc <= 0) return null
+    const nightTime = Number(getField('conditionNight')?.value)
+    const manual = Number(getField('nightCrossCountry')?.value)
+    const night = showNightXc && Number.isFinite(manual)
+      ? Math.max(0, Math.min(manual, xc))
+      : Math.max(0, Math.min(Number.isFinite(nightTime) ? nightTime : 0, xc))
+    return { night: fmt(night), day: fmt(Math.max(0, xc - night)) }
+  })()
+
   const syncNightCrossCountry = () => {
     if (!canAutofill('nightCrossCountry')) return
     const night = Number(getField('conditionNight')?.value)
@@ -902,16 +923,32 @@ export function EntryForm({
               step="0.1"
               min="0"
               defaultValue={initialValues?.conditions?.crossCountry}
-              onChange={syncNightCrossCountry}
+              onChange={() => { syncNightCrossCountry(); setFormTick((t) => t + 1) }}
               className={numberInputClass}
             />
+            {/* 별지 36호는 주간 야외·야간 야외를 나눠 적어야 한다. 사용자는 야외 시간만 넣고 앱이 나눈다.
+                자동 규칙(야간과 야외 중 작은 값)이 안 맞는 비행만 "수정하기"로 직접 넣는다. */}
+            {crossCountrySplit && vehicleClass === 'aircraft' && (
+              <p className="mt-1 text-xs text-slate-400">
+                주간 야외 {crossCountrySplit.day} · 야간 야외 {crossCountrySplit.night}
+                {!showNightXc && (
+                  <button type="button"
+                    onClick={() => { setShowNightXc(true); setFormTick((t) => t + 1) }}
+                    className="ml-1.5 underline underline-offset-2 hover:text-slate-200"
+                  >
+                    수정하기
+                  </button>
+                )}
+              </p>
+            )}
           </div>
-          {vehicleClass === 'aircraft' && (
+          {vehicleClass === 'aircraft' && showNightXc && (
             <div>
               <label htmlFor="nightCrossCountry" className={`${labelClass} inline-flex items-center gap-1`}>
                 야간 크로스컨트리(시간)
                 <InfoTip label="야간 크로스컨트리">
-                  크로스컨트리 중 야간에 한 시간. 야간과 크로스컨트리를 넣으면 둘 중 작은 값으로 자동으로 채워져요(고칠 수 있어요). 비행경력증명서에 주간·야간 야외를 나눠 적어야 해서 있어요.
+                  위 크로스컨트리 시간 중에서 야간에 한 시간이에요. 따로 더해지는 게 아니에요.
+                  보통은 앱이 자동으로 나누고, 그게 안 맞는 비행일 때만 직접 넣으면 돼요. 비행경력증명서에 주간·야간 야외를 나눠 적어야 해서 있어요.
                 </InfoTip>
               </label>
               <input id="nightCrossCountry"
@@ -920,7 +957,8 @@ export function EntryForm({
                 inputMode="decimal"
                 step="0.1"
                 min="0"
-                defaultValue={initialValues?.conditions?.nightCrossCountry}
+                defaultValue={initialValues?.conditions?.nightCrossCountry ?? crossCountrySplit?.night}
+                onChange={() => setFormTick((t) => t + 1)}
                 className={numberInputClass}
               />
             </div>
